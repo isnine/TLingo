@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Direct uses its own URL scheme for the Supabase auth callback so the
+	  request never gets hijacked by the App Store TLingo (which also has the
+	  bundle ID `com.zanderwang.AITranslator` and registers `tlingo://`).
+	  `tlingo://translate` deep links continue to belong to the App Store
+	  build; Direct doesn't ship the Share Extension that consumes them.
+	-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.zanderwang.AITranslator.direct</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tlingo-direct</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Sparkle (auto-update) — Direct target only. -->
+	<key>SUFeedURL</key>
+	<string>https://updates.tlingo.zanderwang.com/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>yjp+s6B27lu1+EolWC7cKtPi3ra+W+s7WwpNzuc7rrs=</string>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUEnableDownloaderService</key>
+	<false/>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>TLingo needs audio capture access to create realtime subtitles from Mac audio.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TLingo needs microphone access to record your voice for creating actions and realtime subtitles.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TLingo needs speech recognition access to transcribe realtime subtitles.</string>
+	<key>NSSystemAudioCaptureUsageDescription</key>
+	<string>TLingo needs system audio access to create realtime subtitles from Mac audio.</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>TLingo needs Accessibility access to translate text you select in any app.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>TLingo needs Automation access to read the text you select in your browser.</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Translate with TLingo</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>translateText</string>
+			<key>NSPortName</key>
+			<string>TLingo</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>public.utf8-plain-text</string>
+				<string>NSStringPboardType</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

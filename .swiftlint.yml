@@ -1,0 +1,28 @@
+disabled_rules:
+  - trailing_comma
+  - trailing_whitespace
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - implicit_return
+  - modifier_order
+  - sorted_imports
+
+line_length:
+  warning: 130
+  error: 160
+  ignores_comments: true
+  ignores_urls: true
+
+excluded:
+  - build
+  - ios/build
+  - .archive
+  - .worktrees
+  - DerivedData
+  - .build
+  - .swiftpm
+  - Carthage
+  - Pods
+  - Workers

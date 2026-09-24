@@ -1,0 +1,8 @@
+// Base.xcconfig
+// Shared build settings for AITranslator targets.
+//
+// All app secrets and runtime keys live in code, not here:
+//   ios/ShareCore/Configuration/AppSecrets.swift
+//
+// Do NOT add `AITRANSLATOR_*`, `SUPABASE_*`, etc. to this file or to any
+// xcconfig — they will not be read by the app and will silently rot.

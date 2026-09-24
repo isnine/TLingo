@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Pre-commit hook to prevent committing secrets
+# Patterns to check for potential secrets
+
+PATTERNS=(
+    # API Keys (32+ hex characters)
+    '[a-fA-F0-9]{32,}'
+    # Common secret patterns
+    'api[_-]?key\s*[:=]\s*["\x27][^"\x27]{10,}'
+    'secret\s*[:=]\s*["\x27][^"\x27]{10,}'
+    'token\s*[:=]\s*["\x27][^"\x27]{10,}'
+    'password\s*[:=]\s*["\x27][^"\x27]{5,}'
+    # Azure specific
+    'openai\.azure\.com'
+    # Known leaked patterns (redacted versions for reference)
+    'REDACTED_AZURE_API_KEY'
+    'REDACTED_HMAC_SECRET'
+)
+
+# Files to exclude from checking
+EXCLUDE_PATTERNS=(
+    '\.md$'
+    '\.example$'
+    'pre-commit$'
+    '\.gitignore$'
+)
+
+echo "Running secret detection pre-commit hook..."
+
+# Get staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+FOUND_SECRETS=0
+
+for FILE in $STAGED_FILES; do
+    # Skip excluded files
+    SKIP=0
+    for EXCLUDE in "${EXCLUDE_PATTERNS[@]}"; do
+        if echo "$FILE" | grep -qE "$EXCLUDE"; then
+            SKIP=1
+            break
+        fi
+    done
+    
+    if [ $SKIP -eq 1 ]; then
+        continue
+    fi
+    
+    # Check file content
+    CONTENT=$(git show ":$FILE" 2>/dev/null)
+    
+    for PATTERN in "${PATTERNS[@]}"; do
+        if echo "$CONTENT" | grep -qE "$PATTERN"; then
+            # Additional check: skip if it's clearly a placeholder or part of a URL
+            MATCH=$(echo "$CONTENT" | grep -oE "$PATTERN" | head -1)
+            MATCH_LINE=$(echo "$CONTENT" | grep -E "$PATTERN" | head -1)
+            if [[ "$MATCH" == *"YOUR_"* ]] || [[ "$MATCH" == *"EXAMPLE"* ]] || [[ "$MATCH" == *"PLACEHOLDER"* ]] || [[ "$MATCH_LINE" == *"notion.site"* ]] || [[ "$MATCH_LINE" == *"notion.so"* ]]; then
+                continue
+            fi
+            
+            echo "❌ Potential secret found in: $FILE"
+            echo "   Pattern: $PATTERN"
+            FOUND_SECRETS=1
+        fi
+    done
+done
+
+if [ $FOUND_SECRETS -eq 1 ]; then
+    echo ""
+    echo "🚫 Commit blocked: Potential secrets detected!"
+    echo ""
+    echo "If this is a false positive, you can:"
+    echo "  1. Add the file pattern to EXCLUDE_PATTERNS in .githooks/pre-commit"
+    echo "  2. Use 'git commit --no-verify' to bypass (use with caution!)"
+    echo ""
+    exit 1
+fi
+
+echo "✅ No secrets detected"
+exit 0

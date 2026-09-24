@@ -1,0 +1,1618 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
+		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
+		BB249D1C81B6D81D3A945314 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 5CB052C0DD54E66D1CAEC997 /* FluidAudio */; };
+		C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C470DB9D2F37431400517417 /* StoreKit.framework */; };
+		CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
+		CE22638F2EB250C100BB7BEF /* ShareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		CE23B5992EAA44B40033543C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
+		CE23B59A2EAA44B40033543C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
+		CE23B59B2EAA44B40033543C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
+		CE266B4E2FF4207300B169B9 /* SwiftStreamingMarkdown in Frameworks */ = {isa = PBXBuildFile; productRef = CE2668FB2FF41EEC00B169B9 /* SwiftStreamingMarkdown */; };
+		CE266B502FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE266B512FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle */; };
+		CE3703402F3E000000000003 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
+		CE4EB10F2EA33CAD00DDDFA5 /* TLingoTranslation.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CE4EB12B2EA4F4B000DDDFA5 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
+		CE6A10012FF4400000AA0001 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = CE6A10032FF4400000AA0001 /* SnapshotTesting */; };
+		CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
+		CE7F10022FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
+		CE9B52832F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
+		CE9B52842F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
+		CE9B52852F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
+		CEAB00012FB5000000000001 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
+		CEAB00022FB5000000000001 /* TLingoBroadcastUpload.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CEAB00142FB5000000000001 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEAB00132FB5000000000001 /* ReplayKit.framework */; };
+		CED1263F2FB0733E00A567CD /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
+		CED126432FB0733E00A567CD /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
+		CED126472FB0733E00A567CD /* ShareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		CED1267202FB0733E00A567CE /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = CED1267102FB0733E00A567CE /* Sparkle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CE22638D2EB250B800BB7BEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
+			remoteInfo = ShareCore;
+		};
+		CE3703402F3E00000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
+			remoteInfo = ShareCore;
+		};
+		CE37034F2F3E00000000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB0DC2EA33ADD00DDDFA5;
+			remoteInfo = TLingo;
+		};
+		CE4EB10D2EA33CAD00DDDFA5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB1072EA33CAD00DDDFA5;
+			remoteInfo = TLingoTranslation;
+		};
+		CE4EB12D2EA4F4B000DDDFA5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
+			remoteInfo = ShareCore;
+		};
+		CEAB000D2FB5000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEAB00092FB5000000000001;
+			remoteInfo = TLingoBroadcastUpload;
+		};
+		CEAB000F2FB5000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
+			remoteInfo = ShareCore;
+		};
+		CED1263A2FB0733E00A567CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
+			remoteInfo = ShareCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CE22638C2EB2509600BB7BEF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				CE22638F2EB250C100BB7BEF /* ShareCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB1102EA33CAD00DDDFA5 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				CE4EB10F2EA33CAD00DDDFA5 /* TLingoTranslation.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEAB00042FB5000000000001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CEAB00022FB5000000000001 /* TLingoBroadcastUpload.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CED126442FB0733E00A567CD /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CED126462FB0733E00A567CD /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				CED126472FB0733E00A567CD /* ShareCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		C470DB9D2F37431400517417 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		CE23B5982EAA44B40033543C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		CE266B512FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE3703262F2E39700039FC39 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		CE3703402F3E000000000001 /* ShareCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShareCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE37034F2F3E000000000001 /* TLingoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TLingoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TLingo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = TLingoTranslation.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ShareCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "TLingo: AI Translator.storekit"; sourceTree = "<group>"; };
+		CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TLingoBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEAB00132FB5000000000001 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
+		CED1264B2FB0733E00A567CD /* TLingo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TLingo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CED126502FB0733E00A567CE /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CE4EB1132EA33CAD00DDDFA5 /* Exceptions for "TranslationUI" folder in "TLingoTranslation" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */;
+		};
+		CE4EB13B2EA50B1300DDDFA5 /* Exceptions for "AITranslator" folder in "TLingo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CE4EB0DC2EA33ADD00DDDFA5 /* TLingo */;
+		};
+		CEAB00062FB5000000000001 /* Exceptions for "TLingoBroadcastUpload" folder in "TLingoBroadcastUpload" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CEAB00092FB5000000000001 /* TLingoBroadcastUpload */;
+		};
+		CED1264D2FB0733F00A567CD /* Exceptions for "AITranslator" folder in "TLingo-Direct" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CED126382FB0733E00A567CD /* TLingo-Direct */;
+		};
+		CED1264E2FB0733F00A567CE /* Exceptions for "Direct" folder in "TLingo-Direct" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CED126382FB0733E00A567CD /* TLingo-Direct */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CE3703402F3E000000000002 /* ShareCoreTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ShareCoreTests;
+			sourceTree = "<group>";
+		};
+		CE37034F2F3E000000000002 /* TLingoUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TLingoUITests;
+			sourceTree = "<group>";
+		};
+		CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CE4EB13B2EA50B1300DDDFA5 /* Exceptions for "AITranslator" folder in "TLingo" target */,
+				CED1264D2FB0733F00A567CD /* Exceptions for "AITranslator" folder in "TLingo-Direct" target */,
+			);
+			path = AITranslator;
+			sourceTree = "<group>";
+		};
+		CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CE4EB1132EA33CAD00DDDFA5 /* Exceptions for "TranslationUI" folder in "TLingoTranslation" target */,
+			);
+			path = TranslationUI;
+			sourceTree = "<group>";
+		};
+		CE4EB11F2EA4F47400DDDFA5 /* ShareCore */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ShareCore;
+			sourceTree = "<group>";
+		};
+		CEAB00072FB5000000000001 /* TLingoBroadcastUpload */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CEAB00062FB5000000000001 /* Exceptions for "TLingoBroadcastUpload" folder in "TLingoBroadcastUpload" target */,
+			);
+			path = TLingoBroadcastUpload;
+			sourceTree = "<group>";
+		};
+		CED126602FB0733E00A567CE /* Direct */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CED1264E2FB0733F00A567CE /* Exceptions for "Direct" folder in "TLingo-Direct" target */,
+			);
+			path = Direct;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CE3703402F3E000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE3703402F3E000000000003 /* ShareCore.framework in Frameworks */,
+				CE6A10012FF4400000AA0001 /* SnapshotTesting in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE37034F2F3E000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB0DA2EA33ADD00DDDFA5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */,
+				C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */,
+				CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB1052EA33CAD00DDDFA5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE4EB12B2EA4F4B000DDDFA5 /* ShareCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB11B2EA4F47400DDDFA5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000001 /* MLXAudioCore in Frameworks */,
+				A10000010000000000000002 /* MLXAudioSTT in Frameworks */,
+				BB249D1C81B6D81D3A945314 /* FluidAudio in Frameworks */,
+				CE266B4E2FF4207300B169B9 /* SwiftStreamingMarkdown in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEAB00082FB5000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEAB00012FB5000000000001 /* ShareCore.framework in Frameworks */,
+				CEAB00142FB5000000000001 /* ReplayKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CED1263E2FB0733E00A567CD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CED1263F2FB0733E00A567CD /* ShareCore.framework in Frameworks */,
+				CED1267202FB0733E00A567CE /* Sparkle in Frameworks */,
+				CE7F10022FF5000000000001 /* PermissionFlow in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CE3703302F2E40000039FC39 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				CE3703262F2E39700039FC39 /* Base.xcconfig */,
+				CED126502FB0733E00A567CE /* Direct.xcconfig */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		CE4EB0D42EA33ADD00DDDFA5 = {
+			isa = PBXGroup;
+			children = (
+				CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */,
+				CE23B5982EAA44B40033543C /* Localizable.xcstrings */,
+				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
+				CED126602FB0733E00A567CE /* Direct */,
+				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
+				CEAB00072FB5000000000001 /* TLingoBroadcastUpload */,
+				CE4EB11F2EA4F47400DDDFA5 /* ShareCore */,
+				CE3703402F3E000000000002 /* ShareCoreTests */,
+				CE37034F2F3E000000000002 /* TLingoUITests */,
+				CE3703302F2E40000039FC39 /* Configuration */,
+				CE4EB12A2EA4F4B000DDDFA5 /* Frameworks */,
+				CE4EB0DE2EA33ADD00DDDFA5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CE4EB0DE2EA33ADD00DDDFA5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */,
+				CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */,
+				CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */,
+				CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */,
+				CE3703402F3E000000000001 /* ShareCoreTests.xctest */,
+				CE37034F2F3E000000000001 /* TLingoUITests.xctest */,
+				CED1264B2FB0733E00A567CD /* TLingo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CE4EB12A2EA4F4B000DDDFA5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CEAB00132FB5000000000001 /* ReplayKit.framework */,
+				C470DB9D2F37431400517417 /* StoreKit.framework */,
+				CE266B512FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		CE4EB1192EA4F47400DDDFA5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		CE3703402F3E000000000007 /* ShareCoreTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE3703402F3E00000000000A /* Build configuration list for PBXNativeTarget "ShareCoreTests" */;
+			buildPhases = (
+				CE3703402F3E000000000005 /* Sources */,
+				CE3703402F3E000000000004 /* Frameworks */,
+				CE3703402F3E000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE3703402F3E00000000000C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE3703402F3E000000000002 /* ShareCoreTests */,
+			);
+			name = ShareCoreTests;
+			packageProductDependencies = (
+				CE6A10032FF4400000AA0001 /* SnapshotTesting */,
+			);
+			productName = ShareCoreTests;
+			productReference = CE3703402F3E000000000001 /* ShareCoreTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CE37034F2F3E000000000006 /* TLingoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE37034F2F3E000000000009 /* Build configuration list for PBXNativeTarget "TLingoUITests" */;
+			buildPhases = (
+				CE37034F2F3E000000000003 /* Sources */,
+				CE37034F2F3E000000000004 /* Frameworks */,
+				CE37034F2F3E000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE37034F2F3E00000000000B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE37034F2F3E000000000002 /* TLingoUITests */,
+			);
+			name = TLingoUITests;
+			packageProductDependencies = (
+			);
+			productName = TLingoUITests;
+			productReference = CE37034F2F3E000000000001 /* TLingoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		CE4EB0DC2EA33ADD00DDDFA5 /* TLingo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE4EB0E82EA33ADF00DDDFA5 /* Build configuration list for PBXNativeTarget "TLingo" */;
+			buildPhases = (
+				CE4EB0D92EA33ADD00DDDFA5 /* Sources */,
+				CE4EB0DA2EA33ADD00DDDFA5 /* Frameworks */,
+				CE4EB0DB2EA33ADD00DDDFA5 /* Resources */,
+				CE4EB1102EA33CAD00DDDFA5 /* Embed ExtensionKit Extensions */,
+				CEAB00042FB5000000000001 /* Embed App Extensions */,
+				CE22638C2EB2509600BB7BEF /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE22638E2EB250B800BB7BEF /* PBXTargetDependency */,
+				CE4EB10E2EA33CAD00DDDFA5 /* PBXTargetDependency */,
+				CEAB000C2FB5000000000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
+			);
+			name = TLingo;
+			packageProductDependencies = (
+				CE7F10032FF5000000000001 /* PermissionFlow */,
+			);
+			productName = TLingo;
+			productReference = CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE4EB1142EA33CAD00DDDFA5 /* Build configuration list for PBXNativeTarget "TLingoTranslation" */;
+			buildPhases = (
+				CE4EB1042EA33CAD00DDDFA5 /* Sources */,
+				CE4EB1052EA33CAD00DDDFA5 /* Frameworks */,
+				CE4EB1062EA33CAD00DDDFA5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE4EB12E2EA4F4B000DDDFA5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
+			);
+			name = TLingoTranslation;
+			packageProductDependencies = (
+			);
+			productName = TLingoTranslation;
+			productReference = CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		CE4EB11D2EA4F47400DDDFA5 /* ShareCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE4EB1262EA4F47400DDDFA5 /* Build configuration list for PBXNativeTarget "ShareCore" */;
+			buildPhases = (
+				CE4EB1192EA4F47400DDDFA5 /* Headers */,
+				CE4EB11A2EA4F47400DDDFA5 /* Sources */,
+				CE4EB11B2EA4F47400DDDFA5 /* Frameworks */,
+				CE4EB11C2EA4F47400DDDFA5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CE4EB11F2EA4F47400DDDFA5 /* ShareCore */,
+			);
+			name = ShareCore;
+			packageProductDependencies = (
+				A10000010000000000000004 /* MLXAudioCore */,
+				A10000010000000000000005 /* MLXAudioSTT */,
+				5CB052C0DD54E66D1CAEC997 /* FluidAudio */,
+				CE2668FB2FF41EEC00B169B9 /* SwiftStreamingMarkdown */,
+			);
+			productName = ShareCore;
+			productReference = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		CEAB00092FB5000000000001 /* TLingoBroadcastUpload */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEAB00122FB5000000000001 /* Build configuration list for PBXNativeTarget "TLingoBroadcastUpload" */;
+			buildPhases = (
+				CEAB000B2FB5000000000001 /* Sources */,
+				CEAB00082FB5000000000001 /* Frameworks */,
+				CEAB000A2FB5000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CEAB000E2FB5000000000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CEAB00072FB5000000000001 /* TLingoBroadcastUpload */,
+			);
+			name = TLingoBroadcastUpload;
+			packageProductDependencies = (
+			);
+			productName = TLingoBroadcastUpload;
+			productReference = CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		CED126382FB0733E00A567CD /* TLingo-Direct */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CED126482FB0733E00A567CD /* Build configuration list for PBXNativeTarget "TLingo-Direct" */;
+			buildPhases = (
+				CED1263D2FB0733E00A567CD /* Sources */,
+				CED1263E2FB0733E00A567CD /* Frameworks */,
+				CED126412FB0733E00A567CD /* Resources */,
+				CED126442FB0733E00A567CD /* Embed ExtensionKit Extensions */,
+				CED126462FB0733E00A567CD /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CED126392FB0733E00A567CD /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
+				CED126602FB0733E00A567CE /* Direct */,
+			);
+			name = "TLingo-Direct";
+			packageProductDependencies = (
+				CED1267102FB0733E00A567CE /* Sparkle */,
+				CE7F10032FF5000000000001 /* PermissionFlow */,
+			);
+			productName = TLingo;
+			productReference = CED1264B2FB0733E00A567CD /* TLingo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CE4EB0D52EA33ADD00DDDFA5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					CE3703402F3E000000000007 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					CE37034F2F3E000000000006 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = CE4EB0DC2EA33ADD00DDDFA5;
+					};
+					CE4EB0DC2EA33ADD00DDDFA5 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					CE4EB1072EA33CAD00DDDFA5 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					CE4EB11D2EA4F47400DDDFA5 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					CEAB00092FB5000000000001 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+				};
+			};
+			buildConfigurationList = CE4EB0D82EA33ADD00DDDFA5 /* Build configuration list for PBXProject "AITranslator" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = CE4EB0D42EA33ADD00DDDFA5;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A10000010000000000000003 /* XCRemoteSwiftPackageReference "mlx-audio-swift" */,
+				3F636BFB3A90A8AA4F69C7EE /* XCRemoteSwiftPackageReference "FluidAudio" */,
+				CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */,
+				CE2668FA2FF41EEC00B169B9 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */,
+				CE6A10022FF4400000AA0001 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				CE7F10002FF5000000000001 /* XCRemoteSwiftPackageReference "PermissionFlow" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CE4EB0DE2EA33ADD00DDDFA5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CE4EB0DC2EA33ADD00DDDFA5 /* TLingo */,
+				CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */,
+				CEAB00092FB5000000000001 /* TLingoBroadcastUpload */,
+				CE4EB11D2EA4F47400DDDFA5 /* ShareCore */,
+				CE3703402F3E000000000007 /* ShareCoreTests */,
+				CE37034F2F3E000000000006 /* TLingoUITests */,
+				CED126382FB0733E00A567CD /* TLingo-Direct */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CE3703402F3E000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE37034F2F3E000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB0DB2EA33ADD00DDDFA5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE9B52852F70331F00914308 /* TLingo: AI Translator.storekit in Resources */,
+				CE23B5992EAA44B40033543C /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB1062EA33CAD00DDDFA5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE9B52842F70331F00914308 /* TLingo: AI Translator.storekit in Resources */,
+				CE23B59A2EAA44B40033543C /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB11C2EA4F47400DDDFA5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE9B52832F70331F00914308 /* TLingo: AI Translator.storekit in Resources */,
+				CE23B59B2EAA44B40033543C /* Localizable.xcstrings in Resources */,
+				CE266B502FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEAB000A2FB5000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CED126412FB0733E00A567CD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CED126432FB0733E00A567CD /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CE3703402F3E000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE37034F2F3E000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB0D92EA33ADD00DDDFA5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB1042EA33CAD00DDDFA5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE4EB11A2EA4F47400DDDFA5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEAB000B2FB5000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CED1263D2FB0733E00A567CD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CE22638E2EB250B800BB7BEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
+			targetProxy = CE22638D2EB250B800BB7BEF /* PBXContainerItemProxy */;
+		};
+		CE3703402F3E00000000000C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
+			targetProxy = CE3703402F3E00000000000B /* PBXContainerItemProxy */;
+		};
+		CE37034F2F3E00000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB0DC2EA33ADD00DDDFA5 /* TLingo */;
+			targetProxy = CE37034F2F3E00000000000A /* PBXContainerItemProxy */;
+		};
+		CE4EB10E2EA33CAD00DDDFA5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */;
+			targetProxy = CE4EB10D2EA33CAD00DDDFA5 /* PBXContainerItemProxy */;
+		};
+		CE4EB12E2EA4F4B000DDDFA5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
+			targetProxy = CE4EB12D2EA4F4B000DDDFA5 /* PBXContainerItemProxy */;
+		};
+		CEAB000C2FB5000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = CEAB00092FB5000000000001 /* TLingoBroadcastUpload */;
+			targetProxy = CEAB000D2FB5000000000001 /* PBXContainerItemProxy */;
+		};
+		CEAB000E2FB5000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
+			targetProxy = CEAB000F2FB5000000000001 /* PBXContainerItemProxy */;
+		};
+		CED126392FB0733E00A567CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
+			targetProxy = CED1263A2FB0733E00A567CD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CE3703402F3E000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.ShareCoreTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE3703402F3E000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.ShareCoreTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CE37034F2F3E000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.TLingoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TLingo;
+			};
+			name = Debug;
+		};
+		CE37034F2F3E000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.TLingoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TLingo;
+			};
+			name = Release;
+		};
+		CE4EB0E62EA33ADF00DDDFA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CE4EB0E72EA33ADF00DDDFA5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CE4EB0E92EA33ADF00DDDFA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "AITranslator/AITranslator-Debug.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AITranslator/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE4EB0EA2EA33ADF00DDDFA5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				AUTOMATION_APPLE_EVENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = AITranslator/AITranslator.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AITranslator/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
+				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
+				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
+				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
+				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CE4EB1112EA33CAD00DDDFA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TranslationUI/TranslationUI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TranslationUI/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.TranslationUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE4EB1122EA33CAD00DDDFA5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TranslationUI/TranslationUI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TranslationUI/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.TranslationUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CE4EB1272EA4F47400DDDFA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.ShareCore;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		CE4EB1282EA4F47400DDDFA5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.ShareCore;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		CEAB00102FB5000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TLingoBroadcastUpload/TLingoBroadcastUpload.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoBroadcastUpload/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.BroadcastUpload;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CEAB00112FB5000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TLingoBroadcastUpload/TLingoBroadcastUpload.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoBroadcastUpload/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.BroadcastUpload;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CED126492FB0733E00A567CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CED126502FB0733E00A567CE /* Direct.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CED1264A2FB0733E00A567CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CED126502FB0733E00A567CE /* Direct.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.8.3;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CE3703402F3E00000000000A /* Build configuration list for PBXNativeTarget "ShareCoreTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE3703402F3E000000000008 /* Debug */,
+				CE3703402F3E000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE37034F2F3E000000000009 /* Build configuration list for PBXNativeTarget "TLingoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE37034F2F3E000000000007 /* Debug */,
+				CE37034F2F3E000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE4EB0D82EA33ADD00DDDFA5 /* Build configuration list for PBXProject "AITranslator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE4EB0E62EA33ADF00DDDFA5 /* Debug */,
+				CE4EB0E72EA33ADF00DDDFA5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE4EB0E82EA33ADF00DDDFA5 /* Build configuration list for PBXNativeTarget "TLingo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE4EB0E92EA33ADF00DDDFA5 /* Debug */,
+				CE4EB0EA2EA33ADF00DDDFA5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE4EB1142EA33CAD00DDDFA5 /* Build configuration list for PBXNativeTarget "TLingoTranslation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE4EB1112EA33CAD00DDDFA5 /* Debug */,
+				CE4EB1122EA33CAD00DDDFA5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE4EB1262EA4F47400DDDFA5 /* Build configuration list for PBXNativeTarget "ShareCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE4EB1272EA4F47400DDDFA5 /* Debug */,
+				CE4EB1282EA4F47400DDDFA5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEAB00122FB5000000000001 /* Build configuration list for PBXNativeTarget "TLingoBroadcastUpload" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEAB00102FB5000000000001 /* Debug */,
+				CEAB00112FB5000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CED126482FB0733E00A567CD /* Build configuration list for PBXNativeTarget "TLingo-Direct" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CED126492FB0733E00A567CD /* Debug */,
+				CED1264A2FB0733E00A567CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3F636BFB3A90A8AA4F69C7EE /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.15.5;
+			};
+		};
+		A10000010000000000000003 /* XCRemoteSwiftPackageReference "mlx-audio-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Blaizzy/mlx-audio-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.1.3;
+			};
+		};
+		CE2668FA2FF41EEC00B169B9 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/microsoft/SwiftStreamingMarkdown.git";
+			requirement = {
+				kind = revision;
+				revision = 21893c1c1de34676df96adf68b82bf675445afbe;
+			};
+		};
+		CE6A10022FF4400000AA0001 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.19.2;
+			};
+		};
+		CE7F10002FF5000000000001 /* XCRemoteSwiftPackageReference "PermissionFlow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jaywcjlove/PermissionFlow.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
+		CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5CB052C0DD54E66D1CAEC997 /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F636BFB3A90A8AA4F69C7EE /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
+		};
+		A10000010000000000000004 /* MLXAudioCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000010000000000000003 /* XCRemoteSwiftPackageReference "mlx-audio-swift" */;
+			productName = MLXAudioCore;
+		};
+		A10000010000000000000005 /* MLXAudioSTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000010000000000000003 /* XCRemoteSwiftPackageReference "mlx-audio-swift" */;
+			productName = MLXAudioSTT;
+		};
+		CE2668FB2FF41EEC00B169B9 /* SwiftStreamingMarkdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE2668FA2FF41EEC00B169B9 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */;
+			productName = SwiftStreamingMarkdown;
+		};
+		CE6A10032FF4400000AA0001 /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE6A10022FF4400000AA0001 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
+		CE7F10032FF5000000000001 /* PermissionFlow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE7F10002FF5000000000001 /* XCRemoteSwiftPackageReference "PermissionFlow" */;
+			productName = PermissionFlow;
+		};
+		CED1267102FB0733E00A567CE /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+}

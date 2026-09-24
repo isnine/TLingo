@@ -1,0 +1,135 @@
+# Git worktrees
+.worktrees/
+
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+.derivedData/
+.derivedData-ios/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcscmblueprint
+*.xcuserstate
+*.swiftsourceinfo
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# Carthage
+Carthage/Build/
+
+# Accio dependency manager
+Dependencies/
+.accio/
+
+# screenshots (large PNGs kept locally only)
+screenshots/ios/**/*.png
+screenshots/macos/**/*.png
+screenshots/macos_marketing/**/*.png
+screenshots/fonts/*.otf
+screenshots/fonts/*.ttf
+
+# App Store screenshot editor assets and exports are reproducible from screenshots/ios.
+screenshots/app-store-editor/public/screenshots/
+screenshots/app-store-editor/exports/
+
+# App Store screenshot generator (Next.js project)
+appstore-screenshots/
+appstore-paper/
+
+# Retro Rubberhose marketing screenshots + pulled metadata (local artifacts)
+screenshots/ios/retro-appstore/
+metadata/ios/version/3.4.11/
+
+# Code coverage
+*.gcda
+*.gcno
+*.lcov
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.lock
+*.profraw
+*.xcstrings.bak.*
+
+# Secrets and local configuration
+Secrets.plist
+Configuration/Local.xcconfig
+Configuration/Secrets.xcconfig
+ios/Configuration/Local.xcconfig
+ios/Configuration/Secrets.xcconfig
+ios/ShareCore/Configuration/AppSecrets.swift
+.env
+
+# Cloudflare Wrangler
+.wrangler/
+
+# Node
+node_modules/
+
+# Azure Functions
+azureLLM/dist/
+azureLLM/local.settings.json
+
+# App Store Connect CLI
+.asc/
+
+# OpenCode
+.opencode/
+
+# XcodeBuildMCP
+.xcodebuildmcp/
+
+# MCP configuration (local)
+.mcp.json
+
+# Build tools
+Makefile
+xcodemake *.log
+
+# Local archive (cleared workspace junk)
+.archive/
+
+vendor
+.bundle/
+.playwright-mcp
+
+# Local agent tool config
+.agents/
+.codex/
+
+# understand-anything tool artifacts
+.understand-anything/
+
+# Xcode Cloud local manifest
+ios/AITranslator.xcodeproj/xcshareddata/xcodecloud/
+
+# Local build server config
+ios/buildServer.json

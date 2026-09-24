@@ -1,0 +1,70 @@
+// Direct.xcconfig
+// Build settings for the TLingo-Direct (Developer ID, non-sandboxed) target.
+// Bundle ID and App Group intentionally match the App Store build so that
+// configuration data (App Group container) is reused.
+
+#include "Base.xcconfig"
+
+// MARK: - Compilation flag
+
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) DIRECT_DISTRIBUTION
+
+// MARK: - Sandbox / Hardened Runtime
+
+ENABLE_APP_SANDBOX = NO
+ENABLE_HARDENED_RUNTIME = YES
+
+// MARK: - Signing (manual Developer ID, Debug + Release)
+
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Developer ID Application
+CODE_SIGN_IDENTITY[sdk=macosx*] = Developer ID Application
+
+DEVELOPMENT_TEAM = JW2LR94V6G
+// Developer ID outside the App Sandbox needs no provisioning profile.
+PROVISIONING_PROFILE_SPECIFIER =
+
+CODE_SIGN_ENTITLEMENTS = Direct/TLingo-Direct.entitlements
+
+// MARK: - Info.plist
+// Direct uses its OWN Info.plist (not the App Store one) so it can register
+// `tlingo-direct://` exclusively for the Supabase auth callback. Sharing the
+// Info.plist with the App Store target meant both apps registered `tlingo://`
+// and macOS Launch Services would arbitrarily route `tlingo://auth-callback`
+// to the App Store TLingo, which has no Direct entitlement handler.
+//
+// NOTE: `GENERATE_INFOPLIST_FILE = YES` stays set in `project.pbxproj` for
+// this target; that's intentional. Xcode merges the source plist with any
+// `INFOPLIST_KEY_*` build settings, so both inputs coexist.
+INFOPLIST_FILE = Direct/Info.plist
+
+// MARK: - Sparkle (auto-update)
+// All Sparkle Info.plist keys live in `AITranslator/Info.plist`.
+
+// MARK: - Platform
+
+SUPPORTED_PLATFORMS = macosx
+SUPPORTS_MACCATALYST = NO
+TARGETED_DEVICE_FAMILY = 2
+
+// MARK: - Identity
+
+PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator
+PRODUCT_NAME = TLingo
+INFOPLIST_KEY_CFBundleDisplayName = TLingo
+
+// MARK: - Distribution channel marker
+// The Direct vs App Store channel is detected via the Swift compile-time flag
+// `DIRECT_DISTRIBUTION` (set above) — the app target calls
+// `BuildEnvironment.markAsDirectDistribution()` from `init()` and ShareCore
+// reads `BuildEnvironment.isDirectDistribution` at runtime.
+
+// MARK: - Web auth (Supabase)
+// Hard-coded in `AppSecrets.swift` (closed-source repo). No xcconfig
+// or Info.plist injection needed.
+
+// MARK: - Accessibility (selection translation, Direct only)
+// macOS shows this string when prompting for the Accessibility permission.
+// NOTE: like other INFOPLIST_KEY_* settings, this is also dropped because
+// INFOPLIST_FILE is set on this target. The string lives in the shared
+// Info.plist instead — see `NSAccessibilityUsageDescription` there.

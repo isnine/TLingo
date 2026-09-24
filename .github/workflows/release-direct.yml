@@ -1,0 +1,241 @@
+name: Release Direct (Developer ID)
+
+# Rollback only: Xcode Cloud `Direct Release` owns `v*` tags. Run manually on a tag ref.
+on:
+  workflow_dispatch:
+    inputs:
+      skip_notarize:
+        description: 'Skip notarization (smoke test only)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history to compute build number
+
+      - name: Compute build number
+        id: build_number
+        run: |
+          # Monotonically-increasing build number = commit count + offset.
+          # Sparkle compares this (CFBundleVersion / sparkle:version) to decide
+          # whether a new release is "newer" than the installed copy. The offset
+          # keeps builds above 780, the last release from the pre-split repository.
+          BUILD=$(( $(git rev-list --count HEAD) + 1000 ))
+          echo "BUILD_NUMBER=$BUILD" >> $GITHUB_ENV
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "Build number: $BUILD"
+
+      - name: Select Xcode
+        # Use DEVELOPER_DIR instead of `sudo xcode-select` so this works on
+        # both GitHub-hosted (no env preset, sudo available) and self-hosted
+        # (sudo would prompt for password) runners.
+        run: |
+          if [ -d /Applications/Xcode_26.app ]; then
+            echo "DEVELOPER_DIR=/Applications/Xcode_26.app/Contents/Developer" >> $GITHUB_ENV
+          else
+            echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          fi
+
+      - name: Trust Swift package macros
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+
+      # 1) Import Developer ID certificate into a temporary keychain.
+      - name: Import signing certificate
+        env:
+          DEV_ID_CERT_P12: ${{ secrets.DEV_ID_CERT_P12 }}
+          DEV_ID_CERT_PASSWORD: ${{ secrets.DEV_ID_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$DEV_ID_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" \
+            -P "$DEV_ID_CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # xcodebuild matches CODE_SIGN_IDENTITY ("Developer ID Application")
+          # against keychains in the search list BEFORE OTHER_CODE_SIGN_FLAGS
+          # is forwarded to codesign. Without adding our temp keychain to the
+          # search list, identity lookup fails with "No signing certificate ...
+          # found". Prepend (don't replace) so login.keychain stays reachable,
+          # and the cleanup step at the end of the job removes the temp file
+          # so nothing leaks across runs on self-hosted runners.
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          echo "SIGNING_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Generate AppSecrets
+        env:
+          TLINGO_CLOUD_ENDPOINT: ${{ secrets.TLINGO_CLOUD_ENDPOINT }}
+          TLINGO_CLOUD_SECRET: ${{ secrets.TLINGO_CLOUD_SECRET }}
+          TLINGO_SUPABASE_URL: ${{ secrets.TLINGO_SUPABASE_URL }}
+          TLINGO_SUPABASE_ANON_KEY: ${{ secrets.TLINGO_SUPABASE_ANON_KEY }}
+        run: |
+          test -n "$TLINGO_CLOUD_SECRET"
+          ./ci_scripts/generate-app-secrets.sh
+
+      # 2) Archive (TLingo-Direct, macOS).
+      # Override CODE_SIGN_IDENTITY globally so embedded targets (ShareCore,
+      # Sparkle) don't fall back to "Mac Development" (which the runner lacks).
+      # Embedded frameworks signed with Developer ID Application is valid for
+      # un-sandboxed Hardened Runtime apps.
+      - name: Archive
+        run: |
+          set -euo pipefail
+          xcodebuild -project ios/AITranslator.xcodeproj \
+            -scheme TLingo-Direct \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath build/TLingo.xcarchive \
+            -skipPackagePluginValidation \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $SIGNING_KEYCHAIN" \
+            DEVELOPMENT_TEAM=JW2LR94V6G \
+            CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
+            archive
+
+      # 4) Export with Developer ID.
+      - name: Export
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/TLingo.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist ios/Configuration/ExportOptions-DeveloperID.plist
+
+      # 5) Notarize and staple.
+      - name: Notarize
+        if: ${{ !inputs.skip_notarize }}
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.private_keys
+          KEY_PATH="$HOME/.private_keys/AuthKey_${ASC_API_KEY_ID}.p8"
+          printf '%s' "$ASC_API_KEY_P8" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          ditto -c -k --keepParent build/export/TLingo.app build/TLingo.zip
+          attempt=1
+          max_attempts=3
+          until xcrun notarytool submit build/TLingo.zip \
+            --key "$KEY_PATH" \
+            --key-id "$ASC_API_KEY_ID" \
+            --issuer "$ASC_API_ISSUER_ID" \
+            --wait; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "notarytool submit failed after $attempt attempts" >&2
+              exit 1
+            fi
+            sleep_s=$((attempt * 30))
+            echo "notarytool submit failed (attempt $attempt/$max_attempts); retrying in ${sleep_s}s..." >&2
+            sleep "$sleep_s"
+            attempt=$((attempt + 1))
+          done
+          xcrun stapler staple build/export/TLingo.app
+
+      # 6) Build DMG.
+      - name: Create DMG
+        run: |
+          set -euo pipefail
+          brew install create-dmg
+          create-dmg \
+            --volname "TLingo" \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --app-drop-link 450 200 \
+            build/TLingo.dmg \
+            build/export/TLingo.app
+
+      # 7) Sparkle appcast.
+      - name: Generate appcast
+        if: ${{ !inputs.skip_notarize }}
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          APPCAST_BASE_URL: https://updates.tlingo.zanderwang.com
+          DMG_PUBLIC_NAME: TLingo-${{ github.ref_name }}.dmg
+          RELEASE_NOTES_URL: https://updates.tlingo.zanderwang.com/release-notes/${{ github.ref_name }}.html
+        run: |
+          set -euo pipefail
+          # Extract release notes from CHANGELOG.md → HTML.
+          # Use the git tag (without leading "v") as version key.
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p build
+          ./ci_scripts/extract-release-notes.sh "$VERSION" build/release-notes.html
+
+          # Locate sign_update from the Sparkle SPM artifact bundle. Narrow the
+          # search to the SourcePackages tree so we don't walk all of DerivedData.
+          SIGN_UPDATE=$(find ~/Library/Developer/Xcode/DerivedData/*/SourcePackages/artifacts/sparkle -type f -name sign_update 2>/dev/null | head -1)
+          if [ -z "$SIGN_UPDATE" ]; then
+            echo "sign_update not found in Sparkle artifacts, falling back to brew"
+            brew install --cask sparkle
+            SIGN_UPDATE=$(command -v sign_update)
+          fi
+          export PATH="$(dirname "$SIGN_UPDATE"):$PATH"
+          ./ci_scripts/generate-appcast.sh build/TLingo.dmg
+
+      # 8) Publish to Cloudflare R2.
+      - name: Upload to R2
+        if: ${{ !inputs.skip_notarize }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npm install -g wrangler@4
+          DMG_NAME="TLingo-${GITHUB_REF_NAME:-manual}.dmg"
+          NOTES_NAME="${GITHUB_REF_NAME:-manual}.html"
+          wrangler r2 object put "tlingo-releases/${DMG_NAME}" --file=build/TLingo.dmg --remote
+          wrangler r2 object put "tlingo-releases/appcast.xml" --file=build/appcast.xml --remote --content-type=application/rss+xml
+          if [ -f build/release-notes.html ]; then
+            wrangler r2 object put "tlingo-releases/release-notes/${NOTES_NAME}" --file=build/release-notes.html --remote --content-type=text/html
+          fi
+
+      # 9) GitHub Release (archive + checksum trail).
+      - name: GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/TLingo.dmg
+            build/appcast.xml
+            build/release-notes.html
+          generate_release_notes: true
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TLingo-Direct-${{ github.run_id }}
+          path: |
+            build/TLingo.dmg
+            build/appcast.xml
+          if-no-files-found: warn
+
+      # Always tear down the temporary signing keychain so it can never leak
+      # into the host's keychain search list across runs.
+      - name: Cleanup signing keychain
+        if: always()
+        run: |
+          if [ -n "${SIGNING_KEYCHAIN:-}" ] && [ -f "$SIGNING_KEYCHAIN" ]; then
+            # Remove the temp keychain from the user search list before deleting
+            # the file so future tooling on the same runner sees a clean state.
+            REMAINING=$(security list-keychains -d user | tr -d '"' | grep -v "$SIGNING_KEYCHAIN" || true)
+            if [ -n "$REMAINING" ]; then
+              security list-keychains -d user -s $REMAINING || true
+            fi
+            security delete-keychain "$SIGNING_KEYCHAIN" || true
+          fi

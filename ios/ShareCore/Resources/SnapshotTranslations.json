@@ -1,0 +1,2691 @@
+{
+  "version": 1,
+  "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares results from multiple AI models, supports on-device translation, and provides real-time bilingual voice captions.",
+  "writingPolishedText": "TLingo brings translation to iPhone, iPad, and Mac. Compare multiple AI models, translate on-device, and follow conversations with real-time bilingual voice captions.",
+  "writingPolishedResults": {
+    "gpt-5.4": "TLingo brings translation to iPhone, iPad, and Mac. Compare multiple AI models, translate on-device, and follow conversations with real-time bilingual voice captions.",
+    "DeepSeek-V4-Pro": "TLingo delivers translation across iPhone, iPad, and Mac, combining multi-model comparisons, private on-device translation, and live bilingual voice captions.",
+    "Kimi-K2.6": "Use TLingo on iPhone, iPad, and Mac to compare AI translations, work offline on-device, and keep up with conversations through live bilingual captions."
+  },
+  "realtimeSourceTexts": [
+    "The meeting starts in five minutes.",
+    "I will summarize the key decisions as we go.",
+    "Please open the quarterly report."
+  ],
+  "modelOrder": [
+    "apple-translate",
+    "google-translate",
+    "gpt-5.4",
+    "DeepSeek-V4-Pro",
+    "Kimi-K2.6"
+  ],
+  "localeOrder": [
+    "en-US",
+    "zh-Hans",
+    "zh-Hant",
+    "ja",
+    "ko",
+    "de-DE",
+    "fr-FR",
+    "es-ES",
+    "it",
+    "pt-BR",
+    "ar-SA",
+    "da",
+    "no",
+    "nl-NL",
+    "sv",
+    "tr",
+    "id",
+    "pl",
+    "ms"
+  ],
+  "grammar": {
+    "sourceText": "Our team are preparing a product launch. The presentation need to be clear, natural and concise.",
+    "correctedText": "Our team is preparing a product launch. The presentation needs to be clear, natural, and concise."
+  },
+  "macScenes": {
+    "en-US": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "The product review begins in five minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Please record the key decisions and their owners."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "We will confirm the launch date before the meeting concludes."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "The product review is scheduled to start in five minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Please document the key decisions and responsible owners."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "The launch date will be confirmed before the meeting ends."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "The product review meeting will begin in five minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Please capture the main decisions and the owner of each action."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "We will finalize the product launch date before this meeting is over."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Rewrite the launch update in clear English and keep the product names unchanged."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo will introduce its new Mac realtime translation workspace this month, while keeping product names such as Apple Translate, Nemotron Streaming 1120ms, and Apple Translation Realtime unchanged."
+          },
+          {
+            "role": "user",
+            "content": "Turn it into concise meeting notes with clear next steps."
+          },
+          {
+            "role": "assistant",
+            "content": "## Launch update\n\n- **Product:** TLingo for Mac\n- **Highlight:** Multi-model realtime translation\n- **Engines:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Next steps\n\n1. Finalize the English App Store screenshots.\n2. Review localized mock content.\n3. Confirm the release date with the product team.\n\n> Keep model and product names unchanged in every locale."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Translate",
+        "targetLanguage": "English",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "The launch review confirmed that the Mac app will lead with offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "annotation": "### Key decisions\n\n- Lead with **offline translation** and privacy.\n- Show multiple AI results **side by side**.\n- Use the Mac workspace to demonstrate **three realtime lanes**.\n\n### Next action\n\n- [ ] Review the final English screenshots before localization.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Summarize the decisions and save a structured note to this history record."
+          },
+          {
+            "role": "assistant",
+            "content": "Saved the key decisions as a Markdown note. I also added a review task so the screenshot set can move directly into localization."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Translate",
+            "targetLanguage": "English",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Compare several AI-generated versions before selecting the final translation."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Translate",
+            "targetLanguage": "English",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "Private translation remains available offline."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Realtime",
+            "targetLanguage": "English",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Please document the key decisions and responsible owners."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Realtime",
+            "targetLanguage": "English",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "The launch date will be finalized before the meeting concludes."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Compare Every",
+          "accentText": "Translation",
+          "subtitle": "Review Apple, Google, GPT, DeepSeek, and Kimi side by side.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Translate Privately,",
+          "accentText": "Offline",
+          "subtitle": "Keep translation on your Mac with Apple Translate.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Three Realtime Lanes.",
+          "accentText": "One Mac.",
+          "subtitle": "Compare local speech and translation engines as conversations happen.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Keep the",
+          "accentText": "Conversation Going",
+          "subtitle": "Ask follow-up questions and get structured Markdown answers.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "See Every",
+          "accentText": "Improvement",
+          "subtitle": "Compare polished rewrites from GPT, DeepSeek, and Kimi with clear diffs.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Chat With Your",
+          "accentText": "History",
+          "subtitle": "Turn past translations into structured notes and next actions.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "zh-Hans": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "产品评审将在五分钟后开始。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "请记录关键决策和负责人。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "我们会在会议结束前确认发布日期。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "产品评审会议将在五分钟后开始。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "请整理关键决策以及对应负责人。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "发布日期会在会议结束前确认。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "产品评审将在五分钟后开始。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "请捕捉主要决策，并标明每个事项的负责人。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "我们会在本次会议结束前敲定产品发布日期。"
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "把这段发布更新改写成清晰中文，并保留产品和模型名称。"
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo 本月将推出新的 Mac 实时翻译工作区，同时保留 Apple Translate、Nemotron Streaming 1120ms 和 Apple Translation Realtime 等产品名称。"
+          },
+          {
+            "role": "user",
+            "content": "整理成简洁的会议纪要，并给出下一步。"
+          },
+          {
+            "role": "assistant",
+            "content": "## 发布更新\n\n- **产品：** TLingo for Mac\n- **重点：** 多模型实时翻译\n- **引擎：** Apple Translate、Nemotron Streaming 1120ms、Apple Translation Realtime\n\n### 下一步\n\n1. 完成英文 App Store 截图。\n2. 审核本地化 mock 内容。\n3. 与产品团队确认发布日期。\n\n> 所有语言都保留模型和产品名称。"
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "翻译",
+        "targetLanguage": "中文",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "发布评审确认，Mac 版将重点展示离线翻译、并排 AI 模型对比，以及三条实时翻译轨道。",
+        "annotation": "### 关键决策\n\n- 以 **离线翻译** 和隐私作为重点。\n- 并排展示多个 AI 模型结果。\n- 用 Mac 工作区呈现 **三条实时翻译轨道**。\n\n### 下一步\n\n- [ ] 本地化前审核最终英文截图。",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "总结这些决策，并把结构化注释保存到这条历史记录。"
+          },
+          {
+            "role": "assistant",
+            "content": "已保存 Markdown 格式的关键决策。我也添加了审核任务，方便截图集直接进入本地化流程。"
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "翻译",
+            "targetLanguage": "中文",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "在选择最终译文前，先比较多个 AI 模型的结果。"
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "翻译",
+            "targetLanguage": "中文",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "即使没有网络连接，也应保留私密翻译能力。"
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "实时翻译",
+            "targetLanguage": "中文",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "请整理关键决策以及对应负责人。"
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "实时翻译",
+            "targetLanguage": "中文",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "发布日期会在会议结束前确认。"
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "对比每一种",
+          "accentText": "翻译",
+          "subtitle": "并排查看 Apple、Google、GPT、DeepSeek 与 Kimi 的结果。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "私密翻译，",
+          "accentText": "离线可用",
+          "subtitle": "使用 Apple Translate，让翻译保留在你的 Mac 上。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "三条实时轨道，",
+          "accentText": "一台 Mac",
+          "subtitle": "对比本地识别与翻译引擎，跟上正在发生的对话。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "让对话",
+          "accentText": "继续",
+          "subtitle": "继续追问，并获得结构化 Markdown 回答。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "看清每一处",
+          "accentText": "改进",
+          "subtitle": "对比 GPT、DeepSeek 与 Kimi 的润色结果，并查看清晰差异。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "和翻译",
+          "accentText": "历史对话",
+          "subtitle": "把过往翻译整理成结构化注释和下一步行动。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "tr": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Ürün değerlendirmesi beş dakika içinde başlayacak."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Lütfen önemli kararları ve sorumluları kaydedin."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Toplantı bitmeden yayın tarihini doğrulayacağız."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Ürün inceleme toplantısı beş dakika sonra başlayacak."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Lütfen temel kararları ve ilgili sorumluları belgeleyin."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Yayın tarihi toplantı sona ermeden netleşecek."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Ürün değerlendirme oturumu beş dakika içinde başlıyor."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Ana kararları ve her eylemin sorumlusunu not edin."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Bu toplantı sona ermeden ürünün yayın tarihini kesinleştireceğiz."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Yayın güncellemesini açık bir Türkçeyle yeniden yaz ve ürün adlarını değiştirme."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo, Apple Translate, Nemotron Streaming 1120ms ve Apple Translation Realtime gibi ürün adlarını koruyarak yeni Mac gerçek zamanlı çeviri çalışma alanını bu ay kullanıma sunacak."
+          },
+          {
+            "role": "user",
+            "content": "Bunu net sonraki adımları olan kısa toplantı notlarına dönüştür."
+          },
+          {
+            "role": "assistant",
+            "content": "## Yayın güncellemesi\n\n- **Ürün:** Mac için TLingo\n- **Öne çıkan:** Çok modelli gerçek zamanlı çeviri\n- **Motorlar:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Sonraki adımlar\n\n1. İngilizce App Store ekran görüntülerini tamamlayın.\n2. Yerelleştirilmiş örnek içerikleri inceleyin.\n3. Yayın tarihini ürün ekibiyle doğrulayın.\n\n> Tüm dillerde model ve ürün adlarını değiştirmeyin."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Çevir",
+        "targetLanguage": "Türkçe",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "Yayın değerlendirmesi, Mac uygulamasının çevrimdışı çeviriyi, yan yana yapay zekâ modeli karşılaştırmasını ve üç gerçek zamanlı çeviri kanalını öne çıkaracağını doğruladı.",
+        "annotation": "### Temel kararlar\n\n- **Çevrimdışı çeviri** ve gizliliği öne çıkarın.\n- Birden fazla yapay zekâ sonucunu **yan yana** gösterin.\n- Mac çalışma alanında **üç gerçek zamanlı kanal** sergileyin.\n\n### Sonraki adım\n\n- [ ] Yerelleştirmeden önce son ekran görüntülerini inceleyin.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Kararları özetle ve bu geçmiş kaydına yapılandırılmış bir not ekle."
+          },
+          {
+            "role": "assistant",
+            "content": "Temel kararları Markdown notu olarak kaydettim ve ekran görüntülerinin yerelleştirmeye geçebilmesi için bir inceleme görevi ekledim."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Çevir",
+            "targetLanguage": "Türkçe",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Son çeviriyi seçmeden önce birden fazla yapay zekâ modelinin sonucunu karşılaştırın."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Çevir",
+            "targetLanguage": "Türkçe",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "Özel çeviri internet bağlantısı olmadan da kullanılabilmelidir."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Gerçek zamanlı",
+            "targetLanguage": "Türkçe",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Lütfen temel kararları ve ilgili sorumluları belgeleyin."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Gerçek zamanlı",
+            "targetLanguage": "Türkçe",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Yayın tarihi toplantı sona ermeden netleşecek."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Her Çeviriyi",
+          "accentText": "Karşılaştırın",
+          "subtitle": "Apple, Google, GPT, DeepSeek ve Kimi sonuçlarını yan yana inceleyin.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Gizli ve",
+          "accentText": "Çevrimdışı",
+          "subtitle": "Apple Translate ile çevirilerinizi Mac'inizde tutun.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Üç Canlı Kanal.",
+          "accentText": "Tek Mac.",
+          "subtitle": "Konuşma sürerken yerel ses ve çeviri motorlarını karşılaştırın.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Sohbeti",
+          "accentText": "Sürdürün",
+          "subtitle": "Takip soruları sorun ve düzenli Markdown yanıtları alın.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "Her İyileştirmeyi",
+          "accentText": "Görün",
+          "subtitle": "GPT, DeepSeek ve Kimi sonuçlarını net farklarla karşılaştırın.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Çeviri Geçmişinizle",
+          "accentText": "Sohbet Edin",
+          "subtitle": "Geçmiş çevirileri düzenli notlara ve sonraki adımlara dönüştürün.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "id": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Tinjauan produk dimulai lima menit lagi."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Catat keputusan utama dan penanggung jawabnya."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Kami akan mengonfirmasi tanggal peluncuran sebelum rapat berakhir."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Rapat tinjauan produk akan dimulai dalam lima menit."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Dokumentasikan keputusan penting beserta pihak yang bertanggung jawab."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Tanggal peluncuran akan dipastikan sebelum rapat selesai."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Sesi tinjauan produk dimulai lima menit lagi."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Catat keputusan utama dan pemilik setiap tindakan."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Kami akan menetapkan tanggal peluncuran produk sebelum rapat ini berakhir."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Tulis ulang pembaruan peluncuran dalam bahasa Indonesia yang jelas dan pertahankan nama produknya."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo akan meluncurkan ruang kerja terjemahan real-time baru di Mac bulan ini, dengan tetap mempertahankan nama Apple Translate, Nemotron Streaming 1120ms, dan Apple Translation Realtime."
+          },
+          {
+            "role": "user",
+            "content": "Ubah menjadi catatan rapat singkat dengan langkah berikutnya yang jelas."
+          },
+          {
+            "role": "assistant",
+            "content": "## Pembaruan peluncuran\n\n- **Produk:** TLingo untuk Mac\n- **Sorotan:** Terjemahan real-time multimodel\n- **Mesin:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Langkah berikutnya\n\n1. Selesaikan tangkapan layar App Store bahasa Inggris.\n2. Tinjau konten contoh yang dilokalkan.\n3. Konfirmasikan tanggal peluncuran dengan tim produk.\n\n> Pertahankan nama model dan produk dalam setiap bahasa."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Terjemahkan",
+        "targetLanguage": "Bahasa Indonesia",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "Tinjauan peluncuran memastikan bahwa aplikasi Mac akan menonjolkan terjemahan offline, perbandingan model AI berdampingan, dan tiga jalur terjemahan real-time.",
+        "annotation": "### Keputusan utama\n\n- Utamakan **terjemahan offline** dan privasi.\n- Tampilkan beberapa hasil AI **secara berdampingan**.\n- Gunakan ruang kerja Mac untuk memperlihatkan **tiga jalur real-time**.\n\n### Langkah berikutnya\n\n- [ ] Tinjau tangkapan layar akhir sebelum lokalisasi.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Ringkas keputusan ini dan simpan catatan terstruktur ke riwayat ini."
+          },
+          {
+            "role": "assistant",
+            "content": "Keputusan utama telah disimpan sebagai catatan Markdown. Saya juga menambahkan tugas peninjauan agar tangkapan layar siap dilokalkan."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Terjemahkan",
+            "targetLanguage": "Bahasa Indonesia",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Bandingkan hasil dari beberapa model AI sebelum memilih terjemahan akhir."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Terjemahkan",
+            "targetLanguage": "Bahasa Indonesia",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "Terjemahan privat harus tetap tersedia tanpa koneksi internet."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Real-time",
+            "targetLanguage": "Bahasa Indonesia",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Dokumentasikan keputusan penting beserta pihak yang bertanggung jawab."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Real-time",
+            "targetLanguage": "Bahasa Indonesia",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Tanggal peluncuran akan dipastikan sebelum rapat selesai."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Bandingkan Setiap",
+          "accentText": "Terjemahan",
+          "subtitle": "Lihat hasil Apple, Google, GPT, DeepSeek, dan Kimi secara berdampingan.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Privat dan",
+          "accentText": "Offline",
+          "subtitle": "Simpan terjemahan di Mac Anda dengan Apple Translate.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Tiga Jalur Langsung.",
+          "accentText": "Satu Mac.",
+          "subtitle": "Bandingkan mesin suara dan terjemahan saat percakapan berlangsung.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Lanjutkan",
+          "accentText": "Percakapan",
+          "subtitle": "Ajukan pertanyaan lanjutan dan dapatkan jawaban Markdown terstruktur.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "Lihat Setiap",
+          "accentText": "Perbaikan",
+          "subtitle": "Bandingkan hasil GPT, DeepSeek, dan Kimi dengan perbedaan yang jelas.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Mengobrol dengan",
+          "accentText": "Riwayat",
+          "subtitle": "Ubah terjemahan lama menjadi catatan dan langkah berikutnya.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "ja": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "製品レビューは5分後に始まります。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "重要な決定事項と担当者を記録してください。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "会議が終わる前にリリース日を確認します。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "製品レビュー会議は5分後に開始予定です。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "主要な決定事項と責任者を整理してください。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "リリース日は会議終了前に確定します。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "製品レビューのセッションが5分後に始まります。"
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "主な決定事項と各アクションの担当者を記録してください。"
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "この会議が終わるまでに製品のリリース日を確定します。"
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "製品名を変えずに、リリース情報を分かりやすい日本語に書き直してください。"
+          },
+          {
+            "role": "assistant",
+            "content": "TLingoは今月、Apple Translate、Nemotron Streaming 1120ms、Apple Translation Realtimeなどの製品名を維持したまま、新しいMac向けリアルタイム翻訳ワークスペースを提供します。"
+          },
+          {
+            "role": "user",
+            "content": "明確な次のステップを含む簡潔な会議メモにしてください。"
+          },
+          {
+            "role": "assistant",
+            "content": "## リリース情報\n\n- **製品:** TLingo for Mac\n- **特長:** マルチモデルのリアルタイム翻訳\n- **エンジン:** Apple Translate、Nemotron Streaming 1120ms、Apple Translation Realtime\n\n### 次のステップ\n\n1. 英語版App Storeスクリーンショットを完成させる。\n2. ローカライズされたモック内容を確認する。\n3. 製品チームとリリース日を確定する。\n\n> すべての言語でモデル名と製品名を維持してください。"
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "翻訳",
+        "targetLanguage": "日本語",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "リリースレビューでは、Macアプリがオフライン翻訳、AIモデルの並列比較、3つのリアルタイム翻訳レーンを強調することが確認されました。",
+        "annotation": "### 主な決定事項\n\n- **オフライン翻訳**とプライバシーを前面に出す。\n- 複数のAI結果を**並べて**表示する。\n- Macワークスペースで**3つのリアルタイムレーン**を紹介する。\n\n### 次のアクション\n\n- [ ] ローカライズ前に最終スクリーンショットを確認する。",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "決定事項を要約し、この履歴レコードに構造化されたメモを保存してください。"
+          },
+          {
+            "role": "assistant",
+            "content": "主な決定事項をMarkdownメモとして保存し、スクリーンショットをローカライズへ進めるための確認タスクも追加しました。"
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "翻訳",
+            "targetLanguage": "日本語",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "最終的な翻訳を選ぶ前に、複数のAIモデルの結果を比較します。"
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "翻訳",
+            "targetLanguage": "日本語",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "インターネット接続がなくてもプライベート翻訳を利用できます。"
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "リアルタイム",
+            "targetLanguage": "日本語",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "主要な決定事項と責任者を整理してください。"
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "リアルタイム",
+            "targetLanguage": "日本語",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "リリース日は会議終了前に確定します。"
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "すべての翻訳を",
+          "accentText": "比較",
+          "subtitle": "Apple、Google、GPT、DeepSeek、Kimiの結果を並べて確認。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "プライベートに",
+          "accentText": "オフライン翻訳",
+          "subtitle": "Apple Translateで翻訳をMac内に保持。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "3つのリアルタイムレーン。",
+          "accentText": "1台のMac。",
+          "subtitle": "会話中にローカル音声認識と翻訳エンジンを比較。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "会話を",
+          "accentText": "続ける",
+          "subtitle": "追加で質問し、構造化されたMarkdown回答を取得。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "すべての改善を",
+          "accentText": "確認",
+          "subtitle": "GPT、DeepSeek、Kimiの推敲結果を明確な差分で比較。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "翻訳履歴と",
+          "accentText": "チャット",
+          "subtitle": "過去の翻訳を整理されたメモと次の行動に変換。",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "de-DE": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Die Produktbesprechung beginnt in fünf Minuten."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Bitte halten Sie die wichtigsten Entscheidungen und Verantwortlichen fest."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Wir bestätigen den Veröffentlichungstermin vor Ende der Besprechung."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Die Produktbewertung startet planmäßig in fünf Minuten."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Bitte dokumentieren Sie die zentralen Entscheidungen und Zuständigkeiten."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Der Veröffentlichungstermin wird vor Ende der Besprechung bestätigt."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "Die Sitzung zur Produktbewertung beginnt in fünf Minuten."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Erfassen Sie die wichtigsten Entscheidungen und die Verantwortlichen jeder Maßnahme."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Wir legen den Veröffentlichungstermin noch vor Abschluss dieser Besprechung fest."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Formuliere das Veröffentlichungsupdate in klarem Deutsch und ändere die Produktnamen nicht."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo führt diesen Monat den neuen Mac-Arbeitsbereich für Echtzeitübersetzung ein. Produktnamen wie Apple Translate, Nemotron Streaming 1120ms und Apple Translation Realtime bleiben unverändert."
+          },
+          {
+            "role": "user",
+            "content": "Fasse es als kurze Besprechungsnotiz mit klaren nächsten Schritten zusammen."
+          },
+          {
+            "role": "assistant",
+            "content": "## Veröffentlichungsupdate\n\n- **Produkt:** TLingo für Mac\n- **Highlight:** Echtzeitübersetzung mit mehreren Modellen\n- **Engines:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Nächste Schritte\n\n1. Englische App-Store-Screenshots fertigstellen.\n2. Lokalisierte Beispieldaten prüfen.\n3. Veröffentlichungstermin mit dem Produktteam bestätigen.\n\n> Modell- und Produktnamen in jeder Sprache beibehalten."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Übersetzen",
+        "targetLanguage": "Deutsch",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "Die Veröffentlichungsprüfung bestätigte, dass die Mac-App Offline-Übersetzung, den direkten Vergleich von KI-Modellen und drei Echtzeit-Übersetzungsspuren hervorheben wird.",
+        "annotation": "### Wichtige Entscheidungen\n\n- **Offline-Übersetzung** und Datenschutz hervorheben.\n- Mehrere KI-Ergebnisse **nebeneinander** darstellen.\n- Im Mac-Arbeitsbereich **drei Echtzeitspuren** zeigen.\n\n### Nächste Aktion\n\n- [ ] Finale Screenshots vor der Lokalisierung prüfen.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Fasse die Entscheidungen zusammen und speichere eine strukturierte Notiz in diesem Verlauf."
+          },
+          {
+            "role": "assistant",
+            "content": "Die wichtigsten Entscheidungen wurden als Markdown-Notiz gespeichert. Zusätzlich wurde eine Prüfaufgabe für die Lokalisierung der Screenshots angelegt."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Übersetzen",
+            "targetLanguage": "Deutsch",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Vergleichen Sie die Ergebnisse mehrerer KI-Modelle, bevor Sie die endgültige Übersetzung auswählen."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Übersetzen",
+            "targetLanguage": "Deutsch",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "Private Übersetzung bleibt auch ohne Internetverbindung verfügbar."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Echtzeit",
+            "targetLanguage": "Deutsch",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Bitte dokumentieren Sie die zentralen Entscheidungen und Zuständigkeiten."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Echtzeit",
+            "targetLanguage": "Deutsch",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Der Veröffentlichungstermin wird vor Ende der Besprechung bestätigt."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Jede Übersetzung",
+          "accentText": "Vergleichen",
+          "subtitle": "Apple, Google, GPT, DeepSeek und Kimi direkt nebeneinander prüfen.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Privat und",
+          "accentText": "Offline",
+          "subtitle": "Übersetzungen mit Apple Translate auf dem Mac behalten.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Drei Echtzeitspuren.",
+          "accentText": "Ein Mac.",
+          "subtitle": "Lokale Sprach- und Übersetzungsmodelle während des Gesprächs vergleichen.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Im Gespräch",
+          "accentText": "Bleiben",
+          "subtitle": "Nachfragen stellen und strukturierte Markdown-Antworten erhalten.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "Jede Verbesserung",
+          "accentText": "Erkennen",
+          "subtitle": "Überarbeitungen von GPT, DeepSeek und Kimi mit klaren Unterschieden vergleichen.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Mit dem Verlauf",
+          "accentText": "Chatten",
+          "subtitle": "Frühere Übersetzungen in strukturierte Notizen und Aufgaben verwandeln.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "fr-FR": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La revue du produit commence dans cinq minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Veuillez noter les décisions clés et leurs responsables."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Nous confirmerons la date de lancement avant la fin de la réunion."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La réunion de revue produit débutera dans cinq minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Veuillez consigner les décisions importantes et les personnes responsables."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "La date de lancement sera confirmée avant la fin de la réunion."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La session de revue du produit commence dans cinq minutes."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Notez les principales décisions et le responsable de chaque action."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Nous finaliserons la date de lancement du produit avant la fin de cette réunion."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Réécris le point de lancement en français clair sans modifier les noms de produits."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo lancera ce mois-ci son nouvel espace de traduction en temps réel sur Mac, tout en conservant les noms Apple Translate, Nemotron Streaming 1120ms et Apple Translation Realtime."
+          },
+          {
+            "role": "user",
+            "content": "Transforme-le en notes de réunion concises avec des prochaines étapes claires."
+          },
+          {
+            "role": "assistant",
+            "content": "## Point de lancement\n\n- **Produit :** TLingo pour Mac\n- **Atout :** Traduction en temps réel multi-modèles\n- **Moteurs :** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Prochaines étapes\n\n1. Finaliser les captures App Store en anglais.\n2. Vérifier les exemples localisés.\n3. Confirmer la date de lancement avec l'équipe produit.\n\n> Conserver les noms des modèles et produits dans chaque langue."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Traduire",
+        "targetLanguage": "Français",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "La revue de lancement a confirmé que l'app Mac mettra en avant la traduction hors ligne, la comparaison côte à côte de modèles d'IA et trois pistes de traduction en temps réel.",
+        "annotation": "### Décisions clés\n\n- Mettre en avant la **traduction hors ligne** et la confidentialité.\n- Afficher plusieurs résultats d'IA **côte à côte**.\n- Présenter **trois pistes en temps réel** dans l'espace Mac.\n\n### Prochaine action\n\n- [ ] Vérifier les captures finales avant la localisation.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Résume les décisions et enregistre une note structurée dans cet historique."
+          },
+          {
+            "role": "assistant",
+            "content": "Les décisions clés ont été enregistrées dans une note Markdown. J'ai aussi ajouté une tâche de vérification avant la localisation des captures."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Traduire",
+            "targetLanguage": "Français",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Comparez les résultats de plusieurs modèles d'IA avant de choisir la traduction finale."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Traduire",
+            "targetLanguage": "Français",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "La traduction privée reste disponible sans connexion Internet."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Temps réel",
+            "targetLanguage": "Français",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Veuillez consigner les décisions importantes et les personnes responsables."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Temps réel",
+            "targetLanguage": "Français",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "La date de lancement sera confirmée avant la fin de la réunion."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Comparez Chaque",
+          "accentText": "Traduction",
+          "subtitle": "Examinez côte à côte les résultats Apple, Google, GPT, DeepSeek et Kimi.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Privée et",
+          "accentText": "Hors Ligne",
+          "subtitle": "Gardez vos traductions sur votre Mac avec Apple Translate.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Trois Pistes en Direct.",
+          "accentText": "Un Mac.",
+          "subtitle": "Comparez les moteurs locaux de voix et de traduction pendant la conversation.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Poursuivez la",
+          "accentText": "Conversation",
+          "subtitle": "Posez des questions et obtenez des réponses Markdown structurées.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "Voyez Chaque",
+          "accentText": "Amélioration",
+          "subtitle": "Comparez les réécritures de GPT, DeepSeek et Kimi avec des différences claires.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Discutez avec Votre",
+          "accentText": "Historique",
+          "subtitle": "Transformez vos traductions en notes structurées et prochaines actions.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "es-ES": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La revisión del producto comienza en cinco minutos."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Anota las decisiones clave y sus responsables."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Confirmaremos la fecha de lanzamiento antes de que termine la reunión."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La reunión de revisión del producto empezará dentro de cinco minutos."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Documenta las decisiones principales y las personas responsables."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "La fecha de lanzamiento quedará confirmada antes de finalizar la reunión."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {
+              "source": "The product review starts in five minutes.",
+              "translation": "La sesión de revisión del producto comienza en cinco minutos."
+            },
+            {
+              "source": "Please capture the key decisions and owners.",
+              "translation": "Registra las decisiones clave y el responsable de cada acción."
+            }
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Cerraremos la fecha de lanzamiento del producto antes de que termine esta reunión."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reescribe la actualización de lanzamiento en un español claro y conserva los nombres de producto."
+          },
+          {
+            "role": "assistant",
+            "content": "TLingo presentará este mes su nuevo espacio de traducción en tiempo real para Mac, manteniendo nombres como Apple Translate, Nemotron Streaming 1120ms y Apple Translation Realtime."
+          },
+          {
+            "role": "user",
+            "content": "Conviértelo en notas breves de reunión con próximos pasos claros."
+          },
+          {
+            "role": "assistant",
+            "content": "## Actualización de lanzamiento\n\n- **Producto:** TLingo para Mac\n- **Destacado:** Traducción en tiempo real con varios modelos\n- **Motores:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Próximos pasos\n\n1. Finalizar las capturas del App Store en inglés.\n2. Revisar el contenido de ejemplo localizado.\n3. Confirmar la fecha de lanzamiento con el equipo de producto.\n\n> Mantener los nombres de modelos y productos en todos los idiomas."
+          }
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Traducir",
+        "targetLanguage": "Español",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "La revisión de lanzamiento confirmó que la app para Mac destacará la traducción sin conexión, la comparación de modelos de IA en paralelo y tres pistas de traducción en tiempo real.",
+        "annotation": "### Decisiones clave\n\n- Destacar la **traducción sin conexión** y la privacidad.\n- Mostrar varios resultados de IA **en paralelo**.\n- Usar el espacio de Mac para presentar **tres pistas en tiempo real**.\n\n### Próxima acción\n\n- [ ] Revisar las capturas finales antes de localizarlas.",
+        "chatMessages": [
+          {
+            "role": "user",
+            "content": "Resume las decisiones y guarda una nota estructurada en este registro del historial."
+          },
+          {
+            "role": "assistant",
+            "content": "He guardado las decisiones clave como una nota Markdown y he añadido una tarea de revisión antes de localizar las capturas."
+          }
+        ],
+        "sidebarRecords": [
+          {
+            "kind": "text",
+            "sourceText": "Compare results from multiple AI models before choosing the final translation.",
+            "actionName": "Traducir",
+            "targetLanguage": "Español",
+            "modelID": "gpt-5.4",
+            "modelDisplayName": "GPT-5.4",
+            "resultText": "Compara los resultados de varios modelos de IA antes de elegir la traducción final."
+          },
+          {
+            "kind": "text",
+            "sourceText": "Private translation should remain available without an internet connection.",
+            "actionName": "Traducir",
+            "targetLanguage": "Español",
+            "modelID": "apple-translate",
+            "modelDisplayName": "Apple Translate",
+            "resultText": "La traducción privada sigue disponible sin conexión a Internet."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "Please capture the key decisions and owners.",
+            "actionName": "Tiempo real",
+            "targetLanguage": "Español",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "Documenta las decisiones principales y las personas responsables."
+          },
+          {
+            "kind": "realtime",
+            "sourceText": "We will confirm the launch date before the meeting ends.",
+            "actionName": "Tiempo real",
+            "targetLanguage": "Español",
+            "modelID": "apple-translation-realtime",
+            "modelDisplayName": "Apple Translation Realtime",
+            "resultText": "La fecha de lanzamiento quedará confirmada antes de finalizar la reunión."
+          }
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {
+          "headline": "Compara Cada",
+          "accentText": "Traducción",
+          "subtitle": "Revisa Apple, Google, GPT, DeepSeek y Kimi en paralelo.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "02_Offline": {
+          "headline": "Privada y",
+          "accentText": "Sin Conexión",
+          "subtitle": "Mantén las traducciones en tu Mac con Apple Translate.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "03_RealtimeMultiLane": {
+          "headline": "Tres Pistas en Directo.",
+          "accentText": "Un Mac.",
+          "subtitle": "Compara motores locales de voz y traducción mientras conversas.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "04_Conversation": {
+          "headline": "Mantén la",
+          "accentText": "Conversación",
+          "subtitle": "Haz preguntas y recibe respuestas Markdown estructuradas.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "05_Polish": {
+          "headline": "Ve Cada",
+          "accentText": "Mejora",
+          "subtitle": "Compara GPT, DeepSeek y Kimi con diferencias claras.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        },
+        "06_HistoryChat": {
+          "headline": "Habla con tu",
+          "accentText": "Historial",
+          "subtitle": "Convierte traducciones anteriores en notas y próximos pasos.",
+          "accent": "#5279F8",
+          "background": "#17191C"
+        }
+      }
+    },
+    "ko": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "제품 검토가 5분 후에 시작됩니다."},
+            {"source": "Please capture the key decisions and owners.", "translation": "주요 결정 사항과 담당자를 기록해 주세요."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "회의가 끝나기 전에 출시일을 확인하겠습니다."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "제품 검토 회의가 5분 뒤에 시작될 예정입니다."},
+            {"source": "Please capture the key decisions and owners.", "translation": "핵심 결정 사항과 각 담당자를 정리해 주세요."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "회의 종료 전에 출시일을 확정할 예정입니다."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "제품 검토 세션이 5분 후 시작됩니다."},
+            {"source": "Please capture the key decisions and owners.", "translation": "주요 결정과 각 실행 항목의 담당자를 기록해 주세요."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "이번 회의가 끝나기 전에 제품 출시일을 최종 확정하겠습니다."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "제품 이름은 유지하면서 출시 업데이트를 명확한 한국어로 다시 작성해 주세요."},
+          {"role": "assistant", "content": "TLingo는 Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime 등의 제품 이름을 유지하면서 이번 달 새로운 Mac 실시간 번역 작업 공간을 선보입니다."},
+          {"role": "user", "content": "명확한 다음 단계가 포함된 간결한 회의록으로 정리해 주세요."},
+          {"role": "assistant", "content": "## 출시 업데이트\n\n- **제품:** Mac용 TLingo\n- **핵심:** 다중 모델 실시간 번역\n- **엔진:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### 다음 단계\n\n1. 영어 App Store 스크린샷을 완료합니다.\n2. 현지화된 예시 콘텐츠를 검토합니다.\n3. 제품 팀과 출시일을 확정합니다.\n\n> 모든 언어에서 모델과 제품 이름을 유지합니다."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "번역",
+        "targetLanguage": "한국어",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "출시 검토에서 Mac 앱이 오프라인 번역, AI 모델 나란히 비교, 세 개의 실시간 번역 레인을 강조하기로 확인했습니다.",
+        "annotation": "### 주요 결정\n\n- **오프라인 번역**과 개인정보 보호를 강조합니다.\n- 여러 AI 결과를 **나란히** 표시합니다.\n- Mac 작업 공간에서 **세 개의 실시간 레인**을 보여 줍니다.\n\n### 다음 작업\n\n- [ ] 현지화 전에 최종 스크린샷을 검토합니다.",
+        "chatMessages": [
+          {"role": "user", "content": "결정 사항을 요약하고 이 기록에 구조화된 메모로 저장해 주세요."},
+          {"role": "assistant", "content": "주요 결정 사항을 Markdown 메모로 저장하고 스크린샷 현지화를 위한 검토 작업도 추가했습니다."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "번역", "targetLanguage": "한국어", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "최종 번역을 선택하기 전에 여러 AI 모델의 결과를 비교하세요."},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "번역", "targetLanguage": "한국어", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "인터넷 연결 없이도 비공개 번역을 사용할 수 있습니다."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "실시간", "targetLanguage": "한국어", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "핵심 결정 사항과 각 담당자를 정리해 주세요."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "실시간", "targetLanguage": "한국어", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "회의 종료 전에 출시일을 확정할 예정입니다."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "모든 번역을", "accentText": "비교하세요", "subtitle": "Apple, Google, GPT, DeepSeek, Kimi 결과를 나란히 확인하세요.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "개인정보를 지키는", "accentText": "오프라인 번역", "subtitle": "Apple Translate로 번역을 Mac 안에 유지하세요.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "세 개의 실시간 레인.", "accentText": "하나의 Mac.", "subtitle": "대화 중 로컬 음성 및 번역 엔진을 비교하세요.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "대화를", "accentText": "계속하세요", "subtitle": "추가 질문을 하고 구조화된 Markdown 답변을 받으세요.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "모든 개선을", "accentText": "확인하세요", "subtitle": "GPT, DeepSeek, Kimi의 다듬기 결과와 차이를 비교하세요.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "번역 기록과", "accentText": "대화하세요", "subtitle": "지난 번역을 구조화된 메모와 다음 작업으로 바꾸세요.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "pt-BR": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "A revisão do produto começa em cinco minutos."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Registre as principais decisões e os responsáveis."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Vamos confirmar a data de lançamento antes do fim da reunião."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "A reunião de revisão do produto começará em cinco minutos."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Documente as decisões importantes e seus responsáveis."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "A data de lançamento será confirmada antes do término da reunião."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "A sessão de revisão do produto começa em cinco minutos."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Anote as decisões principais e o responsável por cada ação."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Definiremos a data de lançamento do produto antes do fim desta reunião."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "Reescreva a atualização de lançamento em português claro e mantenha os nomes dos produtos."},
+          {"role": "assistant", "content": "O TLingo lançará neste mês seu novo espaço de tradução em tempo real para Mac, mantendo nomes como Apple Translate, Nemotron Streaming 1120ms e Apple Translation Realtime."},
+          {"role": "user", "content": "Transforme em notas curtas de reunião com próximos passos claros."},
+          {"role": "assistant", "content": "## Atualização de lançamento\n\n- **Produto:** TLingo para Mac\n- **Destaque:** Tradução em tempo real com vários modelos\n- **Mecanismos:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Próximos passos\n\n1. Finalizar as capturas em inglês da App Store.\n2. Revisar o conteúdo localizado.\n3. Confirmar a data de lançamento com a equipe de produto.\n\n> Manter os nomes dos modelos e produtos em todos os idiomas."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Traduzir",
+        "targetLanguage": "Português",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "A revisão de lançamento confirmou que o app para Mac destacará tradução offline, comparação lado a lado de modelos de IA e três pistas de tradução em tempo real.",
+        "annotation": "### Decisões principais\n\n- Destacar a **tradução offline** e a privacidade.\n- Mostrar vários resultados de IA **lado a lado**.\n- Apresentar **três pistas em tempo real** no espaço do Mac.\n\n### Próxima ação\n\n- [ ] Revisar as capturas finais antes da localização.",
+        "chatMessages": [
+          {"role": "user", "content": "Resuma as decisões e salve uma nota estruturada neste registro."},
+          {"role": "assistant", "content": "As decisões principais foram salvas como uma nota Markdown. Também adicionei uma tarefa de revisão antes da localização das capturas."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "Traduzir", "targetLanguage": "Português", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "Compare os resultados de vários modelos de IA antes de escolher a tradução final."},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "Traduzir", "targetLanguage": "Português", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "A tradução privada continua disponível sem conexão com a internet."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "Tempo real", "targetLanguage": "Português", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Documente as decisões importantes e seus responsáveis."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "Tempo real", "targetLanguage": "Português", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "A data de lançamento será confirmada antes do término da reunião."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "Compare Cada", "accentText": "Tradução", "subtitle": "Veja Apple, Google, GPT, DeepSeek e Kimi lado a lado.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "Privada e", "accentText": "Offline", "subtitle": "Mantenha as traduções no seu Mac com Apple Translate.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "Três Pistas ao Vivo.", "accentText": "Um Mac.", "subtitle": "Compare mecanismos locais de voz e tradução durante a conversa.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "Continue a", "accentText": "Conversa", "subtitle": "Faça perguntas e receba respostas estruturadas em Markdown.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "Veja Cada", "accentText": "Melhoria", "subtitle": "Compare GPT, DeepSeek e Kimi com diferenças claras.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "Converse com seu", "accentText": "Histórico", "subtitle": "Transforme traduções antigas em notas e próximas ações.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "zh-Hant": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "產品評審將在五分鐘後開始。"},
+            {"source": "Please capture the key decisions and owners.", "translation": "請記錄關鍵決策和負責人。"}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "我們會在會議結束前確認發布日期。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "產品評審會議將在五分鐘後開始。"},
+            {"source": "Please capture the key decisions and owners.", "translation": "請整理關鍵決策及其負責人。"}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "發布日期會在會議結束前確認。"
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "產品評審將於五分鐘後開始。"},
+            {"source": "Please capture the key decisions and owners.", "translation": "請記下主要決策與每項工作的負責人。"}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "我們會在本次會議結束前敲定產品發布日期。"
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "請將發布更新改寫成清楚的繁體中文，並保留產品名稱。"},
+          {"role": "assistant", "content": "TLingo 本月將推出全新的 Mac 即時翻譯工作區，同時保留 Apple Translate、Nemotron Streaming 1120ms 和 Apple Translation Realtime 等產品名稱。"},
+          {"role": "user", "content": "整理成簡潔的會議紀要，並列出明確的下一步。"},
+          {"role": "assistant", "content": "## 發布更新\n\n- **產品：** TLingo for Mac\n- **重點：** 多模型即時翻譯\n- **引擎：** Apple Translate、Nemotron Streaming 1120ms、Apple Translation Realtime\n\n### 下一步\n\n1. 完成英文 App Store 截圖。\n2. 審核本地化模擬內容。\n3. 與產品團隊確認發布日期。\n\n> 所有語言都保留模型和產品名稱。"}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "翻譯",
+        "targetLanguage": "繁體中文",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "發布評審確認，Mac 版將重點展示離線翻譯、並排 AI 模型比較，以及三條即時翻譯軌道。",
+        "annotation": "### 關鍵決策\n\n- 以 **離線翻譯** 和隱私為重點。\n- 並排展示多個 AI 模型結果。\n- 用 Mac 工作區呈現 **三條即時翻譯軌道**。\n\n### 下一步\n\n- [ ] 本地化前審核最終截圖。",
+        "chatMessages": [
+          {"role": "user", "content": "總結這些決策，並把結構化註記儲存到這筆歷史記錄。"},
+          {"role": "assistant", "content": "已將關鍵決策儲存為 Markdown 註記，並加入截圖本地化前的審核工作。"}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "翻譯", "targetLanguage": "繁體中文", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "選擇最終譯文前，先比較多個 AI 模型的結果。"},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "翻譯", "targetLanguage": "繁體中文", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "即使沒有網路，也能繼續使用私密翻譯。"},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "即時翻譯", "targetLanguage": "繁體中文", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "請整理關鍵決策及其負責人。"},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "即時翻譯", "targetLanguage": "繁體中文", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "發布日期會在會議結束前確認。"}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "比較每一種", "accentText": "翻譯", "subtitle": "並排查看 Apple、Google、GPT、DeepSeek 與 Kimi 的結果。", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "私密翻譯，", "accentText": "離線可用", "subtitle": "使用 Apple Translate，讓翻譯留在你的 Mac。", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "三條即時軌道，", "accentText": "一台 Mac", "subtitle": "在對話進行時比較本地語音與翻譯引擎。", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "讓對話", "accentText": "繼續", "subtitle": "繼續追問，並取得結構化 Markdown 回答。", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "看清每一處", "accentText": "改進", "subtitle": "比較 GPT、DeepSeek 與 Kimi 的潤色結果和清楚差異。", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "和翻譯", "accentText": "歷史對話", "subtitle": "把過往翻譯整理成結構化註記和下一步。", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "ar-SA": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "تبدأ مراجعة المنتج بعد خمس دقائق."},
+            {"source": "Please capture the key decisions and owners.", "translation": "يرجى تسجيل القرارات الرئيسية والمسؤولين عنها."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "سنؤكد تاريخ الإطلاق قبل انتهاء الاجتماع."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "سيبدأ اجتماع مراجعة المنتج خلال خمس دقائق."},
+            {"source": "Please capture the key decisions and owners.", "translation": "يرجى توثيق القرارات المهمة والأشخاص المسؤولين."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "سيتم تأكيد تاريخ الإطلاق قبل نهاية الاجتماع."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "تبدأ جلسة مراجعة المنتج بعد خمس دقائق."},
+            {"source": "Please capture the key decisions and owners.", "translation": "سجّل القرارات الرئيسية والمسؤول عن كل إجراء."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "سنحدد تاريخ إطلاق المنتج قبل انتهاء هذا الاجتماع."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "أعد كتابة تحديث الإطلاق بالعربية الواضحة مع إبقاء أسماء المنتجات كما هي."},
+          {"role": "assistant", "content": "سيقدم TLingo هذا الشهر مساحة العمل الجديدة للترجمة الفورية على Mac، مع الحفاظ على أسماء Apple Translate وNemotron Streaming 1120ms وApple Translation Realtime."},
+          {"role": "user", "content": "حوّله إلى ملاحظات اجتماع موجزة تتضمن خطوات تالية واضحة."},
+          {"role": "assistant", "content": "## تحديث الإطلاق\n\n- **المنتج:** TLingo على Mac\n- **الميزة:** ترجمة فورية متعددة النماذج\n- **المحركات:** Apple Translate وNemotron Streaming 1120ms وApple Translation Realtime\n\n### الخطوات التالية\n\n1. إكمال لقطات App Store الإنجليزية.\n2. مراجعة المحتوى التجريبي المترجم.\n3. تأكيد تاريخ الإطلاق مع فريق المنتج.\n\n> احتفظ بأسماء النماذج والمنتجات في جميع اللغات."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "ترجمة",
+        "targetLanguage": "العربية",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "أكدت مراجعة الإطلاق أن تطبيق Mac سيبرز الترجمة دون اتصال ومقارنة نماذج الذكاء الاصطناعي جنبًا إلى جنب وثلاثة مسارات للترجمة الفورية.",
+        "annotation": "### القرارات الرئيسية\n\n- إبراز **الترجمة دون اتصال** والخصوصية.\n- عرض نتائج نماذج الذكاء الاصطناعي **جنبًا إلى جنب**.\n- إظهار **ثلاثة مسارات فورية** في مساحة عمل Mac.\n\n### الإجراء التالي\n\n- [ ] مراجعة اللقطات النهائية قبل الترجمة.",
+        "chatMessages": [
+          {"role": "user", "content": "لخص القرارات واحفظ ملاحظة منظمة في سجل الترجمة هذا."},
+          {"role": "assistant", "content": "تم حفظ القرارات الرئيسية كملاحظة Markdown، وإضافة مهمة مراجعة قبل ترجمة لقطات الشاشة."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "ترجمة", "targetLanguage": "العربية", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "قارن نتائج عدة نماذج ذكاء اصطناعي قبل اختيار الترجمة النهائية."},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "ترجمة", "targetLanguage": "العربية", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "تظل الترجمة الخاصة متاحة دون اتصال بالإنترنت."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "ترجمة فورية", "targetLanguage": "العربية", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "يرجى توثيق القرارات المهمة والأشخاص المسؤولين."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "ترجمة فورية", "targetLanguage": "العربية", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "سيتم تأكيد تاريخ الإطلاق قبل نهاية الاجتماع."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "قارن كل", "accentText": "ترجمة", "subtitle": "راجع نتائج Apple وGoogle وGPT وDeepSeek وKimi جنبًا إلى جنب.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "ترجمة خاصة،", "accentText": "دون اتصال", "subtitle": "احتفظ بالترجمة على Mac باستخدام Apple Translate.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "ثلاثة مسارات فورية.", "accentText": "جهاز Mac واحد.", "subtitle": "قارن محركات الصوت والترجمة المحلية أثناء المحادثة.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "واصل", "accentText": "المحادثة", "subtitle": "اطرح أسئلة متابعة واحصل على إجابات Markdown منظمة.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "شاهد كل", "accentText": "تحسين", "subtitle": "قارن نتائج GPT وDeepSeek وKimi مع فروق واضحة.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "تحدث مع", "accentText": "سجل الترجمة", "subtitle": "حوّل الترجمات السابقة إلى ملاحظات وخطوات تالية.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "it": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "La revisione del prodotto inizia tra cinque minuti."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Annota le decisioni principali e i responsabili."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Confermeremo la data di lancio prima della fine della riunione."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "La riunione di revisione del prodotto inizierà tra cinque minuti."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Documenta le decisioni importanti e le persone responsabili."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "La data di lancio sarà confermata prima del termine della riunione."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "La sessione di revisione del prodotto comincia tra cinque minuti."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Registra le decisioni chiave e il responsabile di ogni azione."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Definiremo la data di lancio del prodotto prima della fine di questa riunione."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "Riscrivi l'aggiornamento sul lancio in italiano chiaro e mantieni invariati i nomi dei prodotti."},
+          {"role": "assistant", "content": "TLingo introdurrà questo mese il nuovo spazio di traduzione in tempo reale per Mac, mantenendo nomi come Apple Translate, Nemotron Streaming 1120ms e Apple Translation Realtime."},
+          {"role": "user", "content": "Trasformalo in brevi note di riunione con prossimi passi chiari."},
+          {"role": "assistant", "content": "## Aggiornamento sul lancio\n\n- **Prodotto:** TLingo per Mac\n- **In evidenza:** Traduzione in tempo reale multi-modello\n- **Motori:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Prossimi passi\n\n1. Completare gli screenshot App Store in inglese.\n2. Verificare i contenuti localizzati.\n3. Confermare la data di lancio con il team di prodotto.\n\n> Mantenere invariati i nomi di modelli e prodotti in ogni lingua."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Traduci",
+        "targetLanguage": "Italiano",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "La revisione del lancio ha confermato che l'app per Mac metterà in evidenza la traduzione offline, il confronto affiancato dei modelli IA e tre corsie di traduzione in tempo reale.",
+        "annotation": "### Decisioni principali\n\n- Mettere in evidenza la **traduzione offline** e la privacy.\n- Mostrare più risultati IA **affiancati**.\n- Presentare **tre corsie in tempo reale** nello spazio Mac.\n\n### Prossima azione\n\n- [ ] Verificare gli screenshot finali prima della localizzazione.",
+        "chatMessages": [
+          {"role": "user", "content": "Riassumi le decisioni e salva una nota strutturata in questo elemento della cronologia."},
+          {"role": "assistant", "content": "Le decisioni principali sono state salvate come nota Markdown. Ho anche aggiunto un'attività di verifica prima della localizzazione degli screenshot."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "Traduci", "targetLanguage": "Italiano", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "Confronta i risultati di più modelli IA prima di scegliere la traduzione finale."},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "Traduci", "targetLanguage": "Italiano", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "La traduzione privata resta disponibile anche senza connessione Internet."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "Tempo reale", "targetLanguage": "Italiano", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Documenta le decisioni importanti e le persone responsabili."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "Tempo reale", "targetLanguage": "Italiano", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "La data di lancio sarà confermata prima del termine della riunione."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "Confronta Ogni", "accentText": "Traduzione", "subtitle": "Esamina Apple, Google, GPT, DeepSeek e Kimi fianco a fianco.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "Privata e", "accentText": "Offline", "subtitle": "Mantieni le traduzioni sul Mac con Apple Translate.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "Tre Corsie Live.", "accentText": "Un Mac.", "subtitle": "Confronta motori locali di voce e traduzione durante la conversazione.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "Continua la", "accentText": "Conversazione", "subtitle": "Fai domande e ottieni risposte Markdown strutturate.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "Vedi Ogni", "accentText": "Miglioramento", "subtitle": "Confronta GPT, DeepSeek e Kimi con differenze chiare.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "Parla con la", "accentText": "Cronologia", "subtitle": "Trasforma le traduzioni passate in note e prossime azioni.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "pl": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translator",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Przegląd produktu rozpocznie się za pięć minut."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Zapisz najważniejsze decyzje i osoby odpowiedzialne."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Potwierdzimy datę premiery przed końcem spotkania."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Spotkanie dotyczące przeglądu produktu zacznie się za pięć minut."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Udokumentuj kluczowe decyzje i przypisane do nich osoby."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Data premiery zostanie potwierdzona przed zakończeniem spotkania."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Sesja przeglądu produktu rozpocznie się za pięć minut."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Zanotuj główne decyzje i właściciela każdego działania."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Ustalimy datę premiery produktu przed końcem tego spotkania."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "Przepisz aktualizację dotyczącą premiery jasnym językiem polskim i zachowaj nazwy produktów."},
+          {"role": "assistant", "content": "TLingo wprowadzi w tym miesiącu nową przestrzeń tłumaczenia w czasie rzeczywistym na Macu, zachowując nazwy Apple Translate, Nemotron Streaming 1120ms i Apple Translation Realtime."},
+          {"role": "user", "content": "Zmień to w krótkie notatki ze spotkania z jasnymi kolejnymi krokami."},
+          {"role": "assistant", "content": "## Aktualizacja premiery\n\n- **Produkt:** TLingo na Maca\n- **Najważniejsze:** Tłumaczenie w czasie rzeczywistym z wieloma modelami\n- **Silniki:** Apple Translate, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Kolejne kroki\n\n1. Ukończyć angielskie zrzuty ekranu App Store.\n2. Sprawdzić zlokalizowane treści przykładowe.\n3. Potwierdzić datę premiery z zespołem produktu.\n\n> Zachowaj nazwy modeli i produktów we wszystkich językach."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Tłumacz",
+        "targetLanguage": "Polski",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "Przegląd premiery potwierdził, że aplikacja na Maca wyróżni tłumaczenie offline, porównanie modeli AI obok siebie i trzy ścieżki tłumaczenia w czasie rzeczywistym.",
+        "annotation": "### Najważniejsze decyzje\n\n- Wyróżnić **tłumaczenie offline** i prywatność.\n- Pokazać wiele wyników AI **obok siebie**.\n- Zaprezentować **trzy ścieżki na żywo** w przestrzeni Maca.\n\n### Kolejne działanie\n\n- [ ] Sprawdzić końcowe zrzuty przed lokalizacją.",
+        "chatMessages": [
+          {"role": "user", "content": "Podsumuj decyzje i zapisz uporządkowaną notatkę w tym wpisie historii."},
+          {"role": "assistant", "content": "Najważniejsze decyzje zapisano jako notatkę Markdown. Dodano też zadanie przeglądu przed lokalizacją zrzutów."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "Tłumacz", "targetLanguage": "Polski", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "Porównaj wyniki wielu modeli AI przed wyborem ostatecznego tłumaczenia."},
+          {"kind": "text", "sourceText": "Private translation should remain available without an internet connection.", "actionName": "Tłumacz", "targetLanguage": "Polski", "modelID": "apple-translate", "modelDisplayName": "Apple Translate", "resultText": "Prywatne tłumaczenie pozostaje dostępne bez połączenia z internetem."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "Na żywo", "targetLanguage": "Polski", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Udokumentuj kluczowe decyzje i przypisane do nich osoby."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "Na żywo", "targetLanguage": "Polski", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Data premiery zostanie potwierdzona przed zakończeniem spotkania."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "Porównaj Każde", "accentText": "Tłumaczenie", "subtitle": "Sprawdź obok siebie Apple, Google, GPT, DeepSeek i Kimi.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "Prywatnie i", "accentText": "Offline", "subtitle": "Zachowaj tłumaczenia na Macu dzięki Apple Translate.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "Trzy Ścieżki Na Żywo.", "accentText": "Jeden Mac.", "subtitle": "Porównuj lokalne silniki mowy i tłumaczenia podczas rozmowy.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "Kontynuuj", "accentText": "Rozmowę", "subtitle": "Zadawaj pytania i otrzymuj uporządkowane odpowiedzi Markdown.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "Zobacz Każdą", "accentText": "Poprawę", "subtitle": "Porównaj wyniki GPT, DeepSeek i Kimi z wyraźnymi różnicami.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "Rozmawiaj z", "accentText": "Historią", "subtitle": "Zamień wcześniejsze tłumaczenia w notatki i kolejne działania.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    },
+    "ms": {
+      "realtimeLanes": [
+        {
+          "recognitionModelID": "apple-speech",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Semakan produk bermula dalam lima minit."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Catat keputusan utama dan pihak yang bertanggungjawab."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Kami akan mengesahkan tarikh pelancaran sebelum mesyuarat berakhir."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-1120ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Mesyuarat semakan produk akan bermula dalam lima minit."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Dokumentasikan keputusan penting dan pihak yang bertanggungjawab."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Tarikh pelancaran akan disahkan sebelum mesyuarat tamat."
+        },
+        {
+          "recognitionModelID": "nemotron-streaming-560ms",
+          "translationProviderID": "apple_translation_realtime",
+          "segments": [
+            {"source": "The product review starts in five minutes.", "translation": "Sesi semakan produk bermula dalam lima minit."},
+            {"source": "Please capture the key decisions and owners.", "translation": "Catat keputusan utama dan pemilik setiap tindakan."}
+          ],
+          "pendingSource": "We will confirm the launch date before the meeting ends.",
+          "pendingTranslation": "Kami akan menetapkan tarikh pelancaran produk sebelum mesyuarat ini berakhir."
+        }
+      ],
+      "conversation": {
+        "messages": [
+          {"role": "user", "content": "Tulis semula kemas kini pelancaran dalam Bahasa Melayu yang jelas dan kekalkan nama produk."},
+          {"role": "assistant", "content": "TLingo akan memperkenalkan ruang kerja terjemahan masa nyata baharu untuk Mac bulan ini dengan Apple Speech, Nemotron Streaming 1120ms dan Apple Translation Realtime."},
+          {"role": "user", "content": "Tukarkannya kepada nota mesyuarat ringkas dengan langkah seterusnya yang jelas."},
+          {"role": "assistant", "content": "## Kemas kini pelancaran\n\n- **Produk:** TLingo untuk Mac\n- **Sorotan:** Terjemahan masa nyata berbilang model\n- **Enjin:** Apple Speech, Nemotron Streaming 1120ms, Apple Translation Realtime\n\n### Langkah seterusnya\n\n1. Lengkapkan tangkapan skrin App Store bahasa Inggeris.\n2. Semak kandungan contoh yang disetempatkan.\n3. Sahkan tarikh pelancaran dengan pasukan produk.\n\n> Kekalkan nama model dan produk dalam setiap bahasa."}
+        ]
+      },
+      "history": {
+        "sourceText": "The launch review confirmed that the Mac app will highlight offline translation, side-by-side AI model comparison, and three realtime translation lanes.",
+        "actionName": "Terjemah",
+        "targetLanguage": "Bahasa Melayu",
+        "modelID": "gpt-5.4",
+        "modelDisplayName": "GPT-5.4",
+        "resultText": "Semakan pelancaran mengesahkan bahawa aplikasi Mac akan menonjolkan perbandingan model AI secara bersebelahan dan tiga lorong terjemahan masa nyata.",
+        "annotation": "### Keputusan utama\n\n- Tampilkan beberapa hasil AI **secara bersebelahan**.\n- Gunakan Google dan model GPT untuk terjemahan Bahasa Melayu.\n- Tunjukkan **tiga lorong masa nyata** dalam ruang kerja Mac.\n\n### Langkah seterusnya\n\n- [ ] Semak tangkapan skrin akhir sebelum penyetempatan.",
+        "chatMessages": [
+          {"role": "user", "content": "Ringkaskan keputusan dan simpan nota berstruktur dalam rekod sejarah ini."},
+          {"role": "assistant", "content": "Keputusan utama telah disimpan sebagai nota Markdown. Saya turut menambah tugas semakan sebelum tangkapan skrin disetempatkan."}
+        ],
+        "sidebarRecords": [
+          {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "Terjemah", "targetLanguage": "Bahasa Melayu", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "Bandingkan hasil daripada beberapa model AI sebelum memilih terjemahan akhir."},
+          {"kind": "text", "sourceText": "Use Google Translate when a local language pack is not available.", "actionName": "Terjemah", "targetLanguage": "Bahasa Melayu", "modelID": "google-translate", "modelDisplayName": "Google Translate", "resultText": "Gunakan Google Translate apabila pek bahasa setempat tidak tersedia."},
+          {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "Masa nyata", "targetLanguage": "Bahasa Melayu", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Dokumentasikan keputusan penting dan pihak yang bertanggungjawab."},
+          {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "Masa nyata", "targetLanguage": "Bahasa Melayu", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Tarikh pelancaran akan disahkan sebelum mesyuarat tamat."}
+        ]
+      },
+      "marketing": {
+        "01_MultiModel": {"headline": "Bandingkan Setiap", "accentText": "Terjemahan", "subtitle": "Lihat Google, GPT, DeepSeek dan Kimi secara bersebelahan.", "accent": "#5279F8", "background": "#17191C"},
+        "02_Offline": {"headline": "Terjemahan Mudah dengan", "accentText": "Google", "subtitle": "Terjemah Bahasa Melayu dengan pantas terus dalam ruang kerja Mac.", "accent": "#5279F8", "background": "#17191C"},
+        "03_RealtimeMultiLane": {"headline": "Tiga Lorong Langsung.", "accentText": "Satu Mac.", "subtitle": "Bandingkan enjin suara dan terjemahan semasa perbualan berlangsung.", "accent": "#5279F8", "background": "#17191C"},
+        "04_Conversation": {"headline": "Teruskan", "accentText": "Perbualan", "subtitle": "Tanya soalan lanjut dan dapatkan jawapan Markdown berstruktur.", "accent": "#5279F8", "background": "#17191C"},
+        "05_Polish": {"headline": "Lihat Setiap", "accentText": "Penambahbaikan", "subtitle": "Bandingkan GPT, DeepSeek dan Kimi dengan perbezaan yang jelas.", "accent": "#5279F8", "background": "#17191C"},
+        "06_HistoryChat": {"headline": "Berbual dengan", "accentText": "Sejarah", "subtitle": "Tukar terjemahan lama kepada nota dan tindakan seterusnya.", "accent": "#5279F8", "background": "#17191C"}
+      }
+    }
+  },
+  "locales": {
+    "en-US": {
+      "appleLanguage": "en",
+      "appleLocale": "en_US",
+      "targetLanguage": "en-US",
+      "targetLanguageLabel": "English",
+      "documentTitle": "Meeting Notes",
+      "extensionTitle": "Translate with TLingo",
+      "grammarExplanation": "Corrections:\n- \"are\" -> \"is\"\n- \"need\" -> \"needs\"\n- Added a comma after \"natural\"",
+      "realtimeTranslations": ["The meeting begins in five minutes.", "I will summarize the key decisions as we go.", "Please open the quarterly report."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+        "google-translate": "TLingo provides translation on iPhone, iPad, and Mac, with results from several AI models available for comparison.",
+        "gpt-5.4": "TLingo brings translation to iPhone, iPad, and Mac and lets you compare multiple AI-generated results side by side.",
+        "DeepSeek-V4-Pro": "TLingo is a multi-platform translation tool that compares output from different AI models on iPhone, iPad, and Mac.",
+        "Kimi-K2.6": "Use TLingo across iPhone, iPad, and Mac to review and compare multi-model translation results."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions for easier spoken translation.",
+        "google-translate": "TLingo combines offline local recognition, speech recognition, and live bilingual captions to make spoken content easier to understand.",
+        "gpt-5.4": "TLingo helps you understand spoken content through on-device recognition, speech recognition, and real-time bilingual captions.",
+        "DeepSeek-V4-Pro": "TLingo provides offline local recognition, speech recognition, and live bilingual captions for spoken translation.",
+        "Kimi-K2.6": "With local offline recognition, speech recognition, and real-time bilingual captions, TLingo simplifies spoken translation."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["multiple AI models", "several AI models", "multiple AI-generated", "different AI models", "multi-model"]
+      ],
+      "extensionRequiredTerms": [
+        "TLingo"
+      ],
+      "extensionRequiredConcepts": [
+        ["offline recognition", "local recognition", "on-device recognition"],
+        ["speech recognition"],
+        ["bilingual captions"]
+      ]
+    },
+    "zh-Hans": {
+      "appleLanguage": "zh-Hans",
+      "appleLocale": "zh_Hans",
+      "targetLanguage": "zh-Hans",
+      "targetLanguageLabel": "中文",
+      "documentTitle": "会议记录",
+      "extensionTitle": "使用 TLingo 翻译",
+      "grammarExplanation": "修正说明：\n- “are” 改为 “is”\n- “need” 改为 “needs”\n- 在 “natural” 后添加逗号",
+      "realtimeTranslations": ["会议将在五分钟后开始。", "我会边听边总结关键决定。", "请打开季度报告。"],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo 是一款适用于 iPhone、iPad 和 Mac 的翻译应用。它可比较多个 AI 模型的翻译结果。",
+        "google-translate": "TLingo 是一款面向 iPhone、iPad 和 Mac 的翻译应用，可对比多个 AI 模型生成的翻译结果。",
+        "gpt-5.4": "TLingo 为 iPhone、iPad 与 Mac 提供翻译功能，可并排比较多种 AI 模型的翻译结果。",
+        "DeepSeek-V4-Pro": "TLingo 是覆盖 iPhone、iPad 和 Mac 的翻译工具，能够比较多个 AI 模型输出的译文。",
+        "Kimi-K2.6": "TLingo 可在 iPhone、iPad 和 Mac 上使用，支持多模型翻译结果对比。"
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo 支持本地离线识别、语音识别与实时双语字幕，让语音内容更易于理解和翻译。",
+        "google-translate": "TLingo 提供本地离线识别、语音识别和实时双语字幕功能，让理解与翻译语音内容更加便捷。",
+        "gpt-5.4": "TLingo 具备本地离线识别、语音识别及实时双语字幕，可更轻松地理解并翻译语音内容。",
+        "DeepSeek-V4-Pro": "TLingo 支持本地离线识别和语音识别，并提供实时双语字幕，帮助用户理解与翻译语音内容。",
+        "Kimi-K2.6": "通过本地离线识别、语音识别与实时双语字幕，TLingo 让语音内容的理解和翻译更简单。"
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["多个 AI 模型", "多种 AI 模型", "多模型"]
+      ],
+      "extensionRequiredTerms": [
+        "TLingo"
+      ],
+      "extensionRequiredConcepts": [
+        ["本地离线识别"],
+        ["语音识别"],
+        ["实时双语字幕"]
+      ]
+    },
+    "zh-Hant": {
+      "appleLanguage": "zh-Hant",
+      "appleLocale": "zh_Hant",
+      "targetLanguage": "zh-Hant",
+      "targetLanguageLabel": "中文",
+      "documentTitle": "會議記錄",
+      "extensionTitle": "使用 TLingo 翻譯",
+      "grammarExplanation": "修正說明：\n- 「are」改為「is」\n- 「need」改為「needs」\n- 在「natural」後加入逗號",
+      "realtimeTranslations": ["會議將在五分鐘後開始。", "我會隨時整理關鍵決策。", "請開啟季度報告。"],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo 是一款適用於 iPhone、iPad 和 Mac 的翻譯應用程式。它可比較多個 AI 模型的翻譯結果。",
+        "google-translate": "TLingo 是一款面向 iPhone、iPad 與 Mac 的翻譯 App，可對比多種 AI 模型產生的翻譯結果。",
+        "gpt-5.4": "TLingo 為 iPhone、iPad 和 Mac 提供翻譯功能，可並排比較多個 AI 模型的譯文。",
+        "DeepSeek-V4-Pro": "TLingo 是橫跨 iPhone、iPad 與 Mac 的翻譯工具，能比較多種 AI 模型輸出的翻譯。",
+        "Kimi-K2.6": "TLingo 可在 iPhone、iPad 和 Mac 上使用，支援多模型翻譯結果對比。"
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo 支援本機離線辨識、語音辨識與即時雙語字幕，讓語音內容更容易理解和翻譯。",
+        "google-translate": "TLingo 提供本機離線辨識、語音辨識和即時雙語字幕功能，讓理解與翻譯語音內容更加方便。",
+        "gpt-5.4": "TLingo 具備本機離線辨識、語音辨識及即時雙語字幕，可更輕鬆地理解並翻譯語音內容。",
+        "DeepSeek-V4-Pro": "TLingo 支援本機離線辨識和語音辨識，並提供即時雙語字幕，協助使用者理解與翻譯語音內容。",
+        "Kimi-K2.6": "透過本機離線辨識、語音辨識與即時雙語字幕，TLingo 讓語音內容的理解和翻譯更簡單。"
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["多個 AI 模型", "多種 AI 模型", "多模型"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["本機離線辨識"],
+        ["語音辨識"],
+        ["即時雙語字幕"]
+      ]
+    },
+    "ja": {
+      "appleLanguage": "ja",
+      "appleLocale": "ja_JP",
+      "targetLanguage": "ja",
+      "targetLanguageLabel": "日本語",
+      "documentTitle": "会議メモ",
+      "extensionTitle": "TLingoで翻訳",
+      "grammarExplanation": "修正内容：\n- “are” を “is” に修正\n- “need” を “needs” に修正\n- “natural” の後にコンマを追加",
+      "realtimeTranslations": ["会議は5分後に始まります。", "進行に合わせて重要な決定事項をまとめます。", "四半期報告書を開いてください。"],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingoはiPhone、iPad、Mac向けの翻訳アプリです。複数のAIモデルによる翻訳結果を比較できます。",
+        "google-translate": "TLingoはiPhone、iPad、Macで使える翻訳アプリで、複数のAIモデルが生成した翻訳を比べられます。",
+        "gpt-5.4": "iPhone、iPad、Mac対応のTLingoでは、さまざまなAIモデルの翻訳を並べて比較できます。",
+        "DeepSeek-V4-Pro": "TLingoはiPhone、iPad、Macを対象とした翻訳ツールで、複数AIモデルの翻訳出力を比較できます。",
+        "Kimi-K2.6": "TLingoはiPhone、iPad、Macに対応し、マルチモデルの翻訳結果を比較できます。"
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingoはローカルのオフライン認識、音声認識、リアルタイムの二言語字幕に対応し、音声内容の理解と翻訳を容易にします。",
+        "google-translate": "TLingoはローカルオフライン認識、音声認識、リアルタイム二言語字幕を提供し、話された内容をより簡単に理解して翻訳できます。",
+        "gpt-5.4": "TLingoのローカルオフライン認識、音声認識、リアルタイム二言語字幕により、音声コンテンツの理解と翻訳が手軽になります。",
+        "DeepSeek-V4-Pro": "TLingoは端末内のオフライン認識と音声認識をサポートし、リアルタイムの二言語字幕で音声内容の理解と翻訳を助けます。",
+        "Kimi-K2.6": "ローカルオフライン認識、音声認識、リアルタイム二言語字幕を備えたTLingoなら、音声の理解と翻訳がより簡単です。"
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["複数のAIモデル", "さまざまなAIモデル", "複数AIモデル", "マルチモデル"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["オフライン認識"],
+        ["音声認識"],
+        ["リアルタイムの二言語字幕", "リアルタイム二言語字幕"]
+      ]
+    },
+    "ko": {
+      "appleLanguage": "ko",
+      "appleLocale": "ko_KR",
+      "targetLanguage": "ko",
+      "targetLanguageLabel": "한국어",
+      "documentTitle": "회의 메모",
+      "extensionTitle": "TLingo로 번역",
+      "grammarExplanation": "수정 내용:\n- “are”를 “is”로 수정\n- “need”를 “needs”로 수정\n- “natural” 뒤에 쉼표 추가",
+      "realtimeTranslations": ["회의가 5분 후에 시작됩니다.", "진행하면서 주요 결정 사항을 요약하겠습니다.", "분기 보고서를 열어 주세요."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo는 iPhone, iPad 및 Mac용 번역 앱입니다. 여러 AI 모델의 번역 결과를 비교할 수 있습니다.",
+        "google-translate": "TLingo는 iPhone, iPad, Mac에서 사용할 수 있는 번역 앱으로, 여러 AI 모델이 만든 번역을 비교합니다.",
+        "gpt-5.4": "iPhone, iPad와 Mac용 TLingo에서는 다양한 AI 모델의 번역을 나란히 비교할 수 있습니다.",
+        "DeepSeek-V4-Pro": "TLingo는 iPhone, iPad, Mac을 아우르는 번역 도구로, 복수 AI 모델의 번역 출력을 비교합니다.",
+        "Kimi-K2.6": "TLingo는 iPhone, iPad, Mac에서 다중 모델 번역 결과 비교를 지원합니다."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo는 로컬 오프라인 인식, 음성 인식 및 실시간 이중 언어 자막을 지원하여 음성 내용을 더 쉽게 이해하고 번역할 수 있게 합니다.",
+        "google-translate": "TLingo는 로컬 오프라인 인식과 음성 인식, 실시간 이중 언어 자막 기능으로 음성 콘텐츠의 이해와 번역을 간편하게 합니다.",
+        "gpt-5.4": "TLingo의 로컬 오프라인 인식, 음성 인식, 실시간 이중 언어 자막을 이용하면 음성 내용을 손쉽게 이해하고 번역할 수 있습니다.",
+        "DeepSeek-V4-Pro": "TLingo는 기기 내 오프라인 인식과 음성 인식을 지원하며, 실시간 이중 언어 자막으로 음성 내용의 이해와 번역을 돕습니다.",
+        "Kimi-K2.6": "로컬 오프라인 인식, 음성 인식, 실시간 이중 언어 자막을 갖춘 TLingo는 음성의 이해와 번역을 더 쉽게 만듭니다."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["여러 AI 모델", "다양한 AI 모델", "복수 AI 모델", "다중 모델"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["오프라인 인식"],
+        ["음성 인식"],
+        ["실시간 이중 언어 자막"]
+      ]
+    },
+    "de-DE": {
+      "appleLanguage": "de",
+      "appleLocale": "de_DE",
+      "targetLanguage": "de",
+      "targetLanguageLabel": "Deutsch",
+      "documentTitle": "Besprechungsnotizen",
+      "extensionTitle": "Mit TLingo übersetzen",
+      "grammarExplanation": "Korrekturen:\n- „are“ → „is“\n- „need“ → „needs“\n- Komma nach „natural“ ergänzt",
+      "realtimeTranslations": ["Die Besprechung beginnt in fünf Minuten.", "Ich fasse die wichtigsten Entscheidungen laufend zusammen.", "Bitte öffnen Sie den Quartalsbericht."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo ist eine Übersetzungs-App für iPhone, iPad und Mac. Sie vergleicht Übersetzungen mehrerer KI-Modelle.",
+        "google-translate": "TLingo ist eine Übersetzungs-App für iPhone, iPad und Mac, mit der sich Resultate verschiedener KI-Modelle vergleichen lassen.",
+        "gpt-5.4": "Mit TLingo auf iPhone, iPad und Mac können Übersetzungen mehrerer KI-Modelle nebeneinander verglichen werden.",
+        "DeepSeek-V4-Pro": "TLingo ist ein Übersetzungstool für iPhone, iPad und Mac, das Übersetzungsausgaben verschiedener KI-Modelle vergleicht.",
+        "Kimi-K2.6": "TLingo bringt auf iPhone, iPad und Mac den Vergleich von Übersetzungen mehrerer KI-Modelle zusammen."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo unterstützt lokale Offline-Erkennung, Spracherkennung und zweisprachige Untertitel in Echtzeit, damit gesprochene Inhalte leichter verstanden und übersetzt werden können.",
+        "google-translate": "TLingo bietet lokale Offline-Erkennung, Spracherkennung und zweisprachige Live-Untertitel, wodurch sich Sprachinhalte einfacher verstehen und übersetzen lassen.",
+        "gpt-5.4": "Mit lokaler Offline-Erkennung, Spracherkennung und zweisprachigen Echtzeit-Untertiteln erleichtert TLingo das Verstehen und Übersetzen gesprochener Inhalte.",
+        "DeepSeek-V4-Pro": "TLingo unterstützt Offline-Erkennung auf dem Gerät und Spracherkennung sowie zweisprachige Live-Untertitel für ein leichteres Verständnis und eine einfachere Übersetzung.",
+        "Kimi-K2.6": "Lokale Offline-Erkennung, Spracherkennung und zweisprachige Untertitel in Echtzeit machen mit TLingo das Verstehen und Übersetzen von Sprache einfacher."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["mehrerer KI-Modelle", "verschiedener KI-Modelle"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["Offline-Erkennung"],
+        ["Spracherkennung"],
+        ["zweisprachige Untertitel", "zweisprachige Live-Untertitel", "zweisprachige Echtzeit-Untertitel", "zweisprachigen Echtzeit-Untertiteln"]
+      ]
+    },
+    "fr-FR": {
+      "appleLanguage": "fr",
+      "appleLocale": "fr_FR",
+      "targetLanguage": "fr",
+      "targetLanguageLabel": "Français",
+      "documentTitle": "Notes de réunion",
+      "extensionTitle": "Traduire avec TLingo",
+      "grammarExplanation": "Corrections :\n- « are » → « is »\n- « need » → « needs »\n- Virgule ajoutée après « natural »",
+      "realtimeTranslations": ["La réunion commence dans cinq minutes.", "Je résumerai les décisions importantes au fur et à mesure.", "Veuillez ouvrir le rapport trimestriel."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo est une app de traduction pour iPhone, iPad et Mac. Elle compare les traductions de plusieurs modèles d’IA.",
+        "google-translate": "TLingo est une application de traduction pour iPhone, iPad et Mac qui permet de comparer les résultats de plusieurs modèles d’IA.",
+        "gpt-5.4": "Sur iPhone, iPad et Mac, TLingo compare côte à côte les traductions de différents modèles d’IA.",
+        "DeepSeek-V4-Pro": "TLingo est un outil de traduction pour iPhone, iPad et Mac qui confronte les traductions produites par plusieurs modèles d’IA.",
+        "Kimi-K2.6": "TLingo réunit sur iPhone, iPad et Mac la comparaison de traductions multi-modèles."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo prend en charge la reconnaissance locale hors ligne, la reconnaissance vocale et les sous-titres bilingues en temps réel, afin de faciliter la compréhension et la traduction de la parole.",
+        "google-translate": "TLingo propose la reconnaissance locale hors ligne, la reconnaissance vocale et des sous-titres bilingues en direct pour mieux comprendre et traduire les contenus parlés.",
+        "gpt-5.4": "Grâce à la reconnaissance locale hors ligne, à la reconnaissance vocale et aux sous-titres bilingues en temps réel, TLingo simplifie la compréhension et la traduction de la parole.",
+        "DeepSeek-V4-Pro": "TLingo combine reconnaissance hors ligne sur l’appareil, reconnaissance vocale et sous-titres bilingues en direct pour aider à comprendre et traduire les contenus audio.",
+        "Kimi-K2.6": "Avec la reconnaissance locale hors ligne, la reconnaissance vocale et les sous-titres bilingues en temps réel, TLingo rend la parole plus simple à comprendre et à traduire."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["plusieurs modèles d’IA", "différents modèles d’IA", "multi-modèles"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["reconnaissance locale hors ligne", "reconnaissance hors ligne"],
+        ["reconnaissance vocale"],
+        ["sous-titres bilingues en temps réel", "sous-titres bilingues en direct"]
+      ]
+    },
+    "es-ES": {
+      "appleLanguage": "es",
+      "appleLocale": "es_ES",
+      "targetLanguage": "es",
+      "targetLanguageLabel": "Español",
+      "documentTitle": "Notas de reunión",
+      "extensionTitle": "Traducir con TLingo",
+      "grammarExplanation": "Correcciones:\n- « are » → « is »\n- « need » → « needs »\n- Se añadió una coma después de « natural »",
+      "realtimeTranslations": ["La reunión comienza en cinco minutos.", "Iré resumiendo las decisiones principales sobre la marcha.", "Abre el informe trimestral, por favor."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo es una app de traducción para iPhone, iPad y Mac. Compara las traducciones de varios modelos de IA.",
+        "google-translate": "TLingo es una aplicación de traducción para iPhone, iPad y Mac que permite comparar resultados de distintos modelos de IA.",
+        "gpt-5.4": "Con TLingo en iPhone, iPad y Mac puedes contrastar lado a lado las traducciones de varios modelos de IA.",
+        "DeepSeek-V4-Pro": "TLingo es una herramienta de traducción para iPhone, iPad y Mac que compara traducciones generadas por múltiples modelos de IA.",
+        "Kimi-K2.6": "TLingo reúne en iPhone, iPad y Mac la comparación de traducciones multimodelo."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo admite reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en tiempo real para facilitar la comprensión y traducción del habla.",
+        "google-translate": "TLingo ofrece reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en directo, haciendo más sencillo entender y traducir contenido hablado.",
+        "gpt-5.4": "Con reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en tiempo real, TLingo simplifica la comprensión y traducción de la voz.",
+        "DeepSeek-V4-Pro": "TLingo combina reconocimiento sin conexión en el dispositivo, reconocimiento de voz y subtítulos bilingües en directo para ayudar a entender y traducir audio.",
+        "Kimi-K2.6": "El reconocimiento local sin conexión, el reconocimiento de voz y los subtítulos bilingües en tiempo real de TLingo hacen más fácil comprender y traducir el habla."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["varios modelos de IA", "distintos modelos de IA", "múltiples modelos de IA", "multimodelo"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["sin conexión"],
+        ["reconocimiento de voz"],
+        ["subtítulos bilingües en tiempo real", "subtítulos bilingües en directo"]
+      ]
+    },
+    "it": {
+      "appleLanguage": "it",
+      "appleLocale": "it_IT",
+      "targetLanguage": "it",
+      "targetLanguageLabel": "Italiano",
+      "documentTitle": "Note della riunione",
+      "extensionTitle": "Traduci con TLingo",
+      "grammarExplanation": "Correzioni:\n- “are” → “is”\n- “need” → “needs”\n- Aggiunta una virgola dopo “natural”",
+      "realtimeTranslations": ["La riunione inizia tra cinque minuti.", "Riassumerò le decisioni principali man mano che procediamo.", "Apri il rapporto trimestrale."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo è un’app di traduzione per iPhone, iPad e Mac. Confronta le traduzioni di più modelli di IA.",
+        "google-translate": "TLingo è un’applicazione di traduzione per iPhone, iPad e Mac che consente di confrontare i risultati di diversi modelli di IA.",
+        "gpt-5.4": "Con TLingo su iPhone, iPad e Mac puoi mettere a confronto le traduzioni di vari modelli di IA.",
+        "DeepSeek-V4-Pro": "TLingo è uno strumento di traduzione per iPhone, iPad e Mac che confronta le traduzioni prodotte da più modelli di IA.",
+        "Kimi-K2.6": "TLingo riunisce su iPhone, iPad e Mac il confronto tra traduzioni multimodello."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo supporta il riconoscimento locale offline, il riconoscimento vocale e i sottotitoli bilingui in tempo reale, facilitando la comprensione e la traduzione del parlato.",
+        "google-translate": "TLingo offre riconoscimento locale offline, riconoscimento vocale e sottotitoli bilingui dal vivo per rendere più semplice capire e tradurre i contenuti parlati.",
+        "gpt-5.4": "Grazie al riconoscimento locale offline, al riconoscimento vocale e ai sottotitoli bilingui in tempo reale, TLingo semplifica la comprensione e la traduzione della voce.",
+        "DeepSeek-V4-Pro": "TLingo combina riconoscimento offline sul dispositivo, riconoscimento vocale e sottotitoli bilingui dal vivo per aiutare a comprendere e tradurre l’audio.",
+        "Kimi-K2.6": "Il riconoscimento locale offline, il riconoscimento vocale e i sottotitoli bilingui in tempo reale di TLingo rendono più facile capire e tradurre il parlato."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["più modelli di IA", "diversi modelli di IA", "vari modelli di IA", "multimodello"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offline"],
+        ["riconoscimento vocale"],
+        ["sottotitoli bilingui in tempo reale", "sottotitoli bilingui dal vivo"]
+      ]
+    },
+    "pt-BR": {
+      "appleLanguage": "pt-BR",
+      "appleLocale": "pt_BR",
+      "targetLanguage": "pt-BR",
+      "targetLanguageLabel": "Português",
+      "documentTitle": "Notas da reunião",
+      "extensionTitle": "Traduzir com TLingo",
+      "grammarExplanation": "Correções:\n- “are” → “is”\n- “need” → “needs”\n- Vírgula adicionada depois de “natural”",
+      "realtimeTranslations": ["A reunião começa em cinco minutos.", "Vou resumir as principais decisões ao longo da reunião.", "Abra o relatório trimestral."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "O TLingo é um app de tradução para iPhone, iPad e Mac. Ele compara traduções de vários modelos de IA.",
+        "google-translate": "O TLingo é um aplicativo de tradução para iPhone, iPad e Mac que permite comparar resultados de diferentes modelos de IA.",
+        "gpt-5.4": "Com o TLingo no iPhone, iPad e Mac, você compara lado a lado traduções de vários modelos de IA.",
+        "DeepSeek-V4-Pro": "O TLingo é uma ferramenta de tradução para iPhone, iPad e Mac que confronta traduções produzidas por múltiplos modelos de IA.",
+        "Kimi-K2.6": "O TLingo reúne no iPhone, iPad e Mac a comparação de traduções multimodelo."
+      },
+      "extensionTranslations": {
+        "apple-translate": "O TLingo oferece reconhecimento local offline, reconhecimento de voz e legendas bilíngues em tempo real, facilitando a compreensão e a tradução da fala.",
+        "google-translate": "O TLingo conta com reconhecimento local offline, reconhecimento de voz e legendas bilíngues ao vivo para tornar mais simples entender e traduzir conteúdo falado.",
+        "gpt-5.4": "Com reconhecimento local offline, reconhecimento de voz e legendas bilíngues em tempo real, o TLingo simplifica a compreensão e a tradução da voz.",
+        "DeepSeek-V4-Pro": "O TLingo combina reconhecimento offline no dispositivo, reconhecimento de voz e legendas bilíngues ao vivo para ajudar a entender e traduzir áudio.",
+        "Kimi-K2.6": "O reconhecimento local offline, o reconhecimento de voz e as legendas bilíngues em tempo real do TLingo tornam mais fácil compreender e traduzir a fala."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["vários modelos de IA", "diferentes modelos de IA", "múltiplos modelos de IA", "multimodelo"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offline"],
+        ["reconhecimento de voz"],
+        ["legendas bilíngues em tempo real", "legendas bilíngues ao vivo"]
+      ]
+    },
+    "ar-SA": {
+      "appleLanguage": "ar",
+      "appleLocale": "ar_SA",
+      "targetLanguage": "ar",
+      "targetLanguageLabel": "العربية",
+      "documentTitle": "ملاحظات الاجتماع",
+      "extensionTitle": "الترجمة باستخدام TLingo",
+      "grammarExplanation": "التصحيحات:\n- استبدال “are” بـ “is”\n- استبدال “need” بـ “needs”\n- إضافة فاصلة بعد “natural”",
+      "realtimeTranslations": ["سيبدأ الاجتماع بعد خمس دقائق.", "سألخص القرارات الرئيسية أثناء تقدمنا.", "يرجى فتح التقرير الفصلي."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo هو تطبيق ترجمة لأجهزة iPhone وiPad وMac. يقارن ترجمات عدة نماذج ذكاء اصطناعي.",
+        "google-translate": "TLingo تطبيق ترجمة يعمل على iPhone وiPad وMac ويتيح مقارنة نتائج نماذج ذكاء اصطناعي متعددة.",
+        "gpt-5.4": "مع TLingo على iPhone وiPad وMac، يمكنك مقارنة ترجمات نماذج ذكاء اصطناعي مختلفة جنبًا إلى جنب.",
+        "DeepSeek-V4-Pro": "TLingo أداة ترجمة لأجهزة iPhone وiPad وMac تقارن الترجمات التي تنتجها عدة نماذج ذكاء اصطناعي.",
+        "Kimi-K2.6": "يجمع TLingo على iPhone وiPad وMac بين مقارنة الترجمات متعددة النماذج."
+      },
+      "extensionTranslations": {
+        "apple-translate": "يدعم TLingo التعرف المحلي دون اتصال، والتعرف على الكلام، والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي لتسهيل فهم الكلام وترجمته.",
+        "google-translate": "يوفر TLingo التعرف المحلي دون اتصال والتعرف على الكلام وتسميات توضيحية ثنائية اللغة مباشرة، مما يسهل فهم المحتوى المنطوق وترجمته.",
+        "gpt-5.4": "بفضل التعرف المحلي دون اتصال والتعرف على الكلام والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي، يسهّل TLingo فهم الصوت وترجمته.",
+        "DeepSeek-V4-Pro": "يجمع TLingo بين التعرف دون اتصال على الجهاز والتعرف على الكلام وتسميات توضيحية ثنائية اللغة مباشرة للمساعدة في فهم الصوت وترجمته.",
+        "Kimi-K2.6": "يجعل TLingo فهم الكلام وترجمته أسهل عبر التعرف المحلي دون اتصال والتعرف على الكلام والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["عدة نماذج ذكاء اصطناعي", "نماذج ذكاء اصطناعي متعددة", "نماذج ذكاء اصطناعي مختلفة", "متعددة النماذج"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["دون اتصال"],
+        ["التعرف على الكلام"],
+        ["ثنائية اللغة في الوقت الفعلي", "ثنائية اللغة مباشرة"]
+      ]
+    },
+    "da": {
+      "appleLanguage": "da",
+      "appleLocale": "da_DK",
+      "targetLanguage": "da",
+      "targetLanguageLabel": "Dansk",
+      "documentTitle": "Mødenoter",
+      "extensionTitle": "Oversæt med TLingo",
+      "grammarExplanation": "Rettelser:\n- “are” → “is”\n- “need” → “needs”\n- Komma tilføjet efter “natural”",
+      "realtimeTranslations": ["Mødet begynder om fem minutter.", "Jeg opsummerer de vigtigste beslutninger undervejs.", "Åbn venligst kvartalsrapporten."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo er en oversættelsesapp til iPhone, iPad og Mac. Den sammenligner oversættelser fra flere AI-modeller.",
+        "google-translate": "TLingo er en oversættelsesapp til iPhone, iPad og Mac, hvor du kan sammenligne resultater fra forskellige AI-modeller.",
+        "gpt-5.4": "Med TLingo på iPhone, iPad og Mac kan du sammenholde oversættelser fra flere AI-modeller.",
+        "DeepSeek-V4-Pro": "TLingo er et oversættelsesværktøj til iPhone, iPad og Mac, som sammenligner oversættelser fra forskellige AI-modeller.",
+        "Kimi-K2.6": "TLingo samler på iPhone, iPad og Mac sammenligning af oversættelser fra flere modeller."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo understøtter lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid, så tale bliver lettere at forstå og oversætte.",
+        "google-translate": "TLingo tilbyder lokal offlinegenkendelse, talegenkendelse og tosprogede liveundertekster, som gør det nemmere at forstå og oversætte talt indhold.",
+        "gpt-5.4": "Med lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid gør TLingo forståelse og oversættelse af tale enklere.",
+        "DeepSeek-V4-Pro": "TLingo kombinerer offlinegenkendelse på enheden, talegenkendelse og tosprogede liveundertekster for at hjælpe med at forstå og oversætte lyd.",
+        "Kimi-K2.6": "Lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid gør det med TLingo lettere at forstå og oversætte tale."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["flere AI-modeller", "forskellige AI-modeller", "flere modeller"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offlinegenkendelse"],
+        ["talegenkendelse"],
+        ["tosprogede undertekster i realtid", "tosprogede liveundertekster"]
+      ]
+    },
+    "no": {
+      "appleLanguage": "nb",
+      "appleLocale": "nb_NO",
+      "targetLanguage": "nb",
+      "targetLanguageLabel": "Norsk",
+      "documentTitle": "Møtenotater",
+      "extensionTitle": "Oversett med TLingo",
+      "grammarExplanation": "Rettelser:\n- “are” → “is”\n- “need” → “needs”\n- Komma lagt til etter “natural”",
+      "realtimeTranslations": ["Møtet starter om fem minutter.", "Jeg oppsummerer de viktigste beslutningene underveis.", "Åpne kvartalsrapporten."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo er en oversettelsesapp for iPhone, iPad og Mac. Den sammenligner oversettelser fra flere KI-modeller.",
+        "google-translate": "TLingo er en oversettelsesapp for iPhone, iPad og Mac der du kan sammenligne resultater fra ulike KI-modeller.",
+        "gpt-5.4": "Med TLingo på iPhone, iPad og Mac kan du sammenligne oversettelser fra flere KI-modeller side om side.",
+        "DeepSeek-V4-Pro": "TLingo er et oversettelsesverktøy for iPhone, iPad og Mac som sammenligner oversettelser fra ulike KI-modeller.",
+        "Kimi-K2.6": "TLingo samler sammenligning av oversettelser fra flere modeller på iPhone, iPad og Mac."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo støtter lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid, slik at tale blir enklere å forstå og oversette.",
+        "google-translate": "TLingo tilbyr lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige direktetekster, som gjør det lettere å forstå og oversette muntlig innhold.",
+        "gpt-5.4": "Med lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid forenkler TLingo forståelse og oversettelse av tale.",
+        "DeepSeek-V4-Pro": "TLingo kombinerer frakoblet gjenkjenning på enheten, talegjenkjenning og tospråklige direktetekster for å hjelpe med å forstå og oversette lyd.",
+        "Kimi-K2.6": "Lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid gjør det enklere å forstå og oversette tale med TLingo."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["flere KI-modeller", "ulike KI-modeller", "flere modeller"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["frakoblet gjenkjenning"],
+        ["talegjenkjenning"],
+        ["tospråklige undertekster i sanntid", "tospråklige direktetekster"]
+      ]
+    },
+    "nl-NL": {
+      "appleLanguage": "nl",
+      "appleLocale": "nl_NL",
+      "targetLanguage": "nl",
+      "targetLanguageLabel": "Nederlands",
+      "documentTitle": "Vergadernotities",
+      "extensionTitle": "Vertalen met TLingo",
+      "grammarExplanation": "Correcties:\n- “are” → “is”\n- “need” → “needs”\n- Komma toegevoegd na “natural”",
+      "realtimeTranslations": ["De vergadering begint over vijf minuten.", "Ik vat de belangrijkste beslissingen onderweg samen.", "Open het kwartaalrapport."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo is een vertaalapp voor iPhone, iPad en Mac. De app vergelijkt vertalingen van meerdere AI-modellen.",
+        "google-translate": "TLingo is een vertaalapp voor iPhone, iPad en Mac waarmee je resultaten van verschillende AI-modellen vergelijkt.",
+        "gpt-5.4": "Met TLingo op iPhone, iPad en Mac kun je vertalingen van meerdere AI-modellen naast elkaar zetten.",
+        "DeepSeek-V4-Pro": "TLingo is een vertaaltool voor iPhone, iPad en Mac die vertalingen van verschillende AI-modellen vergelijkt.",
+        "Kimi-K2.6": "TLingo brengt op iPhone, iPad en Mac vergelijking van vertalingen met meerdere modellen samen."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo ondersteunt lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling, zodat gesproken inhoud eenvoudiger te begrijpen en te vertalen is.",
+        "google-translate": "TLingo biedt lokale offlineherkenning, spraakherkenning en live tweetalige ondertiteling om gesproken content makkelijker te begrijpen en te vertalen.",
+        "gpt-5.4": "Met lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling vereenvoudigt TLingo het begrijpen en vertalen van spraak.",
+        "DeepSeek-V4-Pro": "TLingo combineert offlineherkenning op het apparaat, spraakherkenning en live tweetalige ondertiteling om audio te helpen begrijpen en vertalen.",
+        "Kimi-K2.6": "Lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling maken het met TLingo makkelijker om spraak te begrijpen en te vertalen."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["meerdere AI-modellen", "verschillende AI-modellen", "meerdere modellen"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offlineherkenning"],
+        ["spraakherkenning"],
+        ["realtime tweetalige ondertiteling", "live tweetalige ondertiteling"]
+      ]
+    },
+    "sv": {
+      "appleLanguage": "sv",
+      "appleLocale": "sv_SE",
+      "targetLanguage": "sv",
+      "targetLanguageLabel": "Svenska",
+      "documentTitle": "Mötesanteckningar",
+      "extensionTitle": "Översätt med TLingo",
+      "grammarExplanation": "Korrigeringar:\n- “are” → “is”\n- “need” → “needs”\n- Komma tillagt efter “natural”",
+      "realtimeTranslations": ["Mötet börjar om fem minuter.", "Jag sammanfattar de viktigaste besluten under tiden.", "Öppna kvartalsrapporten."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo är en översättningsapp för iPhone, iPad och Mac. Den jämför översättningar från flera AI-modeller.",
+        "google-translate": "TLingo är en översättningsapp för iPhone, iPad och Mac där du kan jämföra resultat från olika AI-modeller.",
+        "gpt-5.4": "Med TLingo på iPhone, iPad och Mac kan du jämföra översättningar från flera AI-modeller sida vid sida.",
+        "DeepSeek-V4-Pro": "TLingo är ett översättningsverktyg för iPhone, iPad och Mac som jämför översättningar från olika AI-modeller.",
+        "Kimi-K2.6": "TLingo samlar jämförelse av översättningar från flera modeller på iPhone, iPad och Mac."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo stöder lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid, så att talat innehåll blir enklare att förstå och översätta.",
+        "google-translate": "TLingo erbjuder lokal offlineigenkänning, taligenkänning och tvåspråkiga liveundertexter som gör det lättare att förstå och översätta talat innehåll.",
+        "gpt-5.4": "Med lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid förenklar TLingo förståelse och översättning av tal.",
+        "DeepSeek-V4-Pro": "TLingo kombinerar offlineigenkänning på enheten, taligenkänning och tvåspråkiga liveundertexter för att hjälpa till att förstå och översätta ljud.",
+        "Kimi-K2.6": "Lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid gör det med TLingo enklare att förstå och översätta tal."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["flera AI-modeller", "olika AI-modeller", "flera modeller"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offlineigenkänning"],
+        ["taligenkänning"],
+        ["tvåspråkiga undertexter i realtid", "tvåspråkiga liveundertexter"]
+      ]
+    },
+    "tr": {
+      "appleLanguage": "tr",
+      "appleLocale": "tr_TR",
+      "targetLanguage": "tr",
+      "targetLanguageLabel": "Türkçe",
+      "documentTitle": "Toplantı Notları",
+      "extensionTitle": "TLingo ile çevir",
+      "grammarExplanation": "Düzeltmeler:\n- “are” → “is”\n- “need” → “needs”\n- “natural” sonrasına virgül eklendi",
+      "realtimeTranslations": ["Toplantı beş dakika içinde başlayacak.", "İlerledikçe önemli kararları özetleyeceğim.", "Lütfen üç aylık raporu açın."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo, iPhone, iPad ve Mac için bir çeviri uygulamasıdır. Birden fazla yapay zekâ modelinin çevirilerini karşılaştırır.",
+        "google-translate": "TLingo, iPhone, iPad ve Mac’te farklı yapay zekâ modellerinin sonuçlarını karşılaştırmanızı sağlayan bir çeviri uygulamasıdır.",
+        "gpt-5.4": "iPhone, iPad ve Mac’teki TLingo ile çeşitli yapay zekâ modellerinin çevirilerini yan yana karşılaştırabilirsiniz.",
+        "DeepSeek-V4-Pro": "TLingo, iPhone, iPad ve Mac için bir çeviri aracıdır ve birden çok yapay zekâ modelinin ürettiği çevirileri karşılaştırır.",
+        "Kimi-K2.6": "TLingo, iPhone, iPad ve Mac’te çok modelli çeviri karşılaştırmasını bir araya getirir."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazıları destekleyerek konuşulan içeriği anlamayı ve çevirmeyi kolaylaştırır.",
+        "google-translate": "TLingo, konuşulan içeriği daha kolay anlamak ve çevirmek için yerel çevrimdışı tanıma, konuşma tanıma ve canlı iki dilli altyazılar sunar.",
+        "gpt-5.4": "Yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazılar sayesinde TLingo konuşmayı anlamayı ve çevirmeyi basitleştirir.",
+        "DeepSeek-V4-Pro": "TLingo, sesi anlamaya ve çevirmeye yardımcı olmak için cihazda çevrimdışı tanıma, konuşma tanıma ve canlı iki dilli altyazıları birleştirir.",
+        "Kimi-K2.6": "TLingo’nun yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazı özellikleri konuşmayı anlamayı ve çevirmeyi kolaylaştırır."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["Birden fazla yapay zekâ modeli", "farklı yapay zekâ modelleri", "çeşitli yapay zekâ modelleri", "birden çok yapay zekâ modeli", "çok modelli"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["çevrimdışı tanıma"],
+        ["konuşma tanıma"],
+        ["gerçek zamanlı iki dilli altyazı", "canlı iki dilli altyazılar"]
+      ]
+    },
+    "id": {
+      "appleLanguage": "id",
+      "appleLocale": "id_ID",
+      "targetLanguage": "id",
+      "targetLanguageLabel": "Bahasa Indonesia",
+      "documentTitle": "Catatan Rapat",
+      "extensionTitle": "Terjemahkan dengan TLingo",
+      "grammarExplanation": "Koreksi:\n- “are” → “is”\n- “need” → “needs”\n- Menambahkan koma setelah “natural”",
+      "realtimeTranslations": ["Rapat dimulai lima menit lagi.", "Saya akan merangkum keputusan utama selama rapat berlangsung.", "Silakan buka laporan triwulanan."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo adalah aplikasi penerjemahan untuk iPhone, iPad, dan Mac. Aplikasi ini membandingkan terjemahan dari beberapa model AI.",
+        "google-translate": "TLingo adalah aplikasi penerjemahan di iPhone, iPad, dan Mac yang memungkinkan Anda membandingkan hasil berbagai model AI.",
+        "gpt-5.4": "Dengan TLingo di iPhone, iPad, dan Mac, Anda dapat membandingkan terjemahan dari beberapa model AI secara berdampingan.",
+        "DeepSeek-V4-Pro": "TLingo merupakan alat penerjemahan untuk iPhone, iPad, dan Mac yang membandingkan terjemahan keluaran berbagai model AI.",
+        "Kimi-K2.6": "TLingo menyatukan perbandingan terjemahan multimodel di iPhone, iPad, dan Mac."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo mendukung pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time agar konten lisan lebih mudah dipahami dan diterjemahkan.",
+        "google-translate": "TLingo menyediakan pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa langsung untuk memudahkan pemahaman dan penerjemahan konten lisan.",
+        "gpt-5.4": "Dengan pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time, TLingo menyederhanakan pemahaman dan penerjemahan suara.",
+        "DeepSeek-V4-Pro": "TLingo menggabungkan pengenalan offline di perangkat, pengenalan ucapan, dan takarir dwibahasa langsung untuk membantu memahami serta menerjemahkan audio.",
+        "Kimi-K2.6": "Pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time dari TLingo membuat ucapan lebih mudah dipahami dan diterjemahkan."
+      },
+      "requiredTerms": [
+        "TLingo",
+        "iPhone",
+        "iPad",
+        "Mac"
+      ],
+      "requiredConcepts": [
+        ["beberapa model AI", "berbagai model AI", "multimodel"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offline"],
+        ["pengenalan ucapan"],
+        ["takarir dwibahasa real-time", "takarir dwibahasa langsung"]
+      ]
+    },
+    "pl": {
+      "appleLanguage": "pl",
+      "appleLocale": "pl_PL",
+      "targetLanguage": "pl",
+      "targetLanguageLabel": "Polski",
+      "documentTitle": "Notatki ze spotkania",
+      "extensionTitle": "Przetłumacz z TLingo",
+      "grammarExplanation": "Poprawki:\n- „are” → „is”\n- „need” → „needs”\n- Dodano przecinek po „natural”",
+      "realtimeTranslations": ["Spotkanie rozpocznie się za pięć minut.", "Będę na bieżąco podsumowywać najważniejsze decyzje.", "Otwórz raport kwartalny."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo to aplikacja do tłumaczenia na iPhone'a, iPada i Maca. Porównuje tłumaczenia z wielu modeli AI.",
+        "google-translate": "TLingo to aplikacja do tłumaczenia na iPhone'a, iPada i Maca, która pozwala porównywać wyniki różnych modeli AI.",
+        "gpt-5.4": "Dzięki TLingo na urządzeniach iPhone, iPad i Mac możesz porównywać obok siebie tłumaczenia z wielu modeli AI.",
+        "DeepSeek-V4-Pro": "TLingo jest narzędziem do tłumaczenia na iPhone'a, iPada i Maca, które porównuje tłumaczenia generowane przez różne modele AI.",
+        "Kimi-K2.6": "TLingo łączy na urządzeniach iPhone, iPad i Mac porównywanie tłumaczeń z wielu modeli AI."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo obsługuje lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy w czasie rzeczywistym, ułatwiając rozumienie i tłumaczenie wypowiedzi.",
+        "google-translate": "TLingo oferuje lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy na żywo, aby ułatwić rozumienie i tłumaczenie treści mówionych.",
+        "gpt-5.4": "Dzięki lokalnemu rozpoznawaniu offline, rozpoznawaniu mowy i dwujęzycznym napisom w czasie rzeczywistym TLingo upraszcza rozumienie i tłumaczenie wypowiedzi.",
+        "DeepSeek-V4-Pro": "TLingo łączy rozpoznawanie offline na urządzeniu, rozpoznawanie mowy i dwujęzyczne napisy na żywo, pomagając rozumieć i tłumaczyć dźwięk.",
+        "Kimi-K2.6": "Lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy w czasie rzeczywistym sprawiają, że TLingo ułatwia rozumienie i tłumaczenie mowy."
+      },
+      "requiredTerms": ["TLingo", "iPhone", "iPad", "Mac"],
+      "requiredConcepts": [
+        ["wielu modeli AI", "różnych modeli AI", "różne modele AI", "wiele modeli AI"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["offline"],
+        ["rozpoznawani"],
+        ["dwujęzyczn"]
+      ]
+    },
+    "ms": {
+      "appleLanguage": "ms",
+      "appleLocale": "ms_MY",
+      "targetLanguage": "ms",
+      "targetLanguageLabel": "Bahasa Melayu",
+      "documentTitle": "Nota Mesyuarat",
+      "extensionTitle": "Terjemah dengan TLingo",
+      "grammarExplanation": "Pembetulan:\n- “are” → “is”\n- “need” → “needs”\n- Koma ditambah selepas “natural”",
+      "realtimeTranslations": ["Mesyuarat bermula dalam lima minit.", "Saya akan merumuskan keputusan utama sepanjang mesyuarat.", "Sila buka laporan suku tahunan."],
+      "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
+      "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
+      "translations": {
+        "apple-translate": "TLingo ialah aplikasi terjemahan untuk iPhone, iPad dan Mac. Ia membandingkan terjemahan daripada pelbagai model AI.",
+        "google-translate": "TLingo ialah aplikasi terjemahan pada iPhone, iPad dan Mac yang membolehkan anda membandingkan hasil daripada pelbagai model AI.",
+        "gpt-5.4": "Dengan TLingo pada iPhone, iPad dan Mac, anda boleh membandingkan terjemahan daripada beberapa model AI secara bersebelahan.",
+        "DeepSeek-V4-Pro": "TLingo ialah alat terjemahan untuk iPhone, iPad dan Mac yang membandingkan terjemahan daripada pelbagai model AI.",
+        "Kimi-K2.6": "TLingo menghimpunkan perbandingan terjemahan berbilang model pada iPhone, iPad dan Mac."
+      },
+      "extensionTranslations": {
+        "apple-translate": "TLingo menyokong pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata untuk memudahkan pemahaman dan terjemahan pertuturan.",
+        "google-translate": "TLingo menawarkan pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa secara langsung untuk memudahkan kandungan lisan difahami dan diterjemahkan.",
+        "gpt-5.4": "Dengan pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata, TLingo memudahkan pemahaman dan terjemahan audio.",
+        "DeepSeek-V4-Pro": "TLingo menggabungkan pengecaman luar talian pada peranti, pengecaman pertuturan dan sari kata dwibahasa secara langsung untuk membantu memahami dan menterjemah audio.",
+        "Kimi-K2.6": "Pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata TLingo memudahkan pertuturan difahami dan diterjemahkan."
+      },
+      "requiredTerms": ["TLingo", "iPhone", "iPad", "Mac"],
+      "requiredConcepts": [
+        ["pelbagai model AI", "beberapa model AI", "berbilang model"]
+      ],
+      "extensionRequiredTerms": ["TLingo"],
+      "extensionRequiredConcepts": [
+        ["luar talian"],
+        ["pengecaman pertuturan"],
+        ["sari kata dwibahasa"]
+      ]
+    }
+  }
+}

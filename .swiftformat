@@ -1,0 +1,7 @@
+--indent 4
+--linebreaks lf
+--wraparguments before-first
+--wrapcollections before-first
+--maxwidth 130
+--selfrequired debug,info,error,notice,fault,trace,warning,critical,log
+--exclude build,ios/build,DerivedData,.build,.swiftpm,Carthage,Pods,Workers,.archive,.worktrees
