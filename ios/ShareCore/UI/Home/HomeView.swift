@@ -17,9 +17,6 @@ private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", categor
 #if canImport(AppKit)
     import AppKit
 #endif
-#if canImport(PhotosUI)
-    import PhotosUI
-#endif
 #if os(iOS) && !targetEnvironment(macCatalyst)
     import TranslationUIProvider
 #endif
@@ -48,7 +45,6 @@ public struct HomeView: View {
     @State private var showingProviderInfo: String?
     @State private var activeConversationSession: ConversationSession?
     @State private var isConversationInspectorPresented = false
-    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showSatisfactionToast = false
     @State private var showModelSelectionSheet = false
     @State private var feedbackDraft: FeedbackMailDraft?
@@ -179,7 +175,7 @@ public struct HomeView: View {
         HomeTextLayoutPolicy.bottomComposerPlacement(
             usesBottomComposerLayout: usesBottomComposerLayout,
             hasResults: !viewModel.modelRuns.isEmpty,
-            hasAttachments: !viewModel.attachedImages.isEmpty
+            hasAttachments: false
         )
     }
 
@@ -1119,7 +1115,6 @@ public struct HomeView: View {
                     modelSelectionButton
                 }
 
-                inputImageButton
                 inputSpeakButton
                 inputSendButton
             }
@@ -1244,65 +1239,6 @@ public struct HomeView: View {
         return displayModels
     }
 
-    @ViewBuilder
-    private var inputImageButton: some View {
-        #if os(macOS)
-            Button {
-                let panel = NSOpenPanel()
-                panel.allowedContentTypes = [.image]
-                panel.allowsMultipleSelection = true
-                panel.canChooseDirectories = false
-                if panel.runModal() == .OK {
-                    for url in panel.urls {
-                        guard let nsImage = NSImage(contentsOf: url),
-                              let attachment = ImageAttachment.from(nsImage: nsImage)
-                        else { continue }
-                        viewModel.addImage(attachment)
-                    }
-                }
-            } label: {
-                inputImageButtonLabel
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(colors.accent)
-        #elseif os(iOS)
-            PhotosPicker(
-                selection: $selectedPhotoItems,
-                matching: .images,
-                photoLibrary: .shared()
-            ) {
-                inputImageButtonLabel
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(colors.accent)
-            .task(id: selectedPhotoItems) {
-                let items = selectedPhotoItems
-                guard !items.isEmpty else { return }
-                for item in items {
-                    guard let data = try? await item.loadTransferable(type: Data.self),
-                          let uiImage = UIImage(data: data),
-                          let attachment = ImageAttachment.from(uiImage: uiImage)
-                    else { continue }
-                    guard !Task.isCancelled else { return }
-                    viewModel.addImage(attachment)
-                }
-                selectedPhotoItems = []
-            }
-        #endif
-    }
-
-    private var inputImageButtonLabel: some View {
-        Image(systemName: "photo.on.rectangle.angled")
-            .font(.system(size: 15, weight: .semibold))
-            .frame(width: 32, height: 32)
-            .tlingoGlassCircle(
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                interactive: true,
-                fallbackTint: colors.chipSecondaryBackground.opacity(0.55),
-                fallbackStroke: colors.divider
-            )
-    }
-
     private var inputSendButton: some View {
         Button(action: performInputActionIfPossible) {
             inputSendButtonLabel
@@ -1352,26 +1288,26 @@ public struct HomeView: View {
     private var inputSpeakButton: some View {
         let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
-        Button {
-            if viewModel.isSpeakingInputText {
-                viewModel.stopSpeaking()
-            } else {
-                viewModel.speakInputText()
+        if hasText || viewModel.isSpeakingInputText {
+            Button {
+                if viewModel.isSpeakingInputText {
+                    viewModel.stopSpeaking()
+                } else {
+                    viewModel.speakInputText()
+                }
+            } label: {
+                if viewModel.isSpeakingInputText {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 14))
+                } else {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 14))
+                }
             }
-        } label: {
-            if viewModel.isSpeakingInputText {
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 14))
-            } else {
-                Image(systemName: "speaker.wave.2.fill")
-                    .font(.system(size: 14))
-            }
+            .buttonStyle(.glass)
+            .tint(viewModel.isSpeakingInputText ? .red : colors.accent)
+            .buttonBorderShape(.circle)
         }
-        .buttonStyle(.glass)
-        .tint(viewModel.isSpeakingInputText ? .red : colors.accent)
-        .buttonBorderShape(.circle)
-        .disabled(!hasText && !viewModel.isSpeakingInputText)
-        .opacity(hasText || viewModel.isSpeakingInputText ? 1.0 : 0.5)
     }
 
     private var collapsedInputSummary: some View {
@@ -1432,22 +1368,7 @@ public struct HomeView: View {
                         onPaste: { pastedText in
                             applyPastedTextIfNeeded(pastedText)
                         },
-                        onImagePaste: { nsImages in
-                            logger.debug("onImagePaste callback: received \(nsImages.count, privacy: .public) NSImage(s)")
-                            for nsImage in nsImages {
-                                if let attachment = ImageAttachment.from(nsImage: nsImage) {
-                                    let size = String(format: "%.2f", attachment.sizeMB)
-                                    logger.debug(
-                                        "onImagePaste: attachment size \(size, privacy: .public)MB"
-                                    )
-                                    viewModel.addImage(attachment)
-                                } else {
-                                    logger.debug(
-                                        "onImagePaste: attachment failed, size \(nsImage.size.debugDescription, privacy: .public)"
-                                    )
-                                }
-                            }
-                        },
+                        onImagePaste: { _ in },
                         onContentHeightChange: contentHeightChangeHandler,
                         onSubmit: performInputActionIfPossible,
                         onSwapLanguages: { viewModel.swapInputLanguages() }
@@ -1461,13 +1382,7 @@ public struct HomeView: View {
                         onPaste: { pastedText in
                             applyPastedTextIfNeeded(pastedText)
                         },
-                        onImagePaste: { uiImages in
-                            for uiImage in uiImages {
-                                if let attachment = ImageAttachment.from(uiImage: uiImage) {
-                                    viewModel.addImage(attachment)
-                                }
-                            }
-                        },
+                        onImagePaste: { _ in },
                         onContentHeightChange: contentHeightChangeHandler,
                         onSubmit: performInputActionIfPossible,
                         onSwapLanguages: { viewModel.swapInputLanguages() }
@@ -1484,18 +1399,6 @@ public struct HomeView: View {
                             handlePasteCommand(providers: providers)
                         }
                 #endif
-            }
-
-            // Image attachment preview
-            if !viewModel.attachedImages.isEmpty {
-                ImageAttachmentPreview(
-                    images: viewModel.attachedImages,
-                    onRemove: { id in
-                        viewModel.removeImage(id: id)
-                    }
-                )
-                .padding(.horizontal, 12)
-                .padding(.bottom, 4)
             }
         }
     }

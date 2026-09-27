@@ -112,19 +112,20 @@
         @ViewBuilder
         private var inputSpeakButton: some View {
             let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            Button {
-                if viewModel.isSpeakingInputText {
-                    viewModel.stopSpeaking()
-                } else {
-                    viewModel.speakInputText()
+            if hasText || viewModel.isSpeakingInputText {
+                Button {
+                    if viewModel.isSpeakingInputText {
+                        viewModel.stopSpeaking()
+                    } else {
+                        viewModel.speakInputText()
+                    }
+                } label: {
+                    Image(systemName: viewModel.isSpeakingInputText ? "stop.fill" : "speaker.wave.2.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(viewModel.isSpeakingInputText ? colors.error : colors.accent)
                 }
-            } label: {
-                Image(systemName: viewModel.isSpeakingInputText ? "stop.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(viewModel.isSpeakingInputText ? colors.error : colors.accent)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .disabled(!hasText && !viewModel.isSpeakingInputText)
         }
 
         @ViewBuilder
