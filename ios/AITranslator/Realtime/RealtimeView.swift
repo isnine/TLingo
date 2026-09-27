@@ -48,7 +48,11 @@
                         preferences: preferences,
                         permissionManager: permissionManager,
                         isOnboardingPresented: $isRealtimeOnboardingPresented,
-                        inspectorTrailingPadding: isInspectorPresented ? inspectorWidth + 20 : 20
+                        inspectorTrailingPadding: isInspectorPresented ? inspectorWidth + 20 : 20,
+                        startBlocker: startBlocker,
+                        onImportAudio: {
+                            isAudioImporterPresented = true
+                        }
                     )
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -135,7 +139,11 @@
                     "Realtime Lane",
                     isPresented: Binding(
                         get: { laneConfigurationError != nil },
-                        set: { if !$0 { laneConfigurationError = nil } }
+                        set: {
+                            if !$0 {
+                                laneConfigurationError = nil
+                            }
+                        }
                     )
                 ) {
                     Button("OK", role: .cancel) {
@@ -148,7 +156,11 @@
                     "Import Failed",
                     isPresented: Binding(
                         get: { audioImportError != nil },
-                        set: { if !$0 { audioImportError = nil } }
+                        set: {
+                            if !$0 {
+                                audioImportError = nil
+                            }
+                        }
                     )
                 ) {
                     Button("OK", role: .cancel) {

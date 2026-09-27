@@ -3,7 +3,6 @@
     import SwiftUI
 
     struct RealtimeSetupPromptView: View {
-        @Environment(\.colorScheme) private var colorScheme
         @ObservedObject var store: RealtimeSessionStore
         @ObservedObject var preferences: AppPreferences
         @ObservedObject var permissionManager: RealtimePermissionManager
@@ -11,64 +10,54 @@
         @Binding var isOnboardingPresented: Bool
 
         let inspectorTrailingPadding: CGFloat
+        let startBlocker: RealtimeStartBlocker?
+        let onImportAudio: () -> Void
 
-        private var colors: AppColorPalette {
-            AppColors.Palette(colorScheme: colorScheme, accentTheme: preferences.accentTheme)
-        }
-
-        @ViewBuilder
         var body: some View {
-            if shouldShowPrompt {
-                Group {
-                    if let missingPermissionKind {
-                        setupPromptBanner {
-                            Image(systemName: permissionSystemImage(for: missingPermissionKind))
-                                .font(.headline)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(permissionTitle(for: missingPermissionKind))
-                                    .font(.caption.bold())
-                                Text(permissionMessage(for: missingPermissionKind))
-                                    .font(.caption)
-                                    .foregroundStyle(colors.textSecondary)
-                                    .lineLimit(2)
-                            }
-
-                            Spacer(minLength: 12)
-
-                            Button {
-                                handleMissingPermission()
-                            } label: {
-                                Label(
-                                    permissionButtonTitle(for: missingPermissionKind),
-                                    systemImage: "gearshape"
-                                )
-                                .fixedSize(horizontal: true, vertical: false)
-                            }
-                            .buttonStyle(.bordered)
-                            .layoutPriority(1)
-                        }
-                    } else if setupRequirement == .languageSelection {
-                        setupPromptBanner {
-                            Image(systemName: "globe")
-                                .font(.headline)
-                            Text(languagePromptText)
-                                .font(.caption.bold())
-                                .lineLimit(1)
-                            Spacer(minLength: 12)
-                        }
-                    }
-                }
-                .padding(.leading, 20)
-                .padding(.trailing, inspectorTrailingPadding)
-                .padding(.top, 16)
-                .padding(.bottom, 8)
+            if !SnapshotLaunchArguments.isSnapshotMode(), let notice {
+                RealtimeNoticeBanner(notice: notice)
+                    .padding(.leading, 20)
+                    .padding(.trailing, inspectorTrailingPadding)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
             }
         }
 
-        private var shouldShowPrompt: Bool {
-            guard !SnapshotLaunchArguments.isSnapshotMode() else { return false }
-            return missingPermissionKind != nil || setupRequirement == .languageSelection
+        private var notice: RealtimeNotice? {
+            if let missingPermissionKind {
+                return RealtimeNotice(
+                    systemImage: permissionSystemImage(for: missingPermissionKind),
+                    title: permissionTitle(for: missingPermissionKind),
+                    message: Text(permissionMessage(for: missingPermissionKind)),
+                    action: RealtimeNotice.Action(
+                        title: permissionButtonTitle(for: missingPermissionKind),
+                        systemImage: "gearshape",
+                        perform: handleMissingPermission
+                    )
+                )
+            }
+            if setupRequirement == .languageSelection {
+                return RealtimeNotice(
+                    systemImage: "globe",
+                    title: "Choose Languages",
+                    message: Text(languagePromptText),
+                    action: nil
+                )
+            }
+            if let startBlocker, let message = startBlocker.errorDescription {
+                switch startBlocker {
+                case .starting, .stopping:
+                    return nil
+                default:
+                    return RealtimeNotice(
+                        systemImage: startBlockerSystemImage(for: startBlocker),
+                        title: "Can’t Start Realtime Translation",
+                        message: Text(verbatim: message),
+                        action: startBlockerAction(for: startBlocker)
+                    )
+                }
+            }
+            return nil
         }
 
         private var missingPermissionKind: RealtimePermissionKind? {
@@ -84,7 +73,7 @@
             let needsSpeechRecognitionPermission = store.laneConfigurations.contains {
                 $0.recognitionModel.runtime == .appleSpeech
             }
-            if needsSpeechRecognitionPermission && !permissionManager.speechRecognition.isGranted {
+            if needsSpeechRecognitionPermission, !permissionManager.speechRecognition.isGranted {
                 return .speechRecognition
             }
 
@@ -104,21 +93,6 @@
             store.primaryLaneConfiguration?.translationProvider.performsTranslation == false
                 ? "Choose source language before starting realtime translation."
                 : "Choose source and target languages before starting realtime translation."
-        }
-
-        private func setupPromptBanner<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-            HStack(spacing: 10) {
-                content()
-            }
-            .foregroundStyle(.orange)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .tlingoGlassSurface(
-                cornerRadius: 12,
-                tint: Color.orange.opacity(colorScheme == .dark ? 0.16 : 0.10),
-                fallbackTint: Color.orange.opacity(colorScheme == .dark ? 0.16 : 0.10),
-                fallbackStroke: Color.orange.opacity(0.28)
-            )
         }
 
         private func handleMissingPermission() {
@@ -160,6 +134,90 @@
             case .screenAndSystemAudio:
                 return "display.and.arrow.down"
             }
+        }
+
+        private func startBlockerSystemImage(for blocker: RealtimeStartBlocker) -> String {
+            switch blocker {
+            case .importedAudioRequired:
+                return "waveform.badge.plus"
+            case .memoryPressure, .tooManyLocalRecognitionModels:
+                return "memorychip"
+            case .missingLanguageSelection:
+                return "globe"
+            case .missingAzureConfiguration:
+                return "key"
+            default:
+                return "exclamationmark.triangle.fill"
+            }
+        }
+
+        private func startBlockerAction(for blocker: RealtimeStartBlocker) -> RealtimeNotice.Action? {
+            guard case .importedAudioRequired = blocker else { return nil }
+            return RealtimeNotice.Action(
+                title: "Import Audio",
+                systemImage: "square.and.arrow.down",
+                perform: onImportAudio
+            )
+        }
+    }
+
+    struct RealtimeNotice {
+        struct Action {
+            let title: LocalizedStringKey
+            let systemImage: String
+            let perform: () -> Void
+        }
+
+        let systemImage: String
+        let title: LocalizedStringKey
+        let message: Text
+        let action: Action?
+    }
+
+    /// Shared inline notice for realtime setup, permission, and start-blocker states.
+    struct RealtimeNoticeBanner: View {
+        @Environment(\.colorScheme) private var colorScheme
+
+        let notice: RealtimeNotice
+
+        var body: some View {
+            HStack(spacing: 10) {
+                Image(systemName: notice.systemImage)
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+                    .frame(width: 20)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(notice.title)
+                        .font(.caption.bold())
+                        .foregroundStyle(.primary)
+                    notice.message
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                .accessibilityElement(children: .combine)
+
+                Spacer(minLength: 12)
+
+                if let action = notice.action {
+                    Button(action: action.perform) {
+                        Label(action.title, systemImage: action.systemImage)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                    .buttonStyle(.bordered)
+                    .layoutPriority(1)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .tlingoGlassSurface(
+                cornerRadius: 12,
+                tint: Color.orange.opacity(colorScheme == .dark ? 0.16 : 0.10),
+                fallbackTint: Color.orange.opacity(colorScheme == .dark ? 0.16 : 0.10),
+                fallbackStroke: Color.orange.opacity(0.28)
+            )
         }
     }
 #endif
