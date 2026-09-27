@@ -2,7 +2,11 @@
 #
 # Writes the gitignored ios/ShareCore/Configuration/AppSecrets.swift.
 #
-# - TLINGO_CLOUD_SECRET set: write real values from TLINGO_* environment variables (CI).
+# - Xcode Cloud: require the credentials used by the selected distribution and
+#   fail instead of shipping an app that points at placeholder hosts.
+# - TLINGO_CLOUD_SECRET set: write real values from TLINGO_* environment variables.
+# - Legacy AITRANSLATOR_*/SUPABASE_* names remain supported while the Xcode Cloud
+#   workflows migrate to TLINGO_* names.
 # - File already exists: keep it (local developer copy).
 # - Otherwise: write placeholders so the app compiles with cloud features disabled.
 
@@ -11,7 +15,30 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT="$ROOT/ios/ShareCore/Configuration/AppSecrets.swift"
 
-if [[ -z "${TLINGO_CLOUD_SECRET:-}" && -f "$OUTPUT" ]]; then
+CLOUD_ENDPOINT="${TLINGO_CLOUD_ENDPOINT:-${AITRANSLATOR_CLOUD_ENDPOINT:-}}"
+CLOUD_SECRET="${TLINGO_CLOUD_SECRET:-${AITRANSLATOR_CLOUD_SECRET:-}}"
+SUPABASE_URL="${TLINGO_SUPABASE_URL:-${SUPABASE_URL:-}}"
+SUPABASE_ANON_KEY="${TLINGO_SUPABASE_ANON_KEY:-${SUPABASE_ANON_KEY:-}}"
+
+if [[ -n "${CI_XCODE_CLOUD:-}" ]]; then
+    missing_variables=()
+    [[ -n "$CLOUD_ENDPOINT" ]] || missing_variables+=("TLINGO_CLOUD_ENDPOINT")
+    [[ -n "$CLOUD_SECRET" ]] || missing_variables+=("TLINGO_CLOUD_SECRET")
+
+    if [[ "${CI_WORKFLOW:-}" == "${DIRECT_RELEASE_WORKFLOW_NAME:-Direct Release}" ]]; then
+        [[ -n "$SUPABASE_URL" ]] || missing_variables+=("TLINGO_SUPABASE_URL")
+        [[ -n "$SUPABASE_ANON_KEY" ]] || missing_variables+=("TLINGO_SUPABASE_ANON_KEY")
+    fi
+
+    if (( ${#missing_variables[@]} > 0 )); then
+        printf 'Missing required Xcode Cloud environment variables: %s\n' \
+            "${missing_variables[*]}" >&2
+        echo "Configure them in the Xcode Cloud workflow before archiving TLingo." >&2
+        exit 1
+    fi
+fi
+
+if [[ -z "$CLOUD_SECRET" && -f "$OUTPUT" ]]; then
     echo "AppSecrets.swift exists; keeping local copy"
     exit 0
 fi
@@ -27,12 +54,12 @@ cat > "$OUTPUT" <<EOF
 import Foundation
 
 public enum AppSecrets {
-    public static let cloudEndpoint = URL(string: "${TLINGO_CLOUD_ENDPOINT:-https://example.invalid}")!
-    public static let cloudSecret = "${TLINGO_CLOUD_SECRET:-}"
+    public static let cloudEndpoint = URL(string: "${CLOUD_ENDPOINT:-https://example.invalid}")!
+    public static let cloudSecret = "$CLOUD_SECRET"
     public static let cloudAPIVersion = "${TLINGO_CLOUD_API_VERSION:-2025-01-01-preview}"
-    public static let supabaseURL = URL(string: "${TLINGO_SUPABASE_URL:-https://example.invalid}")!
-    public static let supabaseAnonKey = "${TLINGO_SUPABASE_ANON_KEY:-}"
+    public static let supabaseURL = URL(string: "${SUPABASE_URL:-https://example.invalid}")!
+    public static let supabaseAnonKey = "$SUPABASE_ANON_KEY"
 }
 EOF
 
-echo "Wrote $OUTPUT (cloud configured: $([[ -n "${TLINGO_CLOUD_SECRET:-}" ]] && echo yes || echo no))"
+echo "Wrote $OUTPUT (cloud configured: $([[ -n "$CLOUD_SECRET" ]] && echo yes || echo no), Supabase configured: $([[ -n "$SUPABASE_ANON_KEY" ]] && echo yes || echo no))"

@@ -25,6 +25,9 @@ swiftlint lint <touched-files>
 ```
 
 首次构建前运行 `./ci_scripts/generate-app-secrets.sh` 生成 `AppSecrets.swift`。
+Xcode Cloud 会在 post-clone 和 pre-xcodebuild 阶段重新生成该文件；正式工作流缺少所需的
+`TLINGO_*` 环境变量时必须直接失败，不得使用 `example.invalid` 占位配置继续归档。迁移期间脚本兼容
+已有的 `AITRANSLATOR_CLOUD_*` 和 `SUPABASE_*` 名称；新配置统一使用 `TLINGO_*`。
 
 ## Apple
 

@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$ROOT/ci_scripts/generate-app-secrets.sh"
+
 DIRECT_WORKFLOW_NAME="${DIRECT_RELEASE_WORKFLOW_NAME:-Direct Release}"
 
 if [[ "${CI_WORKFLOW:-}" != "$DIRECT_WORKFLOW_NAME" ]]; then
@@ -14,7 +17,6 @@ if [[ "${CI_XCODEBUILD_ACTION:-}" != "archive" ]]; then
     exit 0
 fi
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_FILE="$ROOT/ios/AITranslator.xcodeproj/project.pbxproj"
 VERSION="$({
     sed -nE 's/^[[:space:]]*MARKETING_VERSION = ([^;]+);/\1/p' "$PROJECT_FILE"
