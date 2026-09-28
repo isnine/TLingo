@@ -3,7 +3,7 @@
     import Foundation
     import os
     import Speech
-    #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+    #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
         import CoreML
         import FluidAudio
     #endif
@@ -127,7 +127,7 @@
                 guard model.supports(sourceLanguage: sourceLanguage) else {
                     throw RealtimeHistoryAudioPostProcessorError.unsupportedRecognitionModel(model.title)
                 }
-                #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+                #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                     return try await transcribeWithFluidAudio(
                         url: url,
                         model: model,
@@ -252,7 +252,7 @@
                         onSegmentUpdate: onSegmentUpdate
                     )
                 }
-                #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+                #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                     guard await RecognitionModelStore.shared.isModelCached(recognitionModel) else {
                         return try await transcribeWithAppleSpeech(
                             recordings,
@@ -285,7 +285,7 @@
             let model = recognitionModel(for: modelID)
             guard model.runtime == .fluidAudio else { return model }
             guard model.supports(sourceLanguage: sourceLanguage) else { return .appleSpeech }
-            #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+            #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                 return await RecognitionModelStore.shared.isModelCached(model) ? model : .appleSpeech
             #else
                 return .appleSpeech
@@ -541,7 +541,7 @@
             }
         }
 
-        #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+        #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
             private static func transcribeWithFluidAudio(
                 _ recordings: [RealtimeHistoryAudioRecording],
                 model: RecognitionModelDescriptor,

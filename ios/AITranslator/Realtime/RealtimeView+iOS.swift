@@ -50,7 +50,12 @@
         var body: some View {
             captionPane
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    languageControls
+                    if shouldShowSetupBanner {
+                        setupBanner(setupBannerText, systemImage: setupBannerSystemImage)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(colors.background)
+                    }
                 }
                 .background(colors.background.ignoresSafeArea())
                 .overlay {
@@ -104,19 +109,6 @@
                 }
         }
 
-        private var languageControls: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                languagePairControl
-                if shouldShowSetupBanner {
-                    setupBanner(setupBannerText, systemImage: setupBannerSystemImage)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(colors.background)
-        }
-
         @ToolbarContentBuilder
         private var realtimeToolbar: some ToolbarContent {
             if let onShowSidebarTap {
@@ -124,6 +116,9 @@
                     Button("Show Sidebar", systemImage: "sidebar.left", action: onShowSidebarTap)
                         .accessibilityIdentifier("ipad_show_sidebar_button")
                 }
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                languagePairControl
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button("Realtime Options", systemImage: "slider.horizontal.3") {
@@ -138,15 +133,6 @@
                     .disabled(!controlModel.isPauseEnabled(for: store))
                     .accessibilityIdentifier("realtime_pause_button")
                 }
-
-                Button(controlModel.startButtonTitle(for: store), systemImage: controlModel.startButtonSystemImage(for: store)) {
-                    Task {
-                        await controlModel.handleStartButtonTapped(store: store, preferences: preferences)
-                    }
-                }
-                .tint(store.isRunning ? colors.error : colors.accent)
-                .disabled(!controlModel.canUseStartButton(store: store, preferences: preferences))
-                .accessibilityIdentifier("realtime_start_button")
             }
         }
 
@@ -350,6 +336,7 @@
                 .font(captionFont(for: line.kind))
                 .foregroundStyle(captionForegroundStyle(for: line))
                 .lineSpacing(line.kind == .source ? 3 : 6)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .textSelection(.enabled)
         }

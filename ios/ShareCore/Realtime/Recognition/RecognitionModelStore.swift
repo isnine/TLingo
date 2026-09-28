@@ -1,7 +1,7 @@
 #if os(macOS) || os(iOS)
     import CryptoKit
     import Foundation
-    #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+    #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
         import FluidAudio
     #endif
 
@@ -282,7 +282,7 @@
         }
 
         private func isFluidAudioModelCached(_ model: RecognitionFluidAudioModel, at directory: URL) -> Bool {
-            #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+            #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                 switch model {
                 case .parakeetEOU320, .parakeetEOU1280:
                     let repo: Repo = model == .parakeetEOU320 ? .parakeetEou320 : .parakeetEou1280
@@ -347,7 +347,7 @@
             _ fluidAudioModel: RecognitionFluidAudioModel,
             descriptor: RecognitionModelDescriptor
         ) async throws -> URL {
-            #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+            #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                 let modelDirectory = cachedModelURL(for: descriptor)
                 if fileManager.fileExists(atPath: modelDirectory.path),
                    !isFluidAudioModelCached(fluidAudioModel, at: modelDirectory)
@@ -444,7 +444,7 @@
 
     public extension RecognitionModelStore {
         static var isFluidAudioRuntimeAvailable: Bool {
-            #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+            #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                 return true
             #else
                 return false

@@ -14,8 +14,12 @@
         let onImportAudio: () -> Void
 
         var body: some View {
-            if !SnapshotLaunchArguments.isSnapshotMode(), let notice {
-                RealtimeNoticeBanner(notice: notice)
+            if !SnapshotLaunchArguments.isSnapshotMode(), !notices.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach(notices) { notice in
+                        RealtimeNoticeBanner(notice: notice)
+                    }
+                }
                     .padding(.leading, 20)
                     .padding(.trailing, inspectorTrailingPadding)
                     .padding(.top, 16)
@@ -23,11 +27,28 @@
             }
         }
 
-        private var notice: RealtimeNotice? {
+        private var notices: [RealtimeNotice] {
+            var notices = store.modelDownloads.map {
+                RealtimeNotice(
+                    id: "model-download-\($0.id)",
+                    systemImage: "arrow.down.circle.fill",
+                    title: Text(verbatim: $0.title),
+                    message: Text("Downloading model"),
+                    progress: $0.progress,
+                    action: nil
+                )
+            }
+            if let setupNotice {
+                notices.insert(setupNotice, at: 0)
+            }
+            return notices
+        }
+
+        private var setupNotice: RealtimeNotice? {
             if let missingPermissionKind {
                 return RealtimeNotice(
                     systemImage: permissionSystemImage(for: missingPermissionKind),
-                    title: permissionTitle(for: missingPermissionKind),
+                    title: Text(permissionTitle(for: missingPermissionKind)),
                     message: Text(permissionMessage(for: missingPermissionKind)),
                     action: RealtimeNotice.Action(
                         title: permissionButtonTitle(for: missingPermissionKind),
@@ -39,7 +60,7 @@
             if setupRequirement == .languageSelection {
                 return RealtimeNotice(
                     systemImage: "globe",
-                    title: "Choose Languages",
+                    title: Text("Choose Languages"),
                     message: Text(languagePromptText),
                     action: nil
                 )
@@ -51,7 +72,7 @@
                 default:
                     return RealtimeNotice(
                         systemImage: startBlockerSystemImage(for: startBlocker),
-                        title: "Can’t Start Realtime Translation",
+                        title: Text("Can’t Start Realtime Translation"),
                         message: Text(verbatim: message),
                         action: startBlockerAction(for: startBlocker)
                     )
@@ -161,17 +182,35 @@
         }
     }
 
-    struct RealtimeNotice {
+    struct RealtimeNotice: Identifiable {
         struct Action {
             let title: LocalizedStringKey
             let systemImage: String
             let perform: () -> Void
         }
 
+        let id: String
         let systemImage: String
-        let title: LocalizedStringKey
+        let title: Text
         let message: Text
+        let progress: Double?
         let action: Action?
+
+        init(
+            id: String = UUID().uuidString,
+            systemImage: String,
+            title: Text,
+            message: Text,
+            progress: Double? = nil,
+            action: Action?
+        ) {
+            self.id = id
+            self.systemImage = systemImage
+            self.title = title
+            self.message = message
+            self.progress = progress
+            self.action = action
+        }
     }
 
     /// Shared inline notice for realtime setup, permission, and start-blocker states.
@@ -189,7 +228,7 @@
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(notice.title)
+                    notice.title
                         .font(.caption.bold())
                         .foregroundStyle(.primary)
                     notice.message
@@ -201,7 +240,17 @@
 
                 Spacer(minLength: 12)
 
-                if let action = notice.action {
+                if let progress = notice.progress {
+                    HStack(spacing: 8) {
+                        ProgressView(value: progress)
+                            .frame(width: 84)
+                        Text(progress, format: .percent.precision(.fractionLength(0)))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, alignment: .trailing)
+                    }
+                    .accessibilityElement(children: .combine)
+                } else if let action = notice.action {
                     Button(action: action.perform) {
                         Label(action.title, systemImage: action.systemImage)
                             .fixedSize(horizontal: true, vertical: false)

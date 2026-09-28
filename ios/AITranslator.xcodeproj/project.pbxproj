@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
 		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
-		BB249D1C81B6D81D3A945314 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 5CB052C0DD54E66D1CAEC997 /* FluidAudio */; };
+		BB249D1C81B6D81D3A945314 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CB052C0DD54E66D1CAEC997 /* FluidAudio */; };
 		C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C470DB9D2F37431400517417 /* StoreKit.framework */; };
 		CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
 		CE22638F2EB250C100BB7BEF /* ShareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };

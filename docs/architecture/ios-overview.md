@@ -45,7 +45,7 @@ flowchart LR
 - `LLMService` routes Worker models through the Worker and Apple Foundation Models through `FoundationModelService`: `apple-foundation-model` runs on-device, while `apple-private-cloud` uses Private Cloud Compute.
 - `RealtimeSessionStore` owns one Realtime session generation, shared producer lifecycle, macOS lane configuration and final History snapshot.
 - On macOS, `RealtimePipelineCoordinator` owns the shared recognition/translation execution graph. Recognition nodes are keyed by model ID, Azure audio translation is shared, and lane runtimes own independent transcript and translation state.
-- FluidAudio adapters normalize Parakeet EOU, English Nemotron and Nemotron 3.5 Multilingual output into stable and pending transcript snapshots before lane fanout.
+- FluidAudio adapters normalize Parakeet EOU, English Nemotron and Nemotron 3.5 Multilingual output into stable and pending transcript snapshots for macOS lane fanout and iOS microphone recognition. iOS models download into the app cache when selected.
 - `RealtimeR2T2Recognizer` runs Confucius4 R2T2 through `mlx-audio-swift` `Qwen3ASRModel` and produces the same stable and pending snapshots.
 - Realtime snapshots may carry stable recognition segments and one pending segment so model EOU boundaries survive Caption, History and LRC rendering.
 - A macOS realtime lane may select `None` as its translation provider to publish and persist source transcription without creating a translation node.

@@ -25,10 +25,26 @@
         }
     }
 
+    #if os(macOS)
+        public struct RealtimeModelDownload: Identifiable, Equatable {
+            public let id: String
+            public let title: String
+            public var progress: Double
+
+            public init(id: String, title: String, progress: Double) {
+                self.id = id
+                self.title = title
+                self.progress = progress
+            }
+        }
+    #endif
+
     @MainActor
     public final class RealtimeSessionStore: ObservableObject {
         public static let shared = RealtimeSessionStore()
-        private static let captionLineDisplayLimit = 160
+        #if os(macOS)
+            private static let captionLineDisplayLimit = 160
+        #endif
         private static let realtimeHistoryAutosaveInterval: TimeInterval = 5
 
         @Published public var inputSource: RealtimeAudioInputSource = .default
@@ -71,6 +87,7 @@
             @Published public private(set) var primaryLaneID = UUID()
             @Published public private(set) var isRealtimeMemoryConstrained = false
             @Published public private(set) var importedAudioURL: URL?
+            @Published public private(set) var modelDownloads: [RealtimeModelDownload] = []
         #endif
 
         public var audioLevelFraction: Double {
@@ -85,6 +102,29 @@
                 requiresTargetLanguage: preferences.realtimeTranslationProvider.performsTranslation
             )
         }
+
+        #if os(macOS)
+            public func updateModelDownload(
+                id: String,
+                title: String,
+                progress: Double
+            ) {
+                let download = RealtimeModelDownload(
+                    id: id,
+                    title: title,
+                    progress: min(max(progress, 0), 1)
+                )
+                if let index = modelDownloads.firstIndex(where: { $0.id == id }) {
+                    modelDownloads[index] = download
+                } else {
+                    modelDownloads.append(download)
+                }
+            }
+
+            public func removeModelDownload(id: String) {
+                modelDownloads.removeAll { $0.id == id }
+            }
+        #endif
 
         private nonisolated let transcriber = RealtimeLiveSpeechTranscriber()
         private nonisolated let activeRecognizer = RealtimeRecognizerSlot()
@@ -1193,7 +1233,7 @@
                         activeRecognizer.set(transcriber)
                         return transcriber.sampleRate
                     case .fluidAudio:
-                        #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+                        #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                             let recognizer = RealtimeFluidAudioRecognizer(delegate: self)
                             try await recognizer.start(model: model, locale: speechLocale(), sessionID: sessionID)
                             activeRecognizer.set(recognizer)
@@ -2200,16 +2240,18 @@
         func refreshCaptionLines(event: String) {
             let startedAt = Date()
             let allLines = resolvedCaptionLines()
-            let visibleLines = RealtimeCaptionDisplay.displayWindow(
-                RealtimeCaptionDisplay.linesVisibleAfterClear(allLines, anchor: captionClearAnchor),
-                limit: Self.captionLineDisplayLimit
-            )
-            assignIfChanged(&captionLines, visibleLines)
+            let visibleLines = RealtimeCaptionDisplay.linesVisibleAfterClear(allLines, anchor: captionClearAnchor)
+            #if os(macOS)
+                let displayLines = RealtimeCaptionDisplay.displayWindow(visibleLines, limit: Self.captionLineDisplayLimit)
+            #else
+                let displayLines = visibleLines
+            #endif
+            assignIfChanged(&captionLines, displayLines)
             let elapsedMs = Date().timeIntervalSince(startedAt) * 1000
             logRealtime(
                 """
                 captionLines refreshed event=\(event) sourceSegments=\(presentationSourceSegments.count) \
-                pairs=\(sentencePairs.count) allLines=\(allLines.count) visibleLines=\(visibleLines.count) \
+                pairs=\(sentencePairs.count) allLines=\(allLines.count) visibleLines=\(displayLines.count) \
                 elapsedMs=\(String(format: "%.2f", elapsedMs))
                 """
             )
@@ -2637,7 +2679,7 @@
         }
     }
 
-    #if os(macOS) && arch(arm64) && canImport(FluidAudio)
+    #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
         extension RealtimeSessionStore: RealtimeFluidAudioRecognizerDelegate {
             nonisolated func realtimeFluidAudioRecognizer(
                 _: RealtimeFluidAudioRecognizer,

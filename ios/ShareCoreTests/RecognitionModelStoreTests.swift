@@ -25,7 +25,7 @@
             #if os(macOS)
                 #expect(RecognitionModelStore.availableModels == [.appleSpeech] + fluidAudioModels)
             #else
-                #expect(RecognitionModelStore.availableModels == [.appleSpeech])
+                #expect(RecognitionModelStore.availableModels == [.appleSpeech] + Array(fluidAudioModels.dropLast()))
             #endif
             #expect(RecognitionModelStore.selectableModels == [.appleSpeech] + fluidAudioModels)
             #expect(RecognitionModelStore.knownModels == [
@@ -150,15 +150,11 @@
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("tokenizer.json"))
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("metadata.json"))
 
-            #if os(macOS)
-                #expect(await store.isModelCached(.nemotronStreaming1120))
-                try FileManager.default.removeItem(
-                    at: modelDirectory.appendingPathComponent("decoder_joint.mlmodelc/model.mil")
-                )
-                #expect(!(await store.isModelCached(.nemotronStreaming1120)))
-            #else
-                #expect(!(await store.isModelCached(.nemotronStreaming1120)))
-            #endif
+            #expect(await store.isModelCached(.nemotronStreaming1120))
+            try FileManager.default.removeItem(
+                at: modelDirectory.appendingPathComponent("decoder_joint.mlmodelc/model.mil")
+            )
+            #expect(!(await store.isModelCached(.nemotronStreaming1120)))
 
             try? FileManager.default.removeItem(at: cacheURL)
         }
@@ -178,11 +174,7 @@
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("tokenizer.json"))
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("metadata.json"))
 
-            #if os(macOS)
-                #expect(await store.isModelCached(model))
-            #else
-                #expect(!(await store.isModelCached(model)))
-            #endif
+            #expect(await store.isModelCached(model))
 
             try? FileManager.default.removeItem(at: cacheURL)
         }

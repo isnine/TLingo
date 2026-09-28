@@ -54,6 +54,9 @@
                 for task in modelDownloadTasks.values {
                     task.cancel()
                 }
+                for modelID in modelDownloadTasks.keys {
+                    store.removeModelDownload(id: modelID)
+                }
                 modelDownloadTasks.removeAll()
             }
         }
@@ -193,14 +196,18 @@
             }
             desiredModelIDAfterDownload = model.id
             modelDownloadProgress[model.id] = 0
+            store.updateModelDownload(id: model.id, title: model.title, progress: 0)
             modelDownloadError = nil
+            isModelPickerPresented = false
             modelDownloadTasks[model.id] = Task { @MainActor in
                 let progressTask = Task { @MainActor in
                     while !Task.isCancelled {
-                        modelDownloadProgress[model.id] =
+                        let progress =
                             await downloadProgress(for: model) ??
                             modelDownloadProgress[model.id] ??
                             0
+                        modelDownloadProgress[model.id] = progress
+                        store.updateModelDownload(id: model.id, title: model.title, progress: progress)
                         try? await Task.sleep(for: .milliseconds(250))
                     }
                 }
@@ -208,6 +215,7 @@
                     progressTask.cancel()
                     modelDownloadTasks[model.id] = nil
                     modelDownloadProgress[model.id] = nil
+                    store.removeModelDownload(id: model.id)
                 }
 
                 do {

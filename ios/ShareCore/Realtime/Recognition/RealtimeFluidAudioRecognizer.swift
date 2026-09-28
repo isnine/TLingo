@@ -1,9 +1,14 @@
-#if os(macOS) && arch(arm64) && canImport(FluidAudio)
+#if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
     import AVFoundation
     import CoreMedia
     import FluidAudio
     import Foundation
     import os
+
+    private let realtimeFluidAudioLogger = Logger(
+        subsystem: "com.zanderwang.AITranslator",
+        category: "RealtimeRecognition"
+    )
 
     protocol RealtimeFluidAudioRecognizerDelegate: AnyObject {
         func realtimeFluidAudioRecognizer(
@@ -423,7 +428,7 @@
                     let endOffset = stateLock.withLock {
                         Double(processedSampleCount) / Double(sampleRate)
                     }
-                    stateLock.withLock {
+                    _ = stateLock.withLock {
                         transcriptState.commit(
                             finalText,
                             boundaryReason: .terminal,
@@ -438,7 +443,7 @@
             }
 
             let finalDiagnostics = diagnostics
-            realtimePipelineLogger.info(
+            realtimeFluidAudioLogger.info(
                 """
                 recognition diagnostics inputOffset=\(finalDiagnostics.inputAudioOffset) \
                 processedOffset=\(finalDiagnostics.processedAudioOffset) \
