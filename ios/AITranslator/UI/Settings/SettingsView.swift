@@ -684,8 +684,10 @@ private extension SettingsView {
 
     #if os(macOS)
         var hotKeyPreferenceRow: some View {
-            VStack(spacing: 0) {
-                ForEach(HotKeyType.allCases, id: \.self) { type in
+            let visibleHotKeyTypes = HotKeyType.allCases.filter { $0 != .screenshotOCR }
+
+            return VStack(spacing: 0) {
+                ForEach(visibleHotKeyTypes, id: \.self) { type in
                     let config = hotKeyManager.configuration(for: type)
                     let isRecording = recordingHotKeyType == type
 
@@ -754,7 +756,7 @@ private extension SettingsView {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
 
-                    if type != HotKeyType.allCases.last {
+                    if type != visibleHotKeyTypes.last {
                         Divider()
                             .padding(.leading, 68)
                     }

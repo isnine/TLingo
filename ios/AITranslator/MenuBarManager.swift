@@ -11,6 +11,48 @@
     import ShareCore
     import SwiftUI
 
+    @MainActor
+    enum MenuBarAction: Int, CaseIterable {
+        case openMainWindow
+        case toggleRealtimeCaptions
+        case screenshotTranslate
+        case selectionTranslate
+        case clipboardTranslate
+        case quit
+
+        var title: String {
+            switch self {
+            case .openMainWindow:
+                NSLocalizedString("Open Main Window", comment: "Status bar context menu item to open the main app window")
+            case .toggleRealtimeCaptions:
+                RealtimeCaptionVisibility.menuTitle(isVisible: RealtimeFloatingCaptionWindowController.isOpen)
+            case .screenshotTranslate:
+                HotKeyType.screenshotTranslate.displayName
+            case .selectionTranslate:
+                HotKeyType.selectionTranslate.displayName
+            case .clipboardTranslate:
+                HotKeyType.clipboardTranslate.displayName
+            case .quit:
+                NSLocalizedString("Quit TLingo", comment: "Status bar context menu item to quit the app")
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .openMainWindow: "macwindow"
+            case .toggleRealtimeCaptions: "text.bubble"
+            case .screenshotTranslate: HotKeyType.screenshotTranslate.iconName
+            case .selectionTranslate: HotKeyType.selectionTranslate.iconName
+            case .clipboardTranslate: HotKeyType.clipboardTranslate.iconName
+            case .quit: "power"
+            }
+        }
+
+        var startsSection: Bool {
+            self == .screenshotTranslate || self == .quit
+        }
+    }
+
     /// Manages the menu bar status item with popover UI for quick action execution
     @MainActor
     final class MenuBarManager: NSObject, ObservableObject {
@@ -162,31 +204,16 @@
         private func showContextMenu() {
             let menu = NSMenu()
 
-            let openItem = NSMenuItem(
-                title: NSLocalizedString("Open Main Window", comment: "Status bar context menu item to open the main app window"),
-                action: #selector(openMainWindowAction),
-                keyEquivalent: ""
-            )
-            openItem.target = self
-            menu.addItem(openItem)
+            for action in MenuBarAction.allCases {
+                if action.startsSection {
+                    menu.addItem(.separator())
+                }
 
-            let captionsItem = NSMenuItem(
-                title: RealtimeCaptionVisibility.menuTitle(isVisible: RealtimeFloatingCaptionWindowController.isOpen),
-                action: #selector(toggleRealtimeCaptionsAction),
-                keyEquivalent: ""
-            )
-            captionsItem.target = self
-            menu.addItem(captionsItem)
-
-            menu.addItem(.separator())
-
-            let quitItem = NSMenuItem(
-                title: NSLocalizedString("Quit TLingo", comment: "Status bar context menu item to quit the app"),
-                action: #selector(quitAppAction),
-                keyEquivalent: ""
-            )
-            quitItem.target = self
-            menu.addItem(quitItem)
+                let item = NSMenuItem(title: action.title, action: #selector(menuItemSelected(_:)), keyEquivalent: "")
+                item.target = self
+                item.tag = action.rawValue
+                menu.addItem(item)
+            }
 
             if let button = statusItem?.button {
                 // Temporarily set the menu and trigger it
@@ -196,17 +223,31 @@
             }
         }
 
-        @objc private func openMainWindowAction() {
-            closePopover()
-            AppDelegate.shared?.openMainWindow()
+        @objc private func menuItemSelected(_ sender: NSMenuItem) {
+            guard let action = MenuBarAction(rawValue: sender.tag) else { return }
+            perform(action)
         }
 
-        @objc private func toggleRealtimeCaptionsAction() {
+        func perform(_ action: MenuBarAction) {
             closePopover()
-            let shouldShow = RealtimeCaptionVisibility.toggledValue(
-                isVisible: RealtimeFloatingCaptionWindowController.isOpen
-            )
-            setRealtimeCaptionsVisible(shouldShow)
+
+            switch action {
+            case .openMainWindow:
+                AppDelegate.shared?.openMainWindow()
+            case .toggleRealtimeCaptions:
+                let shouldShow = RealtimeCaptionVisibility.toggledValue(
+                    isVisible: RealtimeFloatingCaptionWindowController.isOpen
+                )
+                setRealtimeCaptionsVisible(shouldShow)
+            case .screenshotTranslate:
+                AppDelegate.shared?.translateScreenshot()
+            case .selectionTranslate:
+                AppDelegate.shared?.translateCurrentSelection()
+            case .clipboardTranslate:
+                AppDelegate.shared?.translateClipboard()
+            case .quit:
+                NSApp.terminate(nil)
+            }
         }
 
         private func setRealtimeCaptionsVisible(_ isVisible: Bool) {
@@ -218,10 +259,6 @@
             } else {
                 RealtimeFloatingCaptionWindowController.close()
             }
-        }
-
-        @objc private func quitAppAction() {
-            NSApp.terminate(nil)
         }
 
         @objc private func togglePopover(_: Any?) {

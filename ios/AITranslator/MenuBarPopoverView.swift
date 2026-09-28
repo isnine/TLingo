@@ -206,11 +206,6 @@
             viewModel.performSelectedAction()
         }
 
-        private func openMainWindow() {
-            onClose()
-            AppDelegate.shared?.openMainWindow()
-        }
-
         /// Hand off the current input / selected action / translation results to
         /// the main window's HomeView, then bring the main window to the front.
         private func openInMainApp() {
@@ -262,18 +257,16 @@
                     .help("Open current translation in the main app window")
 
                     Menu {
-                        Button {
-                            openMainWindow()
-                        } label: {
-                            Label("Open Main Window", systemImage: "macwindow")
-                        }
+                        ForEach(MenuBarAction.allCases, id: \.self) { action in
+                            if action.startsSection {
+                                Divider()
+                            }
 
-                        Divider()
-
-                        Button(role: .destructive) {
-                            NSApp.terminate(nil)
-                        } label: {
-                            Label("Quit TLingo", systemImage: "power")
+                            Button(role: action == .quit ? .destructive : nil) {
+                                MenuBarManager.shared.perform(action)
+                            } label: {
+                                Label(action.title, systemImage: action.systemImage)
+                            }
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
