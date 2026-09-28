@@ -19,6 +19,7 @@ public struct ConversationInputBar: View {
     let onStop: () -> Void
 
     @State private var editorHeight: CGFloat = 36
+    @State private var showModelSelectionSheet = false
     #if os(iOS)
         @State private var isPhotoPickerPresented = false
         @State private var selectedPhotoItems: [PhotosPickerItem] = []
@@ -99,7 +100,9 @@ public struct ConversationInputBar: View {
             }
 
             HStack(alignment: .bottom, spacing: 8) {
-                addMenu
+                if onAddImages != nil {
+                    addMenu
+                }
 
                 composerSurface
             }
@@ -109,6 +112,11 @@ public struct ConversationInputBar: View {
     private var composerSurface: some View {
         HStack(alignment: .bottom, spacing: 4) {
             textEditor
+
+            if !availableModels.isEmpty {
+                modelSelectionButton
+                    .padding(.vertical, 4)
+            }
 
             actionButton
                 .padding(4)
@@ -176,14 +184,6 @@ public struct ConversationInputBar: View {
     private var addMenu: some View {
         Menu {
             imageMenuItem
-
-            if !availableModels.isEmpty {
-                ModelPickerMenu(
-                    selectedModel: $selectedModel,
-                    availableModels: availableModels,
-                    onRequiresPro: onRequiresPro
-                )
-            }
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 15, weight: .medium))
@@ -197,9 +197,9 @@ public struct ConversationInputBar: View {
                 )
         }
         .buttonStyle(.plain)
-        .disabled(onAddImages == nil && availableModels.isEmpty)
-        .help("Add Image or Change Model")
-        .accessibilityLabel("Add Image or Change Model")
+        .disabled(onAddImages == nil)
+        .help("Add Image")
+        .accessibilityLabel("Add Image")
         #if os(iOS)
             .photosPicker(
                 isPresented: $isPhotoPickerPresented,
@@ -211,6 +211,39 @@ public struct ConversationInputBar: View {
                 await loadSelectedPhotos()
             }
         #endif
+    }
+
+    private var modelSelectionButton: some View {
+        Button {
+            showModelSelectionSheet = true
+        } label: {
+            HStack(spacing: 5) {
+                Text(selectedModel.displayName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Image(systemName: "cpu")
+                    .font(.system(size: 12, weight: .semibold))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 7, weight: .semibold))
+                    .opacity(0.65)
+            }
+            .foregroundColor(colors.textPrimary)
+            .frame(width: 132, alignment: .trailing)
+            .frame(minHeight: 32)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Models")
+        .accessibilityValue(selectedModel.displayName)
+        .accessibilityIdentifier("conversation_model_picker")
+        .sheet(isPresented: $showModelSelectionSheet) {
+            ModelSelectionSheet(
+                selectedModel: $selectedModel,
+                availableModels: availableModels,
+                onRequiresPro: onRequiresPro
+            )
+        }
     }
 
     @ViewBuilder

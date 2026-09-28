@@ -22,9 +22,6 @@ struct ModelResultOrderTests {
             runs, order: .firstCompletedFirst, catalog: [premium, free]
         ).map(\.id) == [free.id, premium.id])
         #expect(HomeViewModel.sortModelRuns(
-            runs, order: .lastCompletedFirst, catalog: [premium, free]
-        ).map(\.id) == [premium.id, free.id])
-        #expect(HomeViewModel.sortModelRuns(
             runs, order: .modelList, catalog: [premium, free]
         ).map(\.id) == [premium.id, free.id])
     }
@@ -43,12 +40,11 @@ struct ModelResultOrderTests {
             model: ModelConfig.appleTranslate,
             status: .failure(message: "Failed", duration: 0)
         )
-        for order in [ModelResultOrder.firstCompletedFirst, .lastCompletedFirst] {
-            #expect(HomeViewModel.sortModelRuns(
-                [failed, pending, completed(free, at: 10)],
-                order: order, catalog: [premium, free, ModelConfig.appleTranslate]
-            ).map(\.id) == [free.id, premium.id, ModelConfig.appleTranslateID])
-        }
+        #expect(HomeViewModel.sortModelRuns(
+            [failed, pending, completed(free, at: 10)],
+            order: .firstCompletedFirst,
+            catalog: [premium, free, ModelConfig.appleTranslate]
+        ).map(\.id) == [free.id, premium.id, ModelConfig.appleTranslateID])
         #expect(HomeViewModel.sortModelRuns(
             [failed, pending, completed(free, at: 10)],
             order: .modelList, catalog: [ModelConfig.appleTranslate, premium, free]
@@ -61,7 +57,7 @@ struct ModelResultOrderTests {
             runs, order: .firstCompletedFirst, catalog: []
         ).map(\.id) == runs.map(\.id))
         #expect(HomeViewModel.sortModelRuns(
-            runs, order: .lastCompletedFirst, catalog: [premium, free]
+            runs, order: .modelList, catalog: [premium, free]
         ).map(\.id) == [premium.id, free.id])
     }
 
@@ -75,8 +71,8 @@ struct ModelResultOrderTests {
         ).map(\.id) == [premium.id, free.id])
         retried = completed(free, at: 30)
         #expect(HomeViewModel.sortModelRuns(
-            [retried, other], order: .lastCompletedFirst, catalog: [free, premium]
-        ).map(\.id) == [free.id, premium.id])
+            [retried, other], order: .firstCompletedFirst, catalog: [free, premium]
+        ).map(\.id) == [premium.id, free.id])
     }
 
     @Test func preferenceDefaultsPersistsAndRefreshes() throws {
@@ -89,9 +85,9 @@ struct ModelResultOrderTests {
             preferences.setModelResultOrder(order)
             #expect(AppPreferences(defaults: defaults).modelResultOrder == order)
         }
-        defaults.set(ModelResultOrder.lastCompletedFirst.rawValue, forKey: "model_result_order")
+        defaults.set("lastCompletedFirst", forKey: "model_result_order")
         preferences.refreshFromDefaults()
-        #expect(preferences.modelResultOrder == .lastCompletedFirst)
+        #expect(preferences.modelResultOrder == .firstCompletedFirst)
         defaults.set("invalid", forKey: "model_result_order")
         preferences.refreshFromDefaults()
         #expect(preferences.modelResultOrder == .firstCompletedFirst)

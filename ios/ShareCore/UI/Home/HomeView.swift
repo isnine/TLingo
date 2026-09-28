@@ -40,6 +40,7 @@ public struct HomeView: View {
     #endif
     @StateObject private var viewModel: HomeViewModel
     @ObservedObject private var preferences = AppPreferences.shared
+    @ObservedObject private var entitlement = Entitlement.shared
     @State private var hasTriggeredAutoRequest = false
     @State private var isInputExpanded: Bool
     @State private var showingProviderInfo: String?
@@ -276,6 +277,9 @@ public struct HomeView: View {
         #endif
             .toolbar {
                 #if os(macOS)
+                    ToolbarItem(placement: .navigation) {
+                        resultOrderMenu
+                    }
                     if activeConversationSession != nil {
                         ToolbarItem(placement: .primaryAction) {
                             conversationInspectorToggleButton
@@ -283,6 +287,9 @@ public struct HomeView: View {
                     }
                 #elseif os(iOS)
                     if usesNativeNavigationChrome {
+                        ToolbarItem(placement: .topBarLeading) {
+                            resultOrderMenu
+                        }
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             if let onHistoryTap {
                                 Button("History", systemImage: "clock.arrow.circlepath", action: onHistoryTap)
@@ -1132,15 +1139,32 @@ public struct HomeView: View {
         .accessibilityIdentifier("home_model_picker")
     }
 
+    private var resultOrderMenu: some View {
+        Menu {
+            Picker("Result Order", selection: Binding(
+                get: { preferences.modelResultOrder },
+                set: { preferences.setModelResultOrder($0) }
+            )) {
+                ForEach(ModelResultOrder.allCases, id: \.self) { order in
+                    Text(order.title).tag(order)
+                }
+            }
+        } label: {
+            Label("Result Order", systemImage: "arrow.up.arrow.down")
+        }
+        .accessibilityIdentifier("home_result_order")
+        .accessibilityValue(preferences.modelResultOrder.title)
+    }
+
     @ViewBuilder
     private var modelSelectionButtonLabel: some View {
         HStack(spacing: 7) {
-            Image(systemName: "cpu")
-                .font(.system(size: 13, weight: .semibold))
             Text(modelSelectionTitle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
+            Image(systemName: "cpu")
+                .font(.system(size: 13, weight: .semibold))
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 8, weight: .semibold))
                 .opacity(0.65)
@@ -1150,15 +1174,9 @@ public struct HomeView: View {
             .frame(width: 170, alignment: .trailing)
             .contentShape(Rectangle())
         #else
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(maxWidth: 170, alignment: .leading)
-            .tlingoGlassCapsule(
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                interactive: true,
-                fallbackTint: colors.chipSecondaryBackground.opacity(0.58),
-                fallbackStroke: colors.divider
-            )
+            .frame(width: 170, alignment: .trailing)
+            .frame(minHeight: 32)
+            .contentShape(Rectangle())
         #endif
     }
 
@@ -1233,8 +1251,11 @@ public struct HomeView: View {
             displayModels.append(ModelConfig.privateCloudModel)
         }
         displayModels.append(contentsOf: viewModel.models.filter { enabledIDs.contains($0.id) })
+        displayModels = displayModels.filter { entitlement.isPro || !$0.isPremium }
         if displayModels.isEmpty {
-            displayModels = viewModel.models.filter(\.isDefault)
+            displayModels = viewModel.models.filter {
+                $0.isDefault && (entitlement.isPro || !$0.isPremium)
+            }
         }
         return displayModels
     }

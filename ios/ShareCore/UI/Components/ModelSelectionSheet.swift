@@ -11,13 +11,14 @@ public struct ModelSelectionSheet: View {
     @ObservedObject private var preferences = AppPreferences.shared
     @ObservedObject private var entitlement = Entitlement.shared
     @State private var enabledModelIDs: Set<String>
-    @State private var message: String?
+    @State private var selectionAlertReason: ModelSelectionPolicy.Reason?
     @State private var foundationModelAlertMessage = ""
     @State private var showFoundationModelAlert = false
     @State private var showCollapsedFreeModels = false
     @State private var showCollapsedPremiumModels = false
     @State private var cloudModels: [ModelConfig]
 
+    private let selectedModel: Binding<ModelConfig>?
     private let onRequiresPro: (() -> Void)?
 
     private var colors: AppColorPalette {
@@ -32,31 +33,65 @@ public struct ModelSelectionSheet: View {
         translationServices + ModelConfig.appleIntelligenceModels + cloudModels
     }
 
+    private var displayedTranslationServices: [ModelConfig] {
+        guard selectedModel != nil else { return translationServices }
+        let availableIDs = Set(cloudModels.map(\.id))
+        return translationServices.filter { availableIDs.contains($0.id) }
+    }
+
+    private var displayedAppleIntelligenceModels: [ModelConfig] {
+        guard selectedModel != nil else { return ModelConfig.appleIntelligenceModels }
+        let availableIDs = Set(cloudModels.map(\.id))
+        return ModelConfig.appleIntelligenceModels.filter { availableIDs.contains($0.id) }
+    }
+
+    private var displayedCloudModels: [ModelConfig] {
+        guard selectedModel != nil else { return cloudModels }
+        let builtInModelIDs = Set(
+            ModelConfig.translationServices.map(\.id) + ModelConfig.appleIntelligenceModels.map(\.id)
+        )
+        return cloudModels.filter { !builtInModelIDs.contains($0.id) }
+    }
+
     private var modelSections: ModelListSections {
-        ModelListSections(cloudModels: cloudModels, enabledIDs: enabledModelIDs)
+        ModelListSections(cloudModels: displayedCloudModels, enabledIDs: enabledModelIDs)
     }
 
     public init(cloudModels: [ModelConfig], onRequiresPro: (() -> Void)? = nil) {
+        selectedModel = nil
         self.onRequiresPro = onRequiresPro
         _cloudModels = State(initialValue: cloudModels)
         _enabledModelIDs = State(initialValue: AppPreferences.shared.enabledModelIDs)
+    }
+
+    public init(
+        selectedModel: Binding<ModelConfig>,
+        availableModels: [ModelConfig],
+        onRequiresPro: (() -> Void)? = nil
+    ) {
+        self.selectedModel = selectedModel
+        self.onRequiresPro = onRequiresPro
+        _cloudModels = State(initialValue: availableModels)
+        _enabledModelIDs = State(initialValue: [selectedModel.wrappedValue.id])
     }
 
     public var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    resultOrderSection
-
-                    if let message {
-                        messageBanner(message)
+                    if !displayedTranslationServices.isEmpty {
+                        ModelSectionCard(
+                            title: "Translation",
+                            icon: "globe",
+                            models: displayedTranslationServices
+                        ) { model in
+                            modelRow(model)
+                        }
                     }
 
-                    ModelSectionCard(title: "Translation", icon: "globe", models: translationServices) { model in
-                        modelRow(model)
+                    if !displayedAppleIntelligenceModels.isEmpty {
+                        appleIntelligenceSection
                     }
-
-                    appleIntelligenceSection
 
                     if !modelSections.visibleFreeModels.isEmpty || !modelSections.collapsedFreeModels.isEmpty {
                         ModelSectionCard(
@@ -96,20 +131,53 @@ public struct ModelSelectionSheet: View {
                     }
                 }
                 .onReceive(preferences.$enabledModelIDs) { newValue in
+                    guard selectedModel == nil else { return }
                     enabledModelIDs = newValue
                 }
                 .task {
                     async let entitlementRefresh: Bool = entitlement.refreshAndGetIsPro()
-                    let fetchedModels = try? await ModelsService.shared.fetchModels(forceRefresh: true)
+                    let fetchedModels: [ModelConfig]?
+                    if selectedModel == nil {
+                        fetchedModels = try? await ModelsService.shared.fetchModels(forceRefresh: true)
+                    } else {
+                        fetchedModels = nil
+                    }
                     _ = await entitlementRefresh
                     if let fetchedModels {
                         cloudModels = fetchedModels
                     }
                 }
         }
-        .alert("Apple Intelligence", isPresented: $showFoundationModelAlert) {
-        } message: {
+        .alert("Apple Intelligence", isPresented: $showFoundationModelAlert) {} message: {
             Text(foundationModelAlertMessage)
+        }
+        .alert(
+            "Models",
+            isPresented: Binding(
+                get: { selectionAlertReason != nil },
+                set: {
+                    if !$0 {
+                        selectionAlertReason = nil
+                    }
+                }
+            ),
+            presenting: selectionAlertReason
+        ) { reason in
+            if reason == .requiresPro, onRequiresPro != nil {
+                Button("Upgrade") {
+                    selectionAlertReason = nil
+                    onRequiresPro?()
+                }
+                Button("Cancel", role: .cancel) {
+                    selectionAlertReason = nil
+                }
+            } else {
+                Button("OK") {
+                    selectionAlertReason = nil
+                }
+            }
+        } message: { reason in
+            Text(message(for: reason))
         }
         #if os(iOS)
         .presentationDetents([.medium, .large])
@@ -117,50 +185,18 @@ public struct ModelSelectionSheet: View {
         #endif
     }
 
-    private var resultOrderSection: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack {
-                Text("Result Order")
-                    .fixedSize()
-                Spacer()
-                resultOrderPicker
-                    .fixedSize()
-            }
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Result Order")
-                resultOrderPicker
-            }
-        }
-        .padding(16)
-        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    private var resultOrderPicker: some View {
-        Picker("Result Order", selection: Binding(
-            get: { preferences.modelResultOrder },
-            set: { preferences.setModelResultOrder($0) }
-        )) {
-            ForEach(ModelResultOrder.allCases, id: \.self) { order in
-                Text(order.title).tag(order)
-            }
-        }
-        .pickerStyle(.menu)
-        .labelsHidden()
-        .accessibilityIdentifier("modelSelection.resultOrder")
-    }
-
     private var appleIntelligenceSection: some View {
         ModelSectionCard(
             title: "Apple Intelligence",
             icon: "apple.intelligence",
-            models: ModelConfig.appleIntelligenceModels
+            models: displayedAppleIntelligenceModels
         ) { model in
             modelRow(model)
         }
     }
 
     private func modelRow(_ model: ModelConfig) -> some View {
-        let isEnabled = enabledModelIDs.contains(model.id)
+        let isEnabled = selectedModel.map { $0.wrappedValue.id == model.id } ?? enabledModelIDs.contains(model.id)
         let isLocked = model.isPremium && !entitlement.isPro
         let foundationAvailability = FoundationModelService.availability(for: model)
         let isFoundationUnavailable = model.isFoundationModel && !foundationAvailability.isAvailable && !isEnabled
@@ -175,7 +211,7 @@ public struct ModelSelectionSheet: View {
                 : (model.isDirectTranslation ? directModelSubtitle(for: model) : model.id),
             showsModelTags: !model.isDirectTranslation && !model.isFoundationModel
         ) {
-            toggle(model)
+            select(model)
         }
     }
 
@@ -186,10 +222,19 @@ public struct ModelSelectionSheet: View {
         return String(localized: "Free, no API key needed")
     }
 
-    private func toggle(_ model: ModelConfig) {
+    private func select(_ model: ModelConfig) {
         Task {
             let isPro = await entitlement.refreshAndGetIsPro()
-            toggle(model, isPro: isPro)
+            if let selectedModel {
+                guard !model.isPremium || isPro else {
+                    selectionAlertReason = .requiresPro
+                    return
+                }
+                selectedModel.wrappedValue = model
+                dismiss()
+            } else {
+                toggle(model, isPro: isPro)
+            }
         }
     }
 
@@ -226,14 +271,7 @@ public struct ModelSelectionSheet: View {
             preferences.setAppleTranslateInstalledLanguages([])
         }
 
-        if result.reason == .requiresPro, let onRequiresPro {
-            message = nil
-            onRequiresPro()
-        } else if let reason = result.reason {
-            message = message(for: reason)
-        } else {
-            message = nil
-        }
+        selectionAlertReason = result.reason
     }
 
     private func message(for reason: ModelSelectionPolicy.Reason) -> String {
@@ -245,25 +283,6 @@ public struct ModelSelectionSheet: View {
         case .keptDefaultModel:
             return String(localized: "At least one model stays selected.")
         }
-    }
-
-    private func messageBanner(_ message: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "info.circle.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(colors.accent)
-            Text(message)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(colors.textPrimary)
-            Spacer()
-        }
-        .padding(12)
-        .tlingoGlassSurface(
-            cornerRadius: 12,
-            tint: colors.accent.opacity(0.08),
-            fallbackTint: colors.accent.opacity(0.06),
-            fallbackStroke: colors.accent.opacity(0.20)
-        )
     }
 
     private func refreshInstalledLanguagesInBackground() {

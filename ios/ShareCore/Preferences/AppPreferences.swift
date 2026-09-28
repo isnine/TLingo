@@ -237,6 +237,9 @@ public final class AppPreferences: ObservableObject {
         guard let stored = defaults.string(forKey: StorageKeys.modelResultOrder) else {
             return .firstCompletedFirst
         }
+        if stored == "lastCompletedFirst" {
+            return .firstCompletedFirst
+        }
         guard let order = ModelResultOrder(rawValue: stored) else {
             logger.error("Invalid model result order: \(stored, privacy: .public)")
             return .firstCompletedFirst

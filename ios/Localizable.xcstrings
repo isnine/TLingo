@@ -6838,6 +6838,7 @@
       }
     },
     "Add Image or Change Model" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14890,12 +14891,6 @@
             "value" : "Gerçek Zamanlı Çeviri Başlatılamıyor"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法開始即時翻譯"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14903,6 +14898,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法開始即時翻譯"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法開始即時翻譯"
@@ -43133,6 +43134,7 @@
       }
     },
     "Last Completed First" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

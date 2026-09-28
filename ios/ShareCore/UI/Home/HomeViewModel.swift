@@ -255,7 +255,7 @@ public final class HomeViewModel: ObservableObject {
             uniquingKeysWith: { first, _ in first }
         )
         return runs.enumerated().sorted { lhs, rhs in
-            if order != .modelList {
+            if order == .firstCompletedFirst {
                 let leftFailed = if case .failure = lhs.element.status {
                     true
                 } else {
@@ -271,7 +271,7 @@ public final class HomeViewModel: ObservableObject {
                 }
                 switch (lhs.element.completedAt, rhs.element.completedAt) {
                 case let (left?, right?) where left != right:
-                    return order == .firstCompletedFirst ? left < right : left > right
+                    return left < right
                 case (_?, nil):
                     return true
                 case (nil, _?):

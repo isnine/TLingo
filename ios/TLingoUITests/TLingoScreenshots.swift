@@ -71,14 +71,12 @@ final class TLingoScreenshots: XCTestCase {
         XCTAssertTrue(history.waitForExistence(timeout: 8))
         app.swipeUp()
         XCTAssertTrue(history.isHittable)
-        let chat = app.buttons["tab_chat"]
-        XCTAssertTrue(chat.isHittable)
-        chat.tap()
-        XCTAssertTrue(app.navigationBars.buttons["chat_history_button"].waitForExistence(timeout: 5))
-        snapshot("08_NativeChatToolbar")
-        let chatBar = app.navigationBars.firstMatch
-        chatBar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+        let models = app.buttons["tab_models"]
+        XCTAssertTrue(models.isHittable)
+        models.tap()
+        XCTAssertTrue(app.navigationBars["Models"].waitForExistence(timeout: 5))
+        snapshot("08_NativeModelsSheet")
+        app.buttons["Done"].tap()
         XCTAssertTrue(history.waitForExistence(timeout: 5))
         history.tap()
         XCTAssertTrue(app.navigationBars.buttons.firstMatch.waitForExistence(timeout: 5))
@@ -91,8 +89,10 @@ final class TLingoScreenshots: XCTestCase {
         launchSnapshot(fixture: "realtime-bilingual-live", tab: "realtime")
         let options = app.navigationBars.buttons["realtime_options_button"]
         XCTAssertTrue(options.waitForExistence(timeout: 8))
-        XCTAssertTrue(app.navigationBars.buttons["realtime_start_button"].isHittable)
-        XCTAssertTrue(app.buttons["tab_chat"].isHittable)
+        XCTAssertTrue(app.navigationBars.buttons["realtime_source_language_menu"].isHittable)
+        XCTAssertTrue(app.navigationBars.buttons["realtime_target_language_menu"].isHittable)
+        XCTAssertFalse(app.navigationBars.buttons["realtime_start_button"].exists)
+        XCTAssertTrue(app.buttons["tab_realtime_control"].isHittable)
         snapshot("10_NativeRealtimeToolbar")
         let optionsTitle = options.label
         options.tap()

@@ -274,8 +274,6 @@ extension RootTabView {
         @State private var showActions = false
         @State private var showModels: Bool
         @State private var showSettings: Bool
-        @State private var showChat = false
-        @State private var chatSession: ConversationSession
         @ObservedObject var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
         @StateObject private var realtimeStore = RealtimeSessionStore.shared
@@ -287,14 +285,13 @@ extension RootTabView {
             _selection = State(initialValue: initialSelection)
             _showModels = State(initialValue: initialTab == .models)
             _showSettings = State(initialValue: initialTab == .settings)
-            _chatSession = State(initialValue: Self.makeChatSession())
             self.configStore = configStore
         }
 
         private enum TabBarItem: Hashable {
             case text
             case realtime
-            case chat
+            case contextualAction
 
             static func initialSelection(for tab: RootTabView.TabItem) -> TabBarItem {
                 tab == .realtime ? .realtime : .text
@@ -309,15 +306,15 @@ extension RootTabView {
             UIDevice.current.userInterfaceIdiom == .pad
         }
 
-        private var shouldShowChatButton: Bool {
-            if #available(iOS 27.0, *) {
-                return false
-            }
-            return !usesFloatingRealtimeButton
+        private var shouldShowContextualActionTab: Bool {
+            !usesFloatingRealtimeButton
         }
 
-        private var shouldShowChatTab: Bool {
-            !usesFloatingRealtimeButton
+        private var contextualActionTabRole: TabRole {
+            if #available(iOS 27.0, *) {
+                return .prominent
+            }
+            return .search
         }
 
         var body: some View {
@@ -350,11 +347,6 @@ extension RootTabView {
                     }
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
-                }
-                .sheet(isPresented: $showChat) {
-                    ChatPresentationView(session: $chatSession)
-                        .presentationDetents([.large])
-                        .presentationDragIndicator(.visible)
                 }
                 .firstRunOnboardingPresentation {
                     showActions || showModels || showSettings
@@ -425,8 +417,8 @@ extension RootTabView {
             TabView(selection: Binding(
                 get: { selection },
                 set: { newSelection in
-                    if newSelection == .chat {
-                        showChat = true
+                    if newSelection == .contextualAction {
+                        performContextualAction()
                     } else {
                         selection = newSelection
                     }
@@ -443,7 +435,6 @@ extension RootTabView {
                         }, onPremiumRequired: {
                             showFeaturePaywall = true
                         })
-                        .toolbar { chatToolbar }
                         .navigationDestination(isPresented: $showHistory) {
                             HistoryView()
                         }
@@ -462,7 +453,6 @@ extension RootTabView {
                                 showRealtimeHistory = true
                             }
                         )
-                        .toolbar { chatToolbar }
                         .navigationDestination(isPresented: $showRealtimeHistory) {
                             HistoryView(initialFilter: .realtime)
                         }
@@ -472,143 +462,48 @@ extension RootTabView {
                         .accessibilityIdentifier("tab_realtime")
                 }
 
-                if #available(iOS 27.0, *), shouldShowChatTab {
-                    Tab(value: TabBarItem.chat, role: .prominent) {
+                if shouldShowContextualActionTab {
+                    Tab(value: TabBarItem.contextualAction, role: contextualActionTabRole) {
                         EmptyView()
                     } label: {
-                        Label("Chat", systemImage: "square.and.pencil")
-                            .accessibilityIdentifier("tab_chat")
+                        Label(contextualActionTitle, systemImage: contextualActionSystemImage)
+                            .accessibilityIdentifier(contextualActionAccessibilityIdentifier)
                     }
                 }
             }
         }
 
-        @ToolbarContentBuilder
-        private var chatToolbar: some ToolbarContent {
-            if shouldShowChatButton {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Chat", systemImage: "square.and.pencil") {
-                        showChat = true
-                    }
-                    .accessibilityIdentifier("tab_chat")
-                }
+        private var contextualActionTitle: LocalizedStringKey {
+            switch selection {
+            case .text, .contextualAction:
+                return RootTabView.TabItem.models.title
+            case .realtime:
+                return realtimeControlModel.startButtonTitle(for: realtimeStore)
             }
         }
 
-        private static func makeChatSession() -> ConversationSession {
-            let cachedModels = (ModelsService.shared.getCachedModels() ?? []).filter { !$0.isDirectTranslation }
-            let fallbackModel = ModelConfig(
-                id: "gpt-5-nano",
-                displayName: "GPT-5 Nano",
-                isDefault: true,
-                isPremium: false
-            )
-            let availableModels = cachedModels.isEmpty ? [fallbackModel] : cachedModels
-            let model = availableModels.first(where: { $0.id == AppPreferences.shared.chatModelID })
-                ?? availableModels.first(where: { $0.isDefault && !$0.isPremium })
-                ?? availableModels[0]
-
-            return ConversationSession(
-                model: model,
-                action: ActionConfig(name: "Chat", prompt: ""),
-                availableModels: availableModels,
-                messages: []
-            )
-        }
-    }
-
-    private struct ChatPresentationView: View {
-        @Environment(\.colorScheme) private var colorScheme
-        @Binding var session: ConversationSession
-        @ObservedObject private var preferences = AppPreferences.shared
-        @State private var navigationPath: [Route] = []
-        @State private var isStreaming = false
-        @State private var stopStreaming: (() -> Void)?
-        @State private var pendingSession: ConversationSession?
-        @State private var showReplacementConfirmation = false
-        @State private var showPremiumPaywall = false
-        @State private var shouldFocusInput = true
-
-        private enum Route: Hashable {
-            case history
+        private var contextualActionSystemImage: String {
+            selection == .realtime
+                ? realtimeControlModel.startButtonSystemImage(for: realtimeStore)
+                : RootTabView.TabItem.models.systemImage
         }
 
-        private var colors: AppColorPalette {
-            AppColors.Palette(colorScheme: colorScheme, accentTheme: preferences.accentTheme)
+        private var contextualActionAccessibilityIdentifier: String {
+            selection == .realtime ? "tab_realtime_control" : "tab_models"
         }
 
-        var body: some View {
-            NavigationStack(path: $navigationPath) {
-                ConversationContentView(
-                    session: session,
-                    onPremiumRequired: {
-                        showPremiumPaywall = true
-                    },
-                    backgroundColor: colors.background,
-                    inputPlaceholder: String(localized: "Chat"),
-                    focusInputOnAppear: shouldFocusInput,
-                    onStreamingChanged: { isStreaming = $0 },
-                    onStopHandlerReady: { stopStreaming = $0 }
-                )
-                .id(session.id)
-                .navigationTitle("Chat")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            navigationPath.append(.history)
-                        } label: {
-                            Image(systemName: "clock.arrow.circlepath")
-                        }
-                        .accessibilityLabel("History")
-                        .accessibilityIdentifier("chat_history_button")
-                    }
-                }
-                .navigationDestination(for: Route.self) { route in
-                    switch route {
-                    case .history:
-                        HistoryView(
-                            initialFilter: .chat,
-                            locksFilter: true,
-                            onConversationSelected: requestReplacement
-                        )
-                    }
+        private func performContextualAction() {
+            switch selection {
+            case .text, .contextualAction:
+                showModels = true
+            case .realtime:
+                Task {
+                    await realtimeControlModel.handleStartButtonTapped(
+                        store: realtimeStore,
+                        preferences: preferences
+                    )
                 }
             }
-            .alert("Replace", isPresented: $showReplacementConfirmation) {
-                Button("Cancel", role: .cancel) {
-                    pendingSession = nil
-                }
-                Button("Replace", role: .destructive) {
-                    stopStreaming?()
-                    if let pendingSession {
-                        replace(with: pendingSession)
-                    }
-                }
-            }
-            .sheet(isPresented: $showPremiumPaywall) {
-                PaywallView(context: .featureLocked)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-        }
-
-        private func requestReplacement(record: TranslationRecord) {
-            let replacement = conversationSession(for: record)
-            guard isStreaming else {
-                replace(with: replacement)
-                return
-            }
-            pendingSession = replacement
-            showReplacementConfirmation = true
-        }
-
-        private func replace(with replacement: ConversationSession) {
-            pendingSession = nil
-            shouldFocusInput = false
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            session = replacement
-            navigationPath.removeAll()
         }
     }
 #endif
