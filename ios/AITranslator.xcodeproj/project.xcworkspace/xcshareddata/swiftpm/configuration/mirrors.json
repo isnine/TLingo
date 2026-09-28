@@ -1,0 +1,13 @@
+{
+  "object" : [
+    {
+      "mirror" : "https://github.com/isnine/mlx-swift.git",
+      "original" : "https://github.com/ml-explore/mlx-swift.git"
+    },
+    {
+      "mirror" : "https://github.com/isnine/mlx-swift.git",
+      "original" : "https://github.com/ml-explore/mlx-swift"
+    }
+  ],
+  "version" : 1
+}

@@ -50,6 +50,7 @@ review_triggers:
 - Parakeet EOU 320/1280, English Nemotron 560/1120/2240, and Nemotron 3.5 Multilingual 2240 share one realtime adapter and must flush with `finish()` before a session becomes terminal.
 - Nemotron 3.5 Multilingual uses the full-vocabulary `multilingual/2240ms` variant. Explicit source languages are passed as model prompts; Auto uses model language detection.
 - Confucius4 R2T2 (`mlx-community/Confucius4-R2T2-8bit`) runs on MLX with the upstream stable-prefix protocol: 160 ms steps (merged up to 2 s under backlog), a 16 s audio window that drops its oldest 8 s, and one rolled-back token. Committed text is append-only; stop flushes without rollback. The MLX buffer cache is capped at 512 MB.
+- The Xcode workspace mirrors `mlx-swift` to the TLingo fork at version `0.31.7`. That fork updates its MLX core submodule to prevent Metal `Gather` from binding a null pointer for empty vector metadata. Keep the mirror and resolved version together until an upstream release includes the fix.
 - Streaming partial callbacks replace one pending segment. Stable segments are append-only and retain their IDs after pending promotion.
 - Streaming models commit completed sentences at punctuation boundaries. Unpunctuated text looks for likely sentence starts after 20 words, allows weaker boundaries after 32 words, and has a 36-word hard limit. EOU and terminal flush commit the remaining text.
 - Recognition callback timing is not an audio-silence signal. Caption and History segmentation must use canonical model state, punctuation, or bounded stable text.
