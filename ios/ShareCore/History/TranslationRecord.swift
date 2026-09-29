@@ -736,8 +736,9 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
 
     public var durationLabel: String {
         let totalSeconds = max(0, Int(duration.rounded()))
-        let minutes = totalSeconds / 60
-        return minutes > 0 ? "\(minutes) min" : "\(totalSeconds) sec"
+        return Duration.seconds(totalSeconds).formatted(
+            .units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 1)
+        )
     }
 
     public var clockDurationLabel: String {
@@ -750,14 +751,11 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
     }
 
     private static func relativeTimestamp(_ date: Date) -> String {
-        let calendar = Calendar.current
-        if calendar.isDateInToday(date) {
-            return "Today \(date.formatted(date: .omitted, time: .shortened))"
-        }
-        if calendar.isDateInYesterday(date) {
-            return String(localized: "Yesterday")
-        }
-        return date.formatted(.dateTime.weekday(.abbreviated))
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.doesRelativeDateFormatting = true
+        return formatter.string(from: date)
     }
 }
 

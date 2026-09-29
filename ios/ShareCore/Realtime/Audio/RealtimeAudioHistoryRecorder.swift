@@ -2,11 +2,8 @@
     import AVFoundation
     import CoreMedia
     import Foundation
-    import os
 
     final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
-        private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimeAudioHistory")
-
         private let lock = NSLock()
         private let fileManager: FileManager
         private let segmentDuration: TimeInterval
@@ -126,7 +123,7 @@
                     return true
                 }
             } catch {
-                Self.logger.error("Realtime audio history write failed: \(error.localizedDescription, privacy: .public)")
+                RealtimeLog.warn("audio", "history write failed error=\(error.localizedDescription)")
             }
             return false
         }

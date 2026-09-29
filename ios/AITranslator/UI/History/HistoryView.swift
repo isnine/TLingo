@@ -77,7 +77,7 @@ struct HistoryView: View {
     var body: some View {
         let visibleRecords = filteredRecords
         return ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 20) {
                 #if os(macOS)
                     headerSection(visibleCount: visibleRecords.count)
                 #endif
@@ -95,8 +95,9 @@ struct HistoryView: View {
                 }
                 privacyFooter
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 28)
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 24)
         }
         .background(colors.background.ignoresSafeArea())
         .tint(colors.accent)
@@ -106,14 +107,9 @@ struct HistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     if !records.isEmpty {
-                        Button {
+                        Button("Clear All History", systemImage: "trash") {
                             showDeleteAllConfirmation = true
-                        } label: {
-                            Image(systemName: "trash")
-                                .font(.system(size: 16))
-                                .foregroundColor(colors.textSecondary)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -175,14 +171,12 @@ struct HistoryView: View {
                 }
                 Spacer()
                 if !records.isEmpty {
-                    Button {
+                    Button("Clear All History", systemImage: "trash") {
                         showDeleteAllConfirmation = true
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 16))
-                            .foregroundColor(colors.textSecondary)
                     }
+                    .labelStyle(.iconOnly)
                     .buttonStyle(.plain)
+                    .foregroundStyle(colors.textSecondary)
                 }
             }
         }
@@ -191,19 +185,12 @@ struct HistoryView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Spacer().frame(height: 40)
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 48))
-                .foregroundColor(colors.textSecondary.opacity(0.5))
-            Text(emptyStateTitle)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(colors.textPrimary)
+        ContentUnavailableView {
+            Label(emptyStateTitle, systemImage: "clock.arrow.circlepath")
+        } description: {
             Text(emptyStateMessage)
-                .font(.system(size: 15))
-                .foregroundColor(colors.textSecondary)
         }
-        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
     }
 
     private var emptyStateTitle: LocalizedStringKey {
@@ -244,9 +231,17 @@ struct HistoryView: View {
     }
 
     private func recordsList(_ visibleRecords: [TranslationRecord]) -> some View {
-        LazyVStack(spacing: 12) {
-            ForEach(visibleRecords, id: \.id) { record in
-                recordCard(record)
+        let sections = HistoryDaySection.group(visibleRecords)
+        return LazyVStack(alignment: .leading, spacing: 10) {
+            ForEach(sections) { section in
+                Text(section.title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colors.textSecondary)
+                    .padding(.leading, 4)
+                    .padding(.top, section.id == sections.first?.id ? 0 : 14)
+                ForEach(section.records, id: \.id) { record in
+                    recordCard(record)
+                }
             }
         }
     }
@@ -293,16 +288,14 @@ struct HistoryView: View {
     }
 
     private func legacyRecordCard(_ record: TranslationRecord) -> some View {
-        let results = record.modelResults
-        let hasMultipleModels = results.count > 1
+        let hasMultipleModels = record.modelResults.count > 1
         let isExpanded = expandedRecordIDs.contains(record.id)
 
         return legacyRecordContent(record, isExpanded: isExpanded)
             .contextMenu { cardContextMenu(record) }
-            .contentShape(Rectangle())
             .onTapGesture {
                 guard hasMultipleModels else { return }
-                withAnimation(.easeInOut(duration: 0.25)) {
+                withAnimation(.snappy) {
                     if isExpanded {
                         expandedRecordIDs.remove(record.id)
                     } else {
@@ -315,41 +308,28 @@ struct HistoryView: View {
     private func legacyRecordContent(_ record: TranslationRecord, isExpanded: Bool) -> some View {
         let results = record.modelResults
         let hasMultipleModels = results.count > 1
-        let annotation = record.annotation(for: record.id)
 
-        return VStack(alignment: .leading, spacing: 0) {
-            sourceSection(record, isExpanded: isExpanded)
-            resultsSection(results, hasMultipleModels: hasMultipleModels, isExpanded: isExpanded)
-            metadataRow(record, hasMultipleModels: hasMultipleModels, isExpanded: isExpanded)
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, annotation == nil ? 16 : 8)
-            if let annotation {
-                recordAnnotationView(annotation)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-            }
-        }
-        .background(colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    private func sourceSection(_ record: TranslationRecord, isExpanded: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 8) {
             HistoryMarkdownText(
                 text: record.sourceText,
-                font: .system(size: 15),
+                font: .subheadline,
                 foregroundColor: colors.textSecondary,
-                lineLimit: isExpanded ? nil : 3
+                lineLimit: isExpanded ? nil : 2
             )
             .allowsHitTesting(false)
-            Rectangle()
-                .fill(colors.divider)
-                .frame(height: 1)
+            resultsSection(results, hasMultipleModels: hasMultipleModels, isExpanded: isExpanded)
+            if let annotation = record.annotation(for: record.id) {
+                recordAnnotationView(annotation)
+            }
+            HistoryCardFooter(
+                systemImage: footerSystemImage(for: record),
+                text: footerText(for: record, isExpanded: isExpanded),
+                date: record.timestamp,
+                disclosure: hasMultipleModels ? (isExpanded ? "chevron.up" : "chevron.down") : nil
+            )
+            .padding(.top, 2)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+        .historyCardStyle(colors)
     }
 
     @ViewBuilder
@@ -358,22 +338,15 @@ struct HistoryView: View {
         hasMultipleModels: Bool,
         isExpanded: Bool
     ) -> some View {
-        if hasMultipleModels, !isExpanded {
-            collapsedResult(results[0])
-                .padding(.horizontal, 16)
-                .padding(.bottom, 4)
-        } else {
+        if hasMultipleModels, isExpanded {
             ForEach(Array(results.enumerated()), id: \.element.id) { idx, modelResult in
-                modelResultRow(modelResult, showLabel: true, expanded: hasMultipleModels)
-                    .padding(.horizontal, 16)
-                if hasMultipleModels, idx < results.count - 1 {
-                    Rectangle()
-                        .fill(colors.divider.opacity(0.5))
-                        .frame(height: 1)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 4)
+                if idx > 0 {
+                    Divider()
                 }
+                modelResultRow(modelResult)
             }
+        } else if let first = results.first {
+            resultText(first.resultText, lineLimit: 3)
         }
     }
 
@@ -402,48 +375,35 @@ struct HistoryView: View {
 
     // MARK: - Model Result Views
 
-    private func collapsedResult(_ result: ModelResult) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HistoryMarkdownText(
-                text: result.resultText,
-                font: .system(size: 15),
-                foregroundColor: colors.accent,
-                lineLimit: 3
-            )
-            .allowsHitTesting(false)
-        }
+    private func resultText(_ text: String, lineLimit: Int?) -> some View {
+        HistoryMarkdownText(
+            text: text,
+            font: .body,
+            foregroundColor: colors.textPrimary,
+            lineLimit: lineLimit
+        )
+        .allowsHitTesting(false)
     }
 
-    private func modelResultRow(_ result: ModelResult, showLabel: Bool, expanded: Bool) -> some View {
+    private func modelResultRow(_ result: ModelResult) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if showLabel {
-                HStack(spacing: 4) {
-                    Image(systemName: "cpu")
-                        .font(.system(size: 10))
-                    Text(result.modelDisplayName)
-                        .font(.system(size: 12, weight: .medium))
-                    if result.duration > 0 {
-                        Text("· \(String(format: "%.1fs", result.duration))")
-                            .font(.system(size: 12))
-                    }
+            HStack(spacing: 4) {
+                Text(result.modelDisplayName)
+                if result.duration > 0 {
+                    Text("· \(String(format: "%.1fs", result.duration))")
+                        .monospacedDigit()
                 }
-                .foregroundColor(colors.textSecondary)
             }
-            HistoryMarkdownText(
-                text: result.resultText,
-                font: .system(size: 15),
-                foregroundColor: colors.accent,
-                lineLimit: expanded ? nil : 3
-            )
-            .allowsHitTesting(false)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(colors.textSecondary)
+            resultText(result.resultText, lineLimit: nil)
         }
-        .padding(.vertical, 4)
     }
 
     private func recordAnnotationView(_ text: String) -> some View {
         HistoryMarkdownText(
             text: text,
-            font: .system(size: 12),
+            font: .caption,
             foregroundColor: colors.textSecondary,
             lineLimit: 4,
             emphasizesStructure: true
@@ -455,51 +415,39 @@ struct HistoryView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
-    // MARK: - Metadata Row
+    // MARK: - Footer
 
-    private func metadataRow(
-        _ record: TranslationRecord,
-        hasMultipleModels: Bool,
-        isExpanded: Bool
-    ) -> some View {
-        HStack(spacing: 8) {
-            if !record.actionName.isEmpty {
-                MetadataChipView(
-                    AppConfigurationStore.displayName(forActionName: record.actionName),
-                    icon: iconForAction(named: record.actionName)
-                )
-            }
-            if record.isConversation {
-                MetadataChipView("Chat", icon: "bubble.left.and.bubble.right.fill")
-            }
-            if hasMultipleModels {
-                let models = record.modelResults
-                MetadataChipView(
-                    "\(models.count) models",
-                    icon: isExpanded ? "chevron.up" : "chevron.down"
-                )
-            } else if let first = record.modelResults.first, !first.modelDisplayName.isEmpty {
-                MetadataChipView(first.modelDisplayName, icon: "cpu")
-            }
-            Spacer()
-            Text(record.timestamp, style: .relative)
-                .font(.system(size: 12))
-                .foregroundColor(colors.textSecondary)
+    private func footerSystemImage(for record: TranslationRecord) -> String {
+        if record.isConversation {
+            return "bubble.left.and.bubble.right"
         }
+        return record.actionName.isEmpty ? "text.bubble" : iconForAction(named: record.actionName)
+    }
+
+    private func footerText(for record: TranslationRecord, isExpanded: Bool) -> String {
+        var parts: [String] = []
+        if !record.actionName.isEmpty {
+            parts.append(AppConfigurationStore.displayName(forActionName: record.actionName))
+        } else if record.isConversation {
+            parts.append(String(localized: "Chat"))
+        }
+        let results = record.modelResults
+        if results.count > 1 {
+            parts.append(String(localized: "\(results.count) models"))
+        } else if let first = results.first, !first.modelDisplayName.isEmpty {
+            parts.append(first.modelDisplayName)
+        }
+        return parts.joined(separator: " · ")
     }
 
     // MARK: - Privacy Footer
 
     private var privacyFooter: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 11))
-            Text("All history is stored locally on your device.")
-                .font(.system(size: 12))
-        }
-        .foregroundColor(colors.textSecondary.opacity(0.6))
-        .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        Label("All history is stored locally on your device.", systemImage: "lock.fill")
+            .font(.caption)
+            .foregroundStyle(colors.textSecondary.opacity(0.7))
+            .frame(maxWidth: .infinity)
+            .padding(.top, 8)
     }
 
     // MARK: - Helpers
@@ -510,6 +458,73 @@ struct HistoryView: View {
 
     private func refreshRecords() {
         records = TranslationHistoryService.shared.fetchAll()
+    }
+}
+
+private struct HistoryDaySection: Identifiable {
+    let id: Date
+    var records: [TranslationRecord]
+
+    private static let titleFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        formatter.doesRelativeDateFormatting = true
+        return formatter
+    }()
+
+    var title: String {
+        Self.titleFormatter.string(from: id)
+    }
+
+    static func group(_ records: [TranslationRecord]) -> [HistoryDaySection] {
+        var sections: [HistoryDaySection] = []
+        for record in records {
+            let day = Calendar.current.startOfDay(for: record.timestamp)
+            if let index = sections.firstIndex(where: { $0.id == day }) {
+                sections[index].records.append(record)
+            } else {
+                sections.append(HistoryDaySection(id: day, records: [record]))
+            }
+        }
+        return sections
+    }
+}
+
+private struct HistoryCardFooter: View {
+    let systemImage: String
+    let text: String
+    let date: Date
+    var disclosure: String?
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .imageScale(.small)
+            Text(text)
+                .lineLimit(1)
+            if let disclosure {
+                Image(systemName: disclosure)
+                    .imageScale(.small)
+                    .fontWeight(.semibold)
+            }
+            Spacer(minLength: 8)
+            Text(date, format: .dateTime.hour().minute())
+                .monospacedDigit()
+        }
+        .font(.footnote)
+        .foregroundStyle(AppColors.palette(for: colorScheme).textSecondary)
+    }
+}
+
+private extension View {
+    func historyCardStyle(_ colors: AppColorPalette) -> some View {
+        padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
@@ -524,59 +539,35 @@ private struct RealtimeHistoryCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: TranslationRecord.realtimeSystemImageName)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(colors.accent)
-                    .frame(width: 24, height: 24)
-                VStack(alignment: .leading, spacing: 5) {
-                    HistoryMarkdownText(
-                        text: session.displayTitle(fallback: record.sourceText),
-                        font: .system(size: 15, weight: .semibold),
-                        foregroundColor: colors.textPrimary,
-                        lineLimit: 2
-                    )
-                    .allowsHitTesting(false)
-                    Text(session.metaLine)
-                        .font(.system(size: 12))
-                        .foregroundColor(colors.textSecondary)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 8)
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                HistoryMarkdownText(
-                    text: session.translatedText,
-                    font: .system(size: 14, weight: .medium),
-                    foregroundColor: colors.textPrimary,
-                    lineLimit: 2
-                )
-                .allowsHitTesting(false)
-                HistoryMarkdownText(
-                    text: session.sourceText,
-                    font: .system(size: 13),
-                    foregroundColor: colors.textSecondary,
-                    lineLimit: 2
-                )
-                .allowsHitTesting(false)
-            }
-
-            HStack(spacing: 7) {
-                MetadataChipView("Realtime", icon: TranslationRecord.realtimeSystemImageName, isPrimary: true)
-                MetadataChipView(session.inputSource, icon: "mic.fill")
-                if session.audioRecordings.contains(where: \.hasPlayableAudio) {
-                    MetadataChipView("Recording", icon: "play.circle.fill")
-                }
-                if !session.modelDisplayName.isEmpty {
-                    MetadataChipView(session.modelDisplayName, icon: "cpu")
-                }
-                Spacer(minLength: 0)
-            }
+        VStack(alignment: .leading, spacing: 6) {
+            HistoryMarkdownText(
+                text: session.displayTitle(fallback: record.sourceText),
+                font: .headline,
+                foregroundColor: colors.textPrimary,
+                lineLimit: 2
+            )
+            .allowsHitTesting(false)
+            HistoryMarkdownText(
+                text: session.translatedText,
+                font: .subheadline,
+                foregroundColor: colors.textPrimary,
+                lineLimit: 2
+            )
+            .allowsHitTesting(false)
+            HistoryMarkdownText(
+                text: session.sourceText,
+                font: .subheadline,
+                foregroundColor: colors.textSecondary,
+                lineLimit: 2
+            )
+            .allowsHitTesting(false)
+            HistoryCardFooter(
+                systemImage: TranslationRecord.realtimeSystemImageName,
+                text: session.durationLabel,
+                date: session.startedAt
+            )
+            .padding(.top, 4)
         }
-        .padding(16)
-        .background(colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .historyCardStyle(colors)
     }
 }

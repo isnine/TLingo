@@ -490,13 +490,11 @@ private struct RealtimeHistoryDetailContent: View {
                 }
             }
         }
-        #if os(macOS)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if currentSession.audioRecordings.contains(where: \.hasPlayableAudio) {
                 floatingAudioTimeline
             }
         }
-        #endif
         .background(colors.background.ignoresSafeArea())
         .fileExporter(
             isPresented: $isExportPresented,
@@ -710,30 +708,30 @@ private struct RealtimeHistoryDetailContent: View {
         primaryRealtimeCaptionSource(for: currentSession)
     }
 
+    private var audioTimeline: some View {
+        RealtimeHistoryAudioTimelineView(
+            recordings: currentSession.audioRecordings.filter(\.hasPlayableAudio),
+            selectedSource: $visibleCaptionSource,
+            playbackTime: $playbackTime,
+            onScrub: scrollToPlaybackTime
+        )
+    }
+
+    private var floatingAudioTimeline: some View {
+        audioTimeline
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .glassEffect(.regular, in: .rect(cornerRadius: 14))
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+    }
+
+    private func scrollToPlaybackTime(_ time: TimeInterval) {
+        scrollTargetSegmentID = selectedTrack?.closestSegmentID(to: time)
+    }
+
     #if os(macOS)
-        private var audioTimeline: some View {
-            RealtimeHistoryAudioTimelineView(
-                recordings: currentSession.audioRecordings.filter(\.hasPlayableAudio),
-                selectedSource: $visibleCaptionSource,
-                playbackTime: $playbackTime,
-                onScrub: scrollToPlaybackTime
-            )
-        }
-
-        private var floatingAudioTimeline: some View {
-            audioTimeline
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity)
-                .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                .padding(.horizontal, 20)
-                .padding(.bottom, 12)
-        }
-
-        private func scrollToPlaybackTime(_ time: TimeInterval) {
-            scrollTargetSegmentID = selectedTrack?.closestSegmentID(to: time)
-        }
-
         @ViewBuilder
         private var reconstructionError: some View {
             if let reconstructionMessage {
@@ -1218,17 +1216,15 @@ private struct RealtimeHistoryDetailContent: View {
         annotation: String?
     ) -> some View {
         let track = track ?? selectedTrack
+        let isActive = playbackTime >= segment.offset && playbackTime < segment.endOffset
+        let onSeek: (() -> Void)? = {
+            playbackTime = segment.offset
+        }
         #if os(macOS)
-            let isActive = playbackTime >= segment.offset && playbackTime < segment.endOffset
-            let onSeek: (() -> Void)? = {
-                playbackTime = segment.offset
-            }
             let onRenameSpeaker = segment.speakerID.map { speakerID in
                 { presentSpeakerEditor(for: speakerID, track: track) }
             }
         #else
-            let isActive = false
-            let onSeek: (() -> Void)? = nil
             let onRenameSpeaker: (() -> Void)? = nil
         #endif
         return RealtimeTranscriptRow(
