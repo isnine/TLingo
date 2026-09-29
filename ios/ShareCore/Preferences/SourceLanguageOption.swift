@@ -59,7 +59,7 @@ public enum SourceLanguageOption: String, CaseIterable, Identifiable, Codable {
     public var primaryLabel: String {
         switch self {
         case .auto:
-            return String(localized: "Auto")
+            return String(localized: "Detect Language")
         default:
             return nativeName
         }

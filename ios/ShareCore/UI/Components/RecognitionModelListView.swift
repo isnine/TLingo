@@ -59,10 +59,12 @@
                 Text(unsupportedLanguageMessage)
             }
             .onDisappear {
-                for task in downloadTasks.values {
+                for (modelID, task) in downloadTasks {
                     task.cancel()
+                    if let model = models.first(where: { $0.id == modelID }) {
+                        Task { await RecognitionModelStore.shared.cancelDownload(model) }
+                    }
                 }
-                downloadTasks.removeAll()
             }
         }
 
@@ -113,6 +115,7 @@
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.borderless)
         }
 
         @ViewBuilder
@@ -260,8 +263,7 @@
 
         private func cancelDownload(_ model: RecognitionModelDescriptor) {
             downloadTasks[model.id]?.cancel()
-            downloadTasks[model.id] = nil
-            downloadProgress[model.id] = nil
+            Task { await RecognitionModelStore.shared.cancelDownload(model) }
         }
 
         private func delete(_ model: RecognitionModelDescriptor) {

@@ -1,21 +1,21 @@
 # 源语言与目标语言适配逻辑
 
-> 本文档梳理 TLingo 在三个翻译引擎（Apple Translate / Google Translate / AI 模型）上对**源语言**与**目标语言**的解析、检测、回退与拒绝策略。
+> 本文档梳理 TLingo 在三个翻译引擎（Apple Translate / Microsoft Translate / AI 模型）上对**源语言**与**目标语言**的解析、检测、回退与拒绝策略。
 >
 > 相关代码：
 > - `ShareCore/Utilities/SourceLanguageDetector.swift` — 语言检测核心
 > - `ShareCore/UI/HomeViewModel.swift` — 引擎分诊与短路
 > - `ShareCore/Networking/AppleTranslationService.swift` — Apple Translate 服务封装
-> - `ShareCore/Networking/GoogleTranslateService.swift` — Google Translate 服务封装
+> - `ShareCore/Networking/MicrosoftTranslateService.swift` — Microsoft Translate 服务封装（经 Cloud Worker）
 > - `ShareCore/Networking/LLMService.swift` — AI 模型 LLM 调用
 
 ## 总体原则
 
 | 维度 | 策略 |
 |---|---|
-| **目标语言** | **永不自动重定向**，始终遵从用户在 UI 上选择的 `AppPreferences.targetLanguage`。`targetLanguageOverride` 仅用于"语言切换菜单单次覆盖"，消费一次后清空 |
+| **目标语言** | 用户选择具体语言时**永不自动重定向**。选择"自动选择"（`TargetLanguageOption.appLanguage`）时，按候选列表（App 语言 → 系统首选语言 → 英语）取第一个与原文不同的语言，实际只会用到前两个。`targetLanguageOverride` 仅用于"语言切换菜单单次覆盖"，消费一次后清空 |
 | **源语言** | 若用户固定选择（非 `.auto`）→ 用用户选择；若 `.auto` → 用 `NLLanguageRecognizer` 检测，**排除 target 同语言**以避开混合语言误判 |
-| **目标 == 源** | 在 Apple Translate 路径**前置短路**，直接返回本地化错误"Source and target are both <Language>. Pick a different target language."。Google / LLM 不做此校验（可正常调用） |
+| **目标 == 源** | 在 Apple Translate 路径**前置短路**，直接返回本地化错误"Source and target are both <Language>. Pick a different target language."。Microsoft / LLM 不做此校验（可正常调用） |
 
 ## 共享检测层：`SourceLanguageDetector`
 
@@ -63,19 +63,24 @@
 2. 系统首选 `Locale.preferredLanguages` 中第一个被 `SourceLanguageOption` 识别的
 3. 兜底英文
 
-## HomeViewModel 的分诊：`consumeResolvedTarget(for:)`
+## HomeViewModel 的分诊：`resolveLanguages(...)`
 
-每次翻译请求统一从此入口拿到 `ResolvedLanguagePair { target, sourceCode }`：
+语言解析集中在纯函数 `HomeViewModel.resolveLanguages(text:sourcePreference:preferredTarget:override:)`，返回 `LanguageResolution { sourceCode, displaySource, target, displayTarget, isMatchFallback }`，不读写 view model 状态。两个调用方共用它，保证预览与实际请求一致：
+
+- **实时预览**：`inputText` 变化或源/目标偏好变化后防抖 0.25 秒调用，写回 `detectedSourceLanguage`、`resolvedTargetLanguage`、`isMatchTargetFallback`，语言切换器在发送前就显示实际方向。
+- **发送请求**：`consumeResolvedTarget(for:)` 先消费 `targetLanguageOverride`，再调用同一函数得到 `ResolvedLanguagePair { target, sourceCode }`。
 
 ```
-target = targetLanguageOverride ?? AppPreferences.targetLanguage
-                ↑ 消费一次即清空
-sourceCode = detectSourceCode(for: text, excluding: target)
-              ├─ 用户固定 → preferences.sourceLanguage.rawValue
-              └─ .auto    → SourceLanguageDetector.detectLocaleLanguage(of:excludingTargetCode:).minimalIdentifier
+resolvesMatch = override == .appLanguage || (override == nil && preferredTarget == .appLanguage)
+sourceCode =
+  ├─ 用户固定源语言 → sourcePreference.rawValue
+  ├─ .auto 且自动选择目标 → detectLocaleLanguageConstrained(of:candidateCodes: matchCandidates)
+  └─ .auto 且具体目标     → detectLocaleLanguage(of:excludingTargetCode: target)
+target = resolveTargetLanguage(preferred:override:sourceCode:matchCandidates:)
+isMatchFallback = resolvesMatch && sourceCode != nil && target != matchCandidates.first
 ```
 
-`detectedSourceLanguage` 同步写回 `@Published`，UI 上自动显示"删除线 Auto + 检测到的语言"指示。
+检测返回的是最简代码（简体中文为 `zh`），`displaySource` 通过 `languagesAreSame` 映射回 `SourceLanguageOption`。UI 上源语言直接显示检测结果；自动选择的目标带 ✦ 标记；`isMatchFallback` 为真时 iPhone 输入栏上方显示"原文是 X，译成 Y"及改选菜单。
 
 ## 三引擎适配
 
@@ -90,14 +95,14 @@ sourceCode = detectSourceCode(for: text, excluding: target)
 | **路径选择** | 1. 短路命中 → 立即失败<br>2. 调 `languageAvailabilityStatus(source:target:)`：<br>　- `.installed` 或（source nil 且 `.supported`）→ `TranslationSession(installedSource:target:)` 直接翻译<br>　- 其他 → 走 SwiftUI `.translationTask` 桥（macOS `AppleTranslationWindow`）触发下载 UI；若 10s 内 `.translationTask` 未触发 → 超时失败 |
 | **失败日志** | 所有失败分支都用 `logger.error`：service 层 prepareTranslation/translate/translations 的 do-catch、HomeViewModel installed-pack catch、watchdog timeout、bridge 不支持的语言对、`languageAvailabilityStatus` 返回 unsupported 等 |
 
-### 2. Google Translate (GTX)
+### 2. Microsoft Translate
 
 | 项 | 行为 |
 |---|---|
-| **源语言传参** | `resolved.sourceCode`；为 nil 时服务端用 `sl=auto` 自动检测 |
-| **目标语言传参** | `resolvedTarget.rawValue`，经 `mapToGoogleCode`（`zh-Hans`→`zh-CN`、`zh-Hant`→`zh-TW`、`pt-BR`→`pt`） |
-| **`source == target` 短路** | 不做。Google 服务端会原样返回（实际等同于无操作），不会报错 |
-| **网络层** | `URLSession` 直接打 `https://translate.google.com/translate_a/single` GTX 端点，无密钥 |
+| **源语言传参** | `resolved.sourceCode`；为 nil 时由服务端自动检测 |
+| **目标语言传参** | `resolvedTarget.rawValue` |
+| **`source == target` 短路** | 与 Apple Translate 共用 `sameSourceAndTargetResult`，命中则不发请求 |
+| **网络层** | 经 Cloud Worker 的 `translate/microsoft` 端点 |
 
 ### 3. AI 模型 (LLM, 通过 Cloudflare Worker → Azure OpenAI)
 
@@ -118,7 +123,7 @@ sourceCode = detectSourceCode(for: text, excluding: target)
 - 与所有同类竞品行为不一致
 - 让 UI 状态（"已重定向"角标）变得复杂
 
-新策略：**目标 100% 听用户的**，仅 Apple Translate 在 source==target 时显式报错引导用户改 target。Google / LLM 容忍 same-language 调用。
+新策略：**目标 100% 听用户的**，直接翻译服务在 source==target 时显式报错引导用户改 target，LLM 容忍 same-language 调用。需要按原文切换方向的用户改选"自动选择"，它的规则在选择器副标题里写明，回退时有提示。
 
 ### 为什么 detectExcluding 要双门槛
 

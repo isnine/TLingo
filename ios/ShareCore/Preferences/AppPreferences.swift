@@ -776,7 +776,16 @@ public final class AppPreferences: ObservableObject {
         guard let array = defaults.stringArray(forKey: StorageKeys.enabledModels) else {
             return []
         }
-        return Set(array)
+        return migratingRetiredModelIDs(Set(array))
+    }
+
+    /// Google Translate was removed. Users who relied on it alone move to Microsoft Translate;
+    /// otherwise the retired ID is dropped so it cannot count as a selection.
+    private static func migratingRetiredModelIDs(_ ids: Set<String>) -> Set<String> {
+        let retiredGoogleTranslateID = "google-translate"
+        guard ids.contains(retiredGoogleTranslateID) else { return ids }
+        let remaining = ids.subtracting([retiredGoogleTranslateID])
+        return remaining.isEmpty ? [ModelConfig.microsoftTranslateID] : remaining
     }
 
     private static func readInstalledLanguages(from defaults: UserDefaults) -> Set<String> {

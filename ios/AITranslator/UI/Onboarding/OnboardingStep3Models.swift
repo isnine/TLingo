@@ -103,7 +103,7 @@
             if model.id == ModelConfig.appleTranslateID || model.id == ModelConfig.foundationModelID {
                 return "apple.logo"
             }
-            if model.id == ModelConfig.googleTranslateID {
+            if model.id == ModelConfig.microsoftTranslateID {
                 return "globe"
             }
             if model.id == ModelConfig.privateCloudModelID {
@@ -116,7 +116,7 @@
             if model.id == ModelConfig.appleTranslateID {
                 return "Translate privately on your Mac"
             }
-            if model.id == ModelConfig.googleTranslateID {
+            if model.id == ModelConfig.microsoftTranslateID {
                 return "Translate almost any language quickly"
             }
             if model.id == ModelConfig.foundationModelID {

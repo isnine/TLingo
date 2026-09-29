@@ -10,7 +10,6 @@ public enum SnapshotFixture: String, Sendable {
     case realtimeBilingualLive = "realtime-bilingual-live"
     case realtimeAppleValidation = "realtime-apple-validation"
     case offlineAppleTranslation = "offline-apple-translation"
-    case googleTranslation = "google-translation"
     case aiModels = "ai-models"
     case macRealtimeMultiLane = "mac-realtime-multi-lane"
     case macRichConversation = "mac-rich-conversation"
@@ -82,7 +81,7 @@ public enum SnapshotFixtureData {
 
     public static let extensionShowcaseModels: [ModelConfig] = [
         .appleTranslate,
-        .googleTranslate,
+        .microsoftTranslate,
         cloudModels[0],
         cloudModels[6],
         cloudModels[7],
@@ -90,7 +89,7 @@ public enum SnapshotFixtureData {
 
     public static func cloudModels(for fixture: SnapshotFixture) -> [ModelConfig] {
         switch fixture {
-        case .offlineAppleTranslation, .googleTranslation:
+        case .offlineAppleTranslation:
             return []
         case .multiModelTranslation, .realtimeBilingualLive, .realtimeAppleValidation,
              .aiModels, .macRealtimeMultiLane,
@@ -101,7 +100,7 @@ public enum SnapshotFixtureData {
 
     public static func translatePrompt(for fixture: SnapshotFixture) -> String {
         switch fixture {
-        case .offlineAppleTranslation, .googleTranslation, .multiModelTranslation:
+        case .offlineAppleTranslation, .multiModelTranslation:
             return directionalTranslatePrompt
         case .realtimeBilingualLive, .realtimeAppleValidation, .aiModels,
              .macRealtimeMultiLane, .macRichConversation, .macHistoryChat:
@@ -118,8 +117,6 @@ public enum SnapshotFixtureData {
             return extensionShowcaseModels
         case .offlineAppleTranslation:
             return [ModelConfig.appleTranslate]
-        case .googleTranslation:
-            return [ModelConfig.googleTranslate]
         case .realtimeBilingualLive, .realtimeAppleValidation, .aiModels,
              .macRealtimeMultiLane, .macHistoryChat:
             return []
@@ -145,8 +142,6 @@ public enum SnapshotFixtureData {
             )
         case .offlineAppleTranslation:
             return locale.translation(for: ModelConfig.appleTranslateID)
-        case .googleTranslation:
-            return locale.translation(for: ModelConfig.googleTranslateID)
         case .realtimeBilingualLive, .realtimeAppleValidation, .aiModels,
              .macRealtimeMultiLane, .macHistoryChat:
             return ""
@@ -159,7 +154,7 @@ public enum SnapshotFixtureData {
             return realtimeBilingualLive()
         case .realtimeAppleValidation:
             return realtimeAppleValidation()
-        case .multiModelTranslation, .offlineAppleTranslation, .googleTranslation, .aiModels, .macRealtimeMultiLane,
+        case .multiModelTranslation, .offlineAppleTranslation, .aiModels, .macRealtimeMultiLane,
              .macRichConversation, .macHistoryChat:
             return nil
         }

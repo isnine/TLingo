@@ -27,7 +27,7 @@ struct SnapshotFixtureTests {
         let displayNames = SnapshotFixtureData.resultModels(for: .multiModelTranslation).map(\.displayName)
 
         #expect(displayNames.contains("Apple Translate"))
-        #expect(displayNames.contains("Google Translate"))
+        #expect(displayNames.contains("Microsoft Translate"))
         #expect(displayNames.contains("GPT-5.4"))
         #expect(displayNames.contains("DeepSeek V4 Pro"))
         #expect(displayNames.contains("Kimi K2.6"))
@@ -86,13 +86,6 @@ struct SnapshotFixtureTests {
         let modelIDs = SnapshotFixtureData.resultModels(for: .offlineAppleTranslation).map(\.id)
 
         #expect(modelIDs == [ModelConfig.appleTranslateID])
-    }
-
-    @Test("Google translation fixture only shows Google Translate result")
-    func googleTranslationOnlyShowsGoogleTranslateResult() {
-        let modelIDs = SnapshotFixtureData.resultModels(for: .googleTranslation).map(\.id)
-
-        #expect(modelIDs == [ModelConfig.googleTranslateID])
     }
 
     @Test("Offline translation fixture shows explicit source and target language controls")

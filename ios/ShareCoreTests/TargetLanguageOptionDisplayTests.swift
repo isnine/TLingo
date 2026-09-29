@@ -9,27 +9,20 @@ import Testing
 
 @Suite("Target language display")
 struct TargetLanguageOptionDisplayTests {
-    @Test("System language option is not labeled Match")
-    func appLanguagePrimaryLabelUsesSystemLanguages() {
-        #expect(TargetLanguageOption.appLanguage.primaryLabel == "System Languages")
+    @Test("Automatic target option is labeled Choose Automatically")
+    func appLanguagePrimaryLabelUsesChooseAutomatically() {
+        #expect(TargetLanguageOption.appLanguage.primaryLabel == "Choose Automatically")
     }
 
-    @Test("System language summary uses language abbreviations")
-    func systemLanguageSummaryUsesLanguageAbbreviations() {
-        let summary = TargetLanguageOption.systemLanguageSummary(
-            candidates: [.englishUnitedStates, .simplifiedChinese, .traditionalChinese, .japanese, .french],
-            limit: 3
+    @Test("Automatic target description names the first two languages")
+    func automaticTargetDescriptionNamesFirstTwoLanguages() {
+        let chinese = TargetLanguageOption.simplifiedChinese.primaryLabel
+        let english = TargetLanguageOption.english.primaryLabel
+
+        #expect(
+            TargetLanguageOption.automaticTargetDescription(candidates: [.simplifiedChinese, .english, .japanese])
+                == "Translates to \(chinese), or \(english) when the source is \(chinese)"
         )
-
-        #expect(summary == "EN, ZH, JA +1")
-    }
-
-    @Test("System language display name includes summary")
-    func systemLanguageDisplayNameIncludesSummary() {
-        let displayName = TargetLanguageOption.systemLanguageDisplayName(
-            candidates: [.englishUnitedStates, .simplifiedChinese]
-        )
-
-        #expect(displayName == "System (EN, ZH)")
+        #expect(TargetLanguageOption.automaticTargetDescription(candidates: [.english]) == nil)
     }
 }

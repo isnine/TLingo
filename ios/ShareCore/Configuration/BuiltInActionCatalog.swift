@@ -59,6 +59,7 @@ enum BuiltInActionCatalog {
     ].joined(separator: "\n")
 
     static let translateActionID = UUID(uuidString: "A17A0000-0000-4000-8000-000000000001")!
+    static let sentenceTranslateActionID = UUID(uuidString: "A17A0000-0000-4000-8000-000000000002")!
 
     static let wordLookupPrompt = [
         "Look up the {{sourceLanguage}} word or phrase below like a bilingual dictionary for a {{targetLanguage}} reader.",
@@ -101,7 +102,7 @@ enum BuiltInActionCatalog {
             category: .translation
         ),
         ActionConfig(
-            id: UUID(uuidString: "A17A0000-0000-4000-8000-000000000002")!,
+            id: sentenceTranslateActionID,
             name: "Sentence Translate",
             prompt: [
                 "Translate the text below sentence by sentence from {{sourceLanguage}} to {{targetLanguage}}.",

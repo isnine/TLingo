@@ -60,6 +60,7 @@ final class TLingoScreenshots: XCTestCase {
     func test07CustomActions() {
         launchSnapshot(fixture: "multi-model-translation")
         assertHomeLocalized()
+        app.buttons["home_more_menu"].tap()
         app.buttons["home_manage_actions_button"].tap()
         sleep(1)
         snapshot("07_CustomActions")
@@ -71,7 +72,7 @@ final class TLingoScreenshots: XCTestCase {
         XCTAssertTrue(history.waitForExistence(timeout: 8))
         app.swipeUp()
         XCTAssertTrue(history.isHittable)
-        let models = app.buttons["tab_models"]
+        let models = app.buttons["home_model_picker"]
         XCTAssertTrue(models.isHittable)
         models.tap()
         XCTAssertTrue(app.navigationBars["Models"].waitForExistence(timeout: 5))
@@ -89,10 +90,11 @@ final class TLingoScreenshots: XCTestCase {
         launchSnapshot(fixture: "realtime-bilingual-live", tab: "realtime")
         let options = app.navigationBars.buttons["realtime_options_button"]
         XCTAssertTrue(options.waitForExistence(timeout: 8))
-        XCTAssertTrue(app.navigationBars.buttons["realtime_source_language_menu"].isHittable)
-        XCTAssertTrue(app.navigationBars.buttons["realtime_target_language_menu"].isHittable)
+        XCTAssertFalse(app.navigationBars.buttons["realtime_source_language_menu"].exists)
+        XCTAssertTrue(app.buttons["realtime_source_language_menu"].isHittable)
+        XCTAssertTrue(app.buttons["realtime_target_language_menu"].isHittable)
         XCTAssertFalse(app.navigationBars.buttons["realtime_start_button"].exists)
-        XCTAssertTrue(app.buttons["tab_realtime_control"].isHittable)
+        XCTAssertTrue(app.buttons["realtime_session_control_button"].isHittable)
         snapshot("10_NativeRealtimeToolbar")
         let optionsTitle = options.label
         options.tap()

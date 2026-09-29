@@ -165,6 +165,18 @@ private struct Metrics {
             h5Size = 16
             h6Size = 16
             blockSpacing = 16
+        case .prominent:
+            bodySize = 19
+            quoteSize = 17
+            tableSize = 16
+            codeSize = 15
+            h1Size = 24
+            h2Size = 22
+            h3Size = 20
+            h4Size = 19
+            h5Size = 19
+            h6Size = 19
+            blockSpacing = 14
         }
     }
 }

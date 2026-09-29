@@ -156,9 +156,18 @@ public final class HomeViewModel: ObservableObject {
             }
         }
 
+        /// How a translation run is shown; sentence pairs are fetched per run on demand.
+        public enum Presentation: Hashable {
+            case standard
+            case sentencePairs
+        }
+
         public let model: ModelConfig
         public let markdownStreamSource = ConversationMarkdownStreamSource()
         public var status: Status
+        public var presentation: Presentation = .standard
+        /// Finished status per presentation, so switching back never re-requests.
+        var cachedStatuses: [Presentation: Status] = [:]
         public var showDiff: Bool = true
         public var completedAt: Date?
 
@@ -194,6 +203,7 @@ public final class HomeViewModel: ObservableObject {
         didSet {
             guard inputText != oldValue else { return }
             cancelActiveRequest(clearResults: true)
+            scheduleLanguagePreviewRefresh()
         }
     }
 
@@ -296,9 +306,13 @@ public final class HomeViewModel: ObservableObject {
     /// concrete language or because the user picked a one-shot override.
     @Published public private(set) var resolvedTargetLanguage: TargetLanguageOption?
 
-    /// Non-nil after a translation runs: the detected (or user-pinned) source language,
-    /// used to show a strikethrough on the source selector with the detected name beside it.
+    /// The detected (or user-pinned) source language, refreshed live while typing and on each request.
     @Published public private(set) var detectedSourceLanguage: SourceLanguageOption?
+
+    /// True when the automatic target skipped the first language because the source already is that language.
+    @Published public private(set) var isMatchTargetFallback = false
+
+    private var languagePreviewTask: Task<Void, Never>?
 
     // MARK: - Apple Translation Bridge
 
@@ -387,6 +401,24 @@ public final class HomeViewModel: ObservableObject {
         let showsDiff: Bool
         let refreshEntitlement: Bool
         let cachedIsPremium: Bool
+        /// History record for on-demand sentence-pair runs, kept apart from the main result.
+        var sentencePairsHistoryRequestID = UUID()
+
+        func withAction(_ action: ActionConfig, historyRequestID: UUID) -> RequestContext {
+            var context = RequestContext(
+                generation: generation,
+                historyRequestID: historyRequestID,
+                text: text,
+                images: images,
+                action: action,
+                languages: languages,
+                showsDiff: action.showsDiff,
+                refreshEntitlement: refreshEntitlement,
+                cachedIsPremium: cachedIsPremium
+            )
+            context.sentencePairsHistoryRequestID = sentencePairsHistoryRequestID
+            return context
+        }
     }
 
     private var pendingAppleTranslateContext: RequestContext?
@@ -451,6 +483,16 @@ public final class HomeViewModel: ObservableObject {
 
         isLoadingConfiguration = false
 
+        Publishers.Merge(
+            preferences.$sourceLanguage.dropFirst().map { _ in () },
+            preferences.$targetLanguage.dropFirst().map { _ in () }
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] in
+            self?.scheduleLanguagePreviewRefresh()
+        }
+        .store(in: &cancellables)
+
         preferences.$modelResultOrder
             .dropFirst()
             .receive(on: RunLoop.main)
@@ -506,7 +548,7 @@ public final class HomeViewModel: ObservableObject {
         ])
 
         switch fixture {
-        case .offlineAppleTranslation, .googleTranslation:
+        case .offlineAppleTranslation:
             preferences.setEnabledModelIDs(SnapshotFixtureData.enabledModelIDs(for: fixture))
         case .multiModelTranslation, .realtimeBilingualLive, .realtimeAppleValidation,
              .aiModels, .macRealtimeMultiLane,
@@ -761,6 +803,13 @@ public final class HomeViewModel: ObservableObject {
         return true
     }
 
+    /// Direct translation services only translate, so prompt-based actions need an AI model.
+    public func requiresAIModelSelection(for action: ActionConfig) -> Bool {
+        guard !action.supportsAppleTranslate, onboardingTrialModels.isEmpty, !models.isEmpty else { return false }
+        guard preferences.enabledModelIDs.contains(where: ModelConfig.isDirectTranslationID) else { return false }
+        return getEnabledModels().allSatisfy(\.isDirectTranslation)
+    }
+
     private func getEnabledModels(
         cachedIsPremium: Bool? = nil,
         allowModelFallback: Bool = false
@@ -825,20 +874,11 @@ public final class HomeViewModel: ObservableObject {
             available.insert(ModelConfig.appleTranslate, at: 0)
         }
 
-        // Inject Google Translate for translation actions.
-        if enabledIDs.contains(ModelConfig.googleTranslateID),
+        if enabledIDs.contains(ModelConfig.microsoftTranslateID),
            let action = selectedAction, action.supportsAppleTranslate
         {
             // Insert after Apple Translate if present, otherwise at the beginning.
             let insertIndex = available.firstIndex(where: { $0.id == ModelConfig.appleTranslateID })
-                .map { available.index(after: $0) } ?? 0
-            available.insert(ModelConfig.googleTranslate, at: insertIndex)
-        }
-
-        if enabledIDs.contains(ModelConfig.microsoftTranslateID),
-           let action = selectedAction, action.supportsAppleTranslate
-        {
-            let insertIndex = available.firstIndex(where: { $0.id == ModelConfig.googleTranslateID })
                 .map { available.index(after: $0) } ?? 0
             available.insert(ModelConfig.microsoftTranslate, at: insertIndex)
         }
@@ -1004,11 +1044,14 @@ public final class HomeViewModel: ObservableObject {
                     .debug(
                         "No usable models found. models=\(self.models.map(\.id), privacy: .public), enabledIDs=\(self.preferences.enabledModelIDs, privacy: .public)"
                     )
+                let message = requiresAIModelSelection(for: action)
+                    ? String(localized: "This action needs an AI model. Select one in Models.")
+                    : "No models available. Please select a model in the Models tab."
                 modelRuns = [
                     ModelRunViewState(
                         model: ModelConfig(id: "error", displayName: "Error"),
                         status: .failure(
-                            message: "No models available. Please select a model in the Models tab.",
+                            message: message,
                             duration: 0
                         )
                     ),
@@ -1064,6 +1107,71 @@ public final class HomeViewModel: ObservableObject {
 
         guard !context.text.isEmpty || !context.images.isEmpty else { return }
 
+        guard let runContext = requestContext(for: modelRuns[index].presentation, base: context) else { return }
+        startSingleRun(at: index, context: runContext)
+    }
+
+    private var sentenceTranslateAction: ActionConfig? {
+        let id = BuiltInActionCatalog.sentenceTranslateActionID
+        return allActions.first { $0.id == id } ?? BuiltInActionCatalog.actions.first { $0.id == id }
+    }
+
+    /// Sentence pairs are offered on AI results of plain translation actions.
+    public func canShowSentencePairs(for run: ModelRunViewState) -> Bool {
+        guard let context = activeRequestContext,
+              context.action.outputType == .translate,
+              !run.model.isDirectTranslation,
+              sentenceTranslateAction != nil
+        else {
+            return false
+        }
+        return true
+    }
+
+    /// Switches one run between the whole translation and sentence pairs. Only this run
+    /// reloads (or restores its cached result); other runs are untouched.
+    public func toggleSentencePairs(runID: String) {
+        guard let context = activeRequestContext,
+              let index = modelRuns.firstIndex(where: { $0.id == runID })
+        else {
+            return
+        }
+
+        let current = modelRuns[index]
+        let next: ModelRunViewState.Presentation = current.presentation == .standard ? .sentencePairs : .standard
+        if case .success = current.status {
+            modelRuns[index].cachedStatuses[current.presentation] = current.status
+        }
+        modelRuns[index].presentation = next
+
+        if let cached = modelRuns[index].cachedStatuses[next] {
+            // Invalidate any in-flight run for this cell before restoring the cached result.
+            perRunTasks[runID]?.cancel()
+            requestGenerationTracker.retry(runID: runID, token: UUID())
+            modelRuns[index].status = cached
+            return
+        }
+
+        guard let runContext = requestContext(for: next, base: context) else { return }
+        // Keep the original completion time so the row does not jump in first-completed order.
+        startSingleRun(at: index, context: runContext, keepsCompletionOrder: true)
+    }
+
+    private func requestContext(
+        for presentation: ModelRunViewState.Presentation,
+        base context: RequestContext
+    ) -> RequestContext? {
+        switch presentation {
+        case .standard:
+            return context
+        case .sentencePairs:
+            guard let action = sentenceTranslateAction else { return nil }
+            return context.withAction(action, historyRequestID: context.sentencePairsHistoryRequestID)
+        }
+    }
+
+    private func startSingleRun(at index: Int, context: RequestContext, keepsCompletionOrder: Bool = false) {
+        let runID = modelRuns[index].id
         let model = modelRuns[index].model
 
         // Cancel any in-flight retry for this run only
@@ -1075,7 +1183,9 @@ public final class HomeViewModel: ObservableObject {
         // Reset UI state for this specific run
         modelRuns[index].markdownStreamSource.reset()
         modelRuns[index].status = .running(start: Date())
-        modelRuns[index].completedAt = nil
+        if !keepsCompletionOrder {
+            modelRuns[index].completedAt = nil
+        }
 
         perRunTasks[runID] = Task { [weak self] in
             await self?.executeRequest(
@@ -1132,7 +1242,7 @@ public final class HomeViewModel: ObservableObject {
         )
     }
 
-    /// Called when the user picks a new source language — clears the detected-source strikethrough state.
+    /// Called when the user picks a new source language — clears the detected source until the preview refreshes.
     public func clearDetectedSourceLanguage() {
         setDetectedSourceLanguage(nil, reason: "User changed source language")
     }
@@ -1399,7 +1509,7 @@ public final class HomeViewModel: ObservableObject {
     }
 
     /// Result of `consumeResolvedTarget`: the resolved target language and
-    /// the detected/pinned source language code (for reuse by Apple/Google/LLM engines).
+    /// the detected/pinned source language code (for reuse by Apple/Microsoft/LLM engines).
     struct ResolvedLanguagePair {
         let target: TargetLanguageOption
         /// BCP 47 source code (e.g. "en", "zh-Hans"), or nil when detection failed.
@@ -1454,61 +1564,117 @@ public final class HomeViewModel: ObservableObject {
         if overrideTarget != nil {
             setTargetLanguageOverride(nil, reason: "Consumed one-shot target override")
         }
-        let shouldResolveMatch = overrideTarget == .appLanguage || (overrideTarget == nil && preferredTarget == .appLanguage)
-
-        if shouldResolveMatch {
-            let candidates = TargetLanguageOption.matchCandidates
-            let sourceCode = detectSourceCodeConstrained(for: text, candidateCodes: candidates.map(\.rawValue))
-            let resolved = Self.resolveTargetLanguage(
-                preferred: preferredTarget,
-                override: overrideTarget,
-                sourceCode: sourceCode,
-                matchCandidates: candidates
-            )
-            setResolvedTargetLanguage(
-                resolved.displayTarget,
-                reason: "Match target resolved from source=\(sourceCode ?? "nil") preferred=\(preferredTarget.rawValue)"
-            )
-            return ResolvedLanguagePair(target: resolved.target, sourceCode: sourceCode)
-        }
-
-        let target = overrideTarget ?? preferredTarget
-        let sourceCode = detectSourceCode(for: text, excluding: target)
-        let resolved = Self.resolveTargetLanguage(
-            preferred: preferredTarget,
-            override: overrideTarget,
-            sourceCode: sourceCode
+        languagePreviewTask?.cancel()
+        let resolution = Self.resolveLanguages(
+            text: text,
+            sourcePreference: preferences.sourceLanguage,
+            preferredTarget: preferredTarget,
+            override: overrideTarget
         )
-        let targetReason = "Target resolved from preferred=\(preferredTarget.rawValue) " +
-            "override=\(overrideTarget?.rawValue ?? "nil") source=\(sourceCode ?? "nil")"
-        setResolvedTargetLanguage(
-            resolved.displayTarget,
-            reason: targetReason
-        )
-        return ResolvedLanguagePair(target: resolved.target, sourceCode: sourceCode)
+        applyLanguageResolution(resolution, reason: "Request")
+        return ResolvedLanguagePair(target: resolution.target, sourceCode: resolution.sourceCode)
     }
 
-    /// Detects the source language code and sets `detectedSourceLanguage` for UI.
-    /// When `sourceLanguage` is `.auto`, biases detection away from `target` so that
-    /// a Chinese+English input is detected as Chinese when the user is translating to English.
-    private func detectSourceCode(for text: String, excluding target: TargetLanguageOption) -> String? {
-        let sourceLanguage = preferences.sourceLanguage
-        if sourceLanguage != .auto {
-            setDetectedSourceLanguage(sourceLanguage, reason: "Source language preference is pinned")
-            return sourceLanguage.rawValue
+    struct LanguageResolution: Equatable {
+        /// BCP 47 source code used for the request, or nil when detection is inconclusive.
+        let sourceCode: String?
+        /// Source shown in the UI: the detected language, or the pinned preference.
+        let displaySource: SourceLanguageOption?
+        let target: TargetLanguageOption
+        let displayTarget: TargetLanguageOption?
+        let isMatchFallback: Bool
+    }
+
+    /// Resolves the language pair for `text` without touching view-model state, so the live
+    /// preview while typing and the actual request always agree.
+    /// Detection biases away from the target so mixed-language input (e.g. "你好, hello")
+    /// picks the *other* language when the source is `.auto`.
+    nonisolated static func resolveLanguages(
+        text: String,
+        sourcePreference: SourceLanguageOption,
+        preferredTarget: TargetLanguageOption,
+        override: TargetLanguageOption?,
+        matchCandidates: [TargetLanguageOption] = TargetLanguageOption.matchCandidates
+    ) -> LanguageResolution {
+        let resolvesMatch = override == .appLanguage || (override == nil && preferredTarget == .appLanguage)
+
+        let sourceCode: String?
+        if sourcePreference != .auto {
+            sourceCode = sourcePreference.rawValue
+        } else if resolvesMatch {
+            sourceCode = SourceLanguageDetector.detectLocaleLanguageConstrained(
+                of: text,
+                candidateCodes: matchCandidates.map(\.rawValue)
+            )?.minimalIdentifier
+        } else {
+            let target = override ?? preferredTarget
+            sourceCode = SourceLanguageDetector.detectLocaleLanguage(
+                of: text,
+                excludingTargetCode: target.rawValue
+            )?.minimalIdentifier
         }
-        let targetCode = target == .appLanguage ? TargetLanguageOption.appLanguageIdentifier : target.rawValue
-        guard let detected = SourceLanguageDetector.detectLocaleLanguage(of: text, excludingTargetCode: targetCode) else {
-            return nil
+
+        let displaySource: SourceLanguageOption? = if sourcePreference != .auto {
+            sourcePreference
+        } else {
+            // Detection returns minimal codes ("zh" for zh-Hans), so match by language equivalence.
+            sourceCode.flatMap { code in
+                SourceLanguageOption(rawValue: code) ?? SourceLanguageOption.allCases.first {
+                    $0 != .auto && SourceLanguageDetector.languagesAreSame($0.rawValue, code)
+                }
+            }
         }
-        let code = detected.minimalIdentifier
-        let detectedOption = SourceLanguageOption(rawValue: code)
-            ?? SourceLanguageOption(rawValue: String(code.prefix(2)))
-        setDetectedSourceLanguage(
-            detectedOption,
-            reason: "Auto source detected excluding target=\(targetCode)"
+
+        let resolved = resolveTargetLanguage(
+            preferred: preferredTarget,
+            override: override,
+            sourceCode: sourceCode,
+            matchCandidates: matchCandidates
         )
-        return code
+        let isMatchFallback = resolvesMatch && sourceCode != nil && resolved.target != matchCandidates.first
+
+        return LanguageResolution(
+            sourceCode: sourceCode,
+            displaySource: displaySource,
+            target: resolved.target,
+            displayTarget: resolved.displayTarget,
+            isMatchFallback: isMatchFallback
+        )
+    }
+
+    private func applyLanguageResolution(_ resolution: LanguageResolution?, reason: String) {
+        setDetectedSourceLanguage(resolution?.displaySource, reason: "\(reason): source=\(resolution?.sourceCode ?? "nil")")
+        setResolvedTargetLanguage(resolution?.displayTarget, reason: "\(reason): target resolved")
+        if isMatchTargetFallback != (resolution?.isMatchFallback ?? false) {
+            isMatchTargetFallback = resolution?.isMatchFallback ?? false
+        }
+    }
+
+    /// Debounced so language detection runs once the user pauses typing.
+    private func scheduleLanguagePreviewRefresh() {
+        languagePreviewTask?.cancel()
+        languagePreviewTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            guard !Task.isCancelled else { return }
+            self?.refreshLanguagePreview()
+        }
+    }
+
+    private func refreshLanguagePreview() {
+        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else {
+            applyLanguageResolution(nil, reason: "Live preview cleared")
+            return
+        }
+        applyLanguageResolution(
+            Self.resolveLanguages(
+                text: text,
+                sourcePreference: preferences.sourceLanguage,
+                preferredTarget: preferences.targetLanguage,
+                override: targetLanguageOverride
+            ),
+            reason: "Live preview"
+        )
     }
 
     /// Match mode: detects source language constrained to candidate language codes only.
@@ -1583,10 +1749,9 @@ public final class HomeViewModel: ObservableObject {
         // Separate direct translation services from cloud LLM models.
         let cloudModels = models.filter { !$0.isDirectTranslation }
         let hasAppleTranslate = models.contains { $0.id == ModelConfig.appleTranslateID }
-        let hasGoogleTranslate = models.contains { $0.isGoogleTranslate }
         logger
             .debug(
-                "executeRequest: \(models.count, privacy: .public) models, apple=\(hasAppleTranslate, privacy: .public), google=\(hasGoogleTranslate, privacy: .public)"
+                "executeRequest: \(models.count, privacy: .public) models, apple=\(hasAppleTranslate, privacy: .public)"
             )
 
         // Kick off Apple Translate if present.
@@ -1828,44 +1993,37 @@ public final class HomeViewModel: ObservableObject {
             }
         }
 
-        // Both online translation services share run validity and history handling.
-        for model in models where model.isGoogleTranslate || model.id == ModelConfig.microsoftTranslateID {
-            guard let googleRunToken = runTokens[model.id] else { continue }
+        for model in models where model.id == ModelConfig.microsoftTranslateID {
+            guard let serviceRunToken = runTokens[model.id] else { continue }
             if action.supportsAppleTranslate {
                 if let shortCircuit = sameSourceAndTargetResult(
                     sourceCode: resolved.sourceCode,
                     target: resolvedTarget,
                     modelID: model.id
                 ) {
-                    apply(result: shortCircuit, context: context, runToken: googleRunToken, allowDiff: false)
+                    apply(result: shortCircuit, context: context, runToken: serviceRunToken, allowDiff: false)
                 } else {
-                    let googleSourceCode: String? = resolved.sourceCode
+                    let sourceCode: String? = resolved.sourceCode
                     Task { [weak self] in
                         guard let self else { return }
-                        let result = if model.isGoogleTranslate {
-                            await GoogleTranslateService.shared.translate(
-                                text: text, sourceCode: googleSourceCode, targetCode: resolvedTarget.rawValue
-                            )
-                        } else {
-                            await MicrosoftTranslateService.shared.translate(
-                                text: text, sourceCode: googleSourceCode, targetCode: resolvedTarget.rawValue
-                            )
-                        }
+                        let result = await MicrosoftTranslateService.shared.translate(
+                            text: text, sourceCode: sourceCode, targetCode: resolvedTarget.rawValue
+                        )
                         guard self.isRunStillValid(
                             context,
                             runID: result.modelID,
-                            runToken: googleRunToken
+                            runToken: serviceRunToken
                         ) else { return }
                         self.apply(
                             result: result,
                             context: context,
-                            runToken: googleRunToken,
+                            runToken: serviceRunToken,
                             allowDiff: false
                         )
                         self.saveHistoryIfSuccessful(
                             result,
                             context: context,
-                            runToken: googleRunToken
+                            runToken: serviceRunToken
                         )
                     }
                 }
@@ -1875,7 +2033,7 @@ public final class HomeViewModel: ObservableObject {
                     duration: 0,
                     response: .failure(LocalProviderError.unsupportedAction)
                 )
-                apply(result: result, context: context, runToken: googleRunToken, allowDiff: false)
+                apply(result: result, context: context, runToken: serviceRunToken, allowDiff: false)
             }
         }
 
@@ -2142,7 +2300,9 @@ public final class HomeViewModel: ObservableObject {
 
         switch result.response {
         case let .success(message):
-            modelRuns[index].completedAt = Date()
+            if modelRuns[index].completedAt == nil {
+                modelRuns[index].completedAt = Date()
+            }
             let diffTarget = result.diffSource ?? message
             if allowDiff {
                 Task {

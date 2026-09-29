@@ -170,7 +170,6 @@ public final class ModelsService: Sendable {
     static func validatedModels(_ models: [ModelConfig]) throws -> [ModelConfig] {
         let reservedIDs = Set([
             ModelConfig.appleTranslateID,
-            ModelConfig.googleTranslateID,
             ModelConfig.microsoftTranslateID,
             ModelConfig.foundationModelID,
             ModelConfig.privateCloudModelID,

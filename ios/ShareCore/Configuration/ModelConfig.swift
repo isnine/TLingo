@@ -69,8 +69,6 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     /// Well-known identifier for the on-device Apple Translate model.
     public static let appleTranslateID = "apple-translate"
 
-    /// Well-known identifier for the free Google Translate model.
-    public static let googleTranslateID = "google-translate"
     public static let microsoftTranslateID = "microsoft-translate"
 
     /// Well-known identifier for the free GPT-5 Nano model.
@@ -90,17 +88,6 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
         isPremium: false,
         supportsVision: false,
         tags: ["on-device"],
-        hidden: false
-    )
-
-    /// Pre-built ModelConfig for Google Translate.
-    public static let googleTranslate = ModelConfig(
-        id: googleTranslateID,
-        displayName: "Google Translate",
-        isDefault: false,
-        isPremium: false,
-        supportsVision: false,
-        tags: ["free"],
         hidden: false
     )
 
@@ -147,7 +134,7 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     /// Built-in direct translation services, in display order. Apple Translate is
     /// included only when the platform supports it.
     public static var translationServices: [ModelConfig] {
-        var services = [googleTranslate, microsoftTranslate]
+        var services = [microsoftTranslate]
         if AppleTranslationService.shared.isAvailable {
             services.insert(appleTranslate, at: 0)
         }
@@ -160,9 +147,6 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     /// Whether this is a non-LLM direct translation service.
     public var isDirectTranslation: Bool { Self.isDirectTranslationID(id) }
 
-    /// Whether this model is Google Translate.
-    public var isGoogleTranslate: Bool { id == Self.googleTranslateID }
-
     /// Whether this model uses an Apple Foundation Model.
     public var isFoundationModel: Bool { Self.isFoundationModelID(id) }
 
@@ -174,7 +158,7 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
 
     /// Whether the given model ID refers to a non-LLM direct translation service.
     public static func isDirectTranslationID(_ id: String) -> Bool {
-        id == appleTranslateID || id == googleTranslateID || id == microsoftTranslateID
+        id == appleTranslateID || id == microsoftTranslateID
     }
 
     /// Whether the given model ID refers to an Apple Foundation Model.

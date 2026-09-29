@@ -31,6 +31,7 @@ struct SettingsView: View {
     @State private var showDefaultTranslationOnboarding = false
     @State private var pendingDefaultTranslationUpgrade = false
     @State private var showModels = false
+    @State private var showActions = false
     @State private var feedbackDraft: FeedbackMailDraft?
 
     @State private var showNetworkDebug = false
@@ -74,6 +75,9 @@ struct SettingsView: View {
             .navigationTitle("")
             .navigationDestination(isPresented: $showModels) {
                 ModelsView(embedsInNavigationStack: false)
+            }
+            .navigationDestination(isPresented: $showActions) {
+                ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
             }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
@@ -195,6 +199,9 @@ struct SettingsView: View {
             modelManagementRow
             Divider()
                 .padding(.leading, 52)
+            actionManagementRow
+            Divider()
+                .padding(.leading, 52)
             accentThemeRow
             #if os(iOS)
                 Divider()
@@ -230,6 +237,9 @@ struct SettingsView: View {
 
                 settingsSection(title: "Translation", icon: "translate") {
                     modelManagementRow
+                    Divider()
+                        .padding(.leading, 52)
+                    actionManagementRow
                     Divider()
                         .padding(.leading, 52)
                     voicePreferenceRow
@@ -540,6 +550,31 @@ private extension SettingsView {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("settings_models_row")
+    }
+
+    var actionManagementRow: some View {
+        Button {
+            showActions = true
+        } label: {
+            HStack(spacing: 16) {
+                SettingsIconBadge(icon: "slider.horizontal.3", color: .orange)
+
+                Text("Manage Actions")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(colors.textPrimary)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(colors.textSecondary.opacity(0.5))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("settings_actions_row")
     }
 
     var accentThemeRow: some View {

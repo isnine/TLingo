@@ -44,7 +44,7 @@ public struct LanguageSwitcherView: View {
     let resolvedTarget: TargetLanguageOption?
     /// Called when the user picks an override target from the resolved-target menu.
     let onOverrideTarget: ((TargetLanguageOption) -> Void)?
-    /// When non-nil, shows the source selector with a strikethrough and this detected language label beside it.
+    /// When non-nil, the source selector shows this detected language instead of "Detect Language".
     let detectedSource: SourceLanguageOption?
     /// Called when the user picks a new source language (so callers can clear detectedSource state).
     let onSourceChanged: (() -> Void)?
@@ -147,13 +147,15 @@ public struct LanguageSwitcherView: View {
             return targetFallbackTitle ?? target.primaryLabel
         }
         if target == .appLanguage {
-            return TargetLanguageOption.systemLanguageDisplayName()
+            // Automatic target: show the language it translates into by default; the live
+            // preview replaces it once the input's language is known.
+            return (TargetLanguageOption.matchCandidates.first ?? .english).primaryLabel
         }
         return target.primaryLabel
     }
 
-    private var targetResolvedOriginalDisplayName: String {
-        selectedTargetLanguage == .appLanguage ? String(localized: "System") : targetDisplayName
+    private var usesAutomaticTarget: Bool {
+        selectedTargetLanguage == .appLanguage
     }
 
     private var sourceDisplayName: String {
@@ -413,10 +415,6 @@ public struct LanguageSwitcherView: View {
                 HStack(spacing: 3) {
                     let showDetected = detectedSource != nil && detectedSource != selectedSourceLanguage
                     if showDetected, let detected = detectedSource {
-                        languageLabel(sourceDisplayName)
-                            .strikethrough(true)
-                            .opacity(0.5)
-                            .layoutPriority(-1)
                         languageLabel(detected.primaryLabel)
                             .layoutPriority(1)
                     } else {
@@ -479,11 +477,7 @@ public struct LanguageSwitcherView: View {
                 }
             }
         } label: {
-            if showResolved {
-                targetResolvedChip(resolved: resolved, style: style)
-            } else {
-                targetChip(targetDisplayName, style: style)
-            }
+            targetChip(showResolved ? resolved.primaryLabel : targetDisplayName, style: style)
         }
         #if os(macOS)
         .menuStyle(.borderlessButton)
@@ -496,6 +490,7 @@ public struct LanguageSwitcherView: View {
     private func targetChip(_ text: String, style: LanguageControlStyle = .standalone) -> some View {
         languageControl(style: style) {
             HStack(spacing: 3) {
+                automaticTargetBadge
                 languageLabel(text)
                     .layoutPriority(1)
                 if style == .standalone {
@@ -505,29 +500,15 @@ public struct LanguageSwitcherView: View {
         }
     }
 
-    private func targetResolvedChip(resolved: TargetLanguageOption, style: LanguageControlStyle = .standalone) -> some View {
-        languageControl(style: style) {
-            HStack(spacing: 3) {
-                targetResolvedLabel(resolved: resolved)
-                if style == .standalone {
-                    chevron
-                }
-            }
+    /// Marks an automatically chosen target, so the name reads as "decided for you".
+    @ViewBuilder
+    private var automaticTargetBadge: some View {
+        if usesAutomaticTarget {
+            Image(systemName: "sparkles")
+                .font(chevronFont)
+                .foregroundStyle(colors.accent)
+                .accessibilityHidden(true)
         }
-    }
-
-    private func targetResolvedLabel(resolved: TargetLanguageOption) -> some View {
-        let original = Text(targetResolvedOriginalDisplayName)
-            .strikethrough(true)
-            .foregroundColor(resolvedColor.opacity(0.5))
-        let replacement = Text(resolved.compactCodeLabel)
-            .foregroundColor(resolvedColor)
-        return Text("\(original) \(replacement)")
-            .font(textFont)
-            .lineLimit(1)
-            .minimumScaleFactor(0.75)
-            .truncationMode(.tail)
-            .layoutPriority(1)
     }
 
     @ViewBuilder

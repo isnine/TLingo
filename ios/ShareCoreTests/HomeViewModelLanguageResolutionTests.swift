@@ -49,6 +49,60 @@ struct HomeViewModelLanguageResolutionTests {
         #expect(result.displayTarget == .japanese)
     }
 
+    @Test("Automatic target flags fallback only when the first language is skipped")
+    func automaticTargetFlagsFallbackWhenFirstLanguageIsSkipped() throws {
+        let chinese = try #require(SourceLanguageOption(rawValue: "zh-Hans"))
+        let english = try #require(SourceLanguageOption(rawValue: "en"))
+
+        let fallback = HomeViewModel.resolveLanguages(
+            text: "会议改到周四下午了",
+            sourcePreference: chinese,
+            preferredTarget: .appLanguage,
+            override: nil,
+            matchCandidates: [.simplifiedChinese, .english]
+        )
+        #expect(fallback.target == .english)
+        #expect(fallback.isMatchFallback)
+
+        let primary = HomeViewModel.resolveLanguages(
+            text: "The meeting moved to Thursday",
+            sourcePreference: english,
+            preferredTarget: .appLanguage,
+            override: nil,
+            matchCandidates: [.simplifiedChinese, .english]
+        )
+        #expect(primary.target == .simplifiedChinese)
+        #expect(!primary.isMatchFallback)
+    }
+
+    @Test("Minimal Chinese detection code maps to Simplified Chinese source")
+    func minimalChineseCodeMapsToSimplifiedChinese() {
+        let result = HomeViewModel.resolveLanguages(
+            text: "会议改到周四下午了，请大家准时参加",
+            sourcePreference: .auto,
+            preferredTarget: .appLanguage,
+            override: nil,
+            matchCandidates: [.simplifiedChinese, .english]
+        )
+        #expect(result.displaySource == SourceLanguageOption(rawValue: "zh-Hans"))
+        #expect(result.target == .english)
+    }
+
+    @Test("Manual override is never reported as an automatic target fallback")
+    func manualOverrideIsNotFallback() throws {
+        let chinese = try #require(SourceLanguageOption(rawValue: "zh-Hans"))
+
+        let result = HomeViewModel.resolveLanguages(
+            text: "会议改到周四下午了",
+            sourcePreference: chinese,
+            preferredTarget: .appLanguage,
+            override: .japanese,
+            matchCandidates: [.simplifiedChinese, .english]
+        )
+        #expect(result.target == .japanese)
+        #expect(!result.isMatchFallback)
+    }
+
     @Test("Translation equality preserves Chinese script")
     func translationEqualityPreservesChineseScript() {
         #expect(SourceLanguageDetector.languagesAreSame("zh-Hans", "zh-Hant") == false)
@@ -115,12 +169,12 @@ struct HomeViewModelRequestGenerationTests {
     func cancellationRejectsEveryRun() {
         let generation = UUID()
         let appleToken = UUID()
-        let googleToken = UUID()
+        let microsoftToken = UUID()
         var tracker = HomeViewModel.RequestGenerationTracker()
 
         tracker.begin(generation: generation, runTokens: [
             ModelConfig.appleTranslateID: appleToken,
-            ModelConfig.googleTranslateID: googleToken,
+            ModelConfig.microsoftTranslateID: microsoftToken,
         ])
         tracker.cancel()
 
@@ -131,8 +185,8 @@ struct HomeViewModelRequestGenerationTests {
         ) == false)
         #expect(tracker.accepts(
             generation: generation,
-            runID: ModelConfig.googleTranslateID,
-            token: googleToken
+            runID: ModelConfig.microsoftTranslateID,
+            token: microsoftToken
         ) == false)
     }
 

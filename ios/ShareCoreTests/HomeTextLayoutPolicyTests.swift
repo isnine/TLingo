@@ -16,9 +16,14 @@ struct HomeTextLayoutPolicyTests {
         #expect(HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: false, idiom: .pad))
     }
 
-    @Test("iPhone and extension keep stacked layout")
-    func iPhoneAndExtensionKeepStackedLayout() {
-        #expect(!HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: false, idiom: .phone))
+    @Test("iPhone uses bottom composer outside extension")
+    func iPhoneUsesBottomComposer() {
+        #expect(HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: false, idiom: .phone))
+    }
+
+    @Test("Extension keeps stacked layout")
+    func extensionKeepsStackedLayout() {
+        #expect(!HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: true, idiom: .phone))
         #expect(!HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: true, idiom: .mac))
         #expect(!HomeTextLayoutPolicy.usesBottomComposerLayout(openFromExtension: true, idiom: .pad))
     }
@@ -28,8 +33,32 @@ struct HomeTextLayoutPolicyTests {
         #expect(
             HomeTextLayoutPolicy.languageSelectorPlacement(
                 usesBottomComposerLayout: true,
-                usesSimplifiedTextLayout: true
+                usesSimplifiedTextLayout: true,
+                idiom: .mac
             ) == .insideInput
+        )
+    }
+
+    @Test("iPhone bottom composer places language selector in navigation bar")
+    func iPhoneBottomComposerPlacesLanguageSelectorInNavigationBar() {
+        #expect(
+            HomeTextLayoutPolicy.languageSelectorPlacement(
+                usesBottomComposerLayout: true,
+                usesSimplifiedTextLayout: true,
+                idiom: .phone
+            ) == .navigationBar
+        )
+    }
+
+    @Test("iPhone bottom composer stays docked when empty")
+    func iPhoneBottomComposerStaysDockedWhenEmpty() {
+        #expect(
+            HomeTextLayoutPolicy.bottomComposerPlacement(
+                usesBottomComposerLayout: true,
+                hasResults: false,
+                hasAttachments: false,
+                idiom: .phone
+            ) == .bottomDock
         )
     }
 
@@ -38,7 +67,8 @@ struct HomeTextLayoutPolicyTests {
         #expect(
             HomeTextLayoutPolicy.languageSelectorPlacement(
                 usesBottomComposerLayout: false,
-                usesSimplifiedTextLayout: true
+                usesSimplifiedTextLayout: true,
+                idiom: .phone
             ) == .aboveInput
         )
     }
@@ -48,7 +78,8 @@ struct HomeTextLayoutPolicyTests {
         #expect(
             HomeTextLayoutPolicy.languageSelectorPlacement(
                 usesBottomComposerLayout: false,
-                usesSimplifiedTextLayout: false
+                usesSimplifiedTextLayout: false,
+                idiom: .phone
             ) == .insideInput
         )
     }
@@ -59,7 +90,8 @@ struct HomeTextLayoutPolicyTests {
             HomeTextLayoutPolicy.bottomComposerPlacement(
                 usesBottomComposerLayout: true,
                 hasResults: false,
-                hasAttachments: false
+                hasAttachments: false,
+                idiom: .mac
             ) == .centeredEmptyState
         )
     }
@@ -70,7 +102,8 @@ struct HomeTextLayoutPolicyTests {
             HomeTextLayoutPolicy.bottomComposerPlacement(
                 usesBottomComposerLayout: true,
                 hasResults: false,
-                hasAttachments: false
+                hasAttachments: false,
+                idiom: .mac
             ) == .centeredEmptyState
         )
     }
@@ -81,21 +114,24 @@ struct HomeTextLayoutPolicyTests {
             HomeTextLayoutPolicy.bottomComposerPlacement(
                 usesBottomComposerLayout: true,
                 hasResults: false,
-                hasAttachments: true
+                hasAttachments: true,
+                idiom: .mac
             ) == .bottomDock
         )
         #expect(
             HomeTextLayoutPolicy.bottomComposerPlacement(
                 usesBottomComposerLayout: true,
                 hasResults: true,
-                hasAttachments: false
+                hasAttachments: false,
+                idiom: .mac
             ) == .bottomDock
         )
         #expect(
             HomeTextLayoutPolicy.bottomComposerPlacement(
                 usesBottomComposerLayout: false,
                 hasResults: false,
-                hasAttachments: false
+                hasAttachments: false,
+                idiom: .mac
             ) == .bottomDock
         )
     }

@@ -26,6 +26,7 @@ enum HomeSatisfactionPromptChrome {
 enum HomeLanguageSelectorPlacement {
     case aboveInput
     case insideInput
+    case navigationBar
 }
 
 enum HomeBottomComposerPlacement {
@@ -40,9 +41,8 @@ struct HomeBottomComposerHeights: Equatable {
 }
 
 enum HomeTextLayoutPolicy {
-    static func usesBottomComposerLayout(openFromExtension: Bool, idiom: HomeTextLayoutIdiom) -> Bool {
-        guard !openFromExtension else { return false }
-        return idiom == .pad || idiom == .mac
+    static func usesBottomComposerLayout(openFromExtension: Bool, idiom _: HomeTextLayoutIdiom) -> Bool {
+        !openFromExtension
     }
 
     static func satisfactionPromptPlacement(
@@ -78,8 +78,12 @@ enum HomeTextLayoutPolicy {
 
     static func languageSelectorPlacement(
         usesBottomComposerLayout: Bool,
-        usesSimplifiedTextLayout: Bool
+        usesSimplifiedTextLayout: Bool,
+        idiom: HomeTextLayoutIdiom
     ) -> HomeLanguageSelectorPlacement {
+        if usesBottomComposerLayout, idiom == .phone {
+            return .navigationBar
+        }
         if usesBottomComposerLayout || !usesSimplifiedTextLayout {
             return .insideInput
         }
@@ -89,9 +93,11 @@ enum HomeTextLayoutPolicy {
     static func bottomComposerPlacement(
         usesBottomComposerLayout: Bool,
         hasResults: Bool,
-        hasAttachments: Bool
+        hasAttachments: Bool,
+        idiom: HomeTextLayoutIdiom
     ) -> HomeBottomComposerPlacement {
-        if usesBottomComposerLayout, !hasResults, !hasAttachments {
+        // iPhone keeps the composer docked at the thumb even before the first result.
+        if usesBottomComposerLayout, idiom != .phone, !hasResults, !hasAttachments {
             return .centeredEmptyState
         }
         return .bottomDock

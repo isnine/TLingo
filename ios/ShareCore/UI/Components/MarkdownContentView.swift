@@ -5,6 +5,8 @@ import SwiftUI
 public enum MarkdownContentPreset {
     case compact
     case detail
+    /// Large body text for the primary translation on iPhone Home.
+    case prominent
     case fixed(Font)
 }
 
@@ -64,6 +66,8 @@ public struct MarkdownContentView: View {
             .system(size: 15)
         case .detail:
             .system(size: 16)
+        case .prominent:
+            .system(size: 19)
         case let .fixed(font):
             font
         }

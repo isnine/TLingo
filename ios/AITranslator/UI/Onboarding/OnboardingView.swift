@@ -377,7 +377,7 @@
                 enabledModelIDs.subtract(Set(premiumModels.map(\.id)))
             }
             if enabledModelIDs.isEmpty {
-                enabledModelIDs.insert(ModelConfig.googleTranslateID)
+                enabledModelIDs.insert(ModelConfig.microsoftTranslateID)
             }
             prefs.setEnabledModelIDs(enabledModelIDs)
             prefs.setHasCompletedOnboarding(true)
@@ -417,13 +417,13 @@
         private func applyPremiumModels(_ models: [ModelConfig]) {
             premiumModels = models
             if !hadExistingModelSelection, selectedModelIDs.isEmpty {
-                selectedModelIDs = [ModelConfig.nanoModelID, ModelConfig.googleTranslateID]
+                selectedModelIDs = [ModelConfig.nanoModelID, ModelConfig.microsoftTranslateID]
             }
         }
 
         private var selectableModels: [ModelConfig] {
             var seen = Set<String>()
-            return ([ModelConfig.googleTranslate, ModelConfig.appleTranslate, ModelConfig.nanoModel]
+            return ([ModelConfig.microsoftTranslate, ModelConfig.appleTranslate, ModelConfig.nanoModel]
                 + ModelConfig.appleIntelligenceModels + premiumModels)
                 .filter { seen.insert($0.id).inserted }
                 .filter { model in

@@ -14,7 +14,7 @@
   ],
   "modelOrder": [
     "apple-translate",
-    "google-translate",
+    "microsoft-translate",
     "gpt-5.4",
     "DeepSeek-V4-Pro",
     "Kimi-K2.6"
@@ -1898,7 +1898,7 @@
         ],
         "sidebarRecords": [
           {"kind": "text", "sourceText": "Compare results from multiple AI models before choosing the final translation.", "actionName": "Terjemah", "targetLanguage": "Bahasa Melayu", "modelID": "gpt-5.4", "modelDisplayName": "GPT-5.4", "resultText": "Bandingkan hasil daripada beberapa model AI sebelum memilih terjemahan akhir."},
-          {"kind": "text", "sourceText": "Use Google Translate when a local language pack is not available.", "actionName": "Terjemah", "targetLanguage": "Bahasa Melayu", "modelID": "google-translate", "modelDisplayName": "Google Translate", "resultText": "Gunakan Google Translate apabila pek bahasa setempat tidak tersedia."},
+          {"kind": "text", "sourceText": "Use Microsoft Translate when a local language pack is not available.", "actionName": "Terjemah", "targetLanguage": "Bahasa Melayu", "modelID": "microsoft-translate", "modelDisplayName": "Microsoft Translate", "resultText": "Gunakan Microsoft Translate apabila pek bahasa setempat tidak tersedia."},
           {"kind": "realtime", "sourceText": "Please capture the key decisions and owners.", "actionName": "Masa nyata", "targetLanguage": "Bahasa Melayu", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Dokumentasikan keputusan penting dan pihak yang bertanggungjawab."},
           {"kind": "realtime", "sourceText": "We will confirm the launch date before the meeting ends.", "actionName": "Masa nyata", "targetLanguage": "Bahasa Melayu", "modelID": "apple-translation-realtime", "modelDisplayName": "Apple Translation Realtime", "resultText": "Tarikh pelancaran akan disahkan sebelum mesyuarat tamat."}
         ]
@@ -1927,14 +1927,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo is a translation app for iPhone, iPad, and Mac. It compares translations from multiple AI models.",
-        "google-translate": "TLingo provides translation on iPhone, iPad, and Mac, with results from several AI models available for comparison.",
+        "microsoft-translate": "TLingo provides translation on iPhone, iPad, and Mac, with results from several AI models available for comparison.",
         "gpt-5.4": "TLingo brings translation to iPhone, iPad, and Mac and lets you compare multiple AI-generated results side by side.",
         "DeepSeek-V4-Pro": "TLingo is a multi-platform translation tool that compares output from different AI models on iPhone, iPad, and Mac.",
         "Kimi-K2.6": "Use TLingo across iPhone, iPad, and Mac to review and compare multi-model translation results."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions for easier spoken translation.",
-        "google-translate": "TLingo combines offline local recognition, speech recognition, and live bilingual captions to make spoken content easier to understand.",
+        "microsoft-translate": "TLingo combines offline local recognition, speech recognition, and live bilingual captions to make spoken content easier to understand.",
         "gpt-5.4": "TLingo helps you understand spoken content through on-device recognition, speech recognition, and real-time bilingual captions.",
         "DeepSeek-V4-Pro": "TLingo provides offline local recognition, speech recognition, and live bilingual captions for spoken translation.",
         "Kimi-K2.6": "With local offline recognition, speech recognition, and real-time bilingual captions, TLingo simplifies spoken translation."
@@ -1970,14 +1970,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo 是一款适用于 iPhone、iPad 和 Mac 的翻译应用。它可比较多个 AI 模型的翻译结果。",
-        "google-translate": "TLingo 是一款面向 iPhone、iPad 和 Mac 的翻译应用，可对比多个 AI 模型生成的翻译结果。",
+        "microsoft-translate": "TLingo 是一款面向 iPhone、iPad 和 Mac 的翻译应用，可对比多个 AI 模型生成的翻译结果。",
         "gpt-5.4": "TLingo 为 iPhone、iPad 与 Mac 提供翻译功能，可并排比较多种 AI 模型的翻译结果。",
         "DeepSeek-V4-Pro": "TLingo 是覆盖 iPhone、iPad 和 Mac 的翻译工具，能够比较多个 AI 模型输出的译文。",
         "Kimi-K2.6": "TLingo 可在 iPhone、iPad 和 Mac 上使用，支持多模型翻译结果对比。"
       },
       "extensionTranslations": {
         "apple-translate": "TLingo 支持本地离线识别、语音识别与实时双语字幕，让语音内容更易于理解和翻译。",
-        "google-translate": "TLingo 提供本地离线识别、语音识别和实时双语字幕功能，让理解与翻译语音内容更加便捷。",
+        "microsoft-translate": "TLingo 提供本地离线识别、语音识别和实时双语字幕功能，让理解与翻译语音内容更加便捷。",
         "gpt-5.4": "TLingo 具备本地离线识别、语音识别及实时双语字幕，可更轻松地理解并翻译语音内容。",
         "DeepSeek-V4-Pro": "TLingo 支持本地离线识别和语音识别，并提供实时双语字幕，帮助用户理解与翻译语音内容。",
         "Kimi-K2.6": "通过本地离线识别、语音识别与实时双语字幕，TLingo 让语音内容的理解和翻译更简单。"
@@ -2013,14 +2013,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo 是一款適用於 iPhone、iPad 和 Mac 的翻譯應用程式。它可比較多個 AI 模型的翻譯結果。",
-        "google-translate": "TLingo 是一款面向 iPhone、iPad 與 Mac 的翻譯 App，可對比多種 AI 模型產生的翻譯結果。",
+        "microsoft-translate": "TLingo 是一款面向 iPhone、iPad 與 Mac 的翻譯 App，可對比多種 AI 模型產生的翻譯結果。",
         "gpt-5.4": "TLingo 為 iPhone、iPad 和 Mac 提供翻譯功能，可並排比較多個 AI 模型的譯文。",
         "DeepSeek-V4-Pro": "TLingo 是橫跨 iPhone、iPad 與 Mac 的翻譯工具，能比較多種 AI 模型輸出的翻譯。",
         "Kimi-K2.6": "TLingo 可在 iPhone、iPad 和 Mac 上使用，支援多模型翻譯結果對比。"
       },
       "extensionTranslations": {
         "apple-translate": "TLingo 支援本機離線辨識、語音辨識與即時雙語字幕，讓語音內容更容易理解和翻譯。",
-        "google-translate": "TLingo 提供本機離線辨識、語音辨識和即時雙語字幕功能，讓理解與翻譯語音內容更加方便。",
+        "microsoft-translate": "TLingo 提供本機離線辨識、語音辨識和即時雙語字幕功能，讓理解與翻譯語音內容更加方便。",
         "gpt-5.4": "TLingo 具備本機離線辨識、語音辨識及即時雙語字幕，可更輕鬆地理解並翻譯語音內容。",
         "DeepSeek-V4-Pro": "TLingo 支援本機離線辨識和語音辨識，並提供即時雙語字幕，協助使用者理解與翻譯語音內容。",
         "Kimi-K2.6": "透過本機離線辨識、語音辨識與即時雙語字幕，TLingo 讓語音內容的理解和翻譯更簡單。"
@@ -2054,14 +2054,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingoはiPhone、iPad、Mac向けの翻訳アプリです。複数のAIモデルによる翻訳結果を比較できます。",
-        "google-translate": "TLingoはiPhone、iPad、Macで使える翻訳アプリで、複数のAIモデルが生成した翻訳を比べられます。",
+        "microsoft-translate": "TLingoはiPhone、iPad、Macで使える翻訳アプリで、複数のAIモデルが生成した翻訳を比べられます。",
         "gpt-5.4": "iPhone、iPad、Mac対応のTLingoでは、さまざまなAIモデルの翻訳を並べて比較できます。",
         "DeepSeek-V4-Pro": "TLingoはiPhone、iPad、Macを対象とした翻訳ツールで、複数AIモデルの翻訳出力を比較できます。",
         "Kimi-K2.6": "TLingoはiPhone、iPad、Macに対応し、マルチモデルの翻訳結果を比較できます。"
       },
       "extensionTranslations": {
         "apple-translate": "TLingoはローカルのオフライン認識、音声認識、リアルタイムの二言語字幕に対応し、音声内容の理解と翻訳を容易にします。",
-        "google-translate": "TLingoはローカルオフライン認識、音声認識、リアルタイム二言語字幕を提供し、話された内容をより簡単に理解して翻訳できます。",
+        "microsoft-translate": "TLingoはローカルオフライン認識、音声認識、リアルタイム二言語字幕を提供し、話された内容をより簡単に理解して翻訳できます。",
         "gpt-5.4": "TLingoのローカルオフライン認識、音声認識、リアルタイム二言語字幕により、音声コンテンツの理解と翻訳が手軽になります。",
         "DeepSeek-V4-Pro": "TLingoは端末内のオフライン認識と音声認識をサポートし、リアルタイムの二言語字幕で音声内容の理解と翻訳を助けます。",
         "Kimi-K2.6": "ローカルオフライン認識、音声認識、リアルタイム二言語字幕を備えたTLingoなら、音声の理解と翻訳がより簡単です。"
@@ -2095,14 +2095,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo는 iPhone, iPad 및 Mac용 번역 앱입니다. 여러 AI 모델의 번역 결과를 비교할 수 있습니다.",
-        "google-translate": "TLingo는 iPhone, iPad, Mac에서 사용할 수 있는 번역 앱으로, 여러 AI 모델이 만든 번역을 비교합니다.",
+        "microsoft-translate": "TLingo는 iPhone, iPad, Mac에서 사용할 수 있는 번역 앱으로, 여러 AI 모델이 만든 번역을 비교합니다.",
         "gpt-5.4": "iPhone, iPad와 Mac용 TLingo에서는 다양한 AI 모델의 번역을 나란히 비교할 수 있습니다.",
         "DeepSeek-V4-Pro": "TLingo는 iPhone, iPad, Mac을 아우르는 번역 도구로, 복수 AI 모델의 번역 출력을 비교합니다.",
         "Kimi-K2.6": "TLingo는 iPhone, iPad, Mac에서 다중 모델 번역 결과 비교를 지원합니다."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo는 로컬 오프라인 인식, 음성 인식 및 실시간 이중 언어 자막을 지원하여 음성 내용을 더 쉽게 이해하고 번역할 수 있게 합니다.",
-        "google-translate": "TLingo는 로컬 오프라인 인식과 음성 인식, 실시간 이중 언어 자막 기능으로 음성 콘텐츠의 이해와 번역을 간편하게 합니다.",
+        "microsoft-translate": "TLingo는 로컬 오프라인 인식과 음성 인식, 실시간 이중 언어 자막 기능으로 음성 콘텐츠의 이해와 번역을 간편하게 합니다.",
         "gpt-5.4": "TLingo의 로컬 오프라인 인식, 음성 인식, 실시간 이중 언어 자막을 이용하면 음성 내용을 손쉽게 이해하고 번역할 수 있습니다.",
         "DeepSeek-V4-Pro": "TLingo는 기기 내 오프라인 인식과 음성 인식을 지원하며, 실시간 이중 언어 자막으로 음성 내용의 이해와 번역을 돕습니다.",
         "Kimi-K2.6": "로컬 오프라인 인식, 음성 인식, 실시간 이중 언어 자막을 갖춘 TLingo는 음성의 이해와 번역을 더 쉽게 만듭니다."
@@ -2136,14 +2136,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo ist eine Übersetzungs-App für iPhone, iPad und Mac. Sie vergleicht Übersetzungen mehrerer KI-Modelle.",
-        "google-translate": "TLingo ist eine Übersetzungs-App für iPhone, iPad und Mac, mit der sich Resultate verschiedener KI-Modelle vergleichen lassen.",
+        "microsoft-translate": "TLingo ist eine Übersetzungs-App für iPhone, iPad und Mac, mit der sich Resultate verschiedener KI-Modelle vergleichen lassen.",
         "gpt-5.4": "Mit TLingo auf iPhone, iPad und Mac können Übersetzungen mehrerer KI-Modelle nebeneinander verglichen werden.",
         "DeepSeek-V4-Pro": "TLingo ist ein Übersetzungstool für iPhone, iPad und Mac, das Übersetzungsausgaben verschiedener KI-Modelle vergleicht.",
         "Kimi-K2.6": "TLingo bringt auf iPhone, iPad und Mac den Vergleich von Übersetzungen mehrerer KI-Modelle zusammen."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo unterstützt lokale Offline-Erkennung, Spracherkennung und zweisprachige Untertitel in Echtzeit, damit gesprochene Inhalte leichter verstanden und übersetzt werden können.",
-        "google-translate": "TLingo bietet lokale Offline-Erkennung, Spracherkennung und zweisprachige Live-Untertitel, wodurch sich Sprachinhalte einfacher verstehen und übersetzen lassen.",
+        "microsoft-translate": "TLingo bietet lokale Offline-Erkennung, Spracherkennung und zweisprachige Live-Untertitel, wodurch sich Sprachinhalte einfacher verstehen und übersetzen lassen.",
         "gpt-5.4": "Mit lokaler Offline-Erkennung, Spracherkennung und zweisprachigen Echtzeit-Untertiteln erleichtert TLingo das Verstehen und Übersetzen gesprochener Inhalte.",
         "DeepSeek-V4-Pro": "TLingo unterstützt Offline-Erkennung auf dem Gerät und Spracherkennung sowie zweisprachige Live-Untertitel für ein leichteres Verständnis und eine einfachere Übersetzung.",
         "Kimi-K2.6": "Lokale Offline-Erkennung, Spracherkennung und zweisprachige Untertitel in Echtzeit machen mit TLingo das Verstehen und Übersetzen von Sprache einfacher."
@@ -2177,14 +2177,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo est une app de traduction pour iPhone, iPad et Mac. Elle compare les traductions de plusieurs modèles d’IA.",
-        "google-translate": "TLingo est une application de traduction pour iPhone, iPad et Mac qui permet de comparer les résultats de plusieurs modèles d’IA.",
+        "microsoft-translate": "TLingo est une application de traduction pour iPhone, iPad et Mac qui permet de comparer les résultats de plusieurs modèles d’IA.",
         "gpt-5.4": "Sur iPhone, iPad et Mac, TLingo compare côte à côte les traductions de différents modèles d’IA.",
         "DeepSeek-V4-Pro": "TLingo est un outil de traduction pour iPhone, iPad et Mac qui confronte les traductions produites par plusieurs modèles d’IA.",
         "Kimi-K2.6": "TLingo réunit sur iPhone, iPad et Mac la comparaison de traductions multi-modèles."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo prend en charge la reconnaissance locale hors ligne, la reconnaissance vocale et les sous-titres bilingues en temps réel, afin de faciliter la compréhension et la traduction de la parole.",
-        "google-translate": "TLingo propose la reconnaissance locale hors ligne, la reconnaissance vocale et des sous-titres bilingues en direct pour mieux comprendre et traduire les contenus parlés.",
+        "microsoft-translate": "TLingo propose la reconnaissance locale hors ligne, la reconnaissance vocale et des sous-titres bilingues en direct pour mieux comprendre et traduire les contenus parlés.",
         "gpt-5.4": "Grâce à la reconnaissance locale hors ligne, à la reconnaissance vocale et aux sous-titres bilingues en temps réel, TLingo simplifie la compréhension et la traduction de la parole.",
         "DeepSeek-V4-Pro": "TLingo combine reconnaissance hors ligne sur l’appareil, reconnaissance vocale et sous-titres bilingues en direct pour aider à comprendre et traduire les contenus audio.",
         "Kimi-K2.6": "Avec la reconnaissance locale hors ligne, la reconnaissance vocale et les sous-titres bilingues en temps réel, TLingo rend la parole plus simple à comprendre et à traduire."
@@ -2218,14 +2218,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo es una app de traducción para iPhone, iPad y Mac. Compara las traducciones de varios modelos de IA.",
-        "google-translate": "TLingo es una aplicación de traducción para iPhone, iPad y Mac que permite comparar resultados de distintos modelos de IA.",
+        "microsoft-translate": "TLingo es una aplicación de traducción para iPhone, iPad y Mac que permite comparar resultados de distintos modelos de IA.",
         "gpt-5.4": "Con TLingo en iPhone, iPad y Mac puedes contrastar lado a lado las traducciones de varios modelos de IA.",
         "DeepSeek-V4-Pro": "TLingo es una herramienta de traducción para iPhone, iPad y Mac que compara traducciones generadas por múltiples modelos de IA.",
         "Kimi-K2.6": "TLingo reúne en iPhone, iPad y Mac la comparación de traducciones multimodelo."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo admite reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en tiempo real para facilitar la comprensión y traducción del habla.",
-        "google-translate": "TLingo ofrece reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en directo, haciendo más sencillo entender y traducir contenido hablado.",
+        "microsoft-translate": "TLingo ofrece reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en directo, haciendo más sencillo entender y traducir contenido hablado.",
         "gpt-5.4": "Con reconocimiento local sin conexión, reconocimiento de voz y subtítulos bilingües en tiempo real, TLingo simplifica la comprensión y traducción de la voz.",
         "DeepSeek-V4-Pro": "TLingo combina reconocimiento sin conexión en el dispositivo, reconocimiento de voz y subtítulos bilingües en directo para ayudar a entender y traducir audio.",
         "Kimi-K2.6": "El reconocimiento local sin conexión, el reconocimiento de voz y los subtítulos bilingües en tiempo real de TLingo hacen más fácil comprender y traducir el habla."
@@ -2259,14 +2259,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo è un’app di traduzione per iPhone, iPad e Mac. Confronta le traduzioni di più modelli di IA.",
-        "google-translate": "TLingo è un’applicazione di traduzione per iPhone, iPad e Mac che consente di confrontare i risultati di diversi modelli di IA.",
+        "microsoft-translate": "TLingo è un’applicazione di traduzione per iPhone, iPad e Mac che consente di confrontare i risultati di diversi modelli di IA.",
         "gpt-5.4": "Con TLingo su iPhone, iPad e Mac puoi mettere a confronto le traduzioni di vari modelli di IA.",
         "DeepSeek-V4-Pro": "TLingo è uno strumento di traduzione per iPhone, iPad e Mac che confronta le traduzioni prodotte da più modelli di IA.",
         "Kimi-K2.6": "TLingo riunisce su iPhone, iPad e Mac il confronto tra traduzioni multimodello."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo supporta il riconoscimento locale offline, il riconoscimento vocale e i sottotitoli bilingui in tempo reale, facilitando la comprensione e la traduzione del parlato.",
-        "google-translate": "TLingo offre riconoscimento locale offline, riconoscimento vocale e sottotitoli bilingui dal vivo per rendere più semplice capire e tradurre i contenuti parlati.",
+        "microsoft-translate": "TLingo offre riconoscimento locale offline, riconoscimento vocale e sottotitoli bilingui dal vivo per rendere più semplice capire e tradurre i contenuti parlati.",
         "gpt-5.4": "Grazie al riconoscimento locale offline, al riconoscimento vocale e ai sottotitoli bilingui in tempo reale, TLingo semplifica la comprensione e la traduzione della voce.",
         "DeepSeek-V4-Pro": "TLingo combina riconoscimento offline sul dispositivo, riconoscimento vocale e sottotitoli bilingui dal vivo per aiutare a comprendere e tradurre l’audio.",
         "Kimi-K2.6": "Il riconoscimento locale offline, il riconoscimento vocale e i sottotitoli bilingui in tempo reale di TLingo rendono più facile capire e tradurre il parlato."
@@ -2300,14 +2300,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "O TLingo é um app de tradução para iPhone, iPad e Mac. Ele compara traduções de vários modelos de IA.",
-        "google-translate": "O TLingo é um aplicativo de tradução para iPhone, iPad e Mac que permite comparar resultados de diferentes modelos de IA.",
+        "microsoft-translate": "O TLingo é um aplicativo de tradução para iPhone, iPad e Mac que permite comparar resultados de diferentes modelos de IA.",
         "gpt-5.4": "Com o TLingo no iPhone, iPad e Mac, você compara lado a lado traduções de vários modelos de IA.",
         "DeepSeek-V4-Pro": "O TLingo é uma ferramenta de tradução para iPhone, iPad e Mac que confronta traduções produzidas por múltiplos modelos de IA.",
         "Kimi-K2.6": "O TLingo reúne no iPhone, iPad e Mac a comparação de traduções multimodelo."
       },
       "extensionTranslations": {
         "apple-translate": "O TLingo oferece reconhecimento local offline, reconhecimento de voz e legendas bilíngues em tempo real, facilitando a compreensão e a tradução da fala.",
-        "google-translate": "O TLingo conta com reconhecimento local offline, reconhecimento de voz e legendas bilíngues ao vivo para tornar mais simples entender e traduzir conteúdo falado.",
+        "microsoft-translate": "O TLingo conta com reconhecimento local offline, reconhecimento de voz e legendas bilíngues ao vivo para tornar mais simples entender e traduzir conteúdo falado.",
         "gpt-5.4": "Com reconhecimento local offline, reconhecimento de voz e legendas bilíngues em tempo real, o TLingo simplifica a compreensão e a tradução da voz.",
         "DeepSeek-V4-Pro": "O TLingo combina reconhecimento offline no dispositivo, reconhecimento de voz e legendas bilíngues ao vivo para ajudar a entender e traduzir áudio.",
         "Kimi-K2.6": "O reconhecimento local offline, o reconhecimento de voz e as legendas bilíngues em tempo real do TLingo tornam mais fácil compreender e traduzir a fala."
@@ -2341,14 +2341,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo هو تطبيق ترجمة لأجهزة iPhone وiPad وMac. يقارن ترجمات عدة نماذج ذكاء اصطناعي.",
-        "google-translate": "TLingo تطبيق ترجمة يعمل على iPhone وiPad وMac ويتيح مقارنة نتائج نماذج ذكاء اصطناعي متعددة.",
+        "microsoft-translate": "TLingo تطبيق ترجمة يعمل على iPhone وiPad وMac ويتيح مقارنة نتائج نماذج ذكاء اصطناعي متعددة.",
         "gpt-5.4": "مع TLingo على iPhone وiPad وMac، يمكنك مقارنة ترجمات نماذج ذكاء اصطناعي مختلفة جنبًا إلى جنب.",
         "DeepSeek-V4-Pro": "TLingo أداة ترجمة لأجهزة iPhone وiPad وMac تقارن الترجمات التي تنتجها عدة نماذج ذكاء اصطناعي.",
         "Kimi-K2.6": "يجمع TLingo على iPhone وiPad وMac بين مقارنة الترجمات متعددة النماذج."
       },
       "extensionTranslations": {
         "apple-translate": "يدعم TLingo التعرف المحلي دون اتصال، والتعرف على الكلام، والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي لتسهيل فهم الكلام وترجمته.",
-        "google-translate": "يوفر TLingo التعرف المحلي دون اتصال والتعرف على الكلام وتسميات توضيحية ثنائية اللغة مباشرة، مما يسهل فهم المحتوى المنطوق وترجمته.",
+        "microsoft-translate": "يوفر TLingo التعرف المحلي دون اتصال والتعرف على الكلام وتسميات توضيحية ثنائية اللغة مباشرة، مما يسهل فهم المحتوى المنطوق وترجمته.",
         "gpt-5.4": "بفضل التعرف المحلي دون اتصال والتعرف على الكلام والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي، يسهّل TLingo فهم الصوت وترجمته.",
         "DeepSeek-V4-Pro": "يجمع TLingo بين التعرف دون اتصال على الجهاز والتعرف على الكلام وتسميات توضيحية ثنائية اللغة مباشرة للمساعدة في فهم الصوت وترجمته.",
         "Kimi-K2.6": "يجعل TLingo فهم الكلام وترجمته أسهل عبر التعرف المحلي دون اتصال والتعرف على الكلام والتسميات التوضيحية ثنائية اللغة في الوقت الفعلي."
@@ -2382,14 +2382,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo er en oversættelsesapp til iPhone, iPad og Mac. Den sammenligner oversættelser fra flere AI-modeller.",
-        "google-translate": "TLingo er en oversættelsesapp til iPhone, iPad og Mac, hvor du kan sammenligne resultater fra forskellige AI-modeller.",
+        "microsoft-translate": "TLingo er en oversættelsesapp til iPhone, iPad og Mac, hvor du kan sammenligne resultater fra forskellige AI-modeller.",
         "gpt-5.4": "Med TLingo på iPhone, iPad og Mac kan du sammenholde oversættelser fra flere AI-modeller.",
         "DeepSeek-V4-Pro": "TLingo er et oversættelsesværktøj til iPhone, iPad og Mac, som sammenligner oversættelser fra forskellige AI-modeller.",
         "Kimi-K2.6": "TLingo samler på iPhone, iPad og Mac sammenligning af oversættelser fra flere modeller."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo understøtter lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid, så tale bliver lettere at forstå og oversætte.",
-        "google-translate": "TLingo tilbyder lokal offlinegenkendelse, talegenkendelse og tosprogede liveundertekster, som gør det nemmere at forstå og oversætte talt indhold.",
+        "microsoft-translate": "TLingo tilbyder lokal offlinegenkendelse, talegenkendelse og tosprogede liveundertekster, som gør det nemmere at forstå og oversætte talt indhold.",
         "gpt-5.4": "Med lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid gør TLingo forståelse og oversættelse af tale enklere.",
         "DeepSeek-V4-Pro": "TLingo kombinerer offlinegenkendelse på enheden, talegenkendelse og tosprogede liveundertekster for at hjælpe med at forstå og oversætte lyd.",
         "Kimi-K2.6": "Lokal offlinegenkendelse, talegenkendelse og tosprogede undertekster i realtid gør det med TLingo lettere at forstå og oversætte tale."
@@ -2423,14 +2423,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo er en oversettelsesapp for iPhone, iPad og Mac. Den sammenligner oversettelser fra flere KI-modeller.",
-        "google-translate": "TLingo er en oversettelsesapp for iPhone, iPad og Mac der du kan sammenligne resultater fra ulike KI-modeller.",
+        "microsoft-translate": "TLingo er en oversettelsesapp for iPhone, iPad og Mac der du kan sammenligne resultater fra ulike KI-modeller.",
         "gpt-5.4": "Med TLingo på iPhone, iPad og Mac kan du sammenligne oversettelser fra flere KI-modeller side om side.",
         "DeepSeek-V4-Pro": "TLingo er et oversettelsesverktøy for iPhone, iPad og Mac som sammenligner oversettelser fra ulike KI-modeller.",
         "Kimi-K2.6": "TLingo samler sammenligning av oversettelser fra flere modeller på iPhone, iPad og Mac."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo støtter lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid, slik at tale blir enklere å forstå og oversette.",
-        "google-translate": "TLingo tilbyr lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige direktetekster, som gjør det lettere å forstå og oversette muntlig innhold.",
+        "microsoft-translate": "TLingo tilbyr lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige direktetekster, som gjør det lettere å forstå og oversette muntlig innhold.",
         "gpt-5.4": "Med lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid forenkler TLingo forståelse og oversettelse av tale.",
         "DeepSeek-V4-Pro": "TLingo kombinerer frakoblet gjenkjenning på enheten, talegjenkjenning og tospråklige direktetekster for å hjelpe med å forstå og oversette lyd.",
         "Kimi-K2.6": "Lokal frakoblet gjenkjenning, talegjenkjenning og tospråklige undertekster i sanntid gjør det enklere å forstå og oversette tale med TLingo."
@@ -2464,14 +2464,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo is een vertaalapp voor iPhone, iPad en Mac. De app vergelijkt vertalingen van meerdere AI-modellen.",
-        "google-translate": "TLingo is een vertaalapp voor iPhone, iPad en Mac waarmee je resultaten van verschillende AI-modellen vergelijkt.",
+        "microsoft-translate": "TLingo is een vertaalapp voor iPhone, iPad en Mac waarmee je resultaten van verschillende AI-modellen vergelijkt.",
         "gpt-5.4": "Met TLingo op iPhone, iPad en Mac kun je vertalingen van meerdere AI-modellen naast elkaar zetten.",
         "DeepSeek-V4-Pro": "TLingo is een vertaaltool voor iPhone, iPad en Mac die vertalingen van verschillende AI-modellen vergelijkt.",
         "Kimi-K2.6": "TLingo brengt op iPhone, iPad en Mac vergelijking van vertalingen met meerdere modellen samen."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo ondersteunt lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling, zodat gesproken inhoud eenvoudiger te begrijpen en te vertalen is.",
-        "google-translate": "TLingo biedt lokale offlineherkenning, spraakherkenning en live tweetalige ondertiteling om gesproken content makkelijker te begrijpen en te vertalen.",
+        "microsoft-translate": "TLingo biedt lokale offlineherkenning, spraakherkenning en live tweetalige ondertiteling om gesproken content makkelijker te begrijpen en te vertalen.",
         "gpt-5.4": "Met lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling vereenvoudigt TLingo het begrijpen en vertalen van spraak.",
         "DeepSeek-V4-Pro": "TLingo combineert offlineherkenning op het apparaat, spraakherkenning en live tweetalige ondertiteling om audio te helpen begrijpen en vertalen.",
         "Kimi-K2.6": "Lokale offlineherkenning, spraakherkenning en realtime tweetalige ondertiteling maken het met TLingo makkelijker om spraak te begrijpen en te vertalen."
@@ -2505,14 +2505,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo är en översättningsapp för iPhone, iPad och Mac. Den jämför översättningar från flera AI-modeller.",
-        "google-translate": "TLingo är en översättningsapp för iPhone, iPad och Mac där du kan jämföra resultat från olika AI-modeller.",
+        "microsoft-translate": "TLingo är en översättningsapp för iPhone, iPad och Mac där du kan jämföra resultat från olika AI-modeller.",
         "gpt-5.4": "Med TLingo på iPhone, iPad och Mac kan du jämföra översättningar från flera AI-modeller sida vid sida.",
         "DeepSeek-V4-Pro": "TLingo är ett översättningsverktyg för iPhone, iPad och Mac som jämför översättningar från olika AI-modeller.",
         "Kimi-K2.6": "TLingo samlar jämförelse av översättningar från flera modeller på iPhone, iPad och Mac."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo stöder lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid, så att talat innehåll blir enklare att förstå och översätta.",
-        "google-translate": "TLingo erbjuder lokal offlineigenkänning, taligenkänning och tvåspråkiga liveundertexter som gör det lättare att förstå och översätta talat innehåll.",
+        "microsoft-translate": "TLingo erbjuder lokal offlineigenkänning, taligenkänning och tvåspråkiga liveundertexter som gör det lättare att förstå och översätta talat innehåll.",
         "gpt-5.4": "Med lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid förenklar TLingo förståelse och översättning av tal.",
         "DeepSeek-V4-Pro": "TLingo kombinerar offlineigenkänning på enheten, taligenkänning och tvåspråkiga liveundertexter för att hjälpa till att förstå och översätta ljud.",
         "Kimi-K2.6": "Lokal offlineigenkänning, taligenkänning och tvåspråkiga undertexter i realtid gör det med TLingo enklare att förstå och översätta tal."
@@ -2546,14 +2546,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo, iPhone, iPad ve Mac için bir çeviri uygulamasıdır. Birden fazla yapay zekâ modelinin çevirilerini karşılaştırır.",
-        "google-translate": "TLingo, iPhone, iPad ve Mac’te farklı yapay zekâ modellerinin sonuçlarını karşılaştırmanızı sağlayan bir çeviri uygulamasıdır.",
+        "microsoft-translate": "TLingo, iPhone, iPad ve Mac’te farklı yapay zekâ modellerinin sonuçlarını karşılaştırmanızı sağlayan bir çeviri uygulamasıdır.",
         "gpt-5.4": "iPhone, iPad ve Mac’teki TLingo ile çeşitli yapay zekâ modellerinin çevirilerini yan yana karşılaştırabilirsiniz.",
         "DeepSeek-V4-Pro": "TLingo, iPhone, iPad ve Mac için bir çeviri aracıdır ve birden çok yapay zekâ modelinin ürettiği çevirileri karşılaştırır.",
         "Kimi-K2.6": "TLingo, iPhone, iPad ve Mac’te çok modelli çeviri karşılaştırmasını bir araya getirir."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazıları destekleyerek konuşulan içeriği anlamayı ve çevirmeyi kolaylaştırır.",
-        "google-translate": "TLingo, konuşulan içeriği daha kolay anlamak ve çevirmek için yerel çevrimdışı tanıma, konuşma tanıma ve canlı iki dilli altyazılar sunar.",
+        "microsoft-translate": "TLingo, konuşulan içeriği daha kolay anlamak ve çevirmek için yerel çevrimdışı tanıma, konuşma tanıma ve canlı iki dilli altyazılar sunar.",
         "gpt-5.4": "Yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazılar sayesinde TLingo konuşmayı anlamayı ve çevirmeyi basitleştirir.",
         "DeepSeek-V4-Pro": "TLingo, sesi anlamaya ve çevirmeye yardımcı olmak için cihazda çevrimdışı tanıma, konuşma tanıma ve canlı iki dilli altyazıları birleştirir.",
         "Kimi-K2.6": "TLingo’nun yerel çevrimdışı tanıma, konuşma tanıma ve gerçek zamanlı iki dilli altyazı özellikleri konuşmayı anlamayı ve çevirmeyi kolaylaştırır."
@@ -2587,14 +2587,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo adalah aplikasi penerjemahan untuk iPhone, iPad, dan Mac. Aplikasi ini membandingkan terjemahan dari beberapa model AI.",
-        "google-translate": "TLingo adalah aplikasi penerjemahan di iPhone, iPad, dan Mac yang memungkinkan Anda membandingkan hasil berbagai model AI.",
+        "microsoft-translate": "TLingo adalah aplikasi penerjemahan di iPhone, iPad, dan Mac yang memungkinkan Anda membandingkan hasil berbagai model AI.",
         "gpt-5.4": "Dengan TLingo di iPhone, iPad, dan Mac, Anda dapat membandingkan terjemahan dari beberapa model AI secara berdampingan.",
         "DeepSeek-V4-Pro": "TLingo merupakan alat penerjemahan untuk iPhone, iPad, dan Mac yang membandingkan terjemahan keluaran berbagai model AI.",
         "Kimi-K2.6": "TLingo menyatukan perbandingan terjemahan multimodel di iPhone, iPad, dan Mac."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo mendukung pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time agar konten lisan lebih mudah dipahami dan diterjemahkan.",
-        "google-translate": "TLingo menyediakan pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa langsung untuk memudahkan pemahaman dan penerjemahan konten lisan.",
+        "microsoft-translate": "TLingo menyediakan pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa langsung untuk memudahkan pemahaman dan penerjemahan konten lisan.",
         "gpt-5.4": "Dengan pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time, TLingo menyederhanakan pemahaman dan penerjemahan suara.",
         "DeepSeek-V4-Pro": "TLingo menggabungkan pengenalan offline di perangkat, pengenalan ucapan, dan takarir dwibahasa langsung untuk membantu memahami serta menerjemahkan audio.",
         "Kimi-K2.6": "Pengenalan offline lokal, pengenalan ucapan, dan takarir dwibahasa real-time dari TLingo membuat ucapan lebih mudah dipahami dan diterjemahkan."
@@ -2628,14 +2628,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo to aplikacja do tłumaczenia na iPhone'a, iPada i Maca. Porównuje tłumaczenia z wielu modeli AI.",
-        "google-translate": "TLingo to aplikacja do tłumaczenia na iPhone'a, iPada i Maca, która pozwala porównywać wyniki różnych modeli AI.",
+        "microsoft-translate": "TLingo to aplikacja do tłumaczenia na iPhone'a, iPada i Maca, która pozwala porównywać wyniki różnych modeli AI.",
         "gpt-5.4": "Dzięki TLingo na urządzeniach iPhone, iPad i Mac możesz porównywać obok siebie tłumaczenia z wielu modeli AI.",
         "DeepSeek-V4-Pro": "TLingo jest narzędziem do tłumaczenia na iPhone'a, iPada i Maca, które porównuje tłumaczenia generowane przez różne modele AI.",
         "Kimi-K2.6": "TLingo łączy na urządzeniach iPhone, iPad i Mac porównywanie tłumaczeń z wielu modeli AI."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo obsługuje lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy w czasie rzeczywistym, ułatwiając rozumienie i tłumaczenie wypowiedzi.",
-        "google-translate": "TLingo oferuje lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy na żywo, aby ułatwić rozumienie i tłumaczenie treści mówionych.",
+        "microsoft-translate": "TLingo oferuje lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy na żywo, aby ułatwić rozumienie i tłumaczenie treści mówionych.",
         "gpt-5.4": "Dzięki lokalnemu rozpoznawaniu offline, rozpoznawaniu mowy i dwujęzycznym napisom w czasie rzeczywistym TLingo upraszcza rozumienie i tłumaczenie wypowiedzi.",
         "DeepSeek-V4-Pro": "TLingo łączy rozpoznawanie offline na urządzeniu, rozpoznawanie mowy i dwujęzyczne napisy na żywo, pomagając rozumieć i tłumaczyć dźwięk.",
         "Kimi-K2.6": "Lokalne rozpoznawanie offline, rozpoznawanie mowy i dwujęzyczne napisy w czasie rzeczywistym sprawiają, że TLingo ułatwia rozumienie i tłumaczenie mowy."
@@ -2664,14 +2664,14 @@
       "extensionSourceText": "TLingo supports local offline recognition, speech recognition, and real-time bilingual captions, making spoken content easier to understand and translate.",
       "translations": {
         "apple-translate": "TLingo ialah aplikasi terjemahan untuk iPhone, iPad dan Mac. Ia membandingkan terjemahan daripada pelbagai model AI.",
-        "google-translate": "TLingo ialah aplikasi terjemahan pada iPhone, iPad dan Mac yang membolehkan anda membandingkan hasil daripada pelbagai model AI.",
+        "microsoft-translate": "TLingo ialah aplikasi terjemahan pada iPhone, iPad dan Mac yang membolehkan anda membandingkan hasil daripada pelbagai model AI.",
         "gpt-5.4": "Dengan TLingo pada iPhone, iPad dan Mac, anda boleh membandingkan terjemahan daripada beberapa model AI secara bersebelahan.",
         "DeepSeek-V4-Pro": "TLingo ialah alat terjemahan untuk iPhone, iPad dan Mac yang membandingkan terjemahan daripada pelbagai model AI.",
         "Kimi-K2.6": "TLingo menghimpunkan perbandingan terjemahan berbilang model pada iPhone, iPad dan Mac."
       },
       "extensionTranslations": {
         "apple-translate": "TLingo menyokong pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata untuk memudahkan pemahaman dan terjemahan pertuturan.",
-        "google-translate": "TLingo menawarkan pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa secara langsung untuk memudahkan kandungan lisan difahami dan diterjemahkan.",
+        "microsoft-translate": "TLingo menawarkan pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa secara langsung untuk memudahkan kandungan lisan difahami dan diterjemahkan.",
         "gpt-5.4": "Dengan pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata, TLingo memudahkan pemahaman dan terjemahan audio.",
         "DeepSeek-V4-Pro": "TLingo menggabungkan pengecaman luar talian pada peranti, pengecaman pertuturan dan sari kata dwibahasa secara langsung untuk membantu memahami dan menterjemah audio.",
         "Kimi-K2.6": "Pengecaman luar talian setempat, pengecaman pertuturan dan sari kata dwibahasa masa nyata TLingo memudahkan pertuturan difahami dan diterjemahkan."

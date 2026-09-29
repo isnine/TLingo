@@ -40,24 +40,24 @@ struct ModelSelectionPolicyTests {
 
     @Test("Direct translation services do not count toward the free cloud model limit")
     func directTranslationServicesDoNotCountTowardFreeLimit() {
-        let googleResult = ModelSelectionPolicy.toggle(
-            ModelConfig.googleTranslate,
+        let microsoftResult = ModelSelectionPolicy.toggle(
+            ModelConfig.microsoftTranslate,
             enabledIDs: [firstFree.id, secondFree.id],
-            availableModels: [firstFree, secondFree, ModelConfig.googleTranslate],
+            availableModels: [firstFree, secondFree, ModelConfig.microsoftTranslate],
             isPro: false
         )
 
-        #expect(googleResult.enabledIDs == [firstFree.id, secondFree.id, ModelConfig.googleTranslateID])
-        #expect(googleResult.reason == nil)
+        #expect(microsoftResult.enabledIDs == [firstFree.id, secondFree.id, ModelConfig.microsoftTranslateID])
+        #expect(microsoftResult.reason == nil)
 
         let appleResult = ModelSelectionPolicy.toggle(
             ModelConfig.appleTranslate,
-            enabledIDs: googleResult.enabledIDs,
-            availableModels: [firstFree, secondFree, ModelConfig.googleTranslate, ModelConfig.appleTranslate],
+            enabledIDs: microsoftResult.enabledIDs,
+            availableModels: [firstFree, secondFree, ModelConfig.microsoftTranslate, ModelConfig.appleTranslate],
             isPro: false
         )
 
-        let expectedIDs = Set([firstFree.id, secondFree.id, ModelConfig.googleTranslateID, ModelConfig.appleTranslateID])
+        let expectedIDs = Set([firstFree.id, secondFree.id, ModelConfig.microsoftTranslateID, ModelConfig.appleTranslateID])
         #expect(appleResult.enabledIDs == expectedIDs)
         #expect(appleResult.reason == nil)
     }
@@ -106,14 +106,14 @@ struct ModelSelectionPolicyTests {
         let selected = ModelSelectionPolicy.firstCallableCloudModelID(
             enabledIDs: [
                 ModelConfig.appleTranslateID,
-                ModelConfig.googleTranslateID,
+                ModelConfig.microsoftTranslateID,
                 ModelConfig.foundationModelID,
                 secondFree.id,
             ],
             availableModels: [
                 firstFree,
                 ModelConfig.appleTranslate,
-                ModelConfig.googleTranslate,
+                ModelConfig.microsoftTranslate,
                 ModelConfig.foundationModel,
                 secondFree,
             ],

@@ -126,7 +126,7 @@ public enum TargetLanguageOption: String, CaseIterable, Identifiable, Codable {
     public var primaryLabel: String {
         switch self {
         case .appLanguage:
-            return Self.systemLanguagesLabel
+            return Self.automaticTargetLabel
         default:
             return nativeName
         }
@@ -135,19 +135,10 @@ public enum TargetLanguageOption: String, CaseIterable, Identifiable, Codable {
     public var secondaryLabel: String {
         switch self {
         case .appLanguage:
-            let summary = Self.systemLanguageSummary()
-            return summary.isEmpty ? String(localized: "Auto-match target language") : summary
+            return Self.automaticTargetDescription() ?? String(localized: "Auto-match target language")
         default:
             return englishName
         }
-    }
-
-    public var compactCodeLabel: String {
-        let components = Locale.Language.Components(identifier: rawValue)
-        guard let code = components.languageCode?.identifier else {
-            return rawValue.uppercased()
-        }
-        return code.uppercased()
     }
 
     public var resolvedLocale: Locale {
@@ -185,30 +176,21 @@ public enum TargetLanguageOption: String, CaseIterable, Identifiable, Codable {
         return identifier
     }
 
-    public static var systemLanguagesLabel: String {
-        String(localized: "System Languages")
+    public static var automaticTargetLabel: String {
+        String(localized: "Choose Automatically")
     }
 
-    public static func systemLanguageDisplayName(
+    /// Spells out the rule for the picker, e.g. "Translates to 简体中文, or English when the source is 简体中文".
+    /// Only the first two candidates matter: the target is the first one unless the source already is it.
+    public static func automaticTargetDescription(
         candidates: [TargetLanguageOption] = TargetLanguageOption.matchCandidates
-    ) -> String {
-        let summary = systemLanguageSummary(candidates: candidates)
-        guard !summary.isEmpty else { return String(localized: "System") }
-        return "\(String(localized: "System")) (\(summary))"
-    }
-
-    public static func systemLanguageSummary(
-        candidates: [TargetLanguageOption] = TargetLanguageOption.matchCandidates,
-        limit: Int = 3
-    ) -> String {
-        let abbreviations = systemLanguageAbbreviations(candidates: candidates)
-        guard !abbreviations.isEmpty else { return "" }
-        guard abbreviations.count > limit else {
-            return abbreviations.joined(separator: ", ")
-        }
-
-        let visible = abbreviations.prefix(limit)
-        return "\(visible.joined(separator: ", ")) +\(abbreviations.count - limit)"
+    ) -> String? {
+        guard candidates.count >= 2 else { return nil }
+        return String(
+            format: String(localized: "Translates to %1$@, or %2$@ when the source is %1$@"),
+            candidates[0].primaryLabel,
+            candidates[1].primaryLabel
+        )
     }
 
     /// Languages available in Match mode: app language + system preferred languages + English, deduplicated.
@@ -256,18 +238,6 @@ public enum TargetLanguageOption: String, CaseIterable, Identifiable, Codable {
 
     private static func isEnglishLanguageIdentifier(_ identifier: String) -> Bool {
         Locale.Language.Components(identifier: identifier).languageCode?.identifier == "en"
-    }
-
-    private static func systemLanguageAbbreviations(candidates: [TargetLanguageOption]) -> [String] {
-        var seen = Set<String>()
-        var result: [String] = []
-        for candidate in candidates {
-            let abbreviation = candidate.compactCodeLabel
-            if seen.insert(abbreviation).inserted {
-                result.append(abbreviation)
-            }
-        }
-        return result
     }
 
     public var promptDescriptor: String {
