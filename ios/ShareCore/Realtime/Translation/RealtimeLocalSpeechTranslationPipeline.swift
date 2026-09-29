@@ -2,14 +2,12 @@
     import AVFoundation
     import CoreMedia
     import Foundation
-    import os
 
     public final class RealtimeLocalSpeechTranslationPipeline: @unchecked Sendable {
         public var onStateChange: ((RealtimeBroadcastState) -> Void)?
         public var onFailure: ((Error) -> Void)?
 
         private static let audioLevelReportInterval = 8
-        private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "Realtime")
 
         private let stateStore: RealtimeBroadcastStateStore
         private let transcriber = RealtimeLiveSpeechTranscriber()
@@ -49,7 +47,7 @@
         }
 
         public func start(sourceLanguage: SourceLanguageOption, targetLanguage: TargetLanguageOption) async throws {
-            Self.log("iPhonePipeline start requested source=\(sourceLanguage.rawValue) target=\(targetLanguage.rawValue)")
+            Self.log("start requested source=\(sourceLanguage.rawValue) target=\(targetLanguage.rawValue)")
             if stateLock.withLock({ isStarted }) {
                 await stop()
             }
@@ -89,7 +87,7 @@
                 state.stopRequested = false
                 state.realtimeHistorySession = nil
             }
-            Self.log("iPhonePipeline start reset \(Self.stateSummary(state))")
+            Self.log("start reset \(Self.stateSummary(state))")
 
             do {
                 try await transcriber.start(
@@ -110,7 +108,7 @@
                 let shouldRemainPaused = startState.isPaused
                 transcriber.setPaused(shouldRemainPaused)
                 updateState { $0.phase = shouldRemainPaused ? .paused : .broadcasting }
-                Self.log("iPhonePipeline start succeeded paused=\(shouldRemainPaused)")
+                Self.log("start succeeded paused=\(shouldRemainPaused)")
             } catch {
                 guard stateLock.withLock({
                     recognitionSessionID == activeRecognitionSessionID
@@ -118,7 +116,7 @@
                     return
                 }
                 fail(error)
-                Self.log("iPhonePipeline start failed error=\(Self.describe(error))")
+                Self.log("start failed error=\(Self.describe(error))")
                 throw error
             }
         }
@@ -140,7 +138,7 @@
         }
 
         public func setPaused(_ isPaused: Bool) {
-            Self.log("iPhonePipeline pause set paused=\(isPaused)")
+            Self.log("pause set paused=\(isPaused)")
             stateLock.withLock {
                 self.isPaused = isPaused
                 if isPaused {
@@ -158,7 +156,7 @@
         }
 
         public func stop() async {
-            Self.log("iPhonePipeline stop requested")
+            Self.log("stop requested")
             stateLock.withLock {
                 isPaused = true
             }
@@ -198,6 +196,10 @@
 
         private func handleRecognized(_ result: RealtimeRecognitionResult) {
             let scheduled = stateLock.withLock {
+                let previousStableLength = translationState.translationSourceText.count
+                let previousDisplayedTranslationLength =
+                    translationState.translatedText.count + translationState.pendingTranslatedText.count
+                let previousPairCount = translationState.sentencePairs.count
                 let text = transcriptAccumulator.append(result, afterLongSilence: false)
                 translationState.updateSources(from: transcriptAccumulator)
                 state.sourceText = text
@@ -209,18 +211,29 @@
                         finalRequests: [] as [RealtimeTextTranslationRequest],
                         partialRequest: nil as RealtimeTextTranslationRequest?,
                         hasPendingSource: false,
-                        summary: Self.stateSummary(state)
+                        continuity: Self.continuitySummary(
+                            previousStableLength: previousStableLength,
+                            previousDisplayedTranslationLength: previousDisplayedTranslationLength,
+                            previousPairCount: previousPairCount,
+                            state: state
+                        )
                     )
                 }
                 if let source = sourceLanguage.localeLanguage,
-                   RealtimeLanguageMatcher.matches(source, targetLanguage.localeLanguage) {
+                   RealtimeLanguageMatcher.matches(source, targetLanguage.localeLanguage)
+                {
                     translationState.applySameLanguageTranslation()
                     applyTranslationStatePresentation(into: &state)
                     return (
                         finalRequests: [] as [RealtimeTextTranslationRequest],
                         partialRequest: nil as RealtimeTextTranslationRequest?,
                         hasPendingSource: false,
-                        summary: Self.stateSummary(state)
+                        continuity: Self.continuitySummary(
+                            previousStableLength: previousStableLength,
+                            previousDisplayedTranslationLength: previousDisplayedTranslationLength,
+                            previousPairCount: previousPairCount,
+                            state: state
+                        )
                     )
                 }
                 let finalRequests = translationState.makeFinalTranslationRequests(
@@ -240,23 +253,23 @@
                     finalRequests: finalRequests,
                     partialRequest: partialRequest,
                     hasPendingSource: !translationState.pendingSourceText.isEmpty,
-                    summary: Self.stateSummary(state)
+                    continuity: Self.continuitySummary(
+                        previousStableLength: previousStableLength,
+                        previousDisplayedTranslationLength: previousDisplayedTranslationLength,
+                        previousPairCount: previousPairCount,
+                        state: state
+                    )
                 )
             }
             saveCurrentState()
-            Self.log(
-                """
-                iPhonePipeline recognized state=\(String(describing: result.state)) inputLen=\(result.text.count) \
-                finalRequests=\(scheduled.finalRequests.count) hasPartial=\(scheduled.partialRequest != nil) \
-                text=\(Self.preview(result.text)) \(scheduled.summary)
-                """
-            )
+            if let continuity = scheduled.continuity {
+                Self.log("\(continuity)")
+            }
 
             enqueueFinalTranslationRequests(scheduled.finalRequests)
             if let partialRequest = scheduled.partialRequest {
                 schedulePartialTranslation(partialRequest)
             } else if !scheduled.hasPendingSource {
-                Self.log("iPhonePipeline partial cancelled reason=noPendingSource")
                 cancelPartialTranslationWork()
             }
         }
@@ -273,10 +286,7 @@
             }
             stateLock.unlock()
             Self.log(
-                """
-                iPhonePipeline final queued added=\(requests.count) queued=\(queuedCount) \
-                requests=\(requests.map { Self.preview($0.translationText) }.joined(separator: " | "))
-                """
+                "final queued added=\(requests.count) queued=\(queuedCount)"
             )
         }
 
@@ -289,31 +299,18 @@
                 }
             }
             stateLock.unlock()
-            Self.log(
-                """
-                iPhonePipeline partial queued requestLen=\(request.translationText.count) \
-                text=\(Self.preview(request.translationText))
-                """
-            )
         }
 
         private func processFinalTranslationRequests() async {
             while !Task.isCancelled {
                 let request = stateLock.withLock { () -> RealtimeTextTranslationRequest? in
                     guard !queuedFinalTranslationRequests.isEmpty else {
-                        Self.log("iPhonePipeline final drained")
                         finalTranslationTask = nil
                         return nil
                     }
                     return queuedFinalTranslationRequests.removeFirst()
                 }
                 guard let request else { return }
-                Self.log(
-                    """
-                    iPhonePipeline final dequeued requestLen=\(request.translationText.count) \
-                    text=\(Self.preview(request.translationText))
-                    """
-                )
 
                 do {
                     updateState { $0.phase = .translating }
@@ -324,14 +321,13 @@
                         try await Task.sleep(for: .milliseconds(Int((request.cadenceInterval * 1000).rounded(.up))))
                     }
                 } catch is CancellationError {
-                    Self.log("iPhonePipeline final cancelled")
                     return
                 } catch {
                     stateLock.withLock {
                         translationState.finishFinalTranslationRequest(request)
                         applyTranslationStatePresentation(into: &state)
                     }
-                    Self.log("iPhonePipeline final error=\(Self.describe(error))")
+                    Self.log("final error=\(Self.describe(error))")
                     fail(error)
                 }
             }
@@ -341,7 +337,6 @@
             while !Task.isCancelled {
                 let initialRequest = stateLock.withLock { () -> RealtimeTextTranslationRequest? in
                     guard let request = latestPartialTranslationRequest else {
-                        Self.log("iPhonePipeline partial drained")
                         partialTranslationTask = nil
                         nextPartialTranslationAllowedAt = nil
                         return nil
@@ -350,12 +345,6 @@
                     return request
                 }
                 guard var request = initialRequest else { return }
-                Self.log(
-                    """
-                    iPhonePipeline partial dequeued requestLen=\(request.translationText.count) \
-                    text=\(Self.preview(request.translationText))
-                    """
-                )
 
                 do {
                     let allowedAt = stateLock.withLock { () -> Date in
@@ -365,7 +354,6 @@
                     }
                     let delay = allowedAt.timeIntervalSinceNow
                     if delay > 0 {
-                        Self.log("iPhonePipeline partial sleep delay=\(delay) cadence=\(request.cadenceInterval)")
                         try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
                     }
 
@@ -374,12 +362,6 @@
                         latestPartialTranslationRequest = nil
                         return request
                     }) {
-                        Self.log(
-                            """
-                            iPhonePipeline partial replaced oldLen=\(request.translationText.count) \
-                            newLen=\(newerRequest.translationText.count)
-                            """
-                        )
                         request = newerRequest
                     }
 
@@ -394,10 +376,9 @@
                     stateLock.withLock {
                         partialTranslationTask = nil
                     }
-                    Self.log("iPhonePipeline partial cancelled")
                     return
                 } catch {
-                    Self.log("iPhonePipeline partial error=\(Self.describe(error))")
+                    Self.log("partial error=\(Self.describe(error))")
                     fail(error)
                 }
             }
@@ -416,7 +397,7 @@
                 guard requestMatchesCurrentConfiguration(request) else {
                     Self.log(
                         """
-                        iPhonePipeline final discarded reason=configChanged \
+                        final discarded reason=configChanged \
                         request=\(Self.preview(request.translationText))
                         """
                     )
@@ -433,8 +414,8 @@
                     state.errorMessage = nil
                     Self.log(
                         """
-                        iPhonePipeline final applied=\(applied) responseLen=\(text.count) \
-                        resultPairs=\(result.sentencePairs.count) \(Self.stateSummary(state))
+                        final ok applied=\(applied) src=\(Self.preview(request.translationText)) \
+                        -> tr=\(Self.preview(text)) pairs=\(state.sentencePairs.count)/\(state.sourceSegments.count)
                         """
                     )
                 case let .failure(error):
@@ -442,7 +423,7 @@
                     applyTranslationStatePresentation(into: &state)
                     state.phase = .failed
                     state.errorMessage = Self.describe(error)
-                    Self.log("iPhonePipeline final failure error=\(Self.describe(error)) \(Self.stateSummary(state))")
+                    Self.log("final failure error=\(Self.describe(error)) \(Self.stateSummary(state))")
                     failure = error
                 }
             }
@@ -460,7 +441,7 @@
                 guard requestMatchesCurrentConfiguration(request) else {
                     Self.log(
                         """
-                        iPhonePipeline partial discarded reason=configChanged \
+                        partial discarded reason=configChanged \
                         request=\(Self.preview(request.translationText))
                         """
                     )
@@ -468,11 +449,11 @@
                 }
 
                 switch result.response {
-                case let .success(text):
+                case .success:
                     guard translationState.applyPartialTranslationSuccess(result, request: request) else {
                         Self.log(
                             """
-                            iPhonePipeline partial discarded reason=stalePending \
+                            partial discarded reason=stalePending \
                             request=\(Self.preview(request.translationText))
                             """
                         )
@@ -481,16 +462,10 @@
                     applyTranslationStatePresentation(into: &state)
                     state.phase = isPaused ? .paused : .broadcasting
                     state.errorMessage = nil
-                    Self.log(
-                        """
-                        iPhonePipeline partial applied responseLen=\(text.count) \
-                        resultPairs=\(result.sentencePairs.count) \(Self.stateSummary(state))
-                        """
-                    )
                 case let .failure(error):
                     state.phase = .failed
                     state.errorMessage = Self.describe(error)
-                    Self.log("iPhonePipeline partial failure error=\(Self.describe(error)) \(Self.stateSummary(state))")
+                    Self.log("partial failure error=\(Self.describe(error)) \(Self.stateSummary(state))")
                     failure = error
                 }
             }
@@ -501,19 +476,6 @@
 
         private func cancelTranslationWork() {
             stateLock.withLock {
-                if finalTranslationTask != nil ||
-                    partialTranslationTask != nil ||
-                    !queuedFinalTranslationRequests.isEmpty ||
-                    latestPartialTranslationRequest != nil
-                {
-                    Self.log(
-                        """
-                        iPhonePipeline cancelTranslationWork finalTask=\(finalTranslationTask != nil) \
-                        partialTask=\(partialTranslationTask != nil) queuedFinal=\(queuedFinalTranslationRequests.count) \
-                        latestPartial=\(latestPartialTranslationRequest != nil)
-                        """
-                    )
-                }
                 finalTranslationTask?.cancel()
                 finalTranslationTask = nil
                 queuedFinalTranslationRequests.removeAll()
@@ -540,14 +502,6 @@
         }
 
         private func cancelPartialTranslationWorkLocked() {
-            if partialTranslationTask != nil || latestPartialTranslationRequest != nil {
-                Self.log(
-                    """
-                    iPhonePipeline cancelPartial task=\(partialTranslationTask != nil) \
-                    latestPartial=\(latestPartialTranslationRequest != nil)
-                    """
-                )
-            }
             partialTranslationTask?.cancel()
             partialTranslationTask = nil
             latestPartialTranslationRequest = nil
@@ -568,7 +522,6 @@
             state.translatedText = translationState.translatedText
             state.pendingTranslatedText = translationState.pendingTranslatedText
             syncRealtimeHistorySession(into: &state)
-            Self.log("iPhonePipeline presentation \(Self.stateSummary(state))")
         }
 
         private func syncRealtimeHistorySession(into state: inout RealtimeBroadcastState, force: Bool = false) {
@@ -590,7 +543,7 @@
         }
 
         private func fail(_ error: Error) {
-            Self.log("iPhonePipeline fail error=\(Self.describe(error))")
+            Self.log("fail error=\(Self.describe(error))")
             updateState { state in
                 state.phase = .failed
                 state.errorMessage = Self.describe(error)
@@ -640,14 +593,11 @@
         }
 
         private static func log(_ message: String) {
-            logger.debug("[Realtime] \(message, privacy: .public)")
+            RealtimeLog.log("broadcast", message)
         }
 
-        private static func preview(_ text: String, limit: Int = 80) -> String {
-            let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            guard normalized.count > limit else { return normalized }
-            return "\(normalized.prefix(limit))..."
+        private static func preview(_ text: String) -> String {
+            RealtimeLog.text(text)
         }
 
         private static func stateSummary(_ state: RealtimeBroadcastState) -> String {
@@ -656,6 +606,26 @@
             stableLen=\(state.translationSourceText.count) pendingLen=\(state.pendingSourceText.count) \
             translatedLen=\(state.translatedText.count) pendingTranslationLen=\(state.pendingTranslatedText.count) \
             pairs=\(state.sentencePairs.count)
+            """
+        }
+
+        private static func continuitySummary(
+            previousStableLength: Int,
+            previousDisplayedTranslationLength: Int,
+            previousPairCount: Int,
+            state: RealtimeBroadcastState
+        ) -> String? {
+            let stableRegressed = state.translationSourceText.count < previousStableLength
+            let displayedTranslationLength = state.translatedText.count + state.pendingTranslatedText.count
+            let translationRegressed = displayedTranslationLength < previousDisplayedTranslationLength
+            guard stableRegressed || translationRegressed else { return nil }
+
+            return """
+            recognition revised stable transcript stableLen=\(previousStableLength)->\(state.translationSourceText.count) \
+            pendingLen=\(state.pendingSourceText.count) \
+            translationRetained=\(!translationRegressed) \
+            displayedTranslationLen=\(previousDisplayedTranslationLength)->\(displayedTranslationLength) \
+            pairs=\(previousPairCount)->\(state.sentencePairs.count)
             """
         }
     }

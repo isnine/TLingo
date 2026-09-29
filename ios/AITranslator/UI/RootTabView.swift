@@ -43,7 +43,7 @@ struct RootTabView: View {
     }
 
     /// TabItem enum defining the app's top-level destinations.
-    /// iPhone exposes Text and Realtime in the tab bar; macOS and regular-width iPad use the sidebar.
+    /// Compact-width iOS shows Home only (realtime is a full-screen session); macOS and regular-width iPad use the sidebar.
     enum TabItem: String, CaseIterable, Identifiable {
         case home
         case history
@@ -261,16 +261,17 @@ extension RootTabView {
             if usesSidebar {
                 SidebarLayoutView(initialTab: initialTab, configStore: configStore)
             } else {
-                TabBarNavigationView(initialTab: initialTab, configStore: configStore)
+                CompactNavigationView(initialTab: initialTab, configStore: configStore)
             }
         }
     }
 
-    private struct TabBarNavigationView: View {
+    /// Compact-width iOS layout: Home is the single root screen; realtime opens as a
+    /// full-screen session from the Home input bar and ends when dismissed.
+    private struct CompactNavigationView: View {
         @Environment(\.colorScheme) private var colorScheme
-        @State private var selection: TabBarItem
         @State private var showHistory = false
-        @State private var showRealtimeHistory = false
+        @State private var showRealtime: Bool
         @State private var showActions = false
         @State private var showModels: Bool
         @State private var showSettings: Bool
@@ -281,228 +282,90 @@ extension RootTabView {
         @State private var showFeaturePaywall = false
 
         init(initialTab: RootTabView.TabItem, configStore: AppConfigurationStore) {
-            let initialSelection = TabBarItem.initialSelection(for: initialTab)
-            _selection = State(initialValue: initialSelection)
+            _showRealtime = State(initialValue: initialTab == .realtime)
             _showModels = State(initialValue: initialTab == .models)
             _showSettings = State(initialValue: initialTab == .settings)
             self.configStore = configStore
-        }
-
-        private enum TabBarItem: Hashable {
-            case text
-            case realtime
-            case contextualAction
-
-            static func initialSelection(for tab: RootTabView.TabItem) -> TabBarItem {
-                tab == .realtime ? .realtime : .text
-            }
         }
 
         private var colors: AppColorPalette {
             AppColors.Palette(colorScheme: colorScheme, accentTheme: preferences.accentTheme)
         }
 
-        private var usesFloatingRealtimeButton: Bool {
-            UIDevice.current.userInterfaceIdiom == .pad
-        }
-
-        private var shouldShowContextualActionTab: Bool {
-            !usesFloatingRealtimeButton
-        }
-
-        private var contextualActionTabRole: TabRole {
-            if #available(iOS 27.0, *) {
-                return .prominent
-            }
-            return .search
-        }
-
         var body: some View {
-            tabContent
-                .overlay(alignment: .bottomTrailing) {
-                    if usesFloatingRealtimeButton, selection == .realtime {
-                        floatingRealtimeButton
-                            .padding(.trailing, 24)
-                            .padding(.bottom, 32)
-                    }
+            NavigationStack {
+                HomeView(context: nil, usesNativeNavigationHeader: true, onHistoryTap: {
+                    showHistory = true
+                }, onManageActionsTap: {
+                    showActions = true
+                }, onSettingsTap: {
+                    showSettings = true
+                }, onRealtimeTap: {
+                    showRealtime = true
+                }, onPremiumRequired: {
+                    showFeaturePaywall = true
+                })
+                .navigationDestination(isPresented: $showHistory) {
+                    HistoryView()
                 }
-                .sheet(isPresented: $showActions) {
-                    ActionsView(configurationStore: configStore, embedsInNavigationStack: true)
-                }
-                .sheet(isPresented: $showSettings) {
-                    SettingsView(configStore: configStore)
-                        .presentationDetents([.large])
-                        .presentationDragIndicator(.visible)
-                }
-                .sheet(isPresented: $showModels) {
-                    NavigationStack {
-                        ModelsView(embedsInNavigationStack: false)
-                            .toolbar {
-                                ToolbarItem(placement: .confirmationAction) {
-                                    Button("Done") {
-                                        showModels = false
-                                    }
-                                }
-                            }
-                    }
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                }
-                .firstRunOnboardingPresentation {
-                    showActions || showModels || showSettings
-                }
-                .sheet(isPresented: $showFeaturePaywall) {
-                    PaywallView(context: .featureLocked)
-                        .presentationDetents([.large])
-                        .presentationDragIndicator(.visible)
+            }
+            .fullScreenCover(isPresented: $showRealtime, onDismiss: stopRealtimeAfterDismiss) {
+                NavigationStack {
+                    RealtimeView(
+                        store: realtimeStore,
+                        controlModel: realtimeControlModel,
+                        onDismiss: {
+                            showRealtime = false
+                        }
+                    )
                 }
                 .tint(colors.accent)
-                .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { _ in
-                    showActions = false
-                    showHistory = false
-                    showModels = false
-                    showSettings = false
-                    showRealtimeHistory = false
-                    selection = .realtime
-                }
-        }
-
-        private func startRealtimeFromFloatingButton() {
-            selection = .realtime
-            Task {
-                await realtimeControlModel.handleStartButtonTapped(store: realtimeStore, preferences: preferences)
             }
-        }
-
-        private var floatingRealtimeButton: some View {
-            Button {
-                startRealtimeFromFloatingButton()
-            } label: {
-                Image(systemName: realtimeControlModel.startButtonSystemImage(for: realtimeStore))
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 56, height: 56)
-                    .tlingoGlassCircle(
-                        tint: floatingRealtimeButtonTint,
-                        interactive: true,
-                        fallbackTint: floatingRealtimeButtonTint,
-                        fallbackStroke: colors.divider.opacity(0.65)
-                    )
-                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.26 : 0.14), radius: 18, x: 0, y: 8)
+            .sheet(isPresented: $showActions) {
+                ActionsView(configurationStore: configStore, embedsInNavigationStack: true)
             }
-            .buttonStyle(.plain)
-            .disabled(realtimeStore.isStopping)
-            .accessibilityLabel(realtimeControlModel.startButtonTitle(for: realtimeStore))
-            .accessibilityIdentifier("ipad_floating_realtime_button")
-        }
-
-        private var floatingRealtimeButtonTint: Color {
-            if realtimeControlModel.isStartingRealtimeSession || realtimeStore.isStopping {
-                return colors.textSecondary.opacity(0.30)
+            .sheet(isPresented: $showSettings) {
+                SettingsView(configStore: configStore)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
-            return realtimeStore.isRunning ? colors.error.opacity(0.32) : colors.accent.opacity(0.40)
-        }
-
-        @ViewBuilder
-        private var tabContent: some View {
-            if #available(iOS 26.0, *) {
-                tabView
-                    .tabBarMinimizeBehavior(.onScrollUp)
-            } else {
-                tabView
-            }
-        }
-
-        private var tabView: some View {
-            TabView(selection: Binding(
-                get: { selection },
-                set: { newSelection in
-                    if newSelection == .contextualAction {
-                        performContextualAction()
-                    } else {
-                        selection = newSelection
-                    }
-                }
-            )) {
-                Tab(value: TabBarItem.text) {
-                    NavigationStack {
-                        HomeView(context: nil, usesNativeNavigationHeader: true, onHistoryTap: {
-                            showHistory = true
-                        }, onManageActionsTap: {
-                            showActions = true
-                        }, onSettingsTap: {
-                            showSettings = true
-                        }, onPremiumRequired: {
-                            showFeaturePaywall = true
-                        })
-                        .navigationDestination(isPresented: $showHistory) {
-                            HistoryView()
-                        }
-                    }
-                } label: {
-                    Label(RootTabView.TabItem.home.title, systemImage: RootTabView.TabItem.home.systemImage)
-                        .accessibilityIdentifier("tab_home")
-                }
-
-                Tab(value: TabBarItem.realtime) {
-                    NavigationStack {
-                        RealtimeView(
-                            store: realtimeStore,
-                            controlModel: realtimeControlModel,
-                            onHistoryTap: {
-                                showRealtimeHistory = true
+            .sheet(isPresented: $showModels) {
+                NavigationStack {
+                    ModelsView(embedsInNavigationStack: false)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    showModels = false
+                                }
                             }
-                        )
-                        .navigationDestination(isPresented: $showRealtimeHistory) {
-                            HistoryView(initialFilter: .realtime)
                         }
-                    }
-                } label: {
-                    Label(RootTabView.TabItem.realtime.title, systemImage: RootTabView.TabItem.realtime.systemImage)
-                        .accessibilityIdentifier("tab_realtime")
                 }
-
-                if shouldShowContextualActionTab {
-                    Tab(value: TabBarItem.contextualAction, role: contextualActionTabRole) {
-                        EmptyView()
-                    } label: {
-                        Label(contextualActionTitle, systemImage: contextualActionSystemImage)
-                            .accessibilityIdentifier(contextualActionAccessibilityIdentifier)
-                    }
-                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+            .firstRunOnboardingPresentation {
+                showActions || showModels || showSettings || showRealtime
+            }
+            .sheet(isPresented: $showFeaturePaywall) {
+                PaywallView(context: .featureLocked)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+            .tint(colors.accent)
+            .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { _ in
+                showActions = false
+                showHistory = false
+                showModels = false
+                showSettings = false
+                showRealtime = true
             }
         }
 
-        private var contextualActionTitle: LocalizedStringKey {
-            switch selection {
-            case .text, .contextualAction:
-                return RootTabView.TabItem.models.title
-            case .realtime:
-                return realtimeControlModel.startButtonTitle(for: realtimeStore)
-            }
-        }
-
-        private var contextualActionSystemImage: String {
-            selection == .realtime
-                ? realtimeControlModel.startButtonSystemImage(for: realtimeStore)
-                : RootTabView.TabItem.models.systemImage
-        }
-
-        private var contextualActionAccessibilityIdentifier: String {
-            selection == .realtime ? "tab_realtime_control" : "tab_models"
-        }
-
-        private func performContextualAction() {
-            switch selection {
-            case .text, .contextualAction:
-                showModels = true
-            case .realtime:
-                Task {
-                    await realtimeControlModel.handleStartButtonTapped(
-                        store: realtimeStore,
-                        preferences: preferences
-                    )
-                }
+        /// Closing the realtime screen ends the session; `stop()` saves it to History.
+        private func stopRealtimeAfterDismiss() {
+            guard realtimeStore.isRunning else { return }
+            Task {
+                await realtimeStore.stop()
             }
         }
     }

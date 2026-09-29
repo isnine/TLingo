@@ -74,7 +74,8 @@
 
         @Test("Describes single language models by language")
         func describesSingleLanguageModelsByLanguage() {
-            #expect(RecognitionModelDescriptor.parakeetEOU320.languageSummary == "English only")
+            let languageName = Locale.current.localizedString(forIdentifier: "en") ?? "en"
+            #expect(RecognitionModelDescriptor.parakeetEOU320.languageSummary == String(localized: "\(languageName) only"))
         }
 
         @Test("Treats built-in models as cached")

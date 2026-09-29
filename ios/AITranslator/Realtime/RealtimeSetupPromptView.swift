@@ -20,10 +20,10 @@
                         RealtimeNoticeBanner(notice: notice)
                     }
                 }
-                    .padding(.leading, 20)
-                    .padding(.trailing, inspectorTrailingPadding)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                .padding(.leading, 20)
+                .padding(.trailing, inspectorTrailingPadding)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
             }
         }
 
@@ -47,6 +47,7 @@
         private var setupNotice: RealtimeNotice? {
             if let missingPermissionKind {
                 return RealtimeNotice(
+                    id: "missing-permission-\(missingPermissionKind)",
                     systemImage: permissionSystemImage(for: missingPermissionKind),
                     title: Text(permissionTitle(for: missingPermissionKind)),
                     message: Text(permissionMessage(for: missingPermissionKind)),
@@ -59,6 +60,7 @@
             }
             if setupRequirement == .languageSelection {
                 return RealtimeNotice(
+                    id: "language-selection",
                     systemImage: "globe",
                     title: Text("Choose Languages"),
                     message: Text(languagePromptText),
@@ -71,6 +73,7 @@
                     return nil
                 default:
                     return RealtimeNotice(
+                        id: "start-blocker",
                         systemImage: startBlockerSystemImage(for: startBlocker),
                         title: Text("Can’t Start Realtime Translation"),
                         message: Text(verbatim: message),
@@ -197,7 +200,7 @@
         let action: Action?
 
         init(
-            id: String = UUID().uuidString,
+            id: String,
             systemImage: String,
             title: Text,
             message: Text,

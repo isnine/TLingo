@@ -11,7 +11,6 @@
         import Translation
     #endif
 
-    private let realtimeLogger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "Realtime")
 
     public struct RealtimeStartFailureAlert: Identifiable, Equatable {
         public let id: UUID
@@ -165,6 +164,7 @@
         private var realtimeHistoryTitleTasks: [UUID: Task<Void, Never>] = [:]
         private var realtimeHistoryTitleRequestIDs: Set<UUID> = []
         private var lastBroadcastStateLogSignature: String?
+        private var lastCaptionDiagnosticsSignature: String?
         private var queuedFinalTranslationRequests: [RealtimeTextTranslationRequest] = []
         private var latestPartialTranslationRequest: RealtimeTextTranslationRequest?
         private var nextPartialTranslationAllowedAt: Date?
@@ -587,7 +587,7 @@
             logRealtime(
                 """
                 start requested input=\(inputSource.rawValue) provider=\(preferences.realtimeTranslationProvider.rawValue) \
-                engine=\(preferences.realtimeRecognitionEngine.rawValue) source=\(preferences.realtimeSourceLanguage.rawValue) \
+                model=\(preferences.realtimeRecognitionModelID) source=\(preferences.realtimeSourceLanguage.rawValue) \
                 target=\(preferences.realtimeTargetLanguage.rawValue) showCaptions=\(showCaptions)
                 """
             )
@@ -1012,15 +1012,16 @@
             private func startIPhoneAudioBroadcastSession() async {
                 logRealtime(
                     """
-                    iphoneBroadcast start requested source=\(preferences.realtimeSourceLanguage.rawValue) \
+                    start requested source=\(preferences.realtimeSourceLanguage.rawValue) \
                     target=\(preferences.realtimeTargetLanguage.rawValue)
-                    """
+                    """,
+                    stage: "broadcast"
                 )
                 if let failure = await RealtimeIPhoneAudioPreflight.evaluate(
                     sourceLanguage: preferences.realtimeSourceLanguage,
                     targetLanguage: preferences.realtimeTargetLanguage
                 ) {
-                    logRealtime("iphoneBroadcast preflightFailed error=\(Self.describe(failure))")
+                    logRealtime("preflightFailed error=\(Self.describe(failure))", stage: "broadcast")
                     handleStartFailure(failure)
                     return
                 }
@@ -1037,7 +1038,7 @@
                 isRunning = true
                 statusText = String(localized: "Waiting for iPhone Audio broadcast")
                 lastBroadcastStateLogSignature = nil
-                logRealtime("iphoneBroadcast waiting session=\(sessionID)")
+                logRealtime("waiting session=\(sessionID)", stage: "broadcast")
                 startBroadcastStatePolling(sessionID: sessionID)
             }
 
@@ -1178,7 +1179,7 @@
                 audioLevel = nil
                 audioSampleCount = 0
                 statusText = status
-                logRealtime("iphoneBroadcast finished status=\(status)")
+                logRealtime("finished status=\(status)", stage: "broadcast")
             }
         #endif
 
@@ -1416,28 +1417,30 @@
         }
 
         private func handleRecognized(_ result: RealtimeRecognitionResult) {
-            let previousStableLength = translationSourceText.count
-            let previousPendingLength = pendingSourceText.count
+            let previousSegments = translationState.sourceSegments
             let previousPairCount = sentencePairs.count
-            let previousTranslatedLength = translatedText.count
+            let previousDisplayedTranslationLength = translatedText.count + pendingTranslatedText.count
             let recognizedSourceText = transcriptAccumulator.append(result, afterLongSilence: false)
             if sourceText != recognizedSourceText {
                 sourceText = recognizedSourceText
             }
             updateTranscriptPresentation()
-            let sourceLength = sourceText.count
-            let sourcePreview = Self.preview(sourceText)
-            logRealtime(
-                """
-                recognized state=\(String(describing: result.state)) \
-                confidence=\(result.confidence) \
-                inputLen=\(result.text.count) sourceLen=\(sourceLength) \
-                stableLen \(previousStableLength)->\(translationSourceText.count) \
-                pendingLen \(previousPendingLength)->\(pendingSourceText.count) \
-                translatedLen \(previousTranslatedLength)->\(translatedText.count) \
-                pairs \(previousPairCount)->\(sentencePairs.count) visible=\(sourcePreview)
-                """
+            Self.logSourceSegmentChange(
+                from: previousSegments,
+                to: translationState.sourceSegments,
+                pending: pendingSourceText,
+                result: result
             )
+            let displayedTranslationLength = translatedText.count + pendingTranslatedText.count
+            if displayedTranslationLength < previousDisplayedTranslationLength {
+                RealtimeLog.warn(
+                    "align",
+                    """
+                    translation shrank len=\(previousDisplayedTranslationLength)->\(displayedTranslationLength) \
+                    pairs=\(previousPairCount)->\(sentencePairs.count) segs=\(previousSegments.count)->\(translationState.sourceSegments.count)
+                    """
+                )
+            }
             statusText = result
                 .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
             scheduleTranslation()
@@ -1470,39 +1473,17 @@
             let stableSourceText = translationSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
             let partialSourceText = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !stableSourceText.isEmpty || !partialSourceText.isEmpty else {
-                let sourceLength = sourceText.count
-                let translatedLength = translatedText.count
-                let pairCount = sentencePairs.count
-                logRealtime(
-                    """
-                    scheduleTranslation noRequest provider=\(provider.rawValue) \
-                    sourceLen=\(sourceLength) translatedLen=\(translatedLength) pairs=\(pairCount)
-                    """
-                )
                 cancelTranslationWork()
                 translationState.clearStableTranslation()
                 syncTranslationStatePresentation()
-                logPresentation("scheduleTranslation clearedEmptySource")
                 return
             }
 
-            let translatedLength = translatedText.count
-            let pairCount = sentencePairs.count
-            let translationPreview = Self.preview(partialSourceText.isEmpty ? stableSourceText : partialSourceText)
-            logRealtime(
-                """
-                scheduleTranslation request provider=\(provider.rawValue) \
-                finalLen=\(stableSourceText.count) partialLen=\(partialSourceText.count) \
-                translatedLen=\(translatedLength) pairs=\(pairCount) text=\(translationPreview)
-                """
-            )
-
             guard hasRequiredLanguageSelection else {
-                logRealtime("scheduleTranslation missingLanguage clearsTranslation=true")
+                logRealtime("missingLanguage clearsTranslation=true", stage: "tx")
                 cancelTranslationWork()
                 translationState.resetTranslationResults()
                 syncTranslationStatePresentation()
-                logPresentation("scheduleTranslation clearedMissingLanguage")
                 statusText = String(localized: "Choose source and target languages to start")
                 return
             }
@@ -1517,37 +1498,24 @@
             )
 
             if let source, RealtimeLanguageMatcher.matches(source, target) {
-                logRealtime("scheduleTranslation sameLanguage provider=\(provider.rawValue)")
+                logRealtime("sameLanguage provider=\(provider.rawValue) skipsTranslation=true", stage: "tx")
                 cancelTranslationWork()
                 translationState.applySameLanguageTranslation()
                 syncTranslationStatePresentation()
-                logPresentation("scheduleTranslation appliedSameLanguage")
                 statusText = String(localized: "Source and target are the same (\(languagePair))")
                 return
             }
 
             if stableSourceText.isEmpty {
-                logRealtime("scheduleTranslation clearStable reason=emptyStable partialLen=\(partialSourceText.count)")
                 translationState.clearStableTranslation()
                 syncTranslationStatePresentation()
-                logPresentation("scheduleTranslation stableEmpty")
             } else {
-                let oldPairCount = translationState.sentencePairs.count
-                let oldTranslatedLength = translationState.translatedText.count
                 translationState.updateCachedSentencePairs(
                     provider: provider,
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetOption
                 )
-                logRealtime(
-                    """
-                    scheduleTranslation cacheRefresh stableLen=\(stableSourceText.count) \
-                    pairs \(oldPairCount)->\(translationState.sentencePairs.count) \
-                    translatedLen \(oldTranslatedLength)->\(translationState.translatedText.count)
-                    """
-                )
                 syncTranslationStatePresentation()
-                logPresentation("scheduleTranslation cacheRefreshSynced")
                 enqueueFinalTranslationRequests(
                     provider: provider,
                     sourceLanguage: sourceLanguage,
@@ -1567,7 +1535,6 @@
         private func processFinalTranslationRequests() async {
             while !Task.isCancelled {
                 guard !queuedFinalTranslationRequests.isEmpty else {
-                    logRealtime("finalTranslationTask drained")
                     finalTranslationTask = nil
                     updateStatusAfterTranslationActivity()
                     if isPaused {
@@ -1576,12 +1543,6 @@
                     return
                 }
                 let request = queuedFinalTranslationRequests.removeFirst()
-                logRealtime(
-                    """
-                    finalTranslationTask dequeued remaining=\(queuedFinalTranslationRequests.count) \
-                    requestLen=\(request.translationText.count) text=\(Self.preview(request.translationText))
-                    """
-                )
 
                 do {
                     guard !Task.isCancelled else { return }
@@ -1589,16 +1550,9 @@
                     guard !Task.isCancelled else { return }
                     applyFinalTranslationResult(result, request: request)
                     if !queuedFinalTranslationRequests.isEmpty {
-                        logRealtime(
-                            """
-                            finalTranslationTask sleep cadence=\(request.cadenceInterval) \
-                            queued=\(queuedFinalTranslationRequests.count)
-                            """
-                        )
                         try await Task.sleep(for: .milliseconds(Int((request.cadenceInterval * 1000).rounded(.up))))
                     }
                 } catch is CancellationError {
-                    logRealtime("finalTranslationTask cancelled")
                     finalTranslationTask = nil
                     return
                 } catch {
@@ -1610,7 +1564,7 @@
                         target: request.targetLanguage,
                         provider: request.provider
                     )
-                    logRealtime("finalTranslationTask error=\(message)")
+                    RealtimeLog.warn("tx", "final error src=\(RealtimeLog.text(request.translationText)) error=\(message)")
                     handleErrorMessage(message)
                 }
             }
@@ -1619,36 +1573,22 @@
         private func processPartialTranslationRequests() async {
             while !Task.isCancelled {
                 guard var request = latestPartialTranslationRequest else {
-                    logRealtime("partialTranslationTask drained")
                     partialTranslationTask = nil
                     nextPartialTranslationAllowedAt = nil
                     updateStatusAfterTranslationActivity()
                     return
                 }
                 latestPartialTranslationRequest = nil
-                logRealtime(
-                    """
-                    partialTranslationTask dequeued requestLen=\(request.translationText.count) \
-                    text=\(Self.preview(request.translationText))
-                    """
-                )
 
                 do {
                     let allowedAt = nextPartialTranslationAllowedAt ?? Date().addingTimeInterval(request.cadenceInterval)
                     nextPartialTranslationAllowedAt = allowedAt
                     let delay = allowedAt.timeIntervalSinceNow
                     if delay > 0 {
-                        logRealtime("partialTranslationTask sleep delay=\(delay) cadence=\(request.cadenceInterval)")
                         try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
                     }
 
                     if let newerRequest = latestPartialTranslationRequest {
-                        logRealtime(
-                            """
-                            partialTranslationTask replacedWithNewer oldLen=\(request.translationText.count) \
-                            newLen=\(newerRequest.translationText.count)
-                            """
-                        )
                         request = newerRequest
                         latestPartialTranslationRequest = nil
                     }
@@ -1668,7 +1608,7 @@
                         target: request.targetLanguage,
                         provider: request.provider
                     )
-                    logRealtime("partialTranslationTask error=\(message)")
+                    RealtimeLog.warn("tx", "partial error src=\(RealtimeLog.text(request.translationText)) error=\(message)")
                     handleErrorMessage(message)
                 }
             }
@@ -1772,7 +1712,6 @@
                 lastRealtimeHistoryAutosaveSegments = session.segments
                 lastRealtimeHistoryAutosaveRecordings = session.audioRecordings
                 lastRealtimeHistoryAutosaveTracks = session.tracks
-                logRealtime("history session \(event) input=\(inputSource.rawValue) segments=\(session.segments.count)")
                 return true
             } catch {
                 logRealtime("history session save failed event=\(event) error=\(Self.describe(error))")
@@ -2214,8 +2153,8 @@
     }
 
     private extension RealtimeSessionStore {
-        func logRealtime(_ message: String) {
-            realtimeLogger.debug("[Realtime] \(message, privacy: .public)")
+        func logRealtime(_ message: String, stage: String = "session") {
+            RealtimeLog.log(stage, message)
         }
 
         func assignIfChanged<Value: Equatable>(_ value: inout Value, _ newValue: Value) {
@@ -2238,7 +2177,6 @@
         }
 
         func refreshCaptionLines(event: String) {
-            let startedAt = Date()
             let allLines = resolvedCaptionLines()
             let visibleLines = RealtimeCaptionDisplay.linesVisibleAfterClear(allLines, anchor: captionClearAnchor)
             #if os(macOS)
@@ -2246,13 +2184,103 @@
             #else
                 let displayLines = visibleLines
             #endif
+            if captionLines != displayLines {
+                logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
+            }
             assignIfChanged(&captionLines, displayLines)
-            let elapsedMs = Date().timeIntervalSince(startedAt) * 1000
-            logRealtime(
+        }
+
+        /// Flags caption states that look like misalignment or missing text. Deduplicated by
+        /// signature so an unchanged problem is logged once, not on every recognition tick.
+        func logCaptionDiagnostics(
+            event: String,
+            allLines: [RealtimeCaptionLine],
+            displayLines: [RealtimeCaptionLine]
+        ) {
+            let segments = presentationSourceSegments
+            let segmentKeys = Set(segments.map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") })
+            // Translations appended at the bottom because their source line could not be matched.
+            let orphanTranslations = displayLines.filter { $0.id.hasPrefix("previous-translation") }
+            // Pairs whose original no longer equals any current segment (whitespace-normalized).
+            let unmatchedPairs = sentencePairs.filter {
+                !segmentKeys.contains($0.original.split(whereSeparator: \.isWhitespace).joined(separator: " "))
+            }
+            let inFlight = displayLines.filter { $0.id.hasSuffix("-source-in-flight") }
+            let hasTranslationWork = finalTranslationTask != nil || !queuedFinalTranslationRequests.isEmpty
+            let stuckUntranslated = hasTranslationWork ? [] : inFlight
+            let hiddenByClear = allLines.count - displayLines.count
+            let duplicateIDs = Dictionary(grouping: displayLines, by: \.id).filter { $0.value.count > 1 }.keys
+            let lostAllLines = displayLines.isEmpty && !captionLines.isEmpty && !sourceText.isEmpty
+
+            var problems: [String] = []
+            if !orphanTranslations.isEmpty {
+                problems.append("orphanTranslations=\(RealtimeLog.segments(orphanTranslations.map(\.text)))")
+            }
+            if !unmatchedPairs.isEmpty {
+                problems.append("unmatchedPairs=\(RealtimeLog.segments(unmatchedPairs.map(\.original)))")
+            }
+            if !stuckUntranslated.isEmpty {
+                problems.append("untranslatedIdle=\(RealtimeLog.segments(stuckUntranslated.map(\.text)))")
+            }
+            if !duplicateIDs.isEmpty {
+                problems.append("duplicateIDs=\(duplicateIDs.sorted())")
+            }
+            if lostAllLines {
+                problems.append("allLinesDisappeared sourceLen=\(sourceText.count)")
+            }
+            if displayLines.count < captionLines.count, !sourceText.isEmpty {
+                let currentIDs = Set(displayLines.map(\.id))
+                let removed = captionLines.filter { !currentIDs.contains($0.id) }.prefix(4)
+                problems.append(
+                    "lines=\(captionLines.count)->\(displayLines.count) removed=\(removed.map { "\($0.id):\(RealtimeLog.text($0.text, limit: 24))" })"
+                )
+            }
+
+            guard !problems.isEmpty else {
+                lastCaptionDiagnosticsSignature = nil
+                return
+            }
+            let signature = problems.joined(separator: " ")
+            guard signature != lastCaptionDiagnosticsSignature else { return }
+            lastCaptionDiagnosticsSignature = signature
+            RealtimeLog.warn(
+                "caption",
                 """
-                captionLines refreshed event=\(event) sourceSegments=\(presentationSourceSegments.count) \
-                pairs=\(sentencePairs.count) allLines=\(allLines.count) visibleLines=\(displayLines.count) \
-                elapsedMs=\(String(format: "%.2f", elapsedMs))
+                event=\(event) mode=\(resolvedCaptionDisplayMode.rawValue) segs=\(segments.count) \
+                pairs=\(sentencePairs.count) hiddenByClear=\(hiddenByClear) \(signature) \
+                tail=\(RealtimeLog.segments(segments, tail: 2))
+                """
+            )
+        }
+
+        static func logSourceSegmentChange(
+            from previous: [String],
+            to current: [String],
+            pending: String,
+            result: RealtimeRecognitionResult
+        ) {
+            guard previous != current else { return }
+            let offset = result.audioOffset.map { String(format: "%.1fs", $0) } ?? "-"
+            if current.starts(with: previous) {
+                RealtimeLog.log(
+                    "src",
+                    """
+                    commit +\(current.count - previous.count) segs=\(current.count) at=\(offset) \
+                    new=\(RealtimeLog.segments(Array(current.dropFirst(previous.count)), tail: 4)) \
+                    pending=\(RealtimeLog.text(pending))
+                    """
+                )
+                return
+            }
+            let firstChanged = zip(previous, current).prefix { $0 == $1 }.count
+            let old = previous.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
+            let new = current.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
+            // Revisions of already-committed text are the main source of source/translation drift.
+            RealtimeLog.warn(
+                "src",
+                """
+                revised segs=\(previous.count)->\(current.count) from=[\(firstChanged)] at=\(offset) \
+                final=\(result.state == .final) old=\(old.joined(separator: " ")) new=\(new.joined(separator: " "))
                 """
             )
         }
@@ -2268,22 +2296,6 @@
                 sourceText: sourceText,
                 mode: resolvedCaptionDisplayMode,
                 showsUntranslatedSource: true
-            )
-        }
-
-        func logPresentation(_ event: String) {
-            let lineSummary = Self.captionLineSummary(captionLines)
-            logRealtime(
-                """
-                \(event) presentation sourceLen=\(sourceText.count) stableLen=\(translationSourceText.count) \
-                pendingLen=\(pendingSourceText.count) translatedLen=\(translatedText.count) \
-                pendingTranslationLen=\(pendingTranslatedText.count) pairs=\(sentencePairs.count) \
-                sourceSegments=\(presentationSourceSegments.count) visibleLines=\(captionLines.count) \
-                lines=\(lineSummary) showUntranslated=true \
-                mode=\(captionDisplayMode.rawValue) queuedFinal=\(queuedFinalTranslationRequests.count) \
-                finalTask=\(finalTranslationTask != nil) partialTask=\(partialTranslationTask != nil) \
-                latestPartial=\(latestPartialTranslationRequest != nil)
-                """
             )
         }
 
@@ -2304,30 +2316,16 @@
                 lastBroadcastStateLogSignature = signature
                 logRealtime(
                     """
-                    iphoneBroadcast state session=\(state.sessionID) phase=\(state.phase.rawValue) \
+                    state session=\(state.sessionID) phase=\(state.phase.rawValue) \
                     sourceLen=\(state.sourceText.count) stableLen=\(state.translationSourceText.count) \
                     pendingLen=\(state.pendingSourceText.count) translatedLen=\(state.translatedText.count) \
                     pendingTranslationLen=\(state.pendingTranslatedText.count) pairs=\(state.sentencePairs.count) \
                     audioSamples=\(state.audioSampleCount) error=\(state.errorMessage ?? "")
-                    """
+                    """,
+                    stage: "broadcast"
                 )
             }
         #endif
-
-        static func captionLineSummary(_ lines: [RealtimeCaptionLine]) -> String {
-            guard !lines.isEmpty else { return "empty" }
-            return lines.map { line in
-                let kind: String
-                switch line.kind {
-                case .source:
-                    kind = "source"
-                case .translation:
-                    kind = "translation"
-                }
-                let pending = line.isPending ? "*" : ""
-                return "\(kind)\(pending):\(line.text.count)"
-            }.joined(separator: ",")
-        }
 
         static func translationErrorMessage(
             _ error: Error,
@@ -2388,13 +2386,6 @@
             return ([message] + details).joined(separator: "\n\n")
         }
 
-        nonisolated static func preview(_ text: String, limit: Int = 80) -> String {
-            let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            guard normalized.count > limit else { return normalized }
-            return "\(normalized.prefix(limit))..."
-        }
-
         private func shouldAcceptRealtimeCallback(sessionID: UUID) -> Bool {
             Self.shouldAcceptRealtimeCallbackDuringDrain(
                 sessionID: sessionID,
@@ -2407,7 +2398,6 @@
         func updateTranscriptPresentation() {
             translationState.updateSources(from: transcriptAccumulator)
             syncTranslationStatePresentation()
-            logPresentation("updateTranscriptPresentation")
         }
 
         func enqueueFinalTranslationRequests(
@@ -2425,15 +2415,14 @@
             guard !requests.isEmpty else { return }
             queuedFinalTranslationRequests.append(contentsOf: requests)
 
-            let queuedCount = queuedFinalTranslationRequests.count
-            logRealtime(
+            RealtimeLog.log(
+                "tx",
                 """
-                enqueueFinalTranslationRequests provider=\(provider.rawValue) missing=\(requests.count) \
-                queued=\(queuedCount) requests=\(requests.map { Self.preview($0.translationText) }.joined(separator: " | "))
+                enqueue final +\(requests.count) queued=\(queuedFinalTranslationRequests.count) \
+                segs=\(translationState.sourceSegments.count) src=\(RealtimeLog.segments(requests.map(\.translationText)))
                 """
             )
             guard finalTranslationTask == nil else { return }
-            logRealtime("finalTranslationTask started queued=\(queuedFinalTranslationRequests.count)")
             finalTranslationTask = Task { @MainActor [weak self] in
                 await self?.processFinalTranslationRequests()
             }
@@ -2452,29 +2441,14 @@
                 targetLanguage: targetLanguage
             ) else {
                 if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    logRealtime("schedulePartialTranslation noRequest reason=emptyPending")
                     cancelPartialTranslationWork()
                     syncTranslationStatePresentation()
-                } else {
-                    logRealtime(
-                        """
-                        schedulePartialTranslation skippedDuplicate provider=\(provider.rawValue) \
-                        pendingLen=\(translationState.pendingSourceText.count)
-                        """
-                    )
                 }
                 return
             }
 
             latestPartialTranslationRequest = request
-            logRealtime(
-                """
-                schedulePartialTranslation queued provider=\(provider.rawValue) \
-                requestLen=\(request.translationText.count) text=\(Self.preview(request.translationText))
-                """
-            )
             guard partialTranslationTask == nil else { return }
-            logRealtime("partialTranslationTask started")
             partialTranslationTask = Task { @MainActor [weak self] in
                 await self?.processPartialTranslationRequests()
             }
@@ -2485,11 +2459,9 @@
             request: RealtimeTextTranslationRequest
         ) {
             guard requestMatchesCurrentConfiguration(request) else {
-                logRealtime(
-                    """
-                    applyFinalTranslationResult discarded reason=configChanged \
-                    request=\(Self.preview(request.translationText))
-                    """
+                RealtimeLog.warn(
+                    "tx",
+                    "final discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
                 )
                 translationState.finishFinalTranslationRequest(request)
                 syncTranslationStatePresentation()
@@ -2498,19 +2470,29 @@
 
             switch result.response {
             case let .success(text):
-                logRealtime(
-                    """
-                    applyFinalTranslationResult success provider=\(request.provider.rawValue) responseLen=\(text.count) \
-                    resultPairs=\(result.sentencePairs.count) request=\(Self.preview(request.translationText))
-                    """
-                )
                 let applied = translationState.applyFinalTranslationSuccess(result, request: request)
-                logRealtime(
+                let segmentCount = translationState.sourceSegments.count
+                let pairCount = translationState.sentencePairs.count
+                let isStillDisplayed = translationState.sentencePairs.contains { $0.original == request.translationText }
+                RealtimeLog.log(
+                    "tx",
                     """
-                    applyFinalTranslationResult applied=\(applied) stableLen=\(translationState.translationSourceText.count) \
-                    translatedLen=\(translationState.translatedText.count) pairs=\(translationState.sentencePairs.count)
+                    final ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                    -> tr=\(RealtimeLog.text(text)) modelPairs=\(result.sentencePairs.count) applied=\(applied) \
+                    displayed=\(isStillDisplayed) pairs=\(pairCount)/\(segmentCount)
                     """
                 )
+                if !isStillDisplayed {
+                    // The segment was revised while its translation was in flight; the caption keeps
+                    // the new text untranslated until the next request finishes.
+                    RealtimeLog.warn(
+                        "align",
+                        """
+                        final result has no matching segment src=\(RealtimeLog.text(request.translationText)) \
+                        segs=\(RealtimeLog.segments(translationState.sourceSegments))
+                        """
+                    )
+                }
                 syncTranslationStatePresentation()
             case let .failure(error):
                 let message = Self.translationErrorMessage(
@@ -2519,9 +2501,7 @@
                     target: request.targetLanguage,
                     provider: request.provider
                 )
-                logRealtime(
-                    "applyFinalTranslationResult failure error=\(message)"
-                )
+                RealtimeLog.warn("tx", "final failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
                 translationState.finishFinalTranslationRequest(request)
                 syncTranslationStatePresentation()
                 handleErrorMessage(message)
@@ -2533,37 +2513,31 @@
             request: RealtimeTextTranslationRequest
         ) {
             guard requestMatchesCurrentConfiguration(request) else {
-                logRealtime(
-                    """
-                    applyPartialTranslationResult discarded reason=configChanged \
-                    request=\(Self.preview(request.translationText))
-                    """
+                RealtimeLog.warn(
+                    "tx",
+                    "partial discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
                 )
                 return
             }
 
             switch result.response {
             case let .success(text):
-                logRealtime(
-                    """
-                    applyPartialTranslationResult success provider=\(request.provider.rawValue) responseLen=\(text.count) \
-                    resultPairs=\(result.sentencePairs.count) request=\(Self.preview(request.translationText))
-                    """
-                )
                 if translationState.applyPartialTranslationSuccess(result, request: request) {
-                    logRealtime(
+                    RealtimeLog.log(
+                        "tx",
                         """
-                        applyPartialTranslationResult applied pendingLen=\(translationState.pendingSourceText.count) \
-                        pendingTranslationLen=\(translationState.pendingTranslatedText.count)
+                        partial ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                        -> tr=\(RealtimeLog.text(text))
                         """
                     )
                     syncTranslationStatePresentation()
                     updateStatusAfterTranslationActivity()
                 } else {
-                    logRealtime(
+                    RealtimeLog.log(
+                        "tx",
                         """
-                        applyPartialTranslationResult discarded reason=stalePending \
-                        currentPendingLen=\(translationState.pendingSourceText.count)
+                        partial stale \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                        pendingNow=\(RealtimeLog.text(translationState.pendingSourceText))
                         """
                     )
                 }
@@ -2574,9 +2548,7 @@
                     target: request.targetLanguage,
                     provider: request.provider
                 )
-                logRealtime(
-                    "applyPartialTranslationResult failure error=\(message)"
-                )
+                RealtimeLog.warn("tx", "partial failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
                 handleErrorMessage(message)
             }
         }
@@ -2619,9 +2591,10 @@
                 !queuedFinalTranslationRequests.isEmpty ||
                 latestPartialTranslationRequest != nil
             if hadWork {
-                logRealtime(
+                RealtimeLog.log(
+                    "tx",
                     """
-                    cancelTranslationWork finalTask=\(finalTranslationTask != nil) \
+                    cancel finalTask=\(finalTranslationTask != nil) \
                     partialTask=\(partialTranslationTask != nil) \
                     queuedFinal=\(queuedFinalTranslationRequests.count) \
                     latestPartial=\(latestPartialTranslationRequest != nil)
@@ -2636,14 +2609,6 @@
         }
 
         func cancelPartialTranslationWork() {
-            if partialTranslationTask != nil || latestPartialTranslationRequest != nil {
-                logRealtime(
-                    """
-                    cancelPartialTranslationWork task=\(partialTranslationTask != nil) \
-                    latestPartial=\(latestPartialTranslationRequest != nil)
-                    """
-                )
-            }
             partialTranslationTask?.cancel()
             partialTranslationTask = nil
             latestPartialTranslationRequest = nil

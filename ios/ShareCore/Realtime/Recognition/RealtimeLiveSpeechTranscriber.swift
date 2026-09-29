@@ -1,7 +1,6 @@
 #if os(macOS) || os(iOS)
     import AVFoundation
     import CoreMedia
-    import os
     import Speech
 
     protocol RealtimeLiveSpeechTranscriberDelegate: AnyObject {
@@ -22,7 +21,6 @@
 
         private static let reusablePCMBufferCount = 48
         private static let analyzerInputBufferLimit = 32
-        private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimeSpeech")
 
         private let audioFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
@@ -59,23 +57,21 @@
 
             do {
                 try await startSpeechTranscriber(locale: locale, sessionID: sessionID)
+                RealtimeLog.log("asr", "started engine=SpeechTranscriber locale=\(locale.identifier)")
             } catch {
-                Self.logger.warning(
-                    """
-                    SpeechTranscriber unavailable for \(locale.identifier, privacy: .public): \
-                    \(String(describing: error), privacy: .public). Falling back to DictationTranscriber.
-                    """
+                RealtimeLog.warn(
+                    "asr",
+                    "SpeechTranscriber unavailable locale=\(locale.identifier) error=\(String(describing: error)) fallback=Dictation"
                 )
                 await stop()
                 prepareForStart(sessionID: sessionID)
                 do {
                     try await startDictationTranscriber(locale: locale, sessionID: sessionID)
+                    RealtimeLog.log("asr", "started engine=DictationTranscriber locale=\(locale.identifier)")
                 } catch {
-                    Self.logger.warning(
-                        """
-                        DictationTranscriber unavailable for \(locale.identifier, privacy: .public): \
-                        \(String(describing: error), privacy: .public). Falling back to SFSpeechRecognizer.
-                        """
+                    RealtimeLog.warn(
+                        "asr",
+                        "DictationTranscriber unavailable locale=\(locale.identifier) error=\(String(describing: error)) fallback=SFSpeech"
                     )
                     await stop()
                     prepareForStart(sessionID: sessionID)
@@ -162,7 +158,7 @@
                 throw RealtimeCaptureError.speechRecognizerUnavailable
             }
             if let request = try await AssetInventory.assetInstallationRequest(supporting: modules) {
-                Self.logger.debug("Installing speech assets for \(locale.identifier, privacy: .public)")
+                RealtimeLog.log("asr", "installing speech assets locale=\(locale.identifier)")
                 try await request.downloadAndInstall()
             }
             try await AssetInventory.reserve(locale: locale)
@@ -197,6 +193,9 @@
             let recognizedText = String(text.characters)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !recognizedText.isEmpty else { return }
+            if isFinal {
+                RealtimeLog.log("asr", "final text=\(RealtimeLog.text(recognizedText, limit: 64))")
+            }
             publishRecognitionResult(
                 RealtimeRecognitionResult(
                     text: recognizedText,
@@ -370,6 +369,7 @@
             stateLock.unlock()
 
             guard shouldReport else { return }
+            RealtimeLog.warn("asr", "runtime failure error=\(String(describing: error))")
             delegate?.realtimeLiveSpeechTranscriber(self, sessionID: sessionID, didFail: error)
         }
 

@@ -180,6 +180,7 @@
             guard let download = model.download else {
                 throw RecognitionModelStoreError.missingDownload(model.id)
             }
+            try Task.checkCancellation()
             if let task = downloadTasks[model.id] {
                 return try await task.value
             }
@@ -198,7 +199,13 @@
             defer {
                 downloadTasks[model.id] = nil
             }
-            return try await task.value
+            let url = try await task.value
+            try Task.checkCancellation()
+            return url
+        }
+
+        public func cancelDownload(_ model: RecognitionModelDescriptor) {
+            downloadTasks[model.id]?.cancel()
         }
 
         public func deleteModel(_ model: RecognitionModelDescriptor) throws {

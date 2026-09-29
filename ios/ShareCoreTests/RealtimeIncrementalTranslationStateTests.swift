@@ -223,8 +223,84 @@
                 targetLanguage: .simplifiedChinese
             )
 
-            #expect(state.sentencePairs.isEmpty)
+            #expect(state.sentencePairs == [
+                SentencePair(original: "This is the secret sauce.", translation: "旧翻译"),
+            ])
             #expect(correctedRequests.map(\.translationText) == ["This is the secret sauce."])
+        }
+
+        @Test("Keeps translation when ASR only revises punctuation")
+        func keepsTranslationForPunctuationRevision() throws {
+            var state = RealtimeIncrementalTranslationState()
+            state.updateSources(
+                committedText: "",
+                pendingText: "Today I'm going to talk about the big things in the US."
+            )
+
+            let request = try #require(state.makeFinalTranslationRequests(
+                provider: .appleTranslator,
+                sourceLanguage: .english,
+                source: SourceLanguageOption.english.localeLanguage,
+                targetLanguage: .simplifiedChinese
+            ).first)
+            let applied = state.applyFinalTranslationSuccess(
+                ModelExecutionResult(
+                    modelID: ModelConfig.appleTranslateID,
+                    duration: 0,
+                    response: .success("今天我要聊聊美国的大事物")
+                ),
+                request: request
+            )
+            #expect(applied)
+
+            state.updateSources(
+                committedText: "",
+                pendingText: "Today, I'm going to talk about the big things in the US."
+            )
+            let followUpRequests = state.makeFinalTranslationRequests(
+                provider: .appleTranslator,
+                sourceLanguage: .english,
+                source: SourceLanguageOption.english.localeLanguage,
+                targetLanguage: .simplifiedChinese
+            )
+
+            #expect(state.sentencePairs.count == 1)
+            #expect(state.translatedText == "今天我要聊聊美国的大事物")
+            #expect(followUpRequests.isEmpty)
+        }
+
+        @Test("Keeps translation preview when stable ASR text rolls back to pending")
+        func keepsTranslationWhenStableTextRollsBackToPending() throws {
+            var state = RealtimeIncrementalTranslationState()
+            state.updateSources(
+                committedText: "",
+                pendingText: "People like to joke about how big things are."
+            )
+
+            let request = try #require(state.makeFinalTranslationRequests(
+                provider: .appleTranslator,
+                sourceLanguage: .english,
+                source: SourceLanguageOption.english.localeLanguage,
+                targetLanguage: .simplifiedChinese
+            ).first)
+            let applied = state.applyFinalTranslationSuccess(
+                ModelExecutionResult(
+                    modelID: ModelConfig.appleTranslateID,
+                    duration: 0,
+                    response: .success("人们喜欢拿东西很大来开玩笑")
+                ),
+                request: request
+            )
+            #expect(applied)
+
+            state.updateSources(
+                committedText: "",
+                pendingText: "People like to joke about this, about how big things are"
+            )
+
+            #expect(state.translationSourceText.isEmpty)
+            #expect(state.pendingSourceText == "People like to joke about this, about how big things are")
+            #expect(state.pendingTranslatedText == "人们喜欢拿东西很大来开玩笑")
         }
 
         @Test("Keeps stable source segments unchanged while partial text changes")

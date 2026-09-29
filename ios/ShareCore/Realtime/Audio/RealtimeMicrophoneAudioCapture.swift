@@ -1,6 +1,5 @@
 #if os(macOS) || os(iOS)
     import AVFoundation
-    import os
 
     protocol RealtimeMicrophoneAudioCaptureDelegate: AnyObject {
         func realtimeMicrophoneAudioCapture(_ capture: RealtimeMicrophoneAudioCapture, didOutput sampleBuffer: CMSampleBuffer)
@@ -15,9 +14,6 @@
 
     final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
         private static let audioLevelReportInterval = 8
-        #if os(iOS)
-            private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimeMicrophone")
-        #endif
 
         weak var delegate: RealtimeMicrophoneAudioCaptureDelegate?
 
@@ -30,6 +26,7 @@
             private let audioEngine = AVAudioEngine()
             private var converter: AVAudioConverter?
             private var targetFormat: AVAudioFormat?
+            private var conversionFailureCount = 0
         #endif
         private var audioSampleCount = 0
 
@@ -188,6 +185,7 @@
 
                 self.targetFormat = targetFormat
                 converter = nil
+                conversionFailureCount = 0
                 audioSampleCount = 0
                 inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
                     self?.handleInputBuffer(buffer)
@@ -196,42 +194,47 @@
                 do {
                     try audioEngine.start()
                 } catch {
-                    Self.logger.error(
-                        """
-                        Failed to start microphone audio engine: \(String(describing: error), privacy: .public). \
-                        Input format: \(inputFormat.description, privacy: .public)
-                        """
+                    RealtimeLog.warn(
+                        "audio",
+                        "microphone engine start failed error=\(String(describing: error)) input=\(inputFormat.description)"
                     )
                     inputNode.removeTap(onBus: 0)
                     throw RealtimeCaptureError.microphoneUnavailable
                 }
+                RealtimeLog.log(
+                    "audio",
+                    """
+                    microphone started input=\(inputFormat.sampleRate)Hz/\(inputFormat.channelCount)ch \
+                    target=\(sampleRate)Hz route=\(AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue))
+                    """
+                )
             }
 
             private func validInputFormat(for inputNode: AVAudioInputNode) -> AVAudioFormat? {
                 let nodeFormat = inputNode.outputFormat(forBus: 0)
                 guard nodeFormat.sampleRate > 0, nodeFormat.channelCount > 0 else {
-                    Self.logger.error(
-                        """
-                        Microphone input node has an invalid format; refusing to install tap. \
-                        Node format: \(nodeFormat.description, privacy: .public)
-                        """
-                    )
+                    RealtimeLog.warn("audio", "microphone input node has invalid format node=\(nodeFormat.description)")
                     return nil
                 }
                 guard AVAudioSession.sharedInstance().inputNumberOfChannels > 0 else {
-                    Self.logger.error(
-                        """
-                        Microphone audio session has no input channels; refusing to install tap. \
-                        Node format: \(nodeFormat.description, privacy: .public)
-                        """
-                    )
+                    RealtimeLog.warn("audio", "microphone session has no input channels node=\(nodeFormat.description)")
                     return nil
                 }
                 return nodeFormat
             }
 
             private func handleInputBuffer(_ buffer: AVAudioPCMBuffer) {
-                guard let convertedBuffer = convertedPCMBuffer(from: buffer) else { return }
+                guard let convertedBuffer = convertedPCMBuffer(from: buffer) else {
+                    // Dropped audio never reaches the recognizer, so speech silently goes missing.
+                    conversionFailureCount += 1
+                    if conversionFailureCount == 1 || conversionFailureCount % 50 == 0 {
+                        RealtimeLog.warn(
+                            "audio",
+                            "buffer conversion failed count=\(conversionFailureCount) input=\(buffer.format.description)"
+                        )
+                    }
+                    return
+                }
 
                 audioSampleCount += 1
                 delegate?.realtimeMicrophoneAudioCapture(self, didOutput: convertedBuffer)

@@ -16,7 +16,10 @@
         @ObservedObject private var controlModel: RealtimeControlModel
         private let onShowSidebarTap: (() -> Void)?
         private let onHistoryTap: (() -> Void)?
+        /// Set when presented full screen from Home; adds Close and an in-page start/stop control.
+        private let onDismiss: (() -> Void)?
         @State private var isSettingsPresented = false
+        @State private var showsSwapUnsupportedAlert = false
 
         private enum RealtimeTargetSelection: Hashable {
             case transcriptionOnly
@@ -27,12 +30,14 @@
             store: RealtimeSessionStore,
             controlModel: RealtimeControlModel,
             onShowSidebarTap: (() -> Void)? = nil,
-            onHistoryTap: (() -> Void)? = nil
+            onHistoryTap: (() -> Void)? = nil,
+            onDismiss: (() -> Void)? = nil
         ) {
             _store = ObservedObject(wrappedValue: store)
             _controlModel = ObservedObject(wrappedValue: controlModel)
             self.onShowSidebarTap = onShowSidebarTap
             self.onHistoryTap = onHistoryTap
+            self.onDismiss = onDismiss
         }
 
         private var colors: AppColorPalette {
@@ -49,13 +54,8 @@
 
         var body: some View {
             captionPane
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    if shouldShowSetupBanner {
-                        setupBanner(setupBannerText, systemImage: setupBannerSystemImage)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(colors.background)
-                    }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    languageBar
                 }
                 .background(colors.background.ignoresSafeArea())
                 .overlay {
@@ -111,21 +111,25 @@
 
         @ToolbarContentBuilder
         private var realtimeToolbar: some ToolbarContent {
+            if let onDismiss {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close", systemImage: "chevron.down", action: onDismiss)
+                        .accessibilityIdentifier("realtime_close_button")
+                }
+            }
             if let onShowSidebarTap {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Show Sidebar", systemImage: "sidebar.left", action: onShowSidebarTap)
                         .accessibilityIdentifier("ipad_show_sidebar_button")
                 }
             }
-            ToolbarItem(placement: .topBarLeading) {
-                languagePairControl
+            if let onHistoryTap {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Realtime History", systemImage: "clock.arrow.circlepath", action: onHistoryTap)
+                        .accessibilityIdentifier("realtime_history_button")
+                }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button("Realtime Options", systemImage: "slider.horizontal.3") {
-                    isSettingsPresented = true
-                }
-                .accessibilityIdentifier("realtime_options_button")
-
                 if store.isRunning {
                     Button(store.isPaused ? "Resume" : "Pause", systemImage: store.isPaused ? "play.fill" : "pause.fill") {
                         store.togglePaused()
@@ -133,79 +137,144 @@
                     .disabled(!controlModel.isPauseEnabled(for: store))
                     .accessibilityIdentifier("realtime_pause_button")
                 }
+
+                Button("Realtime Options", systemImage: "slider.horizontal.3") {
+                    isSettingsPresented = true
+                }
+                .accessibilityIdentifier("realtime_options_button")
             }
         }
 
-        private var languagePairControl: some View {
-            HStack(spacing: 0) {
+        // MARK: - Full-Screen Session
+
+        private var sessionControlButton: some View {
+            Button {
+                Task {
+                    await controlModel.handleStartButtonTapped(store: store, preferences: preferences)
+                }
+            } label: {
+                Image(systemName: controlModel.startButtonSystemImage(for: store))
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 68, height: 68)
+                    .tlingoGlassCircle(
+                        tint: sessionControlTint,
+                        interactive: true,
+                        fallbackTint: sessionControlTint,
+                        fallbackStroke: colors.divider.opacity(0.65)
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(controlModel.isStartingRealtimeSession || store.isStopping)
+            .accessibilityLabel(controlModel.startButtonTitle(for: store))
+            .accessibilityIdentifier("realtime_session_control_button")
+        }
+
+        private var sessionControlTint: Color {
+            if controlModel.isStartingRealtimeSession || store.isStopping {
+                return colors.textSecondary.opacity(0.45)
+            }
+            return store.isRunning ? colors.error : colors.accent
+        }
+
+        // MARK: - Language Bar
+
+        /// Bottom-docked language pair, following Apple Translate's conversation layout:
+        /// the languages sit next to the Start control in the tab bar, within thumb reach.
+        private var languageBar: some View {
+            VStack(spacing: 10) {
+                if shouldShowSetupHint {
+                    Label(languageSelectionStatusText, systemImage: "exclamationmark.circle.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .transition(.opacity)
+                }
+
+                // Languages are locked while running, so the pair only takes caption space.
+                if !store.isRunning {
+                    languagePairControls
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+
+                if onDismiss != nil {
+                    sessionControlButton
+                        .padding(.top, 6)
+                }
+            }
+            .frame(maxWidth: 520)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .frame(maxWidth: .infinity)
+            .animation(.snappy, value: shouldShowSetupHint)
+            .animation(.snappy, value: store.isRunning)
+        }
+
+        @ViewBuilder
+        private var languagePairControls: some View {
+            let content = HStack(spacing: 8) {
                 sourceLanguageMenu
-
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(colors.accent)
-                    .frame(width: 24, height: 42)
-
+                swapLanguagesButton
                 targetLanguageMenu
             }
-            .padding(.horizontal, 5)
-            .frame(height: 42)
-            .tlingoGlassSurface(
-                cornerRadius: 21,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.72),
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92),
-                fallbackStroke: colors.divider
-            )
-            .layoutPriority(1)
+
+            if #available(iOS 26.0, *) {
+                GlassEffectContainer(spacing: 8) {
+                    content
+                }
+            } else {
+                content
+            }
         }
 
         private var sourceLanguageMenu: some View {
             Menu {
-                Picker("Source", selection: realtimeSourceLanguageBinding) {
+                Picker("Source Language", selection: realtimeSourceLanguageBinding) {
                     ForEach(SourceLanguageOption.realtimeSelectionOptions) { option in
                         Text(option.primaryLabel)
                             .tag(option)
                             .disabled(unsupportedRealtimeSourceLanguageOptions.contains(option))
                     }
                 }
+                .pickerStyle(.inline)
             } label: {
-                languageMenuLabel(preferences.realtimeSourceLanguage.primaryLabel)
+                languageMenuLabel(
+                    sourceLanguageDisplayName,
+                    isMissing: preferences.realtimeSourceLanguage == .auto
+                )
             }
             .disabled(store.isRunning)
             .accessibilityLabel("Source Language")
-            .accessibilityValue(preferences.realtimeSourceLanguage.primaryLabel)
+            .accessibilityValue(sourceLanguageDisplayName)
             .accessibilityIdentifier("realtime_source_language_menu")
         }
 
         private var targetLanguageMenu: some View {
             Menu {
-                Button {
-                    selectTranscriptionOnly()
-                } label: {
-                    if preferences.realtimeTranslationProvider == .transcriptionOnly {
-                        Label(RealtimeTranslationProvider.transcriptionOnly.title, systemImage: "checkmark")
-                    } else {
-                        Text(RealtimeTranslationProvider.transcriptionOnly.title)
-                    }
-                }
-                .disabled(store.isRunning)
+                Picker("Target Language", selection: realtimeTargetSelectionBinding) {
+                    Label(
+                        RealtimeTranslationProvider.transcriptionOnly.title,
+                        systemImage: RealtimeTranslationProvider.transcriptionOnly.systemImage
+                    )
+                    .tag(RealtimeTargetSelection.transcriptionOnly)
+                    .disabled(store.isRunning)
 
-                Divider()
-
-                ForEach(TargetLanguageOption.realtimeSelectionOptions) { option in
-                    Button {
-                        selectTargetLanguage(option)
-                    } label: {
-                        if preferences.realtimeTranslationProvider.performsTranslation,
-                           preferences.realtimeTargetLanguage == option
-                        {
-                            Label(option.primaryLabel, systemImage: "checkmark")
-                        } else {
+                    Section {
+                        ForEach(TargetLanguageOption.realtimeSelectionOptions) { option in
                             Text(option.primaryLabel)
+                                .tag(RealtimeTargetSelection.language(option))
                         }
                     }
                 }
+                .pickerStyle(.inline)
             } label: {
-                languageMenuLabel(targetLanguageDisplayName)
+                languageMenuLabel(
+                    targetLanguageDisplayName,
+                    isMissing: preferences.realtimeTranslationProvider.performsTranslation &&
+                        preferences.realtimeTargetLanguage == .appLanguage
+                )
             }
             .disabled(targetLanguageSelectionDisabled)
             .accessibilityLabel("Target Language")
@@ -213,29 +282,116 @@
             .accessibilityIdentifier("realtime_target_language_menu")
         }
 
-        private func languageMenuLabel(_ title: String) -> some View {
-            HStack(spacing: 3) {
+        private func languageMenuLabel(_ title: String, isMissing: Bool) -> some View {
+            HStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded, weight: .semibold))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .bold))
+                    .minimumScaleFactor(0.8)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(colors.textSecondary)
             }
-            .foregroundStyle(colors.textPrimary)
-            .padding(.horizontal, 6)
-            .frame(minWidth: 44, maxWidth: 70, minHeight: 42)
-            .contentShape(Rectangle())
+            .foregroundStyle(isMissing ? Color.orange : colors.textPrimary)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .contentShape(Capsule())
+            .tlingoGlassCapsule(
+                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.40),
+                interactive: true,
+                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92),
+                fallbackStroke: colors.divider
+            )
+        }
+
+        private var swapLanguagesButton: some View {
+            Button {
+                swapLanguages()
+            } label: {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(canSwapLanguages ? colors.accent : colors.textSecondary)
+                    .frame(width: 48, height: 48)
+                    .contentShape(Circle())
+                    .tlingoGlassCircle(
+                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.40),
+                        interactive: true,
+                        fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92),
+                        fallbackStroke: colors.divider
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSwapLanguages && !isSwapBlockedByRecognitionModel)
+            .accessibilityLabel("Swap languages")
+            .accessibilityIdentifier("realtime_swap_languages_button")
+            .alert("Can't Swap Languages", isPresented: $showsSwapUnsupportedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("The selected recognition model doesn't support the new source language. Choose another model in Settings.")
+            }
+        }
+
+        private var sourceLanguageDisplayName: String {
+            preferences.realtimeSourceLanguage == .auto
+                ? String(localized: "Source")
+                : preferences.realtimeSourceLanguage.primaryLabel
         }
 
         private var targetLanguageDisplayName: String {
-            preferences.realtimeTranslationProvider.performsTranslation
-                ? preferences.realtimeTargetLanguage.primaryLabel
-                : RealtimeTranslationProvider.transcriptionOnly.title
+            guard preferences.realtimeTranslationProvider.performsTranslation else {
+                return RealtimeTranslationProvider.transcriptionOnly.title
+            }
+            return preferences.realtimeTargetLanguage == .appLanguage
+                ? String(localized: "Target")
+                : preferences.realtimeTargetLanguage.primaryLabel
         }
 
         private var targetLanguageSelectionDisabled: Bool {
             store.isRunning && preferences.realtimeTranslationProvider == .transcriptionOnly
+        }
+
+        private var canSwapLanguages: Bool {
+            guard !store.isRunning,
+                  preferences.realtimeTranslationProvider.performsTranslation,
+                  preferences.realtimeSourceLanguage != .auto,
+                  preferences.realtimeTargetLanguage != .appLanguage
+            else {
+                return false
+            }
+            let swapped = LanguageDirectionSwap.swapped(
+                source: preferences.realtimeSourceLanguage,
+                target: preferences.realtimeTargetLanguage
+            )
+            return SourceLanguageOption.realtimeSelectionOptions.contains(swapped.source) &&
+                TargetLanguageOption.realtimeSelectionOptions.contains(swapped.target) &&
+                !unsupportedRealtimeSourceLanguageOptions.contains(swapped.source)
+        }
+
+        private var isSwapBlockedByRecognitionModel: Bool {
+            guard !store.isRunning,
+                  preferences.realtimeTranslationProvider.performsTranslation,
+                  preferences.realtimeSourceLanguage != .auto,
+                  preferences.realtimeTargetLanguage != .appLanguage,
+                  let swappedSource = SourceLanguageOption(rawValue: preferences.realtimeTargetLanguage.rawValue)
+            else {
+                return false
+            }
+            return unsupportedRealtimeSourceLanguageOptions.contains(swappedSource)
+        }
+
+        private func swapLanguages() {
+            if isSwapBlockedByRecognitionModel {
+                showsSwapUnsupportedAlert = true
+                return
+            }
+            guard canSwapLanguages else { return }
+            let swapped = LanguageDirectionSwap.swapped(
+                source: preferences.realtimeSourceLanguage,
+                target: preferences.realtimeTargetLanguage
+            )
+            preferences.setRealtimeSourceLanguage(swapped.source)
+            preferences.setRealtimeTargetLanguage(swapped.target)
+            store.languageSelectionDidChange()
         }
 
         private func selectTranscriptionOnly() {
@@ -255,35 +411,8 @@
             controlModel.languageSelectionStatusText(preferences: preferences)
         }
 
-        private var shouldShowSetupBanner: Bool {
+        private var shouldShowSetupHint: Bool {
             !store.hasRequiredLanguageSelection
-        }
-
-        private var setupBannerText: String {
-            languageSelectionStatusText
-        }
-
-        private var setupBannerSystemImage: String {
-            "globe"
-        }
-
-        private func setupBanner(_ text: String, systemImage: String) -> some View {
-            HStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 13, weight: .semibold))
-                Text(text)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(2)
-                Spacer(minLength: 8)
-            }
-            .foregroundStyle(.orange)
-            .padding(.horizontal, 11)
-            .padding(.vertical, 8)
-            .realtimeGlassSurface(
-                cornerRadius: 14,
-                tint: Color.orange.opacity(colorScheme == .dark ? 0.18 : 0.10),
-                fallbackStroke: Color.orange.opacity(0.22)
-            )
         }
 
         private var unsupportedRealtimeSourceLanguageOptions: Set<SourceLanguageOption> {
@@ -298,30 +427,29 @@
             return ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
-                        if lines.isEmpty {
-                            Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundStyle(colors.textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .topLeading)
-                                .padding(.top, 6)
-                        } else {
-                            ForEach(lines) { line in
-                                captionLine(line)
-                                    .id(line.id)
-                            }
-                            Color.clear
-                                .frame(height: 1)
-                                .id("realtime-transcript-bottom")
+                        ForEach(lines) { line in
+                            captionLine(line)
+                                .id(line.id)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .id("realtime-transcript-bottom")
                     }
                     .padding(.horizontal, 22)
                     .padding(.top, 12)
-                    .padding(.bottom, 36)
+                    .padding(.bottom, 16)
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: 20)
+                .overlay {
+                    if lines.isEmpty {
+                        ContentUnavailableView(
+                            RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning),
+                            systemImage: store.isRunning ? "waveform" : "captions.bubble"
+                        )
+                        .symbolEffect(.variableColor.iterative, isActive: store.isRunning)
+                    }
                 }
                 .defaultScrollAnchor(.bottom)
+                .scrollEdgeEffectStyle(.soft, for: .vertical)
                 .onChange(of: lineIDs) {
                     guard !lineIDs.isEmpty else { return }
                     proxy.scrollTo("realtime-transcript-bottom", anchor: .bottom)
@@ -386,39 +514,6 @@
         private var settingsSheet: some View {
             NavigationStack {
                 Form {
-                    if let onHistoryTap {
-                        Section {
-                            Button {
-                                isSettingsPresented = false
-                                onHistoryTap()
-                            } label: {
-                                Label("Realtime History", systemImage: "clock.arrow.circlepath")
-                            }
-                            .accessibilityIdentifier("realtime_history_button")
-                        }
-                    }
-
-                    Section("Languages") {
-                        Picker("Source", selection: realtimeSourceLanguageBinding) {
-                            ForEach(SourceLanguageOption.realtimeSelectionOptions) { option in
-                                Text(option.primaryLabel)
-                                    .tag(option)
-                                    .disabled(unsupportedRealtimeSourceLanguageOptions.contains(option))
-                            }
-                        }
-                        .disabled(store.isRunning)
-
-                        Picker("Translation Language", selection: realtimeTargetSelectionBinding) {
-                            Text(RealtimeTranslationProvider.transcriptionOnly.title)
-                                .tag(RealtimeTargetSelection.transcriptionOnly)
-                            ForEach(TargetLanguageOption.realtimeSelectionOptions) { option in
-                                Text(option.primaryLabel)
-                                    .tag(RealtimeTargetSelection.language(option))
-                            }
-                        }
-                        .disabled(targetLanguageSelectionDisabled)
-                    }
-
                     if RealtimeAudioInputSource.allCases.count > 1 {
                         Section("Input") {
                             Picker("Input", selection: inputSourceBinding) {

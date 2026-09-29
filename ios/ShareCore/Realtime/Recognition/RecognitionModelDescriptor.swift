@@ -93,11 +93,16 @@
         }
 
         public var languageSummary: String {
+            if id == Self.nemotronMultilingual2240.id {
+                return String(
+                    localized: "About 40 languages: English, Chinese, Japanese, Korean, French, Spanish, and more"
+                )
+            }
             if supportedLanguageIDs.isEmpty {
                 return String(localized: "System languages")
             }
             if supportedLanguageIDs.count == 1, let languageID = supportedLanguageIDs.first {
-                return String(localized: "\(Self.englishLanguageName(for: languageID)) only")
+                return String(localized: "\(Self.localizedLanguageName(for: languageID)) only")
             }
             return String(localized: "\(supportedLanguageIDs.count) languages")
         }
@@ -126,15 +131,7 @@
         }
 
         public var limitsText: String {
-            var parts = [languageSummary]
-            if requiresAppleSilicon {
-                parts.append(String(localized: "Mac Apple Silicon"))
-            }
-            if isExperimental {
-                parts.append(String(localized: "Experimental"))
-            }
-            parts.append(sizeDisplayName)
-            return parts.joined(separator: " · ")
+            "\(languageSummary) · \(sizeDisplayName)"
         }
 
         public func supports(sourceLanguage: SourceLanguageOption) -> Bool {
@@ -156,8 +153,8 @@
             languageID.replacingOccurrences(of: "_", with: "-").lowercased()
         }
 
-        private static func englishLanguageName(for languageID: String) -> String {
-            Locale(identifier: "en").localizedString(forIdentifier: normalizedLanguageID(languageID)) ?? languageID
+        private static func localizedLanguageName(for languageID: String) -> String {
+            Locale.current.localizedString(forIdentifier: normalizedLanguageID(languageID)) ?? languageID
         }
     }
 

@@ -1,10 +1,8 @@
 #if os(macOS) || os(iOS)
     import AVFoundation
-    import os
     import Speech
 
     final class RealtimeLegacySpeechRecognizer: @unchecked Sendable {
-        private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimeSpeech")
         private static let preferredRegions = [
             "ar": "SA",
             "de": "DE",
@@ -79,12 +77,9 @@
                 }
                 if let error {
                     guard !RealtimeSessionStore.isCancellationError(error) else { return }
-                    Self.logger.error(
-                        """
-                        Legacy SFSpeechRecognizer failed for \
-                        \(recognizer.locale.identifier, privacy: .public): \
-                        \(String(describing: error), privacy: .public)
-                        """
+                    RealtimeLog.warn(
+                        "asr",
+                        "SFSpeech failed locale=\(recognizer.locale.identifier) error=\(String(describing: error))"
                     )
                     self.didFail(error)
                     return
@@ -109,6 +104,9 @@
             let text = result.bestTranscription.formattedString
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { return }
+            if result.isFinal {
+                RealtimeLog.log("asr", "final text=\(RealtimeLog.text(text, limit: 64))")
+            }
 
             didRecognize(
                 RealtimeRecognitionResult(
@@ -149,12 +147,9 @@
                 guard let recognizer = SFSpeechRecognizer(locale: candidate.locale), recognizer.isAvailable else {
                     continue
                 }
-                Self.logger.debug(
-                    """
-                    Using legacy SFSpeechRecognizer locale \
-                    \(candidate.locale.identifier, privacy: .public) for requested \
-                    \(locale.identifier, privacy: .public)
-                    """
+                RealtimeLog.log(
+                    "asr",
+                    "started engine=SFSpeech locale=\(candidate.locale.identifier) requested=\(locale.identifier)"
                 )
                 return recognizer
             }

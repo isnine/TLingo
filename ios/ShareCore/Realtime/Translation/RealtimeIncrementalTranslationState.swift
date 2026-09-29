@@ -58,6 +58,7 @@
         mutating func updateSources(committedText: String, pendingText: String) {
             let previousStableText = translationSourceText
             let previousStableSegments = sourceSegments
+            let previousSentencePairs = sentencePairs
             let previousPendingSource = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
             let previousPendingTranslation = pendingTranslatedText.trimmingCharacters(in: .whitespacesAndNewlines)
             let hadPendingSource = !previousPendingSource.isEmpty
@@ -72,14 +73,36 @@
                 previousStableSegments: previousStableSegments,
                 currentStableSegments: sourceSegments
             ) {
+                RealtimeLog.log(
+                    "align",
+                    """
+                    pending promoted to stable with preview translation \
+                    src=\(RealtimeLog.text(finalizedPreviewPair.original)) tr=\(RealtimeLog.text(finalizedPreviewPair.translation))
+                    """
+                )
                 finalizedPreviewPairsBySource[Self.normalizedSourceKey(finalizedPreviewPair.original)] = finalizedPreviewPair
             }
+            let rollbackPreviewTranslation = Self.rollbackPreviewTranslation(
+                previousStableSegments: previousStableSegments,
+                previousSentencePairs: previousSentencePairs,
+                currentStableSegments: sourceSegments,
+                currentPendingSource: pendingSourceText
+            )
             pruneFinalizedPreviewPairs(to: sourceSegments)
             refreshDisplayedSentencePairs(using: sourceSegments)
 
-            if pendingSourceText.isEmpty ||
+            if let rollbackPreviewTranslation {
+                RealtimeLog.warn(
+                    "align",
+                    """
+                    stable segment rolled back to pending, reusing its translation \
+                    pending=\(RealtimeLog.text(pendingSourceText)) tr=\(RealtimeLog.text(rollbackPreviewTranslation))
+                    """
+                )
+                pendingTranslatedText = rollbackPreviewTranslation
+            } else if pendingSourceText.isEmpty ||
                 !hadPendingSource ||
-                !Self.isPendingRevision(previousPendingSource, replacement: pendingSourceText)
+                !Self.isLikelyRevision(previousPendingSource, replacement: pendingSourceText)
             {
                 pendingTranslatedText = ""
             }
@@ -270,9 +293,43 @@
                 return
             }
 
-            var existingPairsBySource = Dictionary(grouping: sentencePairs) { Self.normalizedSourceKey($0.original) }
+            var remainingPairs = sentencePairs
             let displayedPairs = sourceSegments.compactMap { segment in
-                displayedPair(forSegment: segment, consuming: &existingPairsBySource)
+                let key = Self.normalizedSourceKey(segment)
+                if let exactIndex = remainingPairs.firstIndex(where: {
+                    Self.normalizedSourceKey($0.original) == key
+                }) {
+                    return remainingPairs.remove(at: exactIndex)
+                }
+                if let revisedIndex = remainingPairs.firstIndex(where: {
+                    Self.isLikelyRevision($0.original, replacement: segment)
+                }) {
+                    let previousPair = remainingPairs.remove(at: revisedIndex)
+                    let previewPair = SentencePair(original: segment, translation: previousPair.translation)
+                    // The old translation stays under the revised source until the new request lands.
+                    RealtimeLog.log(
+                        "align",
+                        """
+                        revised segment keeps old translation old=\(RealtimeLog.text(previousPair.original)) \
+                        new=\(RealtimeLog.text(segment)) tr=\(RealtimeLog.text(previousPair.translation))
+                        """
+                    )
+                    finalizedPreviewPairsBySource[key] = previewPair
+                    return previewPair
+                }
+                return finalizedPreviewPairsBySource[key]
+            }
+            let droppedPairs = remainingPairs.filter {
+                !$0.translation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            if !droppedPairs.isEmpty {
+                RealtimeLog.warn(
+                    "align",
+                    """
+                    translated pairs dropped after source change dropped=\(RealtimeLog.segments(droppedPairs.map(\.original))) \
+                    segs=\(RealtimeLog.segments(sourceSegments))
+                    """
+                )
             }
             assignDisplayedPairs(displayedPairs)
         }
@@ -386,11 +443,24 @@
             return (stableText, pendingSplit.pending)
         }
 
-        private static func isPendingRevision(_ previous: String, replacement: String) -> Bool {
+        private static func isLikelyRevision(_ previous: String, replacement: String) -> Bool {
             let previousKey = normalizedSourceKey(previous)
             let replacementKey = normalizedSourceKey(replacement)
             guard !previousKey.isEmpty, !replacementKey.isEmpty else { return false }
-            return previousKey.hasPrefix(replacementKey) || replacementKey.hasPrefix(previousKey)
+            if previousKey == replacementKey ||
+                previousKey.hasPrefix(replacementKey) ||
+                replacementKey.hasPrefix(previousKey)
+            {
+                return true
+            }
+
+            let previousTokens = Set(previousKey.split(separator: " "))
+            let replacementTokens = Set(replacementKey.split(separator: " "))
+            guard previousTokens.count >= 4, replacementTokens.count >= 4 else { return false }
+
+            let sharedTokenCount = previousTokens.intersection(replacementTokens).count
+            let shorterTokenCount = min(previousTokens.count, replacementTokens.count)
+            return Double(sharedTokenCount) / Double(shorterTokenCount) >= 0.75
         }
 
         private mutating func updateSourceSegments(previousStableText: String) {
@@ -458,14 +528,48 @@
             }
 
             guard let finalizedSource = addedSegments.last(where: {
-                isPendingRevision(previousPendingSource, replacement: $0)
+                isLikelyRevision(previousPendingSource, replacement: $0)
             }) else { return nil }
             return SentencePair(original: finalizedSource, translation: previousPendingTranslation)
         }
 
+        private static func rollbackPreviewTranslation(
+            previousStableSegments: [String],
+            previousSentencePairs: [SentencePair],
+            currentStableSegments: [String],
+            currentPendingSource: String
+        ) -> String? {
+            let pending = currentPendingSource.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !pending.isEmpty else { return nil }
+
+            let currentKeys = Set(currentStableSegments.map(normalizedSourceKey))
+            for segment in previousStableSegments.reversed() {
+                guard !currentKeys.contains(normalizedSourceKey(segment)),
+                      isLikelyRevision(segment, replacement: pending)
+                else {
+                    continue
+                }
+                guard let pair = previousSentencePairs.last(where: {
+                    normalizedSourceKey($0.original) == normalizedSourceKey(segment)
+                }) else {
+                    continue
+                }
+                let translation = pair.translation.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !translation.isEmpty {
+                    return translation
+                }
+            }
+            return nil
+        }
+
         private static func normalizedSourceKey(_ source: String) -> String {
-            source.trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            let folded = source.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            let normalized = folded.unicodeScalars.map { scalar in
+                CharacterSet.alphanumerics.contains(scalar) ? Character(scalar) : " "
+            }
+            return String(normalized)
+                .split(whereSeparator: \.isWhitespace)
+                .joined(separator: " ")
         }
     }
 #endif

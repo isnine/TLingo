@@ -3,12 +3,6 @@
     import CoreMedia
     import FluidAudio
     import Foundation
-    import os
-
-    private let realtimeFluidAudioLogger = Logger(
-        subsystem: "com.zanderwang.AITranslator",
-        category: "RealtimeRecognition"
-    )
 
     protocol RealtimeFluidAudioRecognizerDelegate: AnyObject {
         func realtimeFluidAudioRecognizer(
@@ -121,6 +115,17 @@
             lastPartialText = normalized
 
             let modelWords = normalized.split(whereSeparator: \.isWhitespace)
+            if modelWords.count <= committedModelWordCount {
+                // Word-count based trimming hides everything when the model rewrites or shortens
+                // its hypothesis, and for unspaced scripts (CJK) where one "word" is a whole clause.
+                RealtimeLog.warn(
+                    "fluid",
+                    """
+                    partial hidden modelWords=\(modelWords.count) committedWords=\(committedModelWordCount) \
+                    raw=\(RealtimeLog.text(normalized, limit: 64)) stableTail=\(RealtimeLog.text(stableSegments.last?.text ?? ""))
+                    """
+                )
+            }
             let uncommittedText = modelWords
                 .dropFirst(min(committedModelWordCount, modelWords.count))
                 .joined(separator: " ")
@@ -157,6 +162,14 @@
             }
             if !completedSegments.isEmpty {
                 currentSegmentStartOffset = audioOffset
+                RealtimeLog.log(
+                    "fluid",
+                    """
+                    segment commit +\(completedSegments.count) at=\(String(format: "%.1fs", audioOffset)) \
+                    reasons=\(completedSegments.map(\.1.rawValue)) committedWords=\(committedModelWordCount)/\(modelWords.count) \
+                    new=\(RealtimeLog.segments(completedSegments.map(\.0), tail: 4)) pending=\(RealtimeLog.text(pendingText))
+                    """
+                )
             }
 
             pendingSegment = pendingText.isEmpty ? nil : RealtimeRecognitionSegment(
@@ -199,6 +212,13 @@
             endOffset: TimeInterval
         ) -> Bool {
             guard let pendingSegment else { return false }
+            RealtimeLog.log(
+                "fluid",
+                """
+                pending commit reason=\(boundaryReason.rawValue) at=\(String(format: "%.1fs", endOffset)) \
+                text=\(RealtimeLog.text(pendingSegment.text))
+                """
+            )
             stableSegments.append(RealtimeRecognitionSegment(
                 id: pendingSegment.id,
                 text: pendingSegment.text,
@@ -257,6 +277,7 @@
         }
 
         private static let maximumPendingAudioDuration: TimeInterval = 15
+        private static let lagReportInterval: TimeInterval = 3
 
         nonisolated static func acceptsPendingAudio(
             pendingSampleCount: Int,
@@ -283,6 +304,10 @@
         private var totalSampleCount = 0
         private var processedSampleCount = 0
         private var callbackAudioOffset: TimeInterval = 0
+        private var maximumInputRMS: Float = 0
+        private var maximumInputAmplitude: Float = 0
+        private var partialCallbackCount = 0
+        private var lastReportedLagBucket = 0
         private var engineNeedsReset = false
         private var isPaused = false
         private var isStopping = false
@@ -314,6 +339,7 @@
             }
 
             let modelDirectory = await RecognitionModelStore.shared.cachedModelURL(for: model)
+            let loadStartedAt = Date()
             let engine: RealtimeFluidAudioStreamingEngine
             switch fluidAudioModel {
             case .parakeetEOU320, .parakeetEOU1280:
@@ -358,6 +384,13 @@
                 self.model = fluidAudioModel
                 streamingEngine = engine
             }
+            RealtimeLog.log(
+                "fluid",
+                """
+                model loaded model=\(fluidAudioModel.rawValue) locale=\(locale.identifier) \
+                loadMs=\(Int(Date().timeIntervalSince(loadStartedAt) * 1000))
+                """
+            )
         }
 
         func append(_ sampleBuffer: CMSampleBuffer) {
@@ -375,6 +408,13 @@
 
         func append(_ audioSamples: [Float]) {
             guard !audioSamples.isEmpty else { return }
+            var squareSum = 0.0
+            var peak: Float = 0
+            for sample in audioSamples {
+                squareSum += Double(sample) * Double(sample)
+                peak = max(peak, abs(sample))
+            }
+            let rms = Float(sqrt(squareSum / Double(audioSamples.count)))
             stateLock.lock()
             guard !isPaused, !isStopping, streamingEngine != nil else {
                 stateLock.unlock()
@@ -390,11 +430,24 @@
                 isPaused = true
                 let sessionID = activeSessionID
                 stateLock.unlock()
+                RealtimeLog.warn(
+                    "fluid",
+                    "audio backlog exceeded pendingSeconds=\(Double(pendingSampleCount) / Double(sampleRate)) recognizer paused"
+                )
                 reportRuntimeFailure(RealtimeRecognizerError.audioBacklogExceeded, sessionID: sessionID)
                 return
             }
             pendingSampleChunks.append(audioSamples)
             totalSampleCount += audioSamples.count
+            let lagSeconds = Double(totalSampleCount - processedSampleCount) / Double(sampleRate)
+            let lagBucket = Int(lagSeconds / Self.lagReportInterval)
+            if lagBucket > lastReportedLagBucket || (lagBucket == 0 && lastReportedLagBucket > 0) {
+                lastReportedLagBucket = lagBucket
+                // Recognition falling behind delays captions and can end in a backlog failure.
+                RealtimeLog.warn("fluid", "processing lag \(String(format: "%.1f", lagSeconds))s chunks=\(pendingSampleChunks.count)")
+            }
+            maximumInputRMS = max(maximumInputRMS, rms)
+            maximumInputAmplitude = max(maximumInputAmplitude, peak)
             if processingTask == nil {
                 let sessionID = activeSessionID
                 processingTask = Task { [weak self] in
@@ -422,9 +475,11 @@
 
             await resources.processingTask?.value
 
+            var finalTextLength = 0
             do {
                 if let engine = resources.streamingEngine {
                     let finalText = try await engine.finish()
+                    finalTextLength = finalText.count
                     let endOffset = stateLock.withLock {
                         Double(processedSampleCount) / Double(sampleRate)
                     }
@@ -443,13 +498,20 @@
             }
 
             let finalDiagnostics = diagnostics
-            realtimeFluidAudioLogger.info(
-                """
-                recognition diagnostics inputOffset=\(finalDiagnostics.inputAudioOffset) \
-                processedOffset=\(finalDiagnostics.processedAudioOffset) \
-                pendingChunks=\(finalDiagnostics.pendingChunkCount)
-                """
-            )
+            let signal = stateLock.withLock {
+                (model?.rawValue ?? "none", maximumInputRMS, maximumInputAmplitude, partialCallbackCount)
+            }
+            if finalDiagnostics.inputAudioOffset > 0 {
+                RealtimeLog.log(
+                    "fluid",
+                    """
+                    stopped model=\(signal.0) inputSeconds=\(finalDiagnostics.inputAudioOffset) \
+                    processedSeconds=\(finalDiagnostics.processedAudioOffset) \
+                    maxRMS=\(signal.1) peak=\(signal.2) partialCallbacks=\(signal.3) \
+                    finalChars=\(finalTextLength) pendingChunks=\(finalDiagnostics.pendingChunkCount)
+                    """
+                )
+            }
             stateLock.withLock {
                 isStopping = true
                 isPaused = false
@@ -461,6 +523,10 @@
                 totalSampleCount = 0
                 processedSampleCount = 0
                 callbackAudioOffset = 0
+                maximumInputRMS = 0
+                maximumInputAmplitude = 0
+                partialCallbackCount = 0
+                lastReportedLagBucket = 0
                 engineNeedsReset = false
                 activeSessionID = UUID()
             }
@@ -479,6 +545,10 @@
                 totalSampleCount = 0
                 processedSampleCount = 0
                 callbackAudioOffset = 0
+                maximumInputRMS = 0
+                maximumInputAmplitude = 0
+                partialCallbackCount = 0
+                lastReportedLagBucket = 0
                 engineNeedsReset = false
                 activeSessionID = sessionID
             }
@@ -526,6 +596,7 @@
                         return engineNeedsReset
                     }
                     if shouldReset {
+                        RealtimeLog.log("fluid", "engine reset after EOU at=\(String(format: "%.1fs", work.endOffset))")
                         publishCurrentSnapshot(sessionID: sessionID)
                         try await work.streamingEngine.reset()
                         stateLock.withLock {
@@ -542,7 +613,8 @@
 
         func publishStreamingPartial(_ text: String, sessionID: UUID) {
             let changed = stateLock.withLock {
-                transcriptState.updatePartial(text, audioOffset: callbackAudioOffset)
+                partialCallbackCount += 1
+                return transcriptState.updatePartial(text, audioOffset: callbackAudioOffset)
             }
             if changed {
                 publishCurrentSnapshot(sessionID: sessionID)
@@ -550,6 +622,7 @@
         }
 
         func commitEOU(_ text: String, sessionID: UUID) {
+            RealtimeLog.log("fluid", "eou text=\(RealtimeLog.text(text))")
             let changed = stateLock.withLock { () -> Bool in
                 let committed = transcriptState.commit(
                     text,
@@ -603,10 +676,20 @@
                 return shouldReport
             }
             guard shouldReport else { return }
+            RealtimeLog.warn("fluid", "runtime failure error=\(String(describing: error))")
             delegate?.realtimeFluidAudioRecognizer(self, sessionID: sessionID, didFail: error)
         }
 
         func floatSamples(from pcmBuffer: AVAudioPCMBuffer) -> [Float]? {
+            let format = pcmBuffer.format
+            if format.sampleRate == 16000,
+               format.channelCount == 1,
+               format.commonFormat == .pcmFormatInt16,
+               !format.isInterleaved,
+               let channel = pcmBuffer.int16ChannelData?.pointee
+            {
+                return (0 ..< Int(pcmBuffer.frameLength)).map { Float(channel[$0]) / 32768 }
+            }
             conversionLock.lock()
             let convertedBuffer = converter.pcmBuffer(from: pcmBuffer)
             conversionLock.unlock()
