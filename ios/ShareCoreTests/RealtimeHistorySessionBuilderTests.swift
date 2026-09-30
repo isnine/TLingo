@@ -88,4 +88,27 @@ struct RealtimeHistorySessionBuilderTests {
 
         #expect(builder.segments[0].offset == 20)
     }
+
+    @Test("Places sentences at recognizer audio time, in order, after the timeline base")
+    func placesSentencesAtRecognizerAudioTime() {
+        var builder = RealtimeHistorySessionBuilder()
+        builder.start(at: Date(timeIntervalSince1970: 100), recognitionTimelineBase: 1)
+        builder.noteRecognition(timings: [
+            RealtimeRecognitionTokenTiming(token: "Stale", startTime: 0.2, endTime: 0.8, confidence: 1),
+            RealtimeRecognitionTokenTiming(token: "Hello,", startTime: 2, endTime: 2.5, confidence: 1),
+            RealtimeRecognitionTokenTiming(token: " hello.", startTime: 2.5, endTime: 3, confidence: 1),
+            RealtimeRecognitionTokenTiming(token: " Hello", startTime: 5, endTime: 5.5, confidence: 1),
+            RealtimeRecognitionTokenTiming(token: " again.", startTime: 5.5, endTime: 6, confidence: 1),
+        ])
+
+        builder.sync(
+            pairs: [
+                SentencePair(original: "Hello, hello.", translation: "你好，你好。"),
+                SentencePair(original: "Hello again.", translation: "又见面了。"),
+            ],
+            at: Date(timeIntervalSince1970: 110)
+        )
+
+        #expect(builder.segments.map(\.offset) == [1, 4])
+    }
 }

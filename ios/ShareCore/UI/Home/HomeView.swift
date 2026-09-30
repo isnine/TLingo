@@ -1327,6 +1327,9 @@ public struct HomeView: View {
                 $0.isDefault && (entitlement.isPro || !$0.isPremium)
             }
         }
+        if displayModels.isEmpty, !viewModel.isLoadingModels, AppleTranslationService.shared.isAvailable {
+            displayModels = [ModelConfig.appleTranslate]
+        }
         return displayModels
     }
 

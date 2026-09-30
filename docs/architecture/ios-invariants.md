@@ -65,6 +65,8 @@ review_triggers:
 - Concurrent writers use revision or field-level merge; a stale whole-session snapshot cannot overwrite newer autosave data.
 - Stable segment IDs represent semantic content, not array position.
 - Multi-lane realtime History stores one shared audio session with stable track and segment IDs. Legacy `segments` and model fields project the primary track.
+- A session without stored tracks projects its legacy `segments` as one track whose ID is the session request ID, so repeated autosaves merge into that track.
+- Single-lane History segment offsets come from recognizer audio time (Apple Speech word time ranges, or segment offsets), measured on the same buffers as the recording. Text-arrival time is only a fallback when the recognizer reports no timing.
 - macOS History audio reconstruction adds a source-scoped track; it cannot replace the original realtime track or a track from another audio source.
 - Reconstructed segments retain their audio offset, duration and anonymous speaker ID so playback, export and Chat context use the same timeline.
 - MOSS diarization is available for macOS Apple Silicon History reconstruction and imported-audio lanes. It is never available for live microphone or Mac Audio capture, and its weights remain an on-demand cache.

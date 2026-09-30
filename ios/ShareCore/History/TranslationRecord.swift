@@ -355,6 +355,16 @@ public struct RealtimeHistoryTrack: Codable, Identifiable, Hashable, Sendable {
         return [durations[0].key, durations[1].key]
     }
 
+    /// Always exactly one active segment (nil only for an empty track): the latest segment that has
+    /// started, or the first one before playback reaches it, so gaps and overlaps never leave
+    /// zero or two highlights.
+    public func activeSegmentID(at time: TimeInterval) -> UUID? {
+        let ordered = segments.enumerated().sorted {
+            $0.element.offset == $1.element.offset ? $0.offset < $1.offset : $0.element.offset < $1.element.offset
+        }
+        return (ordered.last { $0.element.offset <= time } ?? ordered.first)?.element.id
+    }
+
     public func closestSegmentID(to time: TimeInterval) -> UUID? {
         segments.min {
             $0.distance(to: time) < $1.distance(to: time)
@@ -476,7 +486,9 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
                         ? .macAudio
                         : .microphone
                 )
+            // A stable ID keeps every autosave of this session merging into one track.
             let legacyTrack = RealtimeHistoryTrack(
+                id: requestID,
                 audioSource: legacyAudioSource,
                 recognitionModelID: recognitionModel?.modelID ?? RecognitionModelDescriptor.appleSpeech.id,
                 recognitionModelDisplayName: recognitionModel?.modelDisplayName ??
@@ -567,6 +579,7 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
         if tracks.isEmpty {
             let recognitionModel = transcriptionModels.first
             let legacyTrack = RealtimeHistoryTrack(
+                id: requestID,
                 audioSource: primaryAudioSource,
                 recognitionModelID: recognitionModel?.modelID ?? RecognitionModelDescriptor.appleSpeech.id,
                 recognitionModelDisplayName: recognitionModel?.modelDisplayName ??

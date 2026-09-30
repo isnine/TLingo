@@ -257,6 +257,12 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 }
             } detail: {
                 contentView(for: selection ?? .tab(.home))
+                    .realtimeSavedNotice(store: realtimeStore) { requestID in
+                        refreshHistory()
+                        if let record = historyRecords.first(where: { $0.requestID == requestID }) {
+                            selection = .historyRecord(record.id)
+                        }
+                    }
             }
             .toolbarBackground(colors.background, for: .windowToolbar)
             .toolbarBackground(.visible, for: .windowToolbar)
@@ -461,6 +467,9 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             } detail: {
                 let currentSelection = selection ?? .tab(.home)
                 contentView(for: currentSelection)
+                    .realtimeSavedNotice(store: realtimeStore) { _ in
+                        selection = .tab(.history)
+                    }
                     .toolbar {
                         if shouldShowNavigationBarSidebarButton(for: currentSelection) {
                             ToolbarItem(placement: .topBarLeading) {

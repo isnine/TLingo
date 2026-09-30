@@ -109,14 +109,17 @@
 
         #if canImport(Translation)
             @available(iOS 17.4, macOS 14.4, *)
-            @Test("Apple Translate supported language pair can start realtime")
-            func appleTranslateSupportedLanguagePairCanStartRealtime() {
+            @Test("Apple Translate language pair without a downloaded pack blocks realtime")
+            func appleTranslateSupportedLanguagePairBlocksRealtime() {
                 let error = RealtimeSessionStore.appleTranslateLanguagePreflightFailure(
                     status: .supported,
                     languagePair: "English -> 简体中文"
                 )
 
-                #expect(error == nil)
+                guard case .languagePackNotInstalled? = error else {
+                    Issue.record("Expected languagePackNotInstalled, got \(String(describing: error))")
+                    return
+                }
             }
         #endif
 

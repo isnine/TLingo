@@ -54,18 +54,24 @@
 
     public struct RealtimeLaneLatency: Equatable, Sendable {
         public let recognitionMilliseconds: Int
-        public let translationMilliseconds: Int
+        /// `nil` until the first translation of the session completes, or when the lane does not translate.
+        public let translationMilliseconds: Int?
 
         public var totalMilliseconds: Int {
-            recognitionMilliseconds + translationMilliseconds
+            recognitionMilliseconds + (translationMilliseconds ?? 0)
         }
 
         public init(
             recognitionLatency: TimeInterval,
-            translationLatency: TimeInterval
+            translationLatency: TimeInterval?
         ) {
             recognitionMilliseconds = Self.milliseconds(from: recognitionLatency)
-            translationMilliseconds = Self.milliseconds(from: translationLatency)
+            translationMilliseconds = translationLatency.map(Self.milliseconds(from:))
+        }
+
+        public init(recognitionMilliseconds: Int, translationMilliseconds: Int?) {
+            self.recognitionMilliseconds = recognitionMilliseconds
+            self.translationMilliseconds = translationMilliseconds
         }
 
         private static func milliseconds(from duration: TimeInterval) -> Int {

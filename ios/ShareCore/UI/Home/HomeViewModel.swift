@@ -244,6 +244,9 @@ public final class HomeViewModel: ObservableObject {
 
     @Published public private(set) var actions: [ActionConfig]
     @Published public private(set) var models: [ModelConfig] = []
+    @Published public private(set) var isLoadingModels = false
+    /// Cached catalogs can be stale, so enabled model IDs are reconciled only against a server response.
+    private var hasFetchedModels = false
     @Published public var selectedActionID: UUID?
     @Published public private(set) var modelRuns: [ModelRunViewState] = []
 
@@ -591,7 +594,7 @@ public final class HomeViewModel: ObservableObject {
 
         if wantsGrammarCheck {
             let result = "\(SnapshotLocaleCatalog.grammarCorrectedText)\n\n\(snapshotLocale.grammarExplanation)"
-            let model = SnapshotFixtureData.cloudModels.first { $0.id == "gpt-5-nano" } ?? Self.fallbackModels[0]
+            let model = SnapshotFixtureData.cloudModels.first { $0.id == "gpt-5-nano" } ?? ModelConfig.appleTranslate
             modelRuns = [
                 ModelRunViewState(
                     model: model,
@@ -829,7 +832,7 @@ public final class HomeViewModel: ObservableObject {
                 "getEnabledModels: enabledIDs=\(enabledIDs, privacy: .public), models.count=\(self.models.count, privacy: .public), isPremium=\(isPremium, privacy: .public)"
             )
 
-        let modelCatalog = allowModelFallback && models.isEmpty ? Self.fallbackModels : models
+        let modelCatalog = models
         var available: [ModelConfig]
         if enabledIDs.isEmpty {
             available = modelCatalog.filter { $0.isDefault }
@@ -883,30 +886,37 @@ public final class HomeViewModel: ObservableObject {
             available.insert(ModelConfig.microsoftTranslate, at: insertIndex)
         }
 
+        // Last resort when neither the server nor the user settings yield a model.
+        // `allowModelFallback` callers cannot wait for the catalog request to finish.
+        if available.isEmpty, !isLoadingModels || allowModelFallback,
+           AppleTranslationService.shared.isAvailable,
+           let action = selectedAction, action.supportsAppleTranslate
+        {
+            available = [ModelConfig.appleTranslate]
+        }
+
         logger.debug("getEnabledModels result: \(available.map(\.id), privacy: .public)")
         return available
     }
-
-    private static let fallbackModels: [ModelConfig] = [
-        ModelConfig(id: "gpt-5-nano", displayName: "GPT-5 Nano", isDefault: true, isPremium: false),
-    ]
 
     private func loadModels() {
         // Display cached models immediately if available, then refresh in background.
         if let cached = ModelsService.shared.getCachedModels(), !cached.isEmpty {
             models = cached
             logger.debug("loadModels: loaded \(cached.count, privacy: .public) cached models")
-            updateEnabledModels()
         } else {
             logger.debug("loadModels: no cached models, fetching from network")
         }
 
+        isLoadingModels = true
         Task { [weak self] in
             guard let self else { return }
             do {
                 let fetchedModels = try await ModelsService.shared.fetchModels(forceRefresh: true)
                 await MainActor.run { [weak self] in
                     guard let self else { return }
+                    self.isLoadingModels = false
+                    self.hasFetchedModels = true
                     self.models = fetchedModels
                     logger.debug("loadModels: fetched \(fetchedModels.count, privacy: .public) models from network")
                     self.updateEnabledModels()
@@ -921,16 +931,11 @@ public final class HomeViewModel: ObservableObject {
                 logger.error("Failed to fetch models: \(error, privacy: .public)")
                 await MainActor.run { [weak self] in
                     guard let self else { return }
-                    // Use fallback models so the app is functional even offline
-                    if self.models.isEmpty {
-                        self.models = Self.fallbackModels
-                        logger.debug("Using fallback models for offline mode")
-                        self.updateEnabledModels()
-
-                        if self.pendingAutoAction {
-                            self.pendingAutoAction = false
-                            self.performSelectedAction()
-                        }
+                    // Keep the cached catalog; getEnabledModels falls back to Apple Translate without one.
+                    self.isLoadingModels = false
+                    if self.pendingAutoAction {
+                        self.pendingAutoAction = false
+                        self.performSelectedAction()
                     }
                 }
             }
@@ -939,7 +944,7 @@ public final class HomeViewModel: ObservableObject {
 
     private func updateEnabledModels() {
         let availableIDs = Set(models.map { $0.id })
-        guard !availableIDs.isEmpty else { return }
+        guard hasFetchedModels, !availableIDs.isEmpty else { return }
 
         let currentEnabled = preferences.enabledModelIDs
         // Preserve built-in model IDs that do not come from the cloud model list.
@@ -1033,7 +1038,7 @@ public final class HomeViewModel: ObservableObject {
         )
 
         guard !modelsToUse.isEmpty else {
-            if models.isEmpty {
+            if models.isEmpty, isLoadingModels {
                 // Models still loading from network; queue for auto-trigger.
                 logger.debug("Models not loaded yet; marking pending auto-action.")
                 pendingAutoAction = true

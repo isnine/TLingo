@@ -98,6 +98,7 @@
             }
             snapshot.sourceText = transcriptAccumulator.append(result, afterLongSilence: false)
             snapshot.phase = .recognizing
+            updateRecognitionLatency(capturedAudioOffset: capturedAudioOffset)
 
             if !configuration.translationProvider.performsTranslation {
                 syncIndependentSourceHistory()
@@ -112,6 +113,18 @@
                 fallbackEndOffset: result.audioOffset
             ))
             syncApplePresentation()
+        }
+
+        /// Live recognition latency: how far the captured audio clock is ahead of the newest recognized text.
+        private func updateRecognitionLatency(capturedAudioOffset: TimeInterval) {
+            guard audioSource != .importedAudio,
+                  let end = (pendingRecognitionSegment ?? recognitionSegments.last)?.endOffset
+            else { return }
+            let latency = RealtimeLaneLatency(
+                recognitionLatency: capturedAudioOffset - end,
+                translationLatency: snapshot.latency?.translationMilliseconds.map { TimeInterval($0) / 1000 }
+            )
+            snapshot.latency = latency
         }
 
         func setPaused(_ isPaused: Bool) {

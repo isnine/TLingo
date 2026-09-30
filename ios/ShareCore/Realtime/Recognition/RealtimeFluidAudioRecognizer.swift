@@ -36,12 +36,15 @@
         }
     }
 
-    private enum RealtimeFluidAudioStreamingEngine: Sendable {
+    enum RealtimeFluidAudioStreamingEngine: Sendable {
+        case eou(StreamingEouAsrManager)
         case standard(any StreamingAsrManager)
         case multilingual(StreamingNemotronMultilingualAsrManager)
 
         func setPartialTranscriptCallback(_ callback: @escaping @Sendable (String) -> Void) async {
             switch self {
+            case let .eou(manager):
+                await manager.setPartialTranscriptCallback(callback)
             case let .standard(manager):
                 await manager.setPartialTranscriptCallback(callback)
             case let .multilingual(manager):
@@ -51,6 +54,9 @@
 
         func process(_ buffer: AVAudioPCMBuffer) async throws {
             switch self {
+            case let .eou(manager):
+                try await manager.appendAudio(buffer)
+                try await manager.processBufferedAudio()
             case let .standard(manager):
                 try await manager.appendAudio(buffer)
                 try await manager.processBufferedAudio()
@@ -61,6 +67,8 @@
 
         func finish() async throws -> String {
             switch self {
+            case let .eou(manager):
+                return try await manager.finish()
             case let .standard(manager):
                 return try await manager.finish()
             case let .multilingual(manager):
@@ -70,6 +78,8 @@
 
         func reset() async throws {
             switch self {
+            case let .eou(manager):
+                try await manager.reset()
             case let .standard(manager):
                 try await manager.reset()
             case let .multilingual(manager):
@@ -267,6 +277,7 @@
         private struct StopResources {
             let processingTask: Task<Void, Never>?
             let streamingEngine: RealtimeFluidAudioStreamingEngine?
+            let model: RecognitionFluidAudioModel?
             let sessionID: UUID
         }
 
@@ -338,44 +349,20 @@
                 throw RealtimeRecognizerError.unsupportedModel(model.id)
             }
 
-            let modelDirectory = await RecognitionModelStore.shared.cachedModelURL(for: model)
-            let loadStartedAt = Date()
-            let engine: RealtimeFluidAudioStreamingEngine
-            switch fluidAudioModel {
-            case .parakeetEOU320, .parakeetEOU1280:
-                let manager = StreamingEouAsrManager(
-                    chunkSize: fluidAudioModel == .parakeetEOU320 ? .ms320 : .ms1280
-                )
-                try await manager.loadModels(to: modelDirectory)
+            let waitStartedAt = Date()
+            let engine = try await RealtimeFluidAudioEngineCache.shared.checkOut(model)
+            switch engine {
+            case let .eou(manager):
                 await manager.setEouCallback { [weak self] text in
                     self?.commitEOU(text, sessionID: sessionID)
                 }
-                engine = .standard(manager)
-            case .nemotronStreaming560, .nemotronStreaming1120, .nemotronStreaming2240:
-                let chunkSize: NemotronChunkSize = switch fluidAudioModel {
-                case .nemotronStreaming560: .ms560
-                case .nemotronStreaming1120: .ms1120
-                default: .ms2240
-                }
-                let manager = StreamingNemotronAsrManager(
-                    requestedChunkSize: chunkSize
-                )
-                let repo = chunkSize.repo
-                try await manager.loadModels(
-                    from: modelDirectory.appendingPathComponent(repo.folderName, isDirectory: true)
-                )
-                engine = .standard(manager)
-            case .nemotronMultilingual2240:
-                let variantDirectory = modelDirectory
-                    .appendingPathComponent(Repo.nemotronMultilingual.folderName, isDirectory: true)
-                    .appendingPathComponent("multilingual/2240ms", isDirectory: true)
-                let manager = StreamingNemotronMultilingualAsrManager()
-                try await manager.loadModels(from: variantDirectory)
+            case .standard:
+                break
+            case let .multilingual(manager):
                 let languageCode = locale.identifier == "und"
                     ? "auto"
                     : RealtimeFluidAudioLanguageMapper.nemotronLanguageCode(locale.identifier)
                 await manager.setLanguage(languageCode)
-                engine = .multilingual(manager)
             }
             await engine.setPartialTranscriptCallback { [weak self] text in
                 self?.publishStreamingPartial(text, sessionID: sessionID)
@@ -387,8 +374,8 @@
             RealtimeLog.log(
                 "fluid",
                 """
-                model loaded model=\(fluidAudioModel.rawValue) locale=\(locale.identifier) \
-                loadMs=\(Int(Date().timeIntervalSince(loadStartedAt) * 1000))
+                model ready model=\(fluidAudioModel.rawValue) locale=\(locale.identifier) \
+                waitMs=\(Int(Date().timeIntervalSince(waitStartedAt) * 1000))
                 """
             )
         }
@@ -469,6 +456,7 @@
                 return StopResources(
                     processingTask: processingTask,
                     streamingEngine: streamingEngine,
+                    model: model,
                     sessionID: activeSessionID
                 )
             }
@@ -492,6 +480,10 @@
                     }
                     publishCurrentSnapshot(isTerminal: true, sessionID: resources.sessionID)
                     try await engine.reset()
+                    let hasFailed = stateLock.withLock { hasReportedRuntimeFailure }
+                    if let model = resources.model, !hasFailed {
+                        await RealtimeFluidAudioEngineCache.shared.checkIn(engine, model: model)
+                    }
                 }
             } catch {
                 reportRuntimeFailure(error, sessionID: resources.sessionID)

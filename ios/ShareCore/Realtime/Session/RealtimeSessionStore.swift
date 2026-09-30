@@ -16,11 +16,20 @@
         public let id: UUID
         public let title: String
         public let message: String
+        /// The start failed only because an Apple Translate language pack is missing; starting
+        /// again shows the system download prompt.
+        public let offersAppleTranslationDownload: Bool
 
-        public init(id: UUID = UUID(), title: String, message: String) {
+        public init(
+            id: UUID = UUID(),
+            title: String,
+            message: String,
+            offersAppleTranslationDownload: Bool = false
+        ) {
             self.id = id
             self.title = title
             self.message = message
+            self.offersAppleTranslationDownload = offersAppleTranslationDownload
         }
     }
 
@@ -78,8 +87,28 @@
         @Published public private(set) var statusText = String(localized: "Ready")
         @Published public private(set) var errorMessage: String?
         @Published public private(set) var startFailureAlert: RealtimeStartFailureAlert?
-        @Published public private(set) var audioLevel: Float?
-        @Published public private(set) var audioSampleCount = 0
+        /// Set after a stopped session (with saved audio) is written to History; views show a tappable notice.
+        @Published public private(set) var savedHistoryNotice: RealtimeSavedHistoryNotice?
+        /// Set while a start waits for a local recognition model to finish loading.
+        @Published public private(set) var recognitionModelLoad: RealtimeModelLoadProgress?
+        /// Set while a start waits for the system Apple Translate download prompt. Language packs can
+        /// only be downloaded through `prepareTranslation()` on a session from `.translationTask`,
+        /// so realtime views host that modifier and hand the session back. Kept after a request so a
+        /// retry for the same pair can `invalidate()` it: `.translationTask` ignores an equal new value.
+        @Published public private(set) var appleTranslationDownloadConfiguration: TranslationSession.Configuration?
+        private var appleTranslationDownloadRequestID: UUID?
+        private var isAppleTranslationDownloadPromptPresented = false
+        /// The system download prompt only appears when the user asks for it from the start failure alert.
+        private var allowsAppleTranslationDownloadPromptOnNextStart = false
+        private var appleTranslationDownloadContinuation: CheckedContinuation<Void, Never>?
+        /// Not `@Published`: level updates arrive ~20 times per second and would redraw every
+        /// observer of the store. Views read `inputLevel` instead.
+        public private(set) var audioLevel: Float? {
+            didSet { inputLevel.update(decibels: audioLevel) }
+        }
+
+        public private(set) var audioSampleCount = 0
+        public let inputLevel = RealtimeInputLevel()
         #if os(macOS)
             @Published public private(set) var laneConfigurations: [RealtimeLaneConfiguration] = []
             @Published public private(set) var laneSnapshots: [RealtimeLaneSnapshot] = []
@@ -148,6 +177,9 @@
         private var captionClearAnchor = RealtimeCaptionDisplayClearAnchor.empty
         private var historyCheckpoint = RealtimeHistoryCheckpoint()
         private var historySessionBuilder = RealtimeHistorySessionBuilder()
+        /// Latest recognizer audio position; a history session started mid-run (transcript
+        /// cleared) begins its recording here.
+        private var recognitionAudioPosition: TimeInterval = 0
         private var lastRealtimeHistoryAutosaveAt: Date?
         private var lastRealtimeHistoryAutosaveSegments: [RealtimeHistorySegment]?
         private var lastRealtimeHistoryAutosaveRecordings: [RealtimeHistoryAudioRecording]?
@@ -772,6 +804,7 @@
             secondaryAudioHistoryRecorder.finish()
             statusText = String(localized: "Saving realtime history")
             saveRealtimeHistoryIfPossible(generateTitle: true)
+            publishSavedHistoryNoticeIfNeeded()
             isRunning = false
             isPaused = false
             audioLevel = nil
@@ -795,8 +828,40 @@
             }
         }
 
+        public func dismissSavedHistoryNotice() {
+            savedHistoryNotice = nil
+        }
+
+        /// Starts loading the selected local recognition model so a later start does not wait for it.
+        public func prewarmRecognitionModel() async {
+            #if os(iOS) && arch(arm64) && canImport(FluidAudio)
+                guard !isRunning, !isStarting, inputSource == .microphone else { return }
+                let model = RecognitionModelStore.selectableDescriptor(
+                    forModelID: preferences.realtimeRecognitionModelID
+                )
+                guard model.runtime == .fluidAudio,
+                      await RecognitionModelStore.shared.isModelCached(model)
+                else {
+                    return
+                }
+                await RealtimeFluidAudioEngineCache.shared.prewarm(model)
+            #endif
+        }
+
+        private func publishSavedHistoryNoticeIfNeeded() {
+            let recordingCount = lastRealtimeHistoryAutosaveRecordings?.count ?? 0
+            logRealtime("saved history notice recordings=\(recordingCount)")
+            guard recordingCount > 0 else { return }
+            savedHistoryNotice = RealtimeSavedHistoryNotice(requestID: historySessionBuilder.requestID)
+        }
+
         public func dismissStartFailureAlert() {
             startFailureAlert = nil
+        }
+
+        /// Lets the next start show the system Apple Translate download prompt for a missing language pack.
+        public func allowAppleTranslationDownloadOnNextStart() {
+            allowsAppleTranslationDownloadPromptOnNextStart = true
         }
 
         public func cycleCaptionDisplayMode() {
@@ -1184,6 +1249,7 @@
         #endif
 
         private func startRecognition(sessionID: UUID) async throws -> Int {
+            recognitionAudioPosition = 0
             #if os(macOS)
                 for configuration in laneConfigurations {
                     let model = configuration.recognitionModel
@@ -1235,6 +1301,11 @@
                         return transcriber.sampleRate
                     case .fluidAudio:
                         #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
+                            if let progress = await RealtimeFluidAudioEngineCache.shared.loadProgress(for: model) {
+                                statusText = String(localized: "Loading recognition model...")
+                                recognitionModelLoad = progress
+                            }
+                            defer { recognitionModelLoad = nil }
                             let recognizer = RealtimeFluidAudioRecognizer(delegate: self)
                             try await recognizer.start(model: model, locale: speechLocale(), sessionID: sessionID)
                             activeRecognizer.set(recognizer)
@@ -1364,6 +1435,8 @@
         private func ensureAppleTranslateLanguagesInstalledIfNeeded(
             providers requestedProviders: Set<RealtimeTranslationProvider>? = nil
         ) async throws {
+            let allowsDownloadPrompt = allowsAppleTranslationDownloadPromptOnNextStart
+            allowsAppleTranslationDownloadPromptOnNextStart = false
             let providers: Set<RealtimeTranslationProvider> = {
                 if let requestedProviders {
                     return requestedProviders
@@ -1402,11 +1475,19 @@
                 $0 == .appleTranslationRealtime ? .lowLatency : .automatic
             })
             for strategy in strategies {
-                let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
+                var status = try await AppleTranslationService.shared.languageAvailabilityStatus(
                     source: source,
                     target: target,
                     strategy: strategy
                 )
+                if status == .supported, allowsDownloadPrompt {
+                    await requestAppleTranslationLanguageDownload(source: source, target: target, strategy: strategy)
+                    status = try await AppleTranslationService.shared.languageAvailabilityStatus(
+                        source: source,
+                        target: target,
+                        strategy: strategy
+                    )
+                }
                 if let error = Self.appleTranslateLanguagePreflightFailure(
                     status: status,
                     languagePair: languagePair
@@ -1414,6 +1495,79 @@
                     throw error
                 }
             }
+        }
+
+        private func requestAppleTranslationLanguageDownload(
+            source: Locale.Language,
+            target: Locale.Language,
+            strategy: AppleTranslationAvailabilityStrategy
+        ) async {
+            finishAppleTranslationLanguageDownload(requestID: appleTranslationDownloadRequestID)
+            var configuration: TranslationSession.Configuration
+            if #available(iOS 26.4, macOS 26.4, *), strategy == .lowLatency {
+                configuration = .init(source: source, target: target, preferredStrategy: .lowLatency)
+            } else {
+                configuration = .init(source: source, target: target)
+            }
+            if var previous = appleTranslationDownloadConfiguration,
+               previous.source == configuration.source,
+               previous.target == configuration.target,
+               Self.hasSameStrategy(previous, configuration)
+            {
+                previous.invalidate()
+                configuration = previous
+            }
+            let requestID = UUID()
+            logRealtime("apple translate download requested strategy=\(strategy)")
+            await withCheckedContinuation { continuation in
+                appleTranslationDownloadRequestID = requestID
+                isAppleTranslationDownloadPromptPresented = false
+                appleTranslationDownloadContinuation = continuation
+                appleTranslationDownloadConfiguration = configuration
+                // Starts outside the realtime view (e.g. the floating caption window) have no
+                // `.translationTask` host; fail the preflight instead of waiting forever.
+                Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(10))
+                    guard let self,
+                          self.appleTranslationDownloadRequestID == requestID,
+                          !self.isAppleTranslationDownloadPromptPresented
+                    else {
+                        return
+                    }
+                    self.logRealtime("apple translate download prompt not presented")
+                    self.finishAppleTranslationLanguageDownload(requestID: requestID)
+                }
+            }
+        }
+
+        /// Called from a realtime view's `.translationTask` with the session for
+        /// `appleTranslationDownloadConfiguration`.
+        public func prepareAppleTranslationLanguageDownload(using session: TranslationSession) async {
+            guard let requestID = appleTranslationDownloadRequestID else { return }
+            // Keeps the prompt timeout from firing while the user decides.
+            isAppleTranslationDownloadPromptPresented = true
+            do {
+                try await session.prepareTranslation()
+                logRealtime("apple translate download prepared")
+            } catch {
+                logRealtime("apple translate download failed error=\(Self.describe(error))")
+            }
+            finishAppleTranslationLanguageDownload(requestID: requestID)
+        }
+
+        private static func hasSameStrategy(
+            _ lhs: TranslationSession.Configuration,
+            _ rhs: TranslationSession.Configuration
+        ) -> Bool {
+            guard #available(iOS 26.4, macOS 26.4, *) else { return true }
+            return lhs.preferredStrategy == rhs.preferredStrategy
+        }
+
+        private func finishAppleTranslationLanguageDownload(requestID: UUID?) {
+            guard let requestID, requestID == appleTranslationDownloadRequestID else { return }
+            appleTranslationDownloadRequestID = nil
+            appleTranslationDownloadContinuation?.resume()
+            appleTranslationDownloadContinuation = nil
         }
 
         private func handleRecognized(_ result: RealtimeRecognitionResult) {
@@ -1425,6 +1579,18 @@
                 sourceText = recognizedSourceText
             }
             updateTranscriptPresentation()
+            let recognitionTimings = result.snapshot.map(Self.recognitionTimings(in:)) ?? []
+            recognitionAudioPosition = max(
+                recognitionAudioPosition,
+                result.audioOffset ?? recognitionTimings.last?.endTime ?? 0
+            )
+            if usesRealtimeSessionHistory {
+                historySessionBuilder.noteSource(
+                    committedCount: translationState.sourceSegments.count,
+                    hasText: !pendingSourceText.isEmpty
+                )
+                historySessionBuilder.noteRecognition(timings: recognitionTimings)
+            }
             Self.logSourceSegmentChange(
                 from: previousSegments,
                 to: translationState.sourceSegments,
@@ -1444,6 +1610,21 @@
             statusText = result
                 .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
             scheduleTranslation()
+        }
+
+        /// Word timings when the recognizer reports them; otherwise each timed segment is one span.
+        private static func recognitionTimings(
+            in snapshot: RealtimeRecognitionSnapshot
+        ) -> [RealtimeRecognitionTokenTiming] {
+            guard snapshot.tokenTimings.isEmpty else { return snapshot.tokenTimings }
+            return (snapshot.stableSegments + [snapshot.pendingSegment].compactMap(\.self)).map {
+                RealtimeRecognitionTokenTiming(
+                    token: $0.text,
+                    startTime: $0.startOffset,
+                    endTime: $0.endOffset,
+                    confidence: 0.5
+                )
+            }
         }
 
         private func finalizePendingRecognition() {
@@ -1839,7 +2020,7 @@
         private func startRealtimeHistorySessionIfNeeded() {
             resetRealtimeHistoryAutosave()
             if usesRealtimeSessionHistory {
-                historySessionBuilder.start()
+                historySessionBuilder.start(recognitionTimelineBase: recognitionAudioPosition)
                 audioHistoryRecorder.start(
                     requestID: historySessionBuilder.requestID,
                     source: activeHistoryAudioSource
@@ -2046,7 +2227,11 @@
         private nonisolated static func startFailureAlert(for error: Error) -> RealtimeStartFailureAlert {
             RealtimeStartFailureAlert(
                 title: String(localized: "Realtime Failed"),
-                message: startFailureAlertMessage(for: error)
+                message: startFailureAlertMessage(for: error),
+                offersAppleTranslationDownload: {
+                    if case .languagePackNotInstalled? = error as? LocalProviderError { return true }
+                    return false
+                }()
             )
         }
 
@@ -2056,8 +2241,10 @@
             languagePair: String
         ) -> LocalProviderError? {
             switch status {
-            case .installed, .supported:
+            case .installed:
                 return nil
+            case .supported:
+                return .languagePackNotInstalled(languagePair: languagePair)
             case .unsupported:
                 return .translationFailed(AppleTranslationErrorFormatter.withLanguagePair(
                     "Apple Translate does not support this language pair.",
@@ -2809,3 +2996,20 @@
         }
     }
 #endif
+
+public struct RealtimeSavedHistoryNotice: Identifiable, Equatable, Sendable {
+    public let id = UUID()
+    public let requestID: UUID
+}
+
+public struct RealtimeModelLoadProgress: Equatable, Sendable {
+    public let startedAt: Date
+    /// Last measured load time for this model; nil before the first load finishes.
+    public let estimatedDuration: TimeInterval?
+
+    /// Estimated completion, capped below 1 because the real load has no progress callback.
+    public func fraction(at date: Date) -> Double? {
+        guard let estimatedDuration, estimatedDuration > 0 else { return nil }
+        return min(date.timeIntervalSince(startedAt) / estimatedDuration, 0.95)
+    }
+}

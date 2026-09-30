@@ -1,6 +1,7 @@
 #if os(macOS) || os(iOS)
     import SwiftUI
 
+    /// Picker page for the realtime recognition model, meant to be pushed from a settings row.
     public struct RecognitionModelListView: View {
         @ObservedObject private var preferences: AppPreferences
         private let models: [RecognitionModelDescriptor]
@@ -12,7 +13,6 @@
         @State private var downloadTasks: [String: Task<Void, Never>] = [:]
         @State private var unsupportedLanguageMessage = ""
         @State private var isUnsupportedLanguageAlertPresented = false
-        @State private var isExpanded = false
 
         public init(
             preferences: AppPreferences = .shared,
@@ -25,168 +25,153 @@
         }
 
         public var body: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                Button {
-                    isExpanded.toggle()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                            .font(.caption2)
-                        Text(isExpanded ? "Hide Models" : "Show All Models")
-                            .font(.caption)
-                        Spacer()
-                        Text("\(models.count)")
-                            .font(.caption2)
+            Form {
+                if isDisabled {
+                    Section {
+                        Label("Stop realtime to change the recognition model.", systemImage: "info.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
 
-                ForEach(Array(visibleModels.enumerated()), id: \.element.id) { index, model in
-                    modelRow(model)
-                    if index < visibleModels.count - 1 {
-                        Divider()
-                    }
-                }
+                modelSection("On This Device", models: models.filter { isAvailable($0) && isCached($0) })
+                modelSection("Available to Download", models: models.filter { isAvailable($0) && !isCached($0) })
+                modelSection("Unavailable", models: models.filter { !isAvailable($0) })
             }
-            .task {
+            .navigationTitle("Recognition Model")
+            // Downloads outlive this page, so poll the store whenever any download is in flight.
+            .task(id: hasActiveDownloads) {
                 await refreshModelState()
+                while !Task.isCancelled, hasActiveDownloads {
+                    try? await Task.sleep(for: .milliseconds(250))
+                    await refreshModelState()
+                }
             }
             .alert(Text("Source Language Not Supported"), isPresented: $isUnsupportedLanguageAlertPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(unsupportedLanguageMessage)
             }
-            .onDisappear {
-                for (modelID, task) in downloadTasks {
-                    task.cancel()
-                    if let model = models.first(where: { $0.id == modelID }) {
-                        Task { await RecognitionModelStore.shared.cancelDownload(model) }
-                    }
-                }
-            }
-        }
-
-        private var visibleModels: [RecognitionModelDescriptor] {
-            guard !isExpanded else { return models }
-            let selectedModelID = RecognitionModelStore
-                .selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
-                .id
-            let selectedModels = models.filter { $0.id == selectedModelID }
-            return selectedModels.isEmpty ? Array(models.prefix(1)) : selectedModels
-        }
-
-        private func modelRow(_ model: RecognitionModelDescriptor) -> some View {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(model.title)
-                            .font(.system(size: 13, weight: .semibold))
-
-                        Text(model.recommendationText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Text(model.limitsText)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer(minLength: 10)
-
-                    actionView(for: model)
-                }
-
-                Text(detailText(for: model))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                if let error = downloadErrors[model.id] {
-                    Text(error)
-                        .font(.caption2)
-                        .foregroundStyle(.red)
-                }
-
-                if isDownloading(model) {
-                    ProgressView(value: downloadProgress[model.id] ?? 0)
-                        .controlSize(.small)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .buttonStyle(.borderless)
         }
 
         @ViewBuilder
-        private func actionView(for model: RecognitionModelDescriptor) -> some View {
-            if !model.isSupportedOnCurrentDevice {
-                Text("Unavailable")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if isDownloading(model) {
-                Button("Cancel") {
-                    cancelDownload(model)
-                }
-                .disabled(isDisabled)
-            } else if !isCached(model), model.download != nil {
-                Button("Download") {
-                    download(model)
-                }
-                .disabled(isDisabled)
-            } else if RecognitionModelStore.isSelectable(model) {
-                VStack(alignment: .trailing, spacing: 6) {
-                    Button {
-                        use(model)
-                    } label: {
-                        if isSelected(model) {
-                            Text("Using")
-                        } else {
-                            Text("Use")
-                        }
-                    }
-                    .disabled(isDisabled || isSelected(model))
-                    if model.download != nil, !isSelected(model) {
-                        Button("Delete") {
-                            delete(model)
-                        }
-                        .disabled(isDisabled)
-                    }
-                }
-            } else {
-                VStack(alignment: .trailing, spacing: 6) {
-                    Text("Runtime unavailable")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    if model.download != nil, isCached(model) {
-                        Button("Delete") {
-                            delete(model)
-                        }
-                        .disabled(isDisabled)
+        private func modelSection(_ title: LocalizedStringKey, models: [RecognitionModelDescriptor]) -> some View {
+            if !models.isEmpty {
+                Section(title) {
+                    ForEach(models) { model in
+                        modelRow(model)
                     }
                 }
             }
         }
 
-        private func detailText(for model: RecognitionModelDescriptor) -> String {
-            if isDownloading(model) {
-                return String(localized: "Downloading \(Int((downloadProgress[model.id] ?? 0) * 100))%")
+        private func modelRow(_ model: RecognitionModelDescriptor) -> some View {
+            Button {
+                primaryAction(for: model)
+            } label: {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(model.title)
+                            .foregroundStyle(isAvailable(model) ? Color.primary : Color.secondary)
+
+                        Text(model.recommendationText)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(model.limitsText)
+                            .font(.footnote)
+                            .foregroundStyle(Color.secondary)
+
+                        if let status = statusText(for: model) {
+                            Text(status)
+                                .font(.footnote)
+                                .foregroundStyle(Color.secondary)
+                        }
+
+                        if let error = downloadErrors[model.id] {
+                            Text(error)
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                        }
+
+                        if isDownloading(model) {
+                            ProgressView(value: downloadProgress[model.id] ?? 0)
+                                .padding(.top, 4)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
+
+                    accessory(for: model)
+                }
+                .contentShape(Rectangle())
             }
+            .disabled(isDisabled)
+            .swipeActions(edge: .trailing) {
+                if canDelete(model) {
+                    Button("Delete", role: .destructive) {
+                        delete(model)
+                    }
+                }
+            }
+            .contextMenu {
+                if canDelete(model) {
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        delete(model)
+                    }
+                }
+            }
+            .accessibilityAddTraits(isSelected(model) ? .isSelected : [])
+        }
+
+        @ViewBuilder
+        private func accessory(for model: RecognitionModelDescriptor) -> some View {
+            if isDownloading(model) {
+                Image(systemName: "stop.circle")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                    .accessibilityLabel("Cancel")
+            } else if isSelected(model) {
+                Image(systemName: "checkmark")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.tint)
+            } else if isAvailable(model), !isCached(model) {
+                Image(systemName: "arrow.down.circle")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                    .accessibilityLabel("Download")
+            }
+        }
+
+        private func primaryAction(for model: RecognitionModelDescriptor) {
+            guard isAvailable(model) else { return }
+            if isDownloading(model) {
+                cancelDownload(model)
+            } else if !isCached(model) {
+                download(model)
+            } else {
+                use(model)
+            }
+        }
+
+        private func statusText(for model: RecognitionModelDescriptor) -> String? {
             if !model.isSupportedOnCurrentDevice {
                 return String(localized: "Unavailable on this device")
             }
-            if isSelected(model) {
-                return String(localized: "Using")
+            if !RecognitionModelStore.isSelectable(model) {
+                return isCached(model) ?
+                    String(localized: "Downloaded. Runtime unavailable.") :
+                    String(localized: "Runtime unavailable")
             }
-            if model.download == nil {
-                return String(localized: "Ready")
-            }
-            if isCached(model) {
-                return RecognitionModelStore.isSelectable(model) ?
-                    String(localized: "Ready") :
-                    String(localized: "Downloaded. Runtime unavailable.")
-            }
-            return String(localized: "Not Downloaded")
+            return nil
+        }
+
+        private var hasActiveDownloads: Bool {
+            !downloadTasks.isEmpty || !downloadProgress.isEmpty
+        }
+
+        private func isAvailable(_ model: RecognitionModelDescriptor) -> Bool {
+            model.isSupportedOnCurrentDevice && RecognitionModelStore.isSelectable(model)
         }
 
         private func isSelected(_ model: RecognitionModelDescriptor) -> Bool {
@@ -200,7 +185,11 @@
         }
 
         private func isDownloading(_ model: RecognitionModelDescriptor) -> Bool {
-            downloadTasks[model.id] != nil
+            downloadTasks[model.id] != nil || downloadProgress[model.id] != nil
+        }
+
+        private func canDelete(_ model: RecognitionModelDescriptor) -> Bool {
+            model.download != nil && cachedModelIDs.contains(model.id) && !isSelected(model) && !isDownloading(model)
         }
 
         private func use(_ model: RecognitionModelDescriptor) {
@@ -217,48 +206,32 @@
 
         private func refreshModelState() async {
             var cachedIDs = Set<String>()
+            var progress: [String: Double] = [:]
             for model in models {
                 if await RecognitionModelStore.shared.isModelCached(model) {
                     cachedIDs.insert(model.id)
                 }
-                if let progress = await RecognitionModelStore.shared.downloadProgress(for: model) {
-                    downloadProgress[model.id] = progress
+                if let value = await RecognitionModelStore.shared.downloadProgress(for: model) {
+                    progress[model.id] = value
                 }
             }
             cachedModelIDs = cachedIDs
+            downloadProgress = progress
         }
 
         private func download(_ model: RecognitionModelDescriptor) {
             downloadErrors[model.id] = nil
-            let task = Task {
-                let progressTask = Task {
-                    while !Task.isCancelled {
-                        let progress = await RecognitionModelStore.shared.downloadProgress(for: model)
-                        await MainActor.run {
-                            downloadProgress[model.id] = progress ?? downloadProgress[model.id] ?? 0
-                        }
-                        try? await Task.sleep(nanoseconds: 250_000_000)
-                    }
-                }
-                defer { progressTask.cancel() }
-
+            downloadTasks[model.id] = Task {
                 do {
                     try await RecognitionModelStore.shared.downloadModel(model)
                 } catch {
-                    await MainActor.run {
-                        if !RealtimeSessionStore.isCancellationError(error) {
-                            downloadErrors[model.id] = Self.shortErrorDescription(error)
-                        }
+                    if !RealtimeSessionStore.isCancellationError(error) {
+                        downloadErrors[model.id] = Self.shortErrorDescription(error)
                     }
                 }
-
-                await MainActor.run {
-                    downloadTasks[model.id] = nil
-                    downloadProgress[model.id] = nil
-                }
+                downloadTasks[model.id] = nil
                 await refreshModelState()
             }
-            downloadTasks[model.id] = task
         }
 
         private func cancelDownload(_ model: RecognitionModelDescriptor) {

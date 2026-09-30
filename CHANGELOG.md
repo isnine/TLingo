@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.8.3] - 2026-09-19
+## [3.8.3] - 2026-09-30
+
+### Added
+
+- Added Tab as a keyboard shortcut to swap source and target languages in the main app and Quick Translator.
+- Added local speech recognition model options and live audio level and latency indicators for realtime translation.
 
 ### Improved
 
-- Added Tab as a keyboard shortcut to swap source and target languages in the main app and Quick Translator.
+- Improved adaptive iPhone Duo layouts, realtime captions, translation controls, model selection, and translation history playback.
 
 ## [3.8.2] - 2026-09-19
 

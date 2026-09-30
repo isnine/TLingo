@@ -5,6 +5,7 @@
     import ShareCore
     import Speech
     import SwiftUI
+    import Translation
     import UIKit
 
     struct RealtimeView: View {
@@ -16,7 +17,7 @@
         @ObservedObject private var controlModel: RealtimeControlModel
         private let onShowSidebarTap: (() -> Void)?
         private let onHistoryTap: (() -> Void)?
-        /// Set when presented full screen from Home; adds Close and an in-page start/stop control.
+        /// Set when presented full screen from Home; adds a Close button.
         private let onDismiss: (() -> Void)?
         @State private var isSettingsPresented = false
         @State private var showsSwapUnsupportedAlert = false
@@ -54,15 +55,13 @@
 
         var body: some View {
             captionPane
+                .translationTask(store.appleTranslationDownloadConfiguration) { session in
+                    await store.prepareAppleTranslationLanguageDownload(using: session)
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    languageBar
+                    controlDock
                 }
                 .background(colors.background.ignoresSafeArea())
-                .overlay {
-                    if controlModel.isStartingRealtimeSession || store.isStopping {
-                        realtimeProgressOverlay
-                    }
-                }
                 .overlay(alignment: .topLeading) {
                     BroadcastPickerLauncher(trigger: $controlModel.broadcastPickerTrigger)
                         .frame(width: 1, height: 1)
@@ -76,6 +75,10 @@
                 .sheet(isPresented: $isSettingsPresented) {
                     settingsSheet
                 }
+                .task(id: recognitionModelPrewarmKey) {
+                    guard scenePhase == .active else { return }
+                    await store.prewarmRecognitionModel()
+                }
                 .onChange(of: scenePhase) { _, phase in
                     guard phase != .active else { return }
                     guard !isIPhoneAudioInput else { return }
@@ -85,6 +88,13 @@
                     store.startFailureAlert?.title ?? "Realtime Failed",
                     isPresented: startFailureAlertPresentedBinding
                 ) {
+                    if store.startFailureAlert?.offersAppleTranslationDownload == true {
+                        Button("Download") {
+                            store.dismissStartFailureAlert()
+                            store.allowAppleTranslationDownloadOnNextStart()
+                            Task { await controlModel.handleStartButtonTapped(store: store, preferences: preferences) }
+                        }
+                    }
                     Button("OK", role: .cancel) {
                         store.dismissStartFailureAlert()
                     }
@@ -130,14 +140,6 @@
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                if store.isRunning {
-                    Button(store.isPaused ? "Resume" : "Pause", systemImage: store.isPaused ? "play.fill" : "pause.fill") {
-                        store.togglePaused()
-                    }
-                    .disabled(!controlModel.isPauseEnabled(for: store))
-                    .accessibilityIdentifier("realtime_pause_button")
-                }
-
                 Button("Realtime Options", systemImage: "slider.horizontal.3") {
                     isSettingsPresented = true
                 }
@@ -145,88 +147,223 @@
             }
         }
 
-        // MARK: - Full-Screen Session
+        // MARK: - Control Dock
 
+        private static let dockHeight: CGFloat = 56
+
+        private var isSessionActive: Bool {
+            store.isRunning || controlModel.isStartingRealtimeSession || store.isStopping
+        }
+
+        private var isSessionTransitioning: Bool {
+            controlModel.isStartingRealtimeSession || store.isStopping
+        }
+
+        /// Bottom dock within thumb reach: one capsule on the left, the session control on the right.
+        /// The capsule answers "what will be translated" while idle, then turns into a live readout of
+        /// "what is happening" once a session starts, so the eye never has to leave this spot.
+        private var controlDock: some View {
+            VStack(spacing: 0) {
+                if shouldShowSetupHint, !isSessionActive {
+                    Label(languageSelectionStatusText, systemImage: "exclamationmark.circle.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
+                        .transition(.opacity)
+                }
+
+                if store.isRunning {
+                    RealtimeFaintSpeechHint(level: store.inputLevel, isActive: !store.isPaused, color: .orange)
+                }
+
+                dockRow
+            }
+            .frame(maxWidth: 560)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .frame(maxWidth: .infinity)
+            .animation(.snappy, value: shouldShowSetupHint)
+            .animation(.smooth(duration: 0.35), value: isSessionActive)
+            .animation(.snappy, value: store.isPaused)
+            .sensoryFeedback(trigger: store.isRunning) { _, isRunning in
+                isRunning ? .start : .stop
+            }
+        }
+
+        @ViewBuilder
+        private var dockRow: some View {
+            let content = HStack(spacing: 10) {
+                Group {
+                    if isSessionActive {
+                        liveStatusCapsule
+                    } else {
+                        languageCapsule
+                    }
+                }
+                .transition(.blurReplace)
+
+                sessionControlButton
+            }
+
+            if #available(iOS 26.0, *) {
+                GlassEffectContainer(spacing: 10) {
+                    content
+                }
+            } else {
+                content
+            }
+        }
+
+        private var dockCapsuleTint: Color {
+            colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.40)
+        }
+
+        private var dockCapsuleFallbackTint: Color {
+            colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92)
+        }
+
+        /// Source and target share one capsule so the pair reads as a single direction, not two settings.
+        private var languageCapsule: some View {
+            HStack(spacing: 0) {
+                sourceLanguageMenu
+                swapLanguagesButton
+                targetLanguageMenu
+            }
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.dockHeight)
+            .tlingoGlassCapsule(
+                tint: dockCapsuleTint,
+                fallbackTint: dockCapsuleFallbackTint,
+                fallbackStroke: colors.divider
+            )
+        }
+
+        /// Languages are locked while running, so the capsule shows level, status, and pause instead.
+        private var liveStatusCapsule: some View {
+            HStack(spacing: 12) {
+                RealtimeInputLevelIndicator(
+                    level: store.inputLevel,
+                    isActive: store.isRunning && !store.isPaused,
+                    tint: store.isPaused ? colors.textSecondary : colors.accent,
+                    barWidth: 3,
+                    maxHeight: 22
+                )
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(store.statusText)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(colors.textPrimary)
+                        .contentTransition(.opacity)
+                    if let modelLoad = store.recognitionModelLoad {
+                        RealtimeModelLoadProgressView(
+                            progress: modelLoad,
+                            tint: colors.accent,
+                            secondaryColor: colors.textSecondary
+                        )
+                    } else {
+                        Text(languageDirectionSummary)
+                            .font(.caption)
+                            .foregroundStyle(colors.textSecondary)
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+
+                if store.isRunning, store.inputSource != .iphoneAudio {
+                    pauseButton
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .padding(.leading, 18)
+            .padding(.trailing, 6)
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.dockHeight)
+            .tlingoGlassCapsule(
+                tint: dockCapsuleTint,
+                fallbackTint: dockCapsuleFallbackTint,
+                fallbackStroke: colors.divider
+            )
+        }
+
+        private var recognitionModelPrewarmKey: String {
+            "\(preferences.realtimeRecognitionModelID)|\(store.inputSource.rawValue)|\(scenePhase == .active)"
+        }
+
+        private var languageDirectionSummary: String {
+            guard preferences.realtimeTranslationProvider.performsTranslation else {
+                return sourceLanguageDisplayName
+            }
+            return "\(sourceLanguageDisplayName) → \(targetLanguageDisplayName)"
+        }
+
+        private var pauseButton: some View {
+            Button {
+                store.togglePaused()
+            } label: {
+                Image(systemName: store.isPaused ? "play.fill" : "pause.fill")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(colors.textPrimary)
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 44, height: 44)
+                    .background(colors.textPrimary.opacity(0.08), in: Circle())
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!controlModel.isPauseEnabled(for: store))
+            .accessibilityLabel(store.isPaused ? "Resume" : "Pause")
+            .accessibilityIdentifier("realtime_pause_button")
+            .sensoryFeedback(.selection, trigger: store.isPaused)
+        }
+
+        /// Start and stop stay in the same spot; a spinner replaces the glyph while the session
+        /// starts or saves, instead of dimming the whole screen.
         private var sessionControlButton: some View {
             Button {
                 Task {
                     await controlModel.handleStartButtonTapped(store: store, preferences: preferences)
                 }
             } label: {
-                Image(systemName: controlModel.startButtonSystemImage(for: store))
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 68, height: 68)
-                    .tlingoGlassCircle(
-                        tint: sessionControlTint,
-                        interactive: true,
-                        fallbackTint: sessionControlTint,
-                        fallbackStroke: colors.divider.opacity(0.65)
-                    )
+                ZStack {
+                    if isSessionTransitioning {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: sessionControlSystemImage)
+                            .font(.system(size: 22, weight: .semibold))
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                }
+                .foregroundStyle(.white)
+                .frame(width: Self.dockHeight, height: Self.dockHeight)
+                .tlingoGlassCircle(
+                    tint: sessionControlTint,
+                    interactive: true,
+                    fallbackTint: sessionControlTint,
+                    fallbackStroke: colors.divider.opacity(0.65)
+                )
             }
             .buttonStyle(.plain)
-            .disabled(controlModel.isStartingRealtimeSession || store.isStopping)
+            .disabled(isSessionTransitioning)
             .accessibilityLabel(controlModel.startButtonTitle(for: store))
             .accessibilityIdentifier("realtime_session_control_button")
         }
 
+        private var sessionControlSystemImage: String {
+            if store.isRunning {
+                return "stop.fill"
+            }
+            return store.inputSource == .microphone ? "mic.fill" : "play.fill"
+        }
+
         private var sessionControlTint: Color {
-            if controlModel.isStartingRealtimeSession || store.isStopping {
-                return colors.textSecondary.opacity(0.45)
-            }
-            return store.isRunning ? colors.error : colors.accent
-        }
-
-        // MARK: - Language Bar
-
-        /// Bottom-docked language pair, following Apple Translate's conversation layout:
-        /// the languages sit next to the Start control in the tab bar, within thumb reach.
-        private var languageBar: some View {
-            VStack(spacing: 10) {
-                if shouldShowSetupHint {
-                    Label(languageSelectionStatusText, systemImage: "exclamationmark.circle.fill")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.orange)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .transition(.opacity)
-                }
-
-                // Languages are locked while running, so the pair only takes caption space.
-                if !store.isRunning {
-                    languagePairControls
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                }
-
-                if onDismiss != nil {
-                    sessionControlButton
-                        .padding(.top, 6)
-                }
-            }
-            .frame(maxWidth: 520)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 10)
-            .frame(maxWidth: .infinity)
-            .animation(.snappy, value: shouldShowSetupHint)
-            .animation(.snappy, value: store.isRunning)
-        }
-
-        @ViewBuilder
-        private var languagePairControls: some View {
-            let content = HStack(spacing: 8) {
-                sourceLanguageMenu
-                swapLanguagesButton
-                targetLanguageMenu
-            }
-
-            if #available(iOS 26.0, *) {
-                GlassEffectContainer(spacing: 8) {
-                    content
-                }
-            } else {
-                content
-            }
+            let tint = store.isRunning || store.isStopping ? colors.error : colors.accent
+            return isSessionTransitioning ? tint.opacity(0.7) : tint
         }
 
         private var sourceLanguageMenu: some View {
@@ -283,25 +420,19 @@
         }
 
         private func languageMenuLabel(_ title: String, isMissing: Bool) -> some View {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text(title)
                     .font(.system(.body, design: .rounded, weight: .semibold))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.75)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(colors.textSecondary)
             }
             .foregroundStyle(isMissing ? Color.orange : colors.textPrimary)
-            .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, minHeight: 48)
-            .contentShape(Capsule())
-            .tlingoGlassCapsule(
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.40),
-                interactive: true,
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92),
-                fallbackStroke: colors.divider
-            )
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
         }
 
         private var swapLanguagesButton: some View {
@@ -309,19 +440,15 @@
                 swapLanguages()
             } label: {
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.body.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(canSwapLanguages ? colors.accent : colors.textSecondary)
-                    .frame(width: 48, height: 48)
+                    .frame(width: 40, height: 40)
+                    .background(colors.textPrimary.opacity(0.06), in: Circle())
                     .contentShape(Circle())
-                    .tlingoGlassCircle(
-                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.40),
-                        interactive: true,
-                        fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.92),
-                        fallbackStroke: colors.divider
-                    )
             }
             .buttonStyle(.plain)
             .disabled(!canSwapLanguages && !isSwapBlockedByRecognitionModel)
+            .sensoryFeedback(.selection, trigger: preferences.realtimeSourceLanguage)
             .accessibilityLabel("Swap languages")
             .accessibilityIdentifier("realtime_swap_languages_button")
             .alert("Can't Swap Languages", isPresented: $showsSwapUnsupportedAlert) {
@@ -441,11 +568,23 @@
                 }
                 .overlay {
                     if lines.isEmpty {
-                        ContentUnavailableView(
-                            RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning),
-                            systemImage: store.isRunning ? "waveform" : "captions.bubble"
-                        )
-                        .symbolEffect(.variableColor.iterative, isActive: store.isRunning)
+                        if store.isRunning {
+                            ContentUnavailableView {
+                                VStack(spacing: 16) {
+                                    RealtimeInputLevelIndicator(
+                                        level: store.inputLevel,
+                                        isActive: !store.isPaused,
+                                        tint: colors.accent
+                                    )
+                                    Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: true))
+                                }
+                            }
+                        } else {
+                            ContentUnavailableView(
+                                RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: false),
+                                systemImage: "captions.bubble"
+                            )
+                        }
                     }
                 }
                 .defaultScrollAnchor(.bottom)
@@ -485,32 +624,6 @@
             }
         }
 
-        private var realtimeProgressOverlay: some View {
-            ZStack {
-                Color.black.opacity(0.18)
-                    .ignoresSafeArea()
-
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text(realtimeProgressTitle)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(colors.textPrimary)
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 20)
-                .realtimeGlassSurface(
-                    cornerRadius: 20,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.18 : 0.22),
-                    fallbackStroke: colors.divider
-                )
-            }
-            .transition(.opacity)
-        }
-
-        private var realtimeProgressTitle: String {
-            store.isStopping ? store.statusText : String(localized: "Starting realtime translation...")
-        }
-
         private var settingsSheet: some View {
             NavigationStack {
                 Form {
@@ -527,6 +640,23 @@
                         }
                     }
 
+                    Section {
+                        NavigationLink {
+                            RecognitionModelListView(
+                                preferences: preferences,
+                                models: store.inputSource.supportedRecognitionModels,
+                                isDisabled: store.isRunning || store.isStopping
+                            )
+                            .navigationBarTitleDisplayMode(.inline)
+                        } label: {
+                            LabeledContent("Model", value: selectedRecognitionModel.title)
+                        }
+                    } header: {
+                        Text("Speech Recognition")
+                    } footer: {
+                        Text(selectedRecognitionModel.recommendationText)
+                    }
+
                     Section("Translation") {
                         Picker("Translator", selection: translationProviderBinding) {
                             ForEach(store.inputSource.supportedTranslationProviders) { provider in
@@ -535,14 +665,6 @@
                             }
                         }
                         .disabled(store.isRunning)
-                    }
-
-                    Section("Recognition Model") {
-                        RecognitionModelListView(
-                            preferences: preferences,
-                            models: store.inputSource.supportedRecognitionModels,
-                            isDisabled: store.isRunning || store.isStopping
-                        )
                     }
 
                     Section("Captions") {
@@ -565,6 +687,10 @@
                 }
             }
             .presentationDetents([.medium, .large])
+        }
+
+        private var selectedRecognitionModel: RecognitionModelDescriptor {
+            RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
         }
 
         private var inputSourceBinding: Binding<RealtimeAudioInputSource> {
@@ -663,6 +789,33 @@
         }
     }
 
+    /// Local model loads report no progress, so the bar extrapolates from the last measured load
+    /// time; the first load only shows elapsed time.
+    private struct RealtimeModelLoadProgressView: View {
+        let progress: RealtimeModelLoadProgress
+        let tint: Color
+        let secondaryColor: Color
+
+        var body: some View {
+            TimelineView(.periodic(from: .now, by: 0.25)) { context in
+                HStack(spacing: 6) {
+                    if let fraction = progress.fraction(at: context.date) {
+                        ProgressView(value: fraction)
+                            .tint(tint)
+                        Text(fraction, format: .percent.precision(.fractionLength(0)))
+                    } else {
+                        Text(
+                            Duration.seconds(Int(context.date.timeIntervalSince(progress.startedAt))),
+                            format: .units(allowed: [.seconds], width: .abbreviated)
+                        )
+                    }
+                }
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(secondaryColor)
+            }
+        }
+    }
+
     @MainActor
     final class RealtimeControlModel: ObservableObject {
         @Published var isStartingRealtimeSession = false
@@ -677,16 +830,6 @@
                 return "Starting"
             }
             return store.isRunning ? "Stop" : "Start"
-        }
-
-        func startButtonSystemImage(for store: RealtimeSessionStore) -> String {
-            if store.isStopping {
-                return "hourglass"
-            }
-            if isStartingRealtimeSession {
-                return "hourglass"
-            }
-            return store.isRunning ? "stop.fill" : "play.fill"
         }
 
         func canUseStartButton(store: RealtimeSessionStore, preferences: AppPreferences) -> Bool {
@@ -945,27 +1088,4 @@
         }
     }
 
-    private extension View {
-        @ViewBuilder
-        func realtimeGlassSurface(
-            cornerRadius: CGFloat,
-            tint: Color,
-            interactive: Bool = false,
-            fallbackStroke: Color
-        ) -> some View {
-            if #available(iOS 26.0, *) {
-                if interactive {
-                    glassEffect(.regular.tint(tint).interactive(), in: .rect(cornerRadius: cornerRadius))
-                } else {
-                    glassEffect(.regular.tint(tint), in: .rect(cornerRadius: cornerRadius))
-                }
-            } else {
-                background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .stroke(fallbackStroke, lineWidth: 1)
-                    )
-            }
-        }
-    }
 #endif

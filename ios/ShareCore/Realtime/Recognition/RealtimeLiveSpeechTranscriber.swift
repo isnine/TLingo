@@ -42,6 +42,11 @@
         private var hasReportedRuntimeFailure = false
         private var activeSessionID = UUID()
         private var transcriptAccumulator = RealtimeTranscriptAccumulator()
+        /// Audio handed to the recognizer since start; it matches the history recording, which
+        /// receives the same buffers, so result time ranges line up with playback.
+        private var receivedAudioFrames: AVAudioFramePosition = 0
+        private var finalTokenTimings: [RealtimeRecognitionTokenTiming] = []
+        private var volatileTokenTimings: [RealtimeRecognitionTokenTiming] = []
         private var reusablePCMBuffers = [AVAudioPCMBuffer?](
             repeating: nil,
             count: reusablePCMBufferCount
@@ -98,7 +103,7 @@
                 locale: supportedLocale,
                 transcriptionOptions: [],
                 reportingOptions: [.volatileResults, .fastResults],
-                attributeOptions: [.transcriptionConfidence]
+                attributeOptions: [.transcriptionConfidence, .audioTimeRange]
             )
             try await installAssets(for: [transcriber], locale: supportedLocale)
             reservedLocale = supportedLocale
@@ -130,7 +135,7 @@
                 contentHints: [],
                 transcriptionOptions: [],
                 reportingOptions: [.volatileResults],
-                attributeOptions: [.transcriptionConfidence]
+                attributeOptions: [.transcriptionConfidence, .audioTimeRange]
             )
             try await installAssets(for: [transcriber], locale: supportedLocale)
             reservedLocale = supportedLocale
@@ -202,6 +207,7 @@
                     confidence: Self.averageConfidence(in: text),
                     state: isFinal ? .final : .partial
                 ),
+                tokenTimings: Self.tokenTimings(in: text),
                 sessionID: sessionID
             )
         }
@@ -218,11 +224,12 @@
             conversionLock.unlock()
 
             guard let pcmBuffer else { return }
+            let startTime = reserveAudioTime(for: pcmBuffer)
             if legacyRecognizer?.append(pcmBuffer) == true {
                 return
             }
             guard let inputContinuation else { return }
-            inputContinuation.yield(AnalyzerInput(buffer: pcmBuffer))
+            inputContinuation.yield(AnalyzerInput(buffer: pcmBuffer, bufferStartTime: startTime))
         }
 
         func append(_ pcmBuffer: AVAudioPCMBuffer) {
@@ -231,11 +238,24 @@
             stateLock.unlock()
 
             guard !isPaused else { return }
+            let startTime = reserveAudioTime(for: pcmBuffer)
             if legacyRecognizer?.append(pcmBuffer) == true {
                 return
             }
             guard let inputContinuation else { return }
-            inputContinuation.yield(AnalyzerInput(buffer: pcmBuffer))
+            inputContinuation.yield(AnalyzerInput(buffer: pcmBuffer, bufferStartTime: startTime))
+        }
+
+        /// Explicit start times keep the analyzer timeline aligned even when the bounded input
+        /// stream drops buffers under load. They must be exact sample counts: `CMTime(seconds:)`
+        /// marks the time as rounded, and SpeechAnalyzer then rejects contiguous buffers as
+        /// overlapping (SFSpeechErrorDomain "timestamp overlaps or precedes prior audio input").
+        private func reserveAudioTime(for pcmBuffer: AVAudioPCMBuffer) -> CMTime {
+            withStateLock {
+                let startFrame = receivedAudioFrames
+                receivedAudioFrames += AVAudioFramePosition(pcmBuffer.frameLength)
+                return CMTime(value: startFrame, timescale: CMTimeScale(pcmBuffer.format.sampleRate))
+            }
         }
 
         func setPaused(_ isPaused: Bool) {
@@ -298,11 +318,15 @@
             hasReportedRuntimeFailure = false
             activeSessionID = sessionID
             transcriptAccumulator.reset()
+            receivedAudioFrames = 0
+            finalTokenTimings.removeAll()
+            volatileTokenTimings.removeAll()
             stateLock.unlock()
         }
 
         private func publishRecognitionResult(
             _ result: RealtimeRecognitionResult,
+            tokenTimings: [RealtimeRecognitionTokenTiming]? = nil,
             sessionID: UUID
         ) {
             let snapshot = stateLock.withLock { () -> RealtimeRecognitionSnapshot? in
@@ -314,9 +338,18 @@
                     return nil
                 }
                 _ = transcriptAccumulator.append(result, afterLongSilence: false)
+                if let tokenTimings {
+                    if result.state == .final {
+                        finalTokenTimings.append(contentsOf: tokenTimings)
+                        volatileTokenTimings.removeAll()
+                    } else {
+                        volatileTokenTimings = tokenTimings
+                    }
+                }
                 return RealtimeRecognitionSnapshot(
                     stableText: transcriptAccumulator.committedText,
                     volatileText: transcriptAccumulator.partialText,
+                    tokenTimings: finalTokenTimings + volatileTokenTimings,
                     isTerminal: false
                 )
             }
@@ -339,6 +372,7 @@
                 return RealtimeRecognitionSnapshot(
                     stableText: text,
                     volatileText: "",
+                    tokenTimings: finalTokenTimings + volatileTokenTimings,
                     isTerminal: true
                 )
             }
@@ -408,6 +442,24 @@
 
             guard numberOfConfidences > 0 else { return 0.5 }
             return total / Double(numberOfConfidences)
+        }
+
+        private static func tokenTimings(in text: AttributedString) -> [RealtimeRecognitionTokenTiming] {
+            text.runs.compactMap { run in
+                guard let timeRange = run[AttributeScopes.SpeechAttributes.TimeRangeAttribute.self],
+                      timeRange.isValid
+                else {
+                    return nil
+                }
+                let token = String(text[run.range].characters)
+                guard !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+                return RealtimeRecognitionTokenTiming(
+                    token: token,
+                    startTime: timeRange.start.seconds,
+                    endTime: timeRange.end.seconds,
+                    confidence: run[AttributeScopes.SpeechAttributes.ConfidenceAttribute.self] ?? 0.5
+                )
+            }
         }
 
         private func pcmBuffer(from sampleBuffer: CMSampleBuffer) -> AVAudioPCMBuffer? {

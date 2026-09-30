@@ -728,7 +728,7 @@ private struct RealtimeHistoryDetailContent: View {
     }
 
     private func scrollToPlaybackTime(_ time: TimeInterval) {
-        scrollTargetSegmentID = selectedTrack?.closestSegmentID(to: time)
+        scrollTargetSegmentID = selectedTrack?.activeSegmentID(at: time) ?? selectedTrack?.closestSegmentID(to: time)
     }
 
     #if os(macOS)
@@ -1216,7 +1216,7 @@ private struct RealtimeHistoryDetailContent: View {
         annotation: String?
     ) -> some View {
         let track = track ?? selectedTrack
-        let isActive = playbackTime >= segment.offset && playbackTime < segment.endOffset
+        let isActive = track?.activeSegmentID(at: playbackTime) == segment.id
         let onSeek: (() -> Void)? = {
             playbackTime = segment.offset
         }

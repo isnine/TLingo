@@ -7,12 +7,52 @@
         private var startedAt: Date?
         private var pausedAt: Date?
         private var pausedDuration: TimeInterval = 0
+        /// When each committed source sentence (and the one in progress) started being spoken.
+        private var sourceStartOffsets: [TimeInterval] = []
+        private var inProgressStartOffset: TimeInterval?
+        /// Recognizer timings on the recognizer's audio timeline. Subtracting the audio it had
+        /// already consumed when this session started gives positions in the history recording.
+        private var recognitionTimings: [RealtimeRecognitionTokenTiming] = []
+        private var recognitionTimelineBase: TimeInterval = 0
+        private static let timingProbeLength = 12
+        private static let timingSearchWindow = 4000
 
-        mutating func start(at date: Date = Date(), requestID: UUID = UUID()) {
+        mutating func noteRecognition(timings: [RealtimeRecognitionTokenTiming]) {
+            guard startedAt != nil, !timings.isEmpty else { return }
+            recognitionTimings = timings
+        }
+
+        /// Records speech start times from recognition, which precede translation by seconds.
+        mutating func noteSource(committedCount: Int, hasText: Bool, at date: Date = Date()) {
+            guard startedAt != nil else { return }
+            if inProgressStartOffset == nil, hasText || committedCount > sourceStartOffsets.count {
+                inProgressStartOffset = elapsed(at: date)
+            }
+            while sourceStartOffsets.count < committedCount {
+                sourceStartOffsets.append(inProgressStartOffset ?? elapsed(at: date))
+                inProgressStartOffset = nil
+            }
+        }
+
+        private func startOffset(forSegmentAt index: Int, at date: Date) -> TimeInterval {
+            if sourceStartOffsets.indices.contains(index) { return sourceStartOffsets[index] }
+            if index == sourceStartOffsets.count, let inProgressStartOffset { return inProgressStartOffset }
+            return elapsed(at: date)
+        }
+
+        mutating func start(
+            at date: Date = Date(),
+            requestID: UUID = UUID(),
+            recognitionTimelineBase: TimeInterval = 0
+        ) {
             self.requestID = requestID
             startedAt = date
             pausedAt = nil
             pausedDuration = 0
+            sourceStartOffsets.removeAll()
+            inProgressStartOffset = nil
+            recognitionTimings.removeAll()
+            self.recognitionTimelineBase = recognitionTimelineBase
             segments.removeAll()
         }
 
@@ -21,6 +61,10 @@
             startedAt = nil
             pausedAt = nil
             pausedDuration = 0
+            sourceStartOffsets.removeAll()
+            inProgressStartOffset = nil
+            recognitionTimings.removeAll()
+            recognitionTimelineBase = 0
             segments.removeAll()
         }
 
@@ -49,9 +93,17 @@
                 return (source, translation)
             }
 
+            let spokenOffsets = Self.spokenOffsets(
+                for: cleanPairs.map(\.source),
+                timings: recognitionTimings,
+                timelineBase: recognitionTimelineBase
+            )
+
             if cleanPairs.count == segments.count,
-               zip(segments, cleanPairs).allSatisfy({
-                   $0.sourceText == $1.source && $0.translatedText == $1.translation
+               zip(segments, zip(cleanPairs, spokenOffsets)).allSatisfy({ segment, entry in
+                   segment.sourceText == entry.0.source &&
+                       segment.translatedText == entry.0.translation &&
+                       (entry.1 == nil || entry.1 == segment.offset)
                })
             {
                 return
@@ -62,14 +114,59 @@
                     var segment = segments[index]
                     segment.sourceText = pair.source
                     segment.translatedText = pair.translation
+                    if let spokenOffset = spokenOffsets[index] {
+                        segment.offset = spokenOffset
+                    }
                     return segment
                 }
                 return RealtimeHistorySegment(
-                    offset: elapsed(at: date),
+                    offset: spokenOffsets[index] ?? startOffset(forSegmentAt: index, at: date),
                     sourceText: pair.source,
                     translatedText: pair.translation
                 )
             }
+        }
+
+        /// Finds where each sentence was spoken by locating its text, in order, within the
+        /// recognizer's timed tokens. Punctuation and spacing are ignored because translation
+        /// segmentation reformats them; unmatched sentences return nil.
+        static func spokenOffsets(
+            for sources: [String],
+            timings: [RealtimeRecognitionTokenTiming],
+            timelineBase: TimeInterval
+        ) -> [TimeInterval?] {
+            var characters: [Character] = []
+            var times: [TimeInterval] = []
+            for timing in timings where timing.endTime > timelineBase {
+                let key = matchKey(timing.token)
+                let span = max(0, timing.endTime - timing.startTime)
+                for (index, character) in key.enumerated() {
+                    characters.append(character)
+                    times.append(max(0, timing.startTime + span * Double(index) / Double(key.count) - timelineBase))
+                }
+            }
+            guard !characters.isEmpty else { return sources.map { _ in nil } }
+
+            var cursor = 0
+            return sources.map { source in
+                let key = matchKey(source)
+                let probe = key.prefix(timingProbeLength)
+                guard !probe.isEmpty, characters.count >= probe.count else { return nil }
+                let lastStart = min(characters.count - probe.count, cursor + timingSearchWindow)
+                guard cursor <= lastStart,
+                      let start = (cursor ... lastStart).first(where: {
+                          characters[$0 ..< $0 + probe.count].elementsEqual(probe)
+                      })
+                else {
+                    return nil
+                }
+                cursor = min(characters.count, start + key.count)
+                return times[start]
+            }
+        }
+
+        private static func matchKey(_ text: String) -> [Character] {
+            text.lowercased().filter { $0.isLetter || $0.isNumber }.map { $0 }
         }
 
         func makeSession(

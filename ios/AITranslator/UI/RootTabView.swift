@@ -309,6 +309,10 @@ extension RootTabView {
                     HistoryView()
                 }
             }
+            .realtimeSavedNotice(store: realtimeStore) { _ in
+                showRealtime = false
+                showHistory = true
+            }
             .fullScreenCover(isPresented: $showRealtime, onDismiss: stopRealtimeAfterDismiss) {
                 NavigationStack {
                     RealtimeView(
@@ -318,6 +322,10 @@ extension RootTabView {
                             showRealtime = false
                         }
                     )
+                    .realtimeSavedNotice(store: realtimeStore) { _ in
+                        showRealtime = false
+                        showHistory = true
+                    }
                 }
                 .tint(colors.accent)
             }

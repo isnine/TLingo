@@ -2,6 +2,7 @@
     import AVFoundation
     import ShareCore
     import SwiftUI
+    import Translation
     import UniformTypeIdentifiers
 
     struct RealtimeView: View {
@@ -21,6 +22,7 @@
         @State private var laneConfigurationError: String?
         @State private var isAudioImporterPresented = false
         @State private var audioImportError: String?
+        @State private var isLatencyBubbleDismissed = false
 
         init(store: RealtimeSessionStore) {
             self.store = store
@@ -67,6 +69,28 @@
                             statusText: store.statusText
                         )
                     }
+                }
+                .overlay(alignment: .topTrailing) {
+                    let lanes = store.laneSnapshots.compactMap { snapshot in
+                        snapshot.latency.map {
+                            (
+                                title: snapshot.configuration.title,
+                                performsTranslation: snapshot.configuration.translationProvider.performsTranslation,
+                                latency: $0
+                            )
+                        }
+                    }
+                    if store.isRunning, !isLatencyBubbleDismissed, !lanes.isEmpty {
+                        RealtimeLatencyBubble(lanes: lanes) {
+                            isLatencyBubbleDismissed = true
+                        }
+                        .padding(.top, 12)
+                        .padding(.trailing, isInspectorPresented ? inspectorWidth + 20 : 20)
+                        .transition(.opacity)
+                    }
+                }
+                .onChange(of: store.isRunning) { _, isRunning in
+                    if isRunning { isLatencyBubbleDismissed = false }
                 }
                 .overlay(alignment: .trailing) {
                     if isInspectorPresented {
@@ -129,11 +153,21 @@
                     store.startFailureAlert?.title ?? "Realtime Failed",
                     isPresented: startFailureAlertPresentedBinding
                 ) {
+                    if store.startFailureAlert?.offersAppleTranslationDownload == true {
+                        Button("Download") {
+                            store.dismissStartFailureAlert()
+                            store.allowAppleTranslationDownloadOnNextStart()
+                            Task { await toggleRealtimeSession() }
+                        }
+                    }
                     Button("OK", role: .cancel) {
                         store.dismissStartFailureAlert()
                     }
                 } message: {
                     Text(store.startFailureAlert?.message ?? "")
+                }
+                .translationTask(store.appleTranslationDownloadConfiguration) { session in
+                    await store.prepareAppleTranslationLanguageDownload(using: session)
                 }
                 .alert(
                     "Realtime Lane",

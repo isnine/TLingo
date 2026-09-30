@@ -80,14 +80,19 @@ public enum RealtimeHistoryAudioStorage {
         recordings.forEach { deleteRecording($0, fileManager: fileManager) }
     }
 
+    /// Directories touched within this window may belong to a recording that is still in progress
+    /// (or one from another process) and has not been referenced by a history record yet.
+    static let pruneGracePeriod: TimeInterval = 24 * 60 * 60
+
     static func pruneUnreferencedRecordings(
         referencedDirectoryNames: Set<String>,
+        now: Date = Date(),
         fileManager: FileManager = .default
     ) {
         guard let rootURL = rootURL(fileManager: fileManager),
               let contents = try? fileManager.contentsOfDirectory(
                   at: rootURL,
-                  includingPropertiesForKeys: [.isDirectoryKey],
+                  includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
                   options: [.skipsHiddenFiles]
               )
         else {
@@ -95,10 +100,15 @@ public enum RealtimeHistoryAudioStorage {
         }
 
         for url in contents {
-            let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+            let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey])
             guard values?.isDirectory == true,
                   !referencedDirectoryNames.contains(url.lastPathComponent)
             else {
+                continue
+            }
+            if let modified = values?.contentModificationDate,
+               now.timeIntervalSince(modified) < pruneGracePeriod
+            {
                 continue
             }
             do {
