@@ -256,7 +256,8 @@ public struct HomeView: View {
         onSettingsTap: (() -> Void)? = nil,
         onShowSidebarTap: (() -> Void)? = nil,
         onRealtimeTap: (() -> Void)? = nil,
-        onPremiumRequired: (() -> Void)? = nil
+        onPremiumRequired: (() -> Void)? = nil,
+        viewModel: HomeViewModel? = nil
     ) {
         self.context = context
         self.usesNativeNavigationHeader = usesNativeNavigationHeader
@@ -266,7 +267,8 @@ public struct HomeView: View {
         self.onShowSidebarTap = onShowSidebarTap
         self.onRealtimeTap = onRealtimeTap
         self.onPremiumRequired = onPremiumRequired
-        _viewModel = StateObject(wrappedValue: HomeViewModel())
+        // A host-owned model keeps input and results across layout switches.
+        _viewModel = StateObject(wrappedValue: viewModel ?? HomeViewModel())
         #if os(iOS)
             _isInputExpanded = State(initialValue: context == nil)
         #else
@@ -477,6 +479,7 @@ public struct HomeView: View {
                 ConversationContentView(session: session, onPremiumRequired: {
                     onPremiumRequired?()
                 })
+                .id(session.id)
                 .inspectorColumnWidth(
                     min: InspectorColumnWidth.min,
                     ideal: InspectorColumnWidth.ideal,
@@ -532,7 +535,7 @@ public struct HomeView: View {
         .translationTask(appleTranslationConfig) { session in
             logger.debug(".translationTask fired, session received")
             if #available(iOS 17.4, macOS 14.4, *) {
-                viewModel.executeAppleTranslation(session: session)
+                await viewModel.executeAppleTranslation(session: session)
             }
         }
         .onChange(of: viewModel.appleTranslateTargetLanguage) { newTarget in
@@ -2048,13 +2051,6 @@ public struct HomeView: View {
             bottomInfoBar(for: run)
         }
         .padding(16)
-        .overlay(alignment: .topTrailing) {
-            if showingProviderInfo == runID {
-                providerInfoPopover(for: run)
-                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing)))
-            }
-        }
-        .animation(.easeOut(duration: 0.2), value: showingProviderInfo)
 
         #if os(iOS)
             if isSuccessfulRun(run) {
@@ -2285,13 +2281,7 @@ public struct HomeView: View {
                 // (provider meta is still available via logs).
                 viewModel.presentDebugRequestDetails(for: runID)
             } else {
-                withAnimation {
-                    if showingProviderInfo == runID {
-                        showingProviderInfo = nil
-                    } else {
-                        showingProviderInfo = runID
-                    }
-                }
+                showingProviderInfo = showingProviderInfo == runID ? nil : runID
             }
         } label: {
             if DeveloperMode.isEnabled {
@@ -2305,6 +2295,23 @@ public struct HomeView: View {
             }
         }
         .buttonStyle(.plain)
+        .popover(isPresented: providerInfoBinding(for: runID)) {
+            if let run = viewModel.modelRuns.first(where: { $0.id == runID }) {
+                providerInfoPopover(for: run)
+                    .presentationCompactAdaptation(.popover)
+            }
+        }
+    }
+
+    private func providerInfoBinding(for runID: String) -> Binding<Bool> {
+        Binding(
+            get: { showingProviderInfo == runID },
+            set: { isPresented in
+                if !isPresented, showingProviderInfo == runID {
+                    showingProviderInfo = nil
+                }
+            }
+        )
     }
 
     @ViewBuilder
@@ -2344,19 +2351,7 @@ public struct HomeView: View {
             }
         }
         .fixedSize()
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(colors.cardBackground)
-                .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
-        )
-        .padding(.top, 8)
-        .padding(.trailing, 8)
-        .onTapGesture {
-            withAnimation {
-                showingProviderInfo = nil
-            }
-        }
+        .padding(12)
     }
 
     private func liveTimer(start: Date) -> some View {

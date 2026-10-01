@@ -414,6 +414,13 @@ public enum SourceLanguageDetector {
         guard hanScalarCount(in: text) >= scriptFallbackMinimumHanScalars else {
             return nil
         }
+        // Kana means Japanese, not Chinese; let the regular fallback decide.
+        let containsKana = text.unicodeScalars.contains {
+            (0x3041 ... 0x3096).contains($0.value) || (0x30A1 ... 0x30FA).contains($0.value)
+        }
+        guard !containsKana else {
+            return nil
+        }
 
         let corrected = correctChineseScript(.simplifiedChinese, preferredLanguages: preferredLanguages)
         let code = corrected.rawValue

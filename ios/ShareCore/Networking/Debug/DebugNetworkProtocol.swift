@@ -13,7 +13,10 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
     private static let bodyKey = "com.zanderwang.DebugNetworkProtocol.body"
     private static let handledKey = "com.zanderwang.DebugNetworkProtocol.handled"
 
-    private var innerSession: URLSession?
+    /// One shared session keeps connection reuse; a new session per request forces a fresh TLS handshake.
+    private static let router = InnerTaskRouter()
+    private static let innerSession = URLSession(configuration: .default, delegate: router, delegateQueue: nil)
+
     private var innerTask: URLSessionDataTask?
     private var responseBodyByteCount = 0
     private var responseBody = Data()
@@ -59,17 +62,18 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
         }
         URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutableRequest)
 
-        let config = URLSessionConfiguration.default
-        innerSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-        innerTask = innerSession?.dataTask(with: mutableRequest as URLRequest)
-        innerTask?.resume()
+        let task = Self.innerSession.dataTask(with: mutableRequest as URLRequest)
+        Self.router.register(self, for: task)
+        innerTask = task
+        task.resume()
     }
 
     override public func stopLoading() {
-        innerTask?.cancel()
+        if let innerTask {
+            Self.router.unregister(innerTask)
+            innerTask.cancel()
+        }
         innerTask = nil
-        innerSession?.invalidateAndCancel()
-        innerSession = nil
     }
 
     // MARK: - URLSessionDataDelegate
@@ -93,7 +97,8 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
         client?.urlProtocol(self, didLoad: data)
     }
 
-    public func urlSession(_: URLSession, task _: URLSessionTask, didCompleteWithError error: Error?) {
+    public func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        Self.router.unregister(task)
         if let error {
             logRecord(error: error)
             client?.urlProtocol(self, didFailWithError: error)
@@ -134,6 +139,44 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
         )
 
         NetworkRequestLogger.addRecord(record)
-        innerSession?.finishTasksAndInvalidate()
+    }
+}
+
+/// Forwards shared-session delegate callbacks to the protocol instance that owns each task.
+private final class InnerTaskRouter: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var owners: [Int: DebugNetworkProtocol] = [:]
+
+    func register(_ owner: DebugNetworkProtocol, for task: URLSessionTask) {
+        lock.withLock { owners[task.taskIdentifier] = owner }
+    }
+
+    func unregister(_ task: URLSessionTask) {
+        _ = lock.withLock { owners.removeValue(forKey: task.taskIdentifier) }
+    }
+
+    private func owner(of task: URLSessionTask) -> DebugNetworkProtocol? {
+        lock.withLock { owners[task.taskIdentifier] }
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        dataTask: URLSessionDataTask,
+        didReceive response: URLResponse,
+        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
+    ) {
+        guard let owner = owner(of: dataTask) else {
+            completionHandler(.cancel)
+            return
+        }
+        owner.urlSession(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler)
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        owner(of: dataTask)?.urlSession(session, dataTask: dataTask, didReceive: data)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        owner(of: task)?.urlSession(session, task: task, didCompleteWithError: error)
     }
 }

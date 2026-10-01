@@ -15,6 +15,12 @@
             fileprivate let element: AXUIElement
         }
 
+        /// Caps every AX call this process makes; the 6 s default let a hung target app freeze
+        /// the main thread on each selection.
+        static let configureMessagingTimeout: Void = {
+            AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5)
+        }()
+
         /// Read the selected text from the frontmost application using the Accessibility API.
         /// Validates that the click occurred near the focused element to filter stale selections.
         @MainActor
@@ -24,6 +30,7 @@
 
         @MainActor
         static func grabSelection(near clickPoint: CGPoint? = nil) -> Selection? {
+            _ = AccessibilityGrabber.configureMessagingTimeout
             guard let frontApp = NSWorkspace.shared.frontmostApplication else { return nil }
 
             let appElement = AXUIElementCreateApplication(frontApp.processIdentifier)

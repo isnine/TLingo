@@ -4,10 +4,12 @@
 
     @MainActor
     extension RealtimePipelineCoordinator {
+        /// Returns false when a concurrent call already stored a node for the model; that node is reused.
+        @discardableResult
         func startRecognitionNode(
             model: RecognitionModelDescriptor,
             sessionID: UUID
-        ) async throws {
+        ) async throws -> Bool {
             let node = RealtimeRecognitionNode(model: model)
             node.onResult = { [weak self] callbackSessionID, result in
                 guard let self else { return }
@@ -42,10 +44,21 @@
                 sessionID: sessionID,
                 timelineBaseOffset: isRunning ? audioFanout.currentAudioOffset : 0
             )
+            // Loading takes seconds; a stop, restart or concurrent load may have happened meanwhile.
+            guard sessionID == activeSessionID, !isStopping else {
+                await node.stop()
+                throw CancellationError()
+            }
+            guard recognitionNodes[model.id] == nil else {
+                // Not awaited: the caller continues with the stored node and must not suspend here.
+                Task { await node.stop() }
+                return false
+            }
             recognitionNodes[model.id] = node
             if recognitionSubscribers[model.id] == nil {
                 recognitionSubscribers[model.id] = []
             }
+            return true
         }
 
         func installLaneRuntime(
@@ -248,7 +261,8 @@
             guard event.contains(.critical) else { return }
             didEncounterCriticalMemoryPressure = true
             guard let candidate = configurations.reversed().first(where: {
-                $0.id != primaryLaneID && $0.recognitionModel.runtime == .fluidAudio
+                $0.id != primaryLaneID && !removingLaneIDs.contains($0.id) &&
+                    $0.recognitionModel.runtime == .fluidAudio
             }) else {
                 return
             }

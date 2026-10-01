@@ -6,6 +6,7 @@
 //
 
 import ShareCore
+import SwiftData
 import SwiftUI
 
 #if canImport(AppKit)
@@ -42,6 +43,8 @@ enum HistoryFilter: String, CaseIterable, Identifiable {
 struct HistoryView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var records: [TranslationRecord] = []
+    /// Not observed; holds per-record JSON decodes so typing in search doesn't re-decode every record.
+    @State private var decodedRecords = DecodedHistoryRecordCache()
     @State private var filter: HistoryFilter
     @State private var searchText = ""
     @State private var showDeleteAllConfirmation = false
@@ -289,7 +292,8 @@ struct HistoryView: View {
 
     @ViewBuilder
     private func recordLink(_ record: TranslationRecord) -> some View {
-        if let session = record.realtimeSession {
+        let decoded = decodedRecords.decoded(record)
+        if let session = decoded.session {
             NavigationLink {
                 HistoryRecordDetailView(record: record)
             } label: {
@@ -300,7 +304,7 @@ struct HistoryView: View {
                 Button {
                     onConversationSelected(record)
                 } label: {
-                    TextHistoryRow(record: record)
+                    TextHistoryRow(record: record, results: decoded.results)
                 }
                 .buttonStyle(.plain)
             } else {
@@ -313,14 +317,14 @@ struct HistoryView: View {
                     )
                     .id(record.id)
                 } label: {
-                    TextHistoryRow(record: record)
+                    TextHistoryRow(record: record, results: decoded.results)
                 }
             }
         } else {
             NavigationLink {
                 HistoryRecordDetailView(record: record)
             } label: {
-                TextHistoryRow(record: record)
+                TextHistoryRow(record: record, results: decoded.results)
             }
         }
     }
@@ -361,7 +365,8 @@ struct HistoryView: View {
     // MARK: - Helpers
 
     private func copyableResult(for record: TranslationRecord) -> String? {
-        let text = record.realtimeSession?.translatedTextForCopy ?? record.modelResults.first?.resultText
+        let decoded = decodedRecords.decoded(record)
+        let text = decoded.session?.translatedTextForCopy ?? decoded.results.first?.resultText
         guard let text, !text.isEmpty else { return nil }
         return text
     }
@@ -370,11 +375,12 @@ struct HistoryView: View {
         if record.sourceText.localizedStandardContains(query) {
             return true
         }
-        if let session = record.realtimeSession {
+        let decoded = decodedRecords.decoded(record)
+        if let session = decoded.session {
             return session.displayTitle(fallback: "").localizedStandardContains(query)
                 || session.translatedText.localizedStandardContains(query)
         }
-        return record.modelResults.contains { $0.resultText.localizedStandardContains(query) }
+        return decoded.results.contains { $0.resultText.localizedStandardContains(query) }
     }
 
     private func delete(_ record: TranslationRecord) {
@@ -383,7 +389,31 @@ struct HistoryView: View {
     }
 
     private func refreshRecords() {
+        decodedRecords.removeAll()
         records = TranslationHistoryService.shared.fetchAll()
+    }
+}
+
+/// Records are re-fetched on every History change, which clears this cache.
+private final class DecodedHistoryRecordCache {
+    struct Entry {
+        let session: RealtimeHistorySession?
+        let results: [ModelResult]
+    }
+
+    private var entries: [PersistentIdentifier: Entry] = [:]
+
+    func decoded(_ record: TranslationRecord) -> Entry {
+        if let entry = entries[record.persistentModelID] {
+            return entry
+        }
+        let entry = Entry(session: record.realtimeSession, results: record.modelResults)
+        entries[record.persistentModelID] = entry
+        return entry
+    }
+
+    func removeAll() {
+        entries.removeAll()
     }
 }
 
@@ -419,6 +449,7 @@ private struct HistoryDaySection: Identifiable {
 
 private struct TextHistoryRow: View {
     let record: TranslationRecord
+    let results: [ModelResult]
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -434,7 +465,7 @@ private struct TextHistoryRow: View {
                 foregroundColor: colors.textSecondary,
                 lineLimit: 2
             )
-            if let result = record.modelResults.first?.resultText, !result.isEmpty {
+            if let result = results.first?.resultText, !result.isEmpty {
                 HistoryMarkdownText(
                     text: result,
                     font: .body,
@@ -475,7 +506,6 @@ private struct TextHistoryRow: View {
         } else if record.isConversation {
             parts.append(String(localized: "Chat"))
         }
-        let results = record.modelResults
         if results.count > 1 {
             parts.append(String(localized: "\(results.count) models"))
         } else if let first = results.first, !first.modelDisplayName.isEmpty {

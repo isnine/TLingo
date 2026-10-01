@@ -157,7 +157,7 @@ public final class TranslationHistoryService {
 
         if let existing = try persistentContext.fetch(descriptor).first {
             if let newResult {
-                var results = existing.modelResults
+                var results = try existing.decodedModelResults()
                 results.append(newResult)
                 existing.modelResults = results
             }
@@ -197,7 +197,7 @@ public final class TranslationHistoryService {
         descriptor.fetchLimit = 1
 
         if let existing = try persistentContext.fetch(descriptor).first {
-            let session = Self.mergingRealtimeAutosave(session, into: existing.realtimeSession)
+            let session = try Self.mergingRealtimeAutosave(session, into: existing.decodedRealtimeSession())
             existing.sourceText = session.sourceText
             existing.actionName = TranslationRecord.realtimeActionName
             existing.targetLanguage = session.targetLanguage

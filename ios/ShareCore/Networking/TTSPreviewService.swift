@@ -30,6 +30,8 @@ public final class TTSPreviewService: NSObject, ObservableObject, AVAudioPlayerD
     private let urlSession: URLSession
     private var audioPlayer: AVAudioPlayer?
     private var playbackContinuation: CheckedContinuation<Void, Never>?
+    /// Bumped by `stopPlayback()` so a download that finishes after stop or a newer request is dropped.
+    private var playbackGeneration = 0
 
     public init(urlSession: URLSession = NetworkSession.shared) {
         self.urlSession = urlSession
@@ -46,6 +48,7 @@ public final class TTSPreviewService: NSObject, ObservableObject, AVAudioPlayerD
 
         // Stop any current playback
         stopPlayback()
+        let generation = playbackGeneration
 
         isPlaying = true
         currentVoiceID = voiceID
@@ -53,11 +56,13 @@ public final class TTSPreviewService: NSObject, ObservableObject, AVAudioPlayerD
 
         do {
             let audioData = try await fetchTTSAudio(text: text, voiceID: voiceID)
+            guard generation == playbackGeneration else { return }
             try await playAudio(data: audioData)
         } catch {
             logger.error("TTS playback failed: \(error, privacy: .public)")
         }
 
+        guard generation == playbackGeneration else { return }
         isPlaying = false
         currentVoiceID = nil
         currentTextID = nil
@@ -69,17 +74,20 @@ public final class TTSPreviewService: NSObject, ObservableObject, AVAudioPlayerD
     public func playPreview(voiceID: String) async {
         // Stop any current playback
         stopPlayback()
+        let generation = playbackGeneration
 
         isPlaying = true
         currentVoiceID = voiceID
 
         do {
             let audioData = try await fetchTTSAudio(text: Self.previewText, voiceID: voiceID)
+            guard generation == playbackGeneration else { return }
             try await playAudio(data: audioData)
         } catch {
             logger.error("Preview failed for voice '\(voiceID, privacy: .public)': \(error, privacy: .public)")
         }
 
+        guard generation == playbackGeneration else { return }
         isPlaying = false
         currentVoiceID = nil
     }
@@ -87,6 +95,7 @@ public final class TTSPreviewService: NSObject, ObservableObject, AVAudioPlayerD
     /// Stops any current audio playback
     @MainActor
     public func stopPlayback() {
+        playbackGeneration += 1
         audioPlayer?.stop()
         audioPlayer = nil
         isPlaying = false

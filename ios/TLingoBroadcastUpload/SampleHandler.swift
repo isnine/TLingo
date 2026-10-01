@@ -8,7 +8,15 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private let heartbeatQueue = DispatchQueue(label: "com.zanderwang.AITranslator.BroadcastUpload.heartbeat")
     private let finishLock = NSLock()
     private var heartbeatTimer: DispatchSourceTimer?
-    private var pipeline: RealtimeLocalSpeechTranslationPipeline?
+    private let pipelineLock = NSLock()
+    private var _pipeline: RealtimeLocalSpeechTranslationPipeline?
+
+    /// Read on ReplayKit's sample queue and cleared from heartbeat and failure callbacks.
+    private var pipeline: RealtimeLocalSpeechTranslationPipeline? {
+        get { pipelineLock.withLock { _pipeline } }
+        set { pipelineLock.withLock { _pipeline = newValue } }
+    }
+
     private var didFinishBroadcast = false
 
     override func broadcastStarted(withSetupInfo _: [String: NSObject]?) {
@@ -99,16 +107,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with sampleBufferType: RPSampleBufferType) {
-        guard !finishIfStopRequested() else { return }
-
-        switch sampleBufferType {
-        case .audioApp:
+        // Stop requests are polled by the 1 s heartbeat; decoding the shared state on every
+        // sample buffer costs too much CPU and memory in the extension.
+        if sampleBufferType == .audioApp {
             pipeline?.append(sampleBuffer)
-            _ = finishIfStopRequested()
-        case .video, .audioMic:
-            _ = finishIfStopRequested()
-        @unknown default:
-            break
         }
     }
 

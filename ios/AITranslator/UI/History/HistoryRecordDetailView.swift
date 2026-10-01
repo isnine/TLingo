@@ -21,10 +21,6 @@ struct HistoryRecordDetailView: View {
     @State private var visibleRealtimeCaptionSources: [UUID: RealtimeHistoryAudioSource] = [:]
     @State private var activeConversationSession: ConversationSession?
     @State private var showFeaturePaywall = false
-    #if os(macOS)
-        @State private var chatInspectorWidth: CGFloat = InspectorColumnWidth.ideal
-        @State private var chatInspectorDragStartWidth: CGFloat?
-    #endif
 
     private var colors: AppColorPalette {
         AppColors.palette(for: colorScheme)
@@ -161,66 +157,38 @@ struct HistoryRecordDetailView: View {
     #endif
 
     #if os(macOS)
-        private static let minimumMainWidthWithChat: CGFloat = 560
-
-        @ViewBuilder
         private var macOSDetailContent: some View {
-            if let session = activeConversationSession {
-                GeometryReader { proxy in
-                    if proxy.size.width >= Self.minimumMainWidthWithChat + chatInspectorWidth {
-                        HStack(spacing: 0) {
-                            detailContent
-                                .frame(minWidth: Self.minimumMainWidthWithChat, maxWidth: .infinity, maxHeight: .infinity)
-                            chatPanel(session: session)
-                        }
-                    } else {
-                        ZStack(alignment: .trailing) {
-                            detailContent
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            chatPanel(session: session)
-                        }
+            detailContent
+                .inspector(isPresented: macOSConversationInspectorBinding) {
+                    if let session = activeConversationSession {
+                        ConversationContentView(
+                            session: session,
+                            onDismiss: {
+                                activeConversationSession = nil
+                            },
+                            onPremiumRequired: {
+                                showFeaturePaywall = true
+                            }
+                        )
+                        .id(session.id)
+                        .inspectorColumnWidth(
+                            min: InspectorColumnWidth.min,
+                            ideal: InspectorColumnWidth.ideal,
+                            max: InspectorColumnWidth.max
+                        )
                     }
                 }
-            } else {
-                detailContent
-            }
         }
 
-        private func chatPanel(session: ConversationSession) -> some View {
-            ConversationContentView(
-                session: session,
-                onDismiss: {
-                    activeConversationSession = nil
-                },
-                onPremiumRequired: {
-                    showFeaturePaywall = true
+        private var macOSConversationInspectorBinding: Binding<Bool> {
+            Binding(
+                get: { activeConversationSession != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        activeConversationSession = nil
+                    }
                 }
             )
-            .id(session.id)
-            .frame(width: chatInspectorWidth)
-            .frame(maxHeight: .infinity)
-            .background(Color.clear)
-            .overlay(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(width: 10)
-                    .overlay(alignment: .leading) {
-                        Divider()
-                    }
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                let startWidth = chatInspectorDragStartWidth ?? chatInspectorWidth
-                                chatInspectorDragStartWidth = startWidth
-                                chatInspectorWidth = InspectorColumnWidth.clamped(startWidth - value.translation.width)
-                            }
-                            .onEnded { _ in
-                                chatInspectorDragStartWidth = nil
-                            }
-                    )
-                    .accessibilityHidden(true)
-            }
         }
 
     #endif

@@ -466,12 +466,17 @@
             }
 
             public func removeLane(id: UUID) async {
-                guard laneConfigurations.count > 1 else { return }
+                guard laneConfigurations.count > 1,
+                      laneConfigurations.contains(where: { $0.id == id })
+                else {
+                    return
+                }
+                // Remove before suspending so a concurrent removal sees the updated count.
+                laneConfigurations.removeAll { $0.id == id }
+                laneSnapshots.removeAll { $0.id == id }
                 if isRunning {
                     await realtimePipelineCoordinator.removeLane(id: id)
                 }
-                laneConfigurations.removeAll { $0.id == id }
-                laneSnapshots.removeAll { $0.id == id }
                 if primaryLaneID == id, let first = laneConfigurations.first {
                     primaryLaneID = first.id
                     realtimePipelineCoordinator.setPrimaryLaneID(first.id)
@@ -1734,7 +1739,7 @@
                         try await Task.sleep(for: .milliseconds(Int((request.cadenceInterval * 1000).rounded(.up))))
                     }
                 } catch is CancellationError {
-                    finalTranslationTask = nil
+                    // The canceller already cleared the handle and may have scheduled a replacement.
                     return
                 } catch {
                     translationState.finishFinalTranslationRequest(request)
@@ -1780,7 +1785,7 @@
                     guard !Task.isCancelled else { return }
                     applyPartialTranslationResult(result, request: request)
                 } catch is CancellationError {
-                    partialTranslationTask = nil
+                    // The canceller already cleared the handle and may have scheduled a replacement.
                     return
                 } catch {
                     let message = Self.translationErrorMessage(
@@ -1847,20 +1852,24 @@
         }
 
         private func autosaveRealtimeHistoryIfNeeded(now: Date = Date()) {
-            guard isRunning, let session = currentRealtimeHistorySession() else { return }
-            guard session.segments != lastRealtimeHistoryAutosaveSegments ||
-                session.audioRecordings != lastRealtimeHistoryAutosaveRecordings ||
-                session.tracks != lastRealtimeHistoryAutosaveTracks
-            else {
-                return
-            }
-
+            guard isRunning else { return }
+            // Throttle before building the session: this runs on every recognition update.
             if let lastRealtimeHistoryAutosaveAt {
                 let delay = Self.realtimeHistoryAutosaveInterval - now.timeIntervalSince(lastRealtimeHistoryAutosaveAt)
                 if delay > 0 {
-                    scheduleRealtimeHistoryAutosave(after: delay)
+                    if realtimeHistoryAutosaveTask == nil {
+                        scheduleRealtimeHistoryAutosave(after: delay)
+                    }
                     return
                 }
+            }
+
+            guard let session = currentRealtimeHistorySession(),
+                  session.segments != lastRealtimeHistoryAutosaveSegments ||
+                  session.audioRecordings != lastRealtimeHistoryAutosaveRecordings ||
+                  session.tracks != lastRealtimeHistoryAutosaveTracks
+            else {
+                return
             }
 
             _ = saveRealtimeHistorySession(session, at: now, event: "autosaved")

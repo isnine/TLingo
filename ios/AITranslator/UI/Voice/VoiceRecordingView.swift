@@ -43,6 +43,8 @@ struct VoiceRecordingView: View {
         .padding(24)
         .background(colors.background.ignoresSafeArea())
         .presentationBackground(colors.background)
+        // Swipe-to-dismiss skips the cancel button; release the mic and audio session.
+        .onDisappear { speechService.cancelRecording() }
         .onChange(of: speechService.transcript) { _, newValue in
             let text = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !text.isEmpty {

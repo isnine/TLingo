@@ -83,10 +83,10 @@
 
         /// Called by the hidden window view when a TranslationSession becomes available.
         @available(macOS 14.4, *)
-        func sessionReady(_ session: TranslationSession) {
+        func sessionReady(_ session: TranslationSession) async {
             let vmId = activeViewModel.map { "\(ObjectIdentifier($0))" } ?? "nil"
             logger.debug("sessionReady, activeViewModel=\(vmId, privacy: .public)")
-            activeViewModel?.executeAppleTranslation(session: session)
+            await activeViewModel?.executeAppleTranslation(session: session)
         }
     }
 
@@ -102,7 +102,7 @@
                 .frame(width: 1, height: 1)
                 .translationTask(bridge.pendingConfig) { session in
                     logger.debug(".translationTask fired")
-                    AppleTranslationBridge.shared.sessionReady(session)
+                    await AppleTranslationBridge.shared.sessionReady(session)
                 }
         }
     }

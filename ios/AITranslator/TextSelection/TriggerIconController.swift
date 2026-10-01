@@ -181,8 +181,10 @@
                 Task { @MainActor in
                     panel.contentView = nil
                     panel.close()
-                    self?.cleanup()
-                    self?.onDismissed?()
+                    // A new icon may have been shown during the fade-out; leave it alone.
+                    guard let self, self.panel === panel else { return }
+                    self.cleanup()
+                    self.onDismissed?()
                 }
             })
         }

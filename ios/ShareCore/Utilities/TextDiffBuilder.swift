@@ -30,34 +30,42 @@ public enum TextDiffBuilder {
             return nil
         }
 
-        let lcsMatrix = buildLCSMatrix(original: originalTokens, revised: revisedTokens)
-
-        // Backtrack to collect diff tokens, then merge adjacent same-kind tokens
-        var tokenKinds: [(token: Substring, kind: Segment.Kind)] = []
-        var originalIndex = originalTokens.count
-        var revisedIndex = revisedTokens.count
-
-        while originalIndex > 0 || revisedIndex > 0 {
-            if originalIndex > 0, revisedIndex > 0, originalTokens[originalIndex - 1] == revisedTokens[revisedIndex - 1] {
-                tokenKinds.append((originalTokens[originalIndex - 1], .equal))
-                originalIndex -= 1
-                revisedIndex -= 1
-            } else if revisedIndex > 0,
-                      originalIndex == 0 || lcsMatrix[originalIndex][revisedIndex - 1] >=
-                      lcsMatrix[originalIndex - 1][revisedIndex]
-            {
-                tokenKinds.append((revisedTokens[revisedIndex - 1], .added))
-                revisedIndex -= 1
-            } else if originalIndex > 0 {
-                tokenKinds.append((originalTokens[originalIndex - 1], .removed))
-                originalIndex -= 1
+        let difference = revisedTokens.difference(from: originalTokens)
+        var removedOffsets = IndexSet()
+        var insertedOffsets = IndexSet()
+        for change in difference {
+            switch change {
+            case let .remove(offset, _, _):
+                removedOffsets.insert(offset)
+            case let .insert(offset, _, _):
+                insertedOffsets.insert(offset)
             }
         }
 
+        // Walk both token lists forward; within a change run, removals precede additions
+        var tokenKinds: [(token: Substring, kind: Segment.Kind)] = []
+        var originalIndex = 0
+        var revisedIndex = 0
+
+        while originalIndex < originalTokens.count || revisedIndex < revisedTokens.count {
+            if originalIndex < originalTokens.count, removedOffsets.contains(originalIndex) {
+                tokenKinds.append((originalTokens[originalIndex], .removed))
+                originalIndex += 1
+            } else if revisedIndex < revisedTokens.count, insertedOffsets.contains(revisedIndex) {
+                tokenKinds.append((revisedTokens[revisedIndex], .added))
+                revisedIndex += 1
+            } else {
+                tokenKinds.append((originalTokens[originalIndex], .equal))
+                originalIndex += 1
+                revisedIndex += 1
+            }
+        }
+
+        slideChangeRunsLeft(&tokenKinds)
+
         // Build merged segments in forward order
         var segments: [Segment] = []
-        for idx in tokenKinds.indices.reversed() {
-            let (token, kind) = tokenKinds[idx]
+        for (token, kind) in tokenKinds {
             if let lastIdx = segments.indices.last, segments[lastIdx].kind == kind {
                 segments[lastIdx].text.append(contentsOf: token)
             } else {
@@ -120,6 +128,7 @@ public enum TextDiffBuilder {
     }
 
     /// Tokenize a string into words and whitespace/punctuation tokens.
+    /// CJK characters are individual tokens because those scripts do not separate words with spaces.
     /// Preserves all characters so `tokens.joined() == input`.
     private static func tokenize(_ string: String) -> [Substring] {
         var tokens: [Substring] = []
@@ -134,15 +143,17 @@ public enum TextDiffBuilder {
                     index = text.index(after: index)
                 }
                 tokens.append(text[start ..< index])
-            } else if character.isPunctuation || character.isSymbol {
-                // Each punctuation/symbol character is its own token
+            } else if character.isPunctuation || character.isSymbol || isCJK(character) {
+                // Each punctuation/symbol/CJK character is its own token
                 let next = text.index(after: index)
                 tokens.append(text[index ..< next])
                 index = next
             } else {
                 // Collect contiguous word characters
                 let start = index
-                while index < text.endIndex, !text[index].isWhitespace, !text[index].isPunctuation, !text[index].isSymbol {
+                while index < text.endIndex, !text[index].isWhitespace, !text[index].isPunctuation, !text[index].isSymbol,
+                      !isCJK(text[index])
+                {
                     index = text.index(after: index)
                 }
                 tokens.append(text[start ..< index])
@@ -151,22 +162,56 @@ public enum TextDiffBuilder {
         return tokens
     }
 
-    private static func buildLCSMatrix(original: [Substring], revised: [Substring]) -> [[Int]] {
-        let rows = original.count + 1
-        let columns = revised.count + 1
-        var matrix = Array(repeating: Array(repeating: 0, count: columns), count: rows)
-
-        for row in 1 ..< rows {
-            for column in 1 ..< columns {
-                if original[row - 1] == revised[column - 1] {
-                    matrix[row][column] = matrix[row - 1][column - 1] + 1
-                } else {
-                    matrix[row][column] = max(matrix[row - 1][column], matrix[row][column - 1])
+    /// Myers places ambiguous change runs as late as possible ("send |the quarterly |report");
+    /// shift pure insertion/removal runs left while the preceding equal token matches the run's
+    /// last token so boundaries read naturally ("send| the quarterly| report").
+    private static func slideChangeRunsLeft(_ tokenKinds: inout [(token: Substring, kind: Segment.Kind)]) {
+        var start = 0
+        while start < tokenKinds.count {
+            let kind = tokenKinds[start].kind
+            guard kind != .equal else {
+                start += 1
+                continue
+            }
+            var end = start
+            while end < tokenKinds.count, tokenKinds[end].kind == kind {
+                end += 1
+            }
+            let isPureRun = end == tokenKinds.count || tokenKinds[end].kind == .equal
+            if isPureRun {
+                while start > 0, tokenKinds[start - 1].kind == .equal,
+                      tokenKinds[start - 1].token == tokenKinds[end - 1].token
+                {
+                    tokenKinds[start - 1].kind = kind
+                    tokenKinds[end - 1].kind = .equal
+                    start -= 1
+                    end -= 1
                 }
             }
+            start = end
+            while start < tokenKinds.count, tokenKinds[start].kind != .equal {
+                start += 1
+            }
         }
+    }
 
-        return matrix
+    private static func isCJK(_ character: Character) -> Bool {
+        guard let scalar = character.unicodeScalars.first else { return false }
+        if scalar.properties.isIdeographic {
+            return true
+        }
+        switch scalar.value {
+        case 0x3040 ... 0x30FF, // Hiragana, Katakana
+             0x31F0 ... 0x31FF, // Katakana Phonetic Extensions
+             0xFF66 ... 0xFF9F, // Halfwidth Katakana
+             0x1100 ... 0x11FF, // Hangul Jamo
+             0x3130 ... 0x318F, // Hangul Compatibility Jamo
+             0xA960 ... 0xA97F, // Hangul Jamo Extended-A
+             0xAC00 ... 0xD7FF: // Hangul Syllables, Jamo Extended-B
+            return true
+        default:
+            return false
+        }
     }
 }
 

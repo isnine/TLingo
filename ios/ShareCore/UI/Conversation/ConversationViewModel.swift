@@ -244,6 +244,8 @@ public final class ConversationViewModel: ObservableObject {
             publishStreamingResponse(response)
         } else {
             await revealStreamingResponse(response)
+            // stopStreaming() already appended and saved the partial reply.
+            guard !Task.isCancelled else { return }
         }
         let assistantMessage = ChatMessage(
             role: "assistant",

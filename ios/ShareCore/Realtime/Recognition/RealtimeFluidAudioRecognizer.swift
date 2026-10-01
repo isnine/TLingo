@@ -547,9 +547,10 @@
         }
 
         func processPendingAudio(sessionID: UUID) async {
+            var releasedProcessingTask = false
             defer {
                 stateLock.withLock {
-                    if sessionID == activeSessionID {
+                    if !releasedProcessingTask, sessionID == activeSessionID {
                         processingTask = nil
                     }
                 }
@@ -560,6 +561,12 @@
                           !pendingSampleChunks.isEmpty,
                           let streamingEngine
                     else {
+                        // Release in the same critical section that saw the empty queue, so a
+                        // concurrent append starts a new task instead of leaving its chunk queued.
+                        if sessionID == activeSessionID {
+                            processingTask = nil
+                            releasedProcessingTask = true
+                        }
                         return nil
                     }
                     let samples = pendingSampleChunks.removeFirst()

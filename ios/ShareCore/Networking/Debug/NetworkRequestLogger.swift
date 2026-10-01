@@ -53,7 +53,7 @@ public final class NetworkRequestLogger: ObservableObject {
             for file in try recordFiles().dropFirst(Self.maxRecords) {
                 try? FileManager.default.removeItem(at: file)
             }
-            try writeLocalLog()
+            // The readable log is regenerated on export; rebuilding it here re-decoded every record per request.
         } catch {
             logger.error("Failed to write network record: \(error, privacy: .public)")
         }

@@ -25,6 +25,9 @@
         }
 
         private static let maximumStartupBufferDuration: TimeInterval = 15
+        /// Startup replay is appended synchronously, so a node's recognizer input queue must hold
+        /// all of it plus live audio arriving while recognition catches up, at 10 ms capture buffers.
+        static let startupReplayInputBufferLimit = Int(maximumStartupBufferDuration * 2 / 0.01)
 
         private let lock = NSLock()
         private let conversionLock = NSLock()
@@ -209,7 +212,9 @@
             let recognizer: any RealtimeRecognizer
             switch model.runtime {
             case .appleSpeech:
-                let transcriber = RealtimeLiveSpeechTranscriber()
+                let transcriber = RealtimeLiveSpeechTranscriber(
+                    analyzerInputBufferLimit: RealtimePipelineAudioFanout.startupReplayInputBufferLimit
+                )
                 transcriber.delegate = self
                 recognizer = transcriber
             case .fluidAudio:

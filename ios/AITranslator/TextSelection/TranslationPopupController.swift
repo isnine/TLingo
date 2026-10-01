@@ -43,9 +43,14 @@
                 onTranslationSucceeded: { [weak self] in
                     self?.onTranslationSucceeded?()
                 },
-                onReplace: { [weak self] text in
+                onReplace: { [weak self, weak newPanel] text in
                     Task { @MainActor in
-                        guard await selection.replace(with: text) else { return }
+                        // A key popup would receive the synthesized ⌘V of the clipboard fallback.
+                        newPanel?.orderOut(nil)
+                        guard await selection.replace(with: text) else {
+                            newPanel?.makeKeyAndOrderFront(nil)
+                            return
+                        }
                         self?.dismiss()
                     }
                 }
@@ -122,6 +127,7 @@
         func dismiss() {
             dismissMonitor?.stop()
             dismissMonitor = nil
+            persistCurrentFrame()
             panel?.contentView = nil
             panel?.close()
             panel = nil
@@ -166,11 +172,9 @@
             AppPreferences.shared.setSelectionPopupOrigin(panel.frame.origin)
         }
 
-        func windowDidMove(_: Notification) {
-            persistCurrentFrame()
-        }
-
-        func windowDidResize(_: Notification) {
+        /// Persisting on every move/resize event republished AppPreferences per drag frame;
+        /// save once when the gesture ends and when the popup closes instead.
+        func windowDidEndLiveResize(_: Notification) {
             persistCurrentFrame()
         }
 

@@ -112,22 +112,27 @@ public final class ModelsService: Sendable {
             return cached
         }
 
-        lock.lock()
-        let inFlight = inFlightTask
-        lock.unlock()
-
-        // Coalesce concurrent refreshes.
-        if let inFlight {
-            return try await inFlight.value
-        }
-
-        let task = Task { [urlSession] in
-            defer {
-                self.lock.lock()
-                self.inFlightTask = nil
-                self.lock.unlock()
+        // Check and register under one lock so concurrent callers coalesce onto one request.
+        let task: Task<[ModelConfig], Error> = lock.withLock {
+            if let inFlightTask {
+                return inFlightTask
             }
+            let task = makeFetchTask()
+            inFlightTask = task
+            return task
+        }
+        defer {
+            lock.withLock {
+                if inFlightTask == task {
+                    inFlightTask = nil
+                }
+            }
+        }
+        return try await task.value
+    }
 
+    private func makeFetchTask() -> Task<[ModelConfig], Error> {
+        Task { [urlSession] in
             var url = CloudServiceConstants.endpoint.appendingPathComponent("models")
             url.append(queryItems: [URLQueryItem(name: "premium", value: "1")])
             var request = URLRequest(url: url)
@@ -154,12 +159,6 @@ public final class ModelsService: Sendable {
 
             return models
         }
-
-        lock.lock()
-        inFlightTask = task
-        lock.unlock()
-
-        return try await task.value
     }
 
     /// Backwards-compatible entry point (always refresh).

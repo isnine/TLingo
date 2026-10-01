@@ -987,8 +987,9 @@ public final class HomeViewModel: ObservableObject {
             currentRequestTask = Task { [weak self] in
                 await Entitlement.shared.refresh()
                 guard !Task.isCancelled else { return }
+                // Already refreshed once; per-model requests reuse the cached result.
                 self?.performSelectedActionWithCurrentEntitlement(
-                    refreshEntitlement: true,
+                    refreshEntitlement: false,
                     allowModelFallback: allowModelFallback
                 )
             }
@@ -2196,7 +2197,7 @@ public final class HomeViewModel: ObservableObject {
     /// Called from HomeView's `.translationTask()` callback once a TranslationSession is available.
     #if canImport(Translation)
         @available(iOS 17.4, macOS 14.4, *)
-        public func executeAppleTranslation(session: TranslationSession) {
+        public func executeAppleTranslation(session: TranslationSession) async {
             logger
                 .debug(
                     "executeAppleTranslation: hasText=\(self.pendingAppleTranslateText != nil, privacy: .public), hasAction=\(self.pendingAppleTranslateAction != nil, privacy: .public)"
@@ -2225,44 +2226,42 @@ public final class HomeViewModel: ObservableObject {
             appleTranslateSourceLanguage = nil
             appleTranslateTargetLanguage = nil
 
-            Task { [weak self] in
-                guard let self else { return }
-                do {
-                    let result: ModelExecutionResult
-                    if action.outputType == .sentencePairs {
-                        result = try await AppleTranslationService.shared.translateSentences(
-                            text: text, using: session
-                        )
-                    } else {
-                        result = try await AppleTranslationService.shared.translate(
-                            text: text, using: session
-                        )
-                    }
-                    guard self.isRunStillValid(
-                        context,
-                        runID: result.modelID,
-                        runToken: runToken
-                    ) else { return }
-                    self.apply(result: result, context: context, runToken: runToken, allowDiff: false)
-                    self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-                } catch {
-                    logger.error("executeAppleTranslation failed: \(String(describing: error), privacy: .public)")
-                    guard self.isRunStillValid(
-                        context,
-                        runID: ModelConfig.appleTranslateID,
-                        runToken: runToken
-                    ) else { return }
-                    let failResult = ModelExecutionResult(
-                        modelID: ModelConfig.appleTranslateID,
-                        duration: 0,
-                        response: .failure(LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describe(
-                            error,
-                            source: sourceLocale,
-                            target: resolvedTarget
-                        )))
+            // The session is only valid inside the `.translationTask` closure, so run inline.
+            do {
+                let result: ModelExecutionResult
+                if action.outputType == .sentencePairs {
+                    result = try await AppleTranslationService.shared.translateSentences(
+                        text: text, using: session
                     )
-                    self.apply(result: failResult, context: context, runToken: runToken, allowDiff: false)
+                } else {
+                    result = try await AppleTranslationService.shared.translate(
+                        text: text, using: session
+                    )
                 }
+                guard isRunStillValid(
+                    context,
+                    runID: result.modelID,
+                    runToken: runToken
+                ) else { return }
+                apply(result: result, context: context, runToken: runToken, allowDiff: false)
+                saveHistoryIfSuccessful(result, context: context, runToken: runToken)
+            } catch {
+                logger.error("executeAppleTranslation failed: \(String(describing: error), privacy: .public)")
+                guard isRunStillValid(
+                    context,
+                    runID: ModelConfig.appleTranslateID,
+                    runToken: runToken
+                ) else { return }
+                let failResult = ModelExecutionResult(
+                    modelID: ModelConfig.appleTranslateID,
+                    duration: 0,
+                    response: .failure(LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describe(
+                        error,
+                        source: sourceLocale,
+                        target: resolvedTarget
+                    )))
+                )
+                apply(result: failResult, context: context, runToken: runToken, allowDiff: false)
             }
         }
     #endif

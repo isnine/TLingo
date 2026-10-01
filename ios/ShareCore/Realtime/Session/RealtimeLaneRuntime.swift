@@ -320,8 +320,8 @@
                         ))
                     }
                 } catch is CancellationError {
+                    // The canceller already cleared the handle and may have scheduled a replacement.
                     latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
-                    finalTranslationTask = nil
                     return
                 } catch {
                     latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
@@ -357,7 +357,7 @@
                     _ = translationState.applyPartialTranslationSuccess(result, request: latestRequest)
                     syncApplePresentation()
                 } catch is CancellationError {
-                    partialTranslationTask = nil
+                    // The canceller already cleared the handle and may have scheduled a replacement.
                     return
                 } catch {
                     handleTranslationFailure(error)

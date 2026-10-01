@@ -93,8 +93,17 @@
                 return (source, translation)
             }
 
-            let spokenOffsets = Self.spokenOffsets(
-                for: cleanPairs.map(\.source),
+            // Recognizers report a bounded window of recent timings. Segments placed before that
+            // window keep their offset; matching them would hit repeated phrases in recent speech.
+            let coveredStart = recognitionTimings
+                .first(where: { $0.endTime > recognitionTimelineBase })
+                .map { max(0, $0.startTime - recognitionTimelineBase) } ?? 0
+            let firstMatchableIndex = min(
+                segments.firstIndex(where: { $0.offset >= coveredStart }) ?? segments.count,
+                cleanPairs.count
+            )
+            let spokenOffsets = [TimeInterval?](repeating: nil, count: firstMatchableIndex) + Self.spokenOffsets(
+                for: cleanPairs.dropFirst(firstMatchableIndex).map(\.source),
                 timings: recognitionTimings,
                 timelineBase: recognitionTimelineBase
             )

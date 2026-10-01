@@ -947,6 +947,16 @@ public final class TranslationRecord {
         }
     }
 
+    /// Write paths merge into existing data, so a decode failure must not read as empty.
+    func decodedModelResults() throws -> [ModelResult] {
+        guard !modelResultsData.isEmpty else { return [] }
+        return try JSONDecoder().decode([ModelResult].self, from: modelResultsData)
+    }
+
+    func decodedRealtimeSession() throws -> RealtimeHistorySession? {
+        try realtimeSessionData.map { try JSONDecoder().decode(RealtimeHistorySession.self, from: $0) }
+    }
+
     public var conversationMessages: [ChatMessage] {
         get {
             guard let conversationMessagesData,

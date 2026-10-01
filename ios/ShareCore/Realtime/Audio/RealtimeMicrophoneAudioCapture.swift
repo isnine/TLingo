@@ -32,6 +32,8 @@
             private var converter: AVAudioConverter?
             private var targetFormat: AVAudioFormat?
             private var conversionFailureCount = 0
+            private var engineSampleRate = 16000
+            private var configurationChangeObserver: NSObjectProtocol?
         #endif
         private var audioSampleCount = 0
 
@@ -79,7 +81,9 @@
                 registerSessionObservers(for: session)
                 session.startRunning()
             #elseif os(iOS)
+                engineSampleRate = sampleRate
                 try startAudioEngine(sampleRate: sampleRate)
+                observeEngineConfigurationChanges()
             #endif
         }
 
@@ -93,6 +97,10 @@
                 output = nil
                 session = nil
             #elseif os(iOS)
+                if let configurationChangeObserver {
+                    NotificationCenter.default.removeObserver(configurationChangeObserver)
+                    self.configurationChangeObserver = nil
+                }
                 audioEngine.stop()
                 audioEngine.inputNode.removeTap(onBus: 0)
                 if audioEngine.inputNode.isVoiceProcessingEnabled {
@@ -178,7 +186,10 @@
             private func startAudioEngine(sampleRate: Int) throws {
                 let inputNode = audioEngine.inputNode
                 do {
-                    try inputNode.setVoiceProcessingEnabled(true)
+                    // Re-enabling during a configuration-change restart would trigger another change.
+                    if !inputNode.isVoiceProcessingEnabled {
+                        try inputNode.setVoiceProcessingEnabled(true)
+                    }
                 } catch {
                     // Raw input still works, only quieter; do not fail the session.
                     RealtimeLog.warn("audio", "voice processing unavailable error=\(String(describing: error))")
@@ -222,6 +233,32 @@
                     target=\(sampleRate)Hz voiceProcessing=\(inputNode.isVoiceProcessingEnabled) route=\(AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue))
                     """
                 )
+            }
+
+            /// Route changes (AirPods, wired headset) stop the engine and leave the tap silent.
+            private func observeEngineConfigurationChanges() {
+                configurationChangeObserver = NotificationCenter.default.addObserver(
+                    forName: .AVAudioEngineConfigurationChange,
+                    object: audioEngine,
+                    queue: .main
+                ) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        self?.restartAudioEngineAfterConfigurationChange()
+                    }
+                }
+            }
+
+            @MainActor
+            private func restartAudioEngineAfterConfigurationChange() {
+                guard targetFormat != nil else { return }
+                RealtimeLog.log("audio", "microphone engine configuration changed; restarting")
+                audioEngine.stop()
+                audioEngine.inputNode.removeTap(onBus: 0)
+                do {
+                    try startAudioEngine(sampleRate: engineSampleRate)
+                } catch {
+                    delegate?.realtimeMicrophoneAudioCapture(self, didFail: error)
+                }
             }
 
             private func validInputFormat(for inputNode: AVAudioInputNode) -> AVAudioFormat? {

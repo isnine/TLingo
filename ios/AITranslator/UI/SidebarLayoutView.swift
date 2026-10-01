@@ -163,7 +163,8 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         @State private var visibleRealtimeHistoryCount = sidebarHistoryPageSize
         @State private var showActions = false
         @State private var showFeaturePaywall = false
-        @StateObject private var realtimeStore = RealtimeSessionStore.shared
+        // Not observed: high-frequency caption updates must not invalidate the root view.
+        private let realtimeStore = RealtimeSessionStore.shared
         @ObservedObject private var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject private var storeManager = StoreManager.shared
@@ -386,16 +387,25 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         @State private var visibleChatHistoryCount = sidebarHistoryPageSize
         @State private var visibleRealtimeHistoryCount = sidebarHistoryPageSize
         @State private var showActions = false
-        @StateObject private var realtimeStore = RealtimeSessionStore.shared
-        @StateObject private var realtimeControlModel = RealtimeControlModel()
+        // Not observed: high-frequency caption updates must not invalidate the root view.
+        private let realtimeStore = RealtimeSessionStore.shared
+        private let homeViewModel: HomeViewModel
+        @ObservedObject private var realtimeControlModel: RealtimeControlModel
         @ObservedObject private var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject private var storeManager = StoreManager.shared
         @State private var showFeaturePaywall = false
 
-        init(initialTab: RootTabView.TabItem, configStore: AppConfigurationStore) {
+        init(
+            initialTab: RootTabView.TabItem,
+            configStore: AppConfigurationStore,
+            homeViewModel: HomeViewModel,
+            realtimeControlModel: RealtimeControlModel
+        ) {
             _selection = State(initialValue: .tab(initialTab))
             self.configStore = configStore
+            self.homeViewModel = homeViewModel
+            self.realtimeControlModel = realtimeControlModel
         }
 
         private var sidebarTabs: [RootTabView.TabItem] {
@@ -550,7 +560,8 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                     onShowSidebarTap: sidebarRevealAction,
                     onPremiumRequired: {
                         showFeaturePaywall = true
-                    }
+                    },
+                    viewModel: homeViewModel
                 )
             case .history:
                 HistoryView()
@@ -603,6 +614,7 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
 private struct PremiumSidebarFooter: View {
     @ObservedObject private var preferences = AppPreferences.shared
     @ObservedObject private var oauth = OAuthCoordinator.shared
+    @ObservedObject private var entitlement = Entitlement.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var showPaywall = false
 
@@ -632,7 +644,7 @@ private struct PremiumSidebarFooter: View {
             fadeGradient
                 .allowsHitTesting(false)
 
-            if Entitlement.shared.isPro {
+            if entitlement.isPro {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Image(systemName: "crown.fill")

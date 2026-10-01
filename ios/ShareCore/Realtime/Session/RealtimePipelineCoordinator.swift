@@ -21,6 +21,10 @@
         var onLaneTerminated: ((UUID, String) -> Void)?
 
         var configurations: [RealtimeLaneConfiguration] = []
+        /// Lanes reserved by an `addLane` that is still loading its recognition model.
+        var pendingLaneConfigurations: [RealtimeLaneConfiguration] = []
+        /// Lanes whose removal has started; they stay in `configurations` until their track is saved.
+        var removingLaneIDs: Set<UUID> = []
         var primaryLaneID: UUID?
         var recognitionNodes: [String: RealtimeRecognitionNode] = [:]
         var recognitionSubscribers: [String: Set<UUID>] = [:]
@@ -112,9 +116,12 @@
                     )
                 }
             } catch {
-                await stopNodes()
-                laneRuntimes.removeAll()
-                self.configurations = []
+                // A stop or newer start during model loading already owns the pipeline state.
+                if sessionID == activeSessionID, !isStopping {
+                    await stopNodes()
+                    laneRuntimes.removeAll()
+                    self.configurations = []
+                }
                 throw error
             }
 
@@ -140,23 +147,28 @@
             guard !isUnderMemoryPressure else {
                 throw RealtimePipelineError.memoryPressure
             }
-            guard configurations.count < Self.maximumLaneCount else {
+            let reservedConfigurations = configurations + pendingLaneConfigurations
+            guard reservedConfigurations.count < Self.maximumLaneCount else {
                 throw RealtimePipelineError.maximumLaneCount
             }
-            guard !configurations.contains(where: {
+            guard !reservedConfigurations.contains(where: {
                 $0.recognitionModelID == configuration.recognitionModelID &&
                     $0.translationProvider == configuration.translationProvider
             }) else {
                 throw RealtimePipelineError.duplicateLane
             }
-            _ = try Self.validated(configurations + [configuration])
+            _ = try Self.validated(reservedConfigurations + [configuration])
 
             var createdRecognitionNode = false
             if isRunning {
                 let model = configuration.recognitionModel
-                createdRecognitionNode = recognitionNodes[model.id] == nil
                 if recognitionNodes[model.id] == nil {
-                    try await startRecognitionNode(model: model, sessionID: activeSessionID)
+                    pendingLaneConfigurations.append(configuration)
+                    defer { pendingLaneConfigurations.removeAll { $0.id == configuration.id } }
+                    createdRecognitionNode = try await startRecognitionNode(
+                        model: model,
+                        sessionID: activeSessionID
+                    )
                 }
             }
 
@@ -177,11 +189,14 @@
         }
 
         func removeLane(id: UUID) async {
-            guard configurations.count > 1,
+            guard configurations.count - removingLaneIDs.count > 1,
+                  !removingLaneIDs.contains(id),
                   let configuration = configurations.first(where: { $0.id == id })
             else {
                 return
             }
+            removingLaneIDs.insert(id)
+            defer { removingLaneIDs.remove(id) }
 
             await removeSubscriber(id, modelID: configuration.recognitionModel.id)
             if let runtime = laneRuntimes[id] {

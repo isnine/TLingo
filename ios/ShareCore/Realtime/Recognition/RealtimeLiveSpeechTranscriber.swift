@@ -19,8 +19,14 @@
     final class RealtimeLiveSpeechTranscriber: @unchecked Sendable {
         weak var delegate: RealtimeLiveSpeechTranscriberDelegate?
 
-        private static let reusablePCMBufferCount = 48
-        private static let analyzerInputBufferLimit = 32
+        /// Final timings older than this, relative to the latest final token, are dropped so a long
+        /// session does not copy its whole timing history into every partial result.
+        private static let retainedFinalTokenTimingDuration: TimeInterval = 300
+
+        /// Reused PCM buffers stay queued in the input stream, so the ring must outnumber the
+        /// stream bound or a queued buffer would be overwritten.
+        private let reusablePCMBufferCount: Int
+        private let analyzerInputBufferLimit: Int
 
         private let audioFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
@@ -47,11 +53,14 @@
         private var receivedAudioFrames: AVAudioFramePosition = 0
         private var finalTokenTimings: [RealtimeRecognitionTokenTiming] = []
         private var volatileTokenTimings: [RealtimeRecognitionTokenTiming] = []
-        private var reusablePCMBuffers = [AVAudioPCMBuffer?](
-            repeating: nil,
-            count: reusablePCMBufferCount
-        )
+        private var reusablePCMBuffers: [AVAudioPCMBuffer?]
         private var reusablePCMBufferCursor = 0
+
+        init(analyzerInputBufferLimit: Int = 32) {
+            self.analyzerInputBufferLimit = analyzerInputBufferLimit
+            reusablePCMBufferCount = analyzerInputBufferLimit + 16
+            reusablePCMBuffers = [AVAudioPCMBuffer?](repeating: nil, count: reusablePCMBufferCount)
+        }
 
         func start(locale: Locale, sessionID: UUID) async throws {
             let authorized = await requestAuthorization()
@@ -80,7 +89,7 @@
                     )
                     await stop()
                     prepareForStart(sessionID: sessionID)
-                    legacyRecognizer = try RealtimeLegacySpeechRecognizer(
+                    let legacyRecognizer = try RealtimeLegacySpeechRecognizer(
                         locale: locale,
                         didRecognize: { [weak self] result in
                             self?.publishRecognitionResult(result, sessionID: sessionID)
@@ -90,6 +99,7 @@
                             self.reportRuntimeFailure(error, sessionID: sessionID)
                         }
                     )
+                    withStateLock { self.legacyRecognizer = legacyRecognizer }
                 }
             }
         }
@@ -171,9 +181,9 @@
 
         private func makeInputStream() -> AsyncStream<AnalyzerInput> {
             AsyncStream<AnalyzerInput>(
-                bufferingPolicy: .bufferingNewest(Self.analyzerInputBufferLimit)
+                bufferingPolicy: .bufferingNewest(analyzerInputBufferLimit)
             ) { continuation in
-                self.inputContinuation = continuation
+                self.withStateLock { self.inputContinuation = continuation }
             }
         }
 
@@ -213,9 +223,9 @@
         }
 
         func append(_ sampleBuffer: CMSampleBuffer) {
-            stateLock.lock()
-            let isPaused = isPaused
-            stateLock.unlock()
+            let (isPaused, inputContinuation, legacyRecognizer) = withStateLock {
+                (self.isPaused, self.inputContinuation, self.legacyRecognizer)
+            }
 
             guard !isPaused else { return }
 
@@ -233,9 +243,9 @@
         }
 
         func append(_ pcmBuffer: AVAudioPCMBuffer) {
-            stateLock.lock()
-            let isPaused = isPaused
-            stateLock.unlock()
+            let (isPaused, inputContinuation, legacyRecognizer) = withStateLock {
+                (self.isPaused, self.inputContinuation, self.legacyRecognizer)
+            }
 
             guard !isPaused else { return }
             let startTime = reserveAudioTime(for: pcmBuffer)
@@ -341,6 +351,7 @@
                 if let tokenTimings {
                     if result.state == .final {
                         finalTokenTimings.append(contentsOf: tokenTimings)
+                        trimFinalTokenTimings()
                         volatileTokenTimings.removeAll()
                     } else {
                         volatileTokenTimings = tokenTimings
@@ -362,6 +373,18 @@
                     confidence: result.confidence
                 )
             )
+        }
+
+        /// Caller holds `stateLock`.
+        private func trimFinalTokenTimings() {
+            guard let latestEndTime = finalTokenTimings.last?.endTime else { return }
+            let cutoff = latestEndTime - Self.retainedFinalTokenTimingDuration
+            guard let firstRetainedIndex = finalTokenTimings.firstIndex(where: { $0.endTime >= cutoff }),
+                  firstRetainedIndex > 0
+            else {
+                return
+            }
+            finalTokenTimings.removeFirst(firstRetainedIndex)
         }
 
         private func publishTerminalSnapshotIfNeeded(sessionID: UUID) {
@@ -544,7 +567,7 @@
         private func reusablePCMBuffer(frameCount: Int) -> AVAudioPCMBuffer? {
             let frameCapacity = AVAudioFrameCount(frameCount)
             let index = reusablePCMBufferCursor
-            reusablePCMBufferCursor = (reusablePCMBufferCursor + 1) % Self.reusablePCMBufferCount
+            reusablePCMBufferCursor = (reusablePCMBufferCursor + 1) % reusablePCMBufferCount
 
             if let buffer = reusablePCMBuffers[index], buffer.frameCapacity >= frameCapacity {
                 buffer.frameLength = 0
@@ -563,7 +586,7 @@
             conversionLock.lock()
             reusablePCMBuffers = [AVAudioPCMBuffer?](
                 repeating: nil,
-                count: Self.reusablePCMBufferCount
+                count: reusablePCMBufferCount
             )
             reusablePCMBufferCursor = 0
             conversionLock.unlock()

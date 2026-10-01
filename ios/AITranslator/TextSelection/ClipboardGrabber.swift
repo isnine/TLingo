@@ -162,11 +162,14 @@
 
         /// Presses the enabled Copy item (⌘C without extra modifiers) in the frontmost app's menu bar.
         private static func pressMenuBarCopy() -> Bool {
+            _ = AccessibilityGrabber.configureMessagingTimeout
             guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
                   let menuBar: AXUIElement = attribute(kAXMenuBarAttribute, of: AXUIElementCreateApplication(pid))
             else { return false }
 
-            for barItem in children(of: menuBar) {
+            // Copy lives in the Edit menu near the front; scanning every menu (History,
+            // Bookmarks) cost hundreds of AX round trips.
+            for barItem in children(of: menuBar).prefix(6) {
                 for menu in children(of: barItem) {
                     for item in children(of: menu) {
                         guard attribute(kAXMenuItemCmdCharAttribute, of: item) as String? == "C",

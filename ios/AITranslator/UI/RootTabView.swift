@@ -255,6 +255,9 @@ extension RootTabView {
 
         let initialTab: RootTabView.TabItem
         @ObservedObject var configStore: AppConfigurationStore
+        // Owned here so crossing the regular/compact boundary keeps Home and realtime state.
+        @StateObject private var homeViewModel = HomeViewModel()
+        @StateObject private var realtimeControlModel = RealtimeControlModel()
 
         private var usesSidebar: Bool {
             UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
@@ -263,9 +266,19 @@ extension RootTabView {
         @ViewBuilder
         var body: some View {
             if usesSidebar {
-                SidebarLayoutView(initialTab: initialTab, configStore: configStore)
+                SidebarLayoutView(
+                    initialTab: initialTab,
+                    configStore: configStore,
+                    homeViewModel: homeViewModel,
+                    realtimeControlModel: realtimeControlModel
+                )
             } else {
-                CompactNavigationView(initialTab: initialTab, configStore: configStore)
+                CompactNavigationView(
+                    initialTab: initialTab,
+                    configStore: configStore,
+                    homeViewModel: homeViewModel,
+                    realtimeControlModel: realtimeControlModel
+                )
             }
         }
     }
@@ -281,15 +294,24 @@ extension RootTabView {
         @State private var showSettings: Bool
         @ObservedObject var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
-        @StateObject private var realtimeStore = RealtimeSessionStore.shared
-        @StateObject private var realtimeControlModel = RealtimeControlModel()
+        // Not observed: high-frequency caption updates must not invalidate the root view.
+        private let realtimeStore = RealtimeSessionStore.shared
+        private let homeViewModel: HomeViewModel
+        @ObservedObject private var realtimeControlModel: RealtimeControlModel
         @State private var showFeaturePaywall = false
 
-        init(initialTab: RootTabView.TabItem, configStore: AppConfigurationStore) {
+        init(
+            initialTab: RootTabView.TabItem,
+            configStore: AppConfigurationStore,
+            homeViewModel: HomeViewModel,
+            realtimeControlModel: RealtimeControlModel
+        ) {
             _showRealtime = State(initialValue: initialTab == .realtime)
             _showModels = State(initialValue: initialTab == .models)
             _showSettings = State(initialValue: initialTab == .settings)
             self.configStore = configStore
+            self.homeViewModel = homeViewModel
+            self.realtimeControlModel = realtimeControlModel
         }
 
         private var colors: AppColorPalette {
@@ -308,7 +330,7 @@ extension RootTabView {
                     showRealtime = true
                 }, onPremiumRequired: {
                     showFeaturePaywall = true
-                })
+                }, viewModel: homeViewModel)
                 .navigationDestination(isPresented: $showHistory) {
                     HistoryView()
                 }

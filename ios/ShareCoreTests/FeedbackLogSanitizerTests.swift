@@ -222,7 +222,7 @@ struct FeedbackLogSanitizerTests {
             requestHeaders: ["Authorization": "Bearer private-token"],
             statusCode: 200
         ))
-        let localFile = directory.appendingPathComponent("tlingo-local.log")
+        let localFile = try writer.writeLocalLog()
         let initial = try String(contentsOf: localFile, encoding: .utf8)
         #expect(initial.contains("status=200"))
         writer.store(NetworkRequestRecord(

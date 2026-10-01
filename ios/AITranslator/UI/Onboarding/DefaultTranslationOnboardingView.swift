@@ -917,7 +917,7 @@
 
         private static let reminderDateFormatter: DateFormatter = {
             let formatter = DateFormatter()
-            formatter.dateFormat = "MMM d, h a"
+            formatter.setLocalizedDateFormatFromTemplate("MMMdj")
             return formatter
         }()
 
