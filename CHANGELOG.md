@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.4] - 2026-10-01
+
+### Added
+
+- Added a deep link that opens the realtime speech recognition model picker.
+
+### Improved
+
+- Improved speech model download buttons and progress, and history browsing.
+
+### Fixed
+
+- Fixed blank Markdown frames and unstable ordering of the first translation result.
+
 ## [3.8.3] - 2026-09-30
 
 ### Added
