@@ -17,6 +17,7 @@ public struct MarkdownContentView: View {
     private let lineLimit: Int?
 
     @Environment(\.colorScheme) private var colorScheme
+    @State private var parsed: ParsedMarkdown?
 
     private var colors: AppColorPalette {
         AppColors.palette(for: colorScheme)
@@ -44,12 +45,41 @@ public struct MarkdownContentView: View {
                 .textSelection(.enabled)
                 .contentDirectionAware(text)
         } else {
-            SwiftStreamingMarkdown.MarkdownView(
-                text: text.isEmpty ? " " : text,
+            SwiftStreamingMarkdown.DocumentView(
+                renderableDocument: renderableDocument,
                 config: renderConfig
             )
+            .task(id: parseKey) {
+                let key = parseKey
+                let document = await MarkdownParserImpl().parse(text: key.text, config: renderConfig)
+                guard !Task.isCancelled else { return }
+                parsed = ParsedMarkdown(key: key, document: document)
+            }
             .contentDirectionAware(text)
         }
+    }
+
+    private struct ParseKey: Equatable {
+        let text: String
+        let colorScheme: ColorScheme
+    }
+
+    private struct ParsedMarkdown {
+        let key: ParseKey
+        let document: RenderableDocument
+    }
+
+    private var parseKey: ParseKey {
+        ParseKey(text: text.isEmpty ? " " : text, colorScheme: colorScheme)
+    }
+
+    /// Parsing is async, so show styled plain text until it lands instead of an empty frame.
+    private var renderableDocument: RenderableDocument {
+        let key = parseKey
+        if let parsed, parsed.key == key {
+            return parsed.document
+        }
+        return RenderableDocument(plainText: key.text, config: renderConfig)
     }
 
     private var resolvedTextColor: Color {
