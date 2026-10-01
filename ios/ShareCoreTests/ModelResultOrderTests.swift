@@ -12,7 +12,7 @@ struct ModelResultOrderTests {
             model: model,
             status: .success(.init(text: "Result", copyText: "Result", duration: 1))
         )
-        run.completedAt = Date(timeIntervalSince1970: time)
+        run.firstOutputAt = Date(timeIntervalSince1970: time)
         return run
     }
 
@@ -64,7 +64,7 @@ struct ModelResultOrderTests {
     @Test func retryUsesNewCompletionTime() {
         var retried = completed(free, at: 10)
         retried.status = .running(start: Date())
-        retried.completedAt = nil
+        retried.firstOutputAt = nil
         let other = completed(premium, at: 20)
         #expect(HomeViewModel.sortModelRuns(
             [retried, other], order: .firstCompletedFirst, catalog: [free, premium]

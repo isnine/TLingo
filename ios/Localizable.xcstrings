@@ -34466,126 +34466,126 @@
         }
       }
     },
-    "First Completed First" : {
+    "First Result First" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "المكتمل أولاً يظهر أولاً"
+            "value" : "صاحب أول نتيجة يظهر أولاً"
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Først færdig vises først"
+            "value" : "Først med resultat vises først"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zuerst fertig, zuerst angezeigt"
+            "value" : "Erstes Ergebnis zuerst"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First Completed First"
+            "value" : "First Result First"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Primero el que termine antes"
+            "value" : "Primero el primer resultado"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premier terminé en premier"
+            "value" : "Premier résultat en premier"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selesai Pertama Ditampilkan Pertama"
+            "value" : "Hasil Pertama Ditampilkan Pertama"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prima il primo completato"
+            "value" : "Prima il primo risultato"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完了が早い順"
+            "value" : "結果が早い順"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "먼저 완료된 결과부터"
+            "value" : "먼저 결과가 나온 순"
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selesai Dahulu Dipaparkan Dahulu"
+            "value" : "Hasil Dahulu Dipaparkan Dahulu"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Først ferdig vises først"
+            "value" : "Først med resultat vises først"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eerst voltooid bovenaan"
+            "value" : "Eerste resultaat bovenaan"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Najwcześniej ukończone na początku"
+            "value" : "Najpierw pierwszy wynik"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Primeiro concluído no início"
+            "value" : "Primeiro resultado no início"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Först klar visas först"
+            "value" : "Först med resultat visas först"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İlk Tamamlanan Önce"
+            "value" : "İlk Sonuç Önce"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先完成在前"
+            "value" : "先出结果在前"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先完成在前"
+            "value" : "先出結果在前"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先完成在前"
+            "value" : "先出結果在前"
           }
         }
       }

@@ -7,7 +7,7 @@ public enum ModelResultOrder: String, CaseIterable, Sendable {
     public var title: String {
         switch self {
         case .firstCompletedFirst:
-            String(localized: "First Completed First")
+            String(localized: "First Result First")
         case .modelList:
             String(localized: "Model List Order")
         }

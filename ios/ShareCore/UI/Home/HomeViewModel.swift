@@ -169,7 +169,8 @@ public final class HomeViewModel: ObservableObject {
         /// Finished status per presentation, so switching back never re-requests.
         var cachedStatuses: [Presentation: Status] = [:]
         public var showDiff: Bool = true
-        public var completedAt: Date?
+        /// When this run first showed output; fixes its slot in first-result order.
+        public var firstOutputAt: Date?
 
         public var id: String { model.id }
 
@@ -269,28 +270,30 @@ public final class HomeViewModel: ObservableObject {
         )
         return runs.enumerated().sorted { lhs, rhs in
             if order == .firstCompletedFirst {
-                let leftFailed = if case .failure = lhs.element.status {
-                    true
-                } else {
-                    false
-                }
-                let rightFailed = if case .failure = rhs.element.status {
-                    true
-                } else {
-                    false
-                }
-                if leftFailed != rightFailed {
-                    return !leftFailed
-                }
-                switch (lhs.element.completedAt, rhs.element.completedAt) {
-                case let (left?, right?) where left != right:
-                    return left < right
+                // Runs keep their slot once output appears, even if they later fail.
+                switch (lhs.element.firstOutputAt, rhs.element.firstOutputAt) {
+                case let (left?, right?):
+                    if left != right {
+                        return left < right
+                    }
                 case (_?, nil):
                     return true
                 case (nil, _?):
                     return false
-                default:
-                    break
+                case (nil, nil):
+                    let leftFailed = if case .failure = lhs.element.status {
+                        true
+                    } else {
+                        false
+                    }
+                    let rightFailed = if case .failure = rhs.element.status {
+                        true
+                    } else {
+                        false
+                    }
+                    if leftFailed != rightFailed {
+                        return !leftFailed
+                    }
                 }
             }
             let leftRank = ranks[lhs.element.id] ?? Int.max
@@ -1158,8 +1161,8 @@ public final class HomeViewModel: ObservableObject {
         }
 
         guard let runContext = requestContext(for: next, base: context) else { return }
-        // Keep the original completion time so the row does not jump in first-completed order.
-        startSingleRun(at: index, context: runContext, keepsCompletionOrder: true)
+        // Keep the original output time so the row does not jump in first-result order.
+        startSingleRun(at: index, context: runContext, keepsResultOrder: true)
     }
 
     private func requestContext(
@@ -1175,7 +1178,7 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func startSingleRun(at index: Int, context: RequestContext, keepsCompletionOrder: Bool = false) {
+    private func startSingleRun(at index: Int, context: RequestContext, keepsResultOrder: Bool = false) {
         let runID = modelRuns[index].id
         let model = modelRuns[index].model
 
@@ -1188,8 +1191,8 @@ public final class HomeViewModel: ObservableObject {
         // Reset UI state for this specific run
         modelRuns[index].markdownStreamSource.reset()
         modelRuns[index].status = .running(start: Date())
-        if !keepsCompletionOrder {
-            modelRuns[index].completedAt = nil
+        if !keepsResultOrder {
+            modelRuns[index].firstOutputAt = nil
         }
 
         perRunTasks[runID] = Task { [weak self] in
@@ -2078,12 +2081,18 @@ public final class HomeViewModel: ObservableObject {
                 let startDate = self.modelRuns[index].startDate ?? Date()
                 switch update {
                 case let .text(partialText):
+                    if !partialText.isEmpty, self.modelRuns[index].firstOutputAt == nil {
+                        self.modelRuns[index].firstOutputAt = now
+                    }
                     self.modelRuns[index].markdownStreamSource.yield(partialText)
                     self.modelRuns[index].status = .streaming(
                         text: partialText,
                         start: startDate
                     )
                 case let .sentencePairs(pairs):
+                    if !pairs.isEmpty, self.modelRuns[index].firstOutputAt == nil {
+                        self.modelRuns[index].firstOutputAt = now
+                    }
                     self.modelRuns[index].status = .streamingSentencePairs(
                         pairs: pairs,
                         start: startDate
@@ -2305,8 +2314,8 @@ public final class HomeViewModel: ObservableObject {
 
         switch result.response {
         case let .success(message):
-            if modelRuns[index].completedAt == nil {
-                modelRuns[index].completedAt = Date()
+            if modelRuns[index].firstOutputAt == nil {
+                modelRuns[index].firstOutputAt = Date()
             }
             let diffTarget = result.diffSource ?? message
             if allowDiff {
