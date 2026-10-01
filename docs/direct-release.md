@@ -23,12 +23,14 @@ project: ios/AITranslator.xcodeproj
 scheme: TLingo-Direct
 platform: macOS
 configuration: Release
-Xcode: 26.6
+Xcode: 27
 macOS: 26.6.2
 trigger: v* tag
 ```
 
 工作流的 Distribution Preparation 使用 `None`。Xcode Cloud archive 本身使用临时 ad-hoc 签名；`ci_post_xcodebuild.sh` 从 `CI_ARCHIVE_PATH` 使用专用 Developer ID 证书重新导出，再提交公证并 staple。不要选择 App Store 分发，也不要使用 Xcode 27 Beta 发布。
+
+固定选择正式版 Xcode 27 和 macOS 26.6.2，不使用 `Latest Beta or Release`。当前 Xcode Cloud 不接受 Xcode 26.6 与 macOS 26.6.2 的组合。
 
 关闭 tag 条件的自动取消。每个正式版本都必须完整执行，后续 tag 不得取消正在发布的版本。
 
@@ -66,6 +68,8 @@ Xcode Cloud 以 `ios/AITranslator.xcodeproj` 为容器，因此自动调用 `ios
 | `APPCAST_BASE_URL` | No | Optional override; defaults to `https://updates.tlingo.zanderwang.com` |
 
 不要把这些值写入仓库、日志或构建产物。
+
+仓库迁移不会自动把 GitHub Actions variables 或其他工作流的 shared environment variables 注入 `Direct Release`。必须在 Direct 工作流中单独配置上述变量，或明确关联产品级共享变量。
 
 ## 发布顺序
 
