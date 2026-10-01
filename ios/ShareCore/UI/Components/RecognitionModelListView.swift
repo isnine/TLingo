@@ -94,10 +94,6 @@
                                 .foregroundStyle(.red)
                         }
 
-                        if isDownloading(model) {
-                            ProgressView(value: downloadProgress[model.id] ?? 0)
-                                .padding(.top, 4)
-                        }
                     }
 
                     Spacer(minLength: 8)
@@ -127,20 +123,48 @@
         @ViewBuilder
         private func accessory(for model: RecognitionModelDescriptor) -> some View {
             if isDownloading(model) {
-                Image(systemName: "stop.circle")
-                    .font(.title3)
-                    .foregroundStyle(.tint)
-                    .accessibilityLabel("Cancel")
+                downloadProgressRing(progress: downloadProgress[model.id])
             } else if isSelected(model) {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
                     .foregroundStyle(.tint)
             } else if isAvailable(model), !isCached(model) {
-                Image(systemName: "arrow.down.circle")
-                    .font(.title3)
+                Label("Download", systemImage: "arrow.down")
+                    .labelStyle(.titleAndIcon)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
                     .foregroundStyle(.tint)
-                    .accessibilityLabel("Download")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.tint.opacity(0.15), in: Capsule())
+                    .opacity(isDisabled ? 0.5 : 1)
             }
+        }
+
+        /// App Store style ring with a stop glyph; the whole row cancels the download.
+        private func downloadProgressRing(progress: Double?) -> some View {
+            ZStack {
+                Circle()
+                    .stroke(.tint.opacity(0.2), lineWidth: 3)
+                if let progress {
+                    Circle()
+                        .trim(from: 0, to: max(progress, 0.02))
+                        .stroke(.tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 0.25), value: progress)
+                } else {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(.tint)
+                    .frame(width: 9, height: 9)
+                    .opacity(progress == nil ? 0 : 1)
+            }
+            .frame(width: 30, height: 30)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Cancel")
+            .accessibilityValue(progress.map { Text($0, format: .percent.precision(.fractionLength(0))) } ?? Text(""))
         }
 
         private func primaryAction(for model: RecognitionModelDescriptor) {

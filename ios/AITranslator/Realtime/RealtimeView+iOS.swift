@@ -20,7 +20,13 @@
         /// Set when presented full screen from Home; adds a Close button.
         private let onDismiss: (() -> Void)?
         @State private var isSettingsPresented = false
+        @State private var settingsPath: [RealtimeSettingsRoute] = []
+        @State private var settingsDetent: PresentationDetent = .medium
         @State private var showsSwapUnsupportedAlert = false
+
+        private enum RealtimeSettingsRoute: Hashable {
+            case recognitionModels
+        }
 
         private enum RealtimeTargetSelection: Hashable {
             case transcriptionOnly
@@ -74,6 +80,13 @@
                 .toolbar { realtimeToolbar }
                 .sheet(isPresented: $isSettingsPresented) {
                     settingsSheet
+                }
+                .onChange(of: controlModel.opensRecognitionModels, initial: true) { _, opens in
+                    guard opens else { return }
+                    controlModel.opensRecognitionModels = false
+                    settingsPath = [.recognitionModels]
+                    settingsDetent = .large
+                    isSettingsPresented = true
                 }
                 .task(id: recognitionModelPrewarmKey) {
                     guard scenePhase == .active else { return }
@@ -141,6 +154,7 @@
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button("Realtime Options", systemImage: "slider.horizontal.3") {
+                    settingsDetent = .medium
                     isSettingsPresented = true
                 }
                 .accessibilityIdentifier("realtime_options_button")
@@ -625,7 +639,7 @@
         }
 
         private var settingsSheet: some View {
-            NavigationStack {
+            NavigationStack(path: $settingsPath) {
                 Form {
                     if RealtimeAudioInputSource.allCases.count > 1 {
                         Section("Input") {
@@ -641,14 +655,7 @@
                     }
 
                     Section {
-                        NavigationLink {
-                            RecognitionModelListView(
-                                preferences: preferences,
-                                models: store.inputSource.supportedRecognitionModels,
-                                isDisabled: store.isRunning || store.isStopping
-                            )
-                            .navigationBarTitleDisplayMode(.inline)
-                        } label: {
+                        NavigationLink(value: RealtimeSettingsRoute.recognitionModels) {
                             LabeledContent("Model", value: selectedRecognitionModel.title)
                         }
                     } header: {
@@ -678,6 +685,17 @@
                 }
                 .navigationTitle("Realtime Options")
                 .navigationBarTitleDisplayMode(.inline)
+                .navigationDestination(for: RealtimeSettingsRoute.self) { route in
+                    switch route {
+                    case .recognitionModels:
+                        RecognitionModelListView(
+                            preferences: preferences,
+                            models: store.inputSource.supportedRecognitionModels,
+                            isDisabled: store.isRunning || store.isStopping
+                        )
+                        .navigationBarTitleDisplayMode(.inline)
+                    }
+                }
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") {
@@ -686,7 +704,7 @@
                     }
                 }
             }
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.medium, .large], selection: $settingsDetent)
         }
 
         private var selectedRecognitionModel: RecognitionModelDescriptor {
@@ -821,6 +839,14 @@
         @Published var isStartingRealtimeSession = false
         @Published var broadcastPickerTrigger: UUID?
         @Published fileprivate var startBlockedAlert: StartBlockedAlert?
+        /// Set by a `tlingo://realtime/models` deep link; consumed by `RealtimeView`.
+        @Published var opensRecognitionModels = false
+
+        func handleRealtimeDeepLink(_ notification: Notification) {
+            if notification.userInfo?[DeepLink.NotificationKey.opensRecognitionModels] as? Bool == true {
+                opensRecognitionModels = true
+            }
+        }
 
         func startButtonTitle(for store: RealtimeSessionStore) -> LocalizedStringKey {
             if store.isStopping {

@@ -10,6 +10,7 @@ import Foundation
 ///
 /// - `tlingo://translate` — share-extension / shortcuts entry, App Store target.
 /// - `tlingo://realtime` — App Store event / campaign entry for realtime translation.
+/// - `tlingo://realtime/models` — opens realtime options on the recognition model picker.
 /// - `tlingo-direct://oauth/callback` — OAuth activation return target,
 ///   handled by `OAuthCoordinator.handleCallbackIfMatching` in the
 ///   Direct macOS build. Uses a distinct scheme so macOS Launch Services
@@ -20,6 +21,7 @@ public enum DeepLink {
     public static let directScheme = "tlingo-direct"
     public static let translateHost = "translate"
     public static let realtimeHost = "realtime"
+    public static let realtimeModelsPath = "/models"
 
     public enum QueryParam {
         public static let text = "text"
@@ -31,6 +33,7 @@ public enum DeepLink {
         public static let text = "text"
         public static let actionName = "actionName"
         public static let configName = "configName"
+        public static let opensRecognitionModels = "opensRecognitionModels"
     }
 
     /// Builds a `tlingo://translate?text=...&action=<name>&config=<name>` URL.
@@ -64,6 +67,10 @@ public enum DeepLink {
 
     public static func isRealtimeURL(_ url: URL) -> Bool {
         url.scheme == scheme && url.host == realtimeHost
+    }
+
+    public static func isRealtimeModelsURL(_ url: URL) -> Bool {
+        isRealtimeURL(url) && url.path == realtimeModelsPath
     }
 }
 

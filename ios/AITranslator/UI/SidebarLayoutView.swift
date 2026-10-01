@@ -489,9 +489,10 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                     refreshHistory()
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { notification in
                 showActions = false
                 selection = .tab(.realtime)
+                realtimeControlModel.handleRealtimeDeepLink(notification)
             }
             .sheet(isPresented: $showActions) {
                 ActionsView(configurationStore: configStore, embedsInNavigationStack: true)

@@ -222,7 +222,11 @@ extension RootTabView {
                         return
                     }
                     if DeepLink.isRealtimeURL(url) {
-                        NotificationCenter.default.post(name: .deepLinkRealtimeRequested, object: nil)
+                        NotificationCenter.default.post(
+                            name: .deepLinkRealtimeRequested,
+                            object: nil,
+                            userInfo: [DeepLink.NotificationKey.opensRecognitionModels: DeepLink.isRealtimeModelsURL(url)]
+                        )
                         return
                     }
                     guard let parsed = DeepLink.parse(url) else { return }
@@ -360,12 +364,13 @@ extension RootTabView {
                     .presentationDragIndicator(.visible)
             }
             .tint(colors.accent)
-            .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { notification in
                 showActions = false
                 showHistory = false
                 showModels = false
                 showSettings = false
                 showRealtime = true
+                realtimeControlModel.handleRealtimeDeepLink(notification)
             }
         }
 
