@@ -62,18 +62,7 @@ public enum ConfigurationMigrator {
     )
 
     private static let sentenceTranslatePrompt =
-        [
-            "Translate the text below sentence by sentence from {{sourceLanguage}} to {{targetLanguage}}.",
-            "",
-            "Text:",
-            "{{text}}",
-            "",
-            "Rules:",
-            "- Split the input into sentences while keeping punctuation with each sentence.",
-            "- Preserve the original meaning, tone, and style.",
-            "- Use natural, fluent {{targetLanguage}} for each translation.",
-            "- Return original-translation pairs only.",
-        ].joined(separator: "\n")
+        BuiltInActionCatalog.prompt(named: "Sentence Translate") ?? ""
 
     private static let previousSentenceTranslatePrompt =
         "If input is in {{targetLanguage}}, translate sentence by sentence to English; " +
@@ -172,7 +161,7 @@ public enum ConfigurationMigrator {
 
         switch name {
         case sentenceTranslateName:
-            return BuiltInActionCatalog.prompt(named: "Sentence Translate") ?? sentenceTranslatePrompt
+            return sentenceTranslatePrompt
         case grammarCheckName:
             return BuiltInActionCatalog.prompt(named: "Grammar Check")
         case sentenceAnalysisName:

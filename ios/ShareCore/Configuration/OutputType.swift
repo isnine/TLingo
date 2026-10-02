@@ -106,7 +106,7 @@ public extension ActionConfig.StructuredOutputConfig {
             "properties": {
               "text": {
                 "type": "string",
-                "description": "The final user-facing text result only. Do not include explanations, instructions, or metadata."
+                "description": "The final user-facing result of the requested task, such as the translated or rewritten text. Do not include the prompt instructions, explanations, or metadata."
               }
             },
             "required": ["text"],
