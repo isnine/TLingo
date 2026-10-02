@@ -34,6 +34,7 @@
         private var partialTranslationTask: Task<Void, Never>?
         private var queuedFinalRequests: [RealtimeTextTranslationRequest] = []
         private var latestPartialRequest: RealtimeTextTranslationRequest?
+        private var nextPartialAllowedAt: Date?
         private var currentEventOffset: TimeInterval
         private var trackUpdatedAt: Date?
         private var latencyContextsByTranslationKey: [String: (
@@ -166,9 +167,7 @@
                 queuedFinalRequests.append(contentsOf: requests)
                 startFinalTranslationTaskIfNeeded()
                 let partialTask = partialTranslationTask
-                partialTranslationTask?.cancel()
-                partialTranslationTask = nil
-                latestPartialRequest = nil
+                cancelPartialTranslationWork()
                 await partialTask?.value
                 await finalTranslationTask?.value
                 syncApplePresentation()
@@ -244,6 +243,12 @@
                 return
             }
 
+            // Re-apply cached translations to revised segments before any new request lands.
+            translationState.updateCachedSentencePairs(
+                provider: configuration.translationProvider,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetLanguage
+            )
             let finalRequests = translationState.makeFinalTranslationRequests(
                 provider: configuration.translationProvider,
                 sourceLanguage: sourceLanguage,
@@ -261,13 +266,26 @@
             queuedFinalRequests.append(contentsOf: finalRequests)
             startFinalTranslationTaskIfNeeded()
 
-            latestPartialRequest = translationState.makePartialTranslationRequest(
+            guard let partialRequest = translationState.makePartialTranslationRequest(
                 provider: configuration.translationProvider,
                 sourceLanguage: sourceLanguage,
                 source: sourceLanguage.localeLanguage,
                 targetLanguage: targetLanguage
-            )
+            ) else {
+                if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    cancelPartialTranslationWork()
+                }
+                return
+            }
+            latestPartialRequest = partialRequest
             startPartialTranslationTaskIfNeeded()
+        }
+
+        private func cancelPartialTranslationWork() {
+            partialTranslationTask?.cancel()
+            partialTranslationTask = nil
+            latestPartialRequest = nil
+            nextPartialAllowedAt = nil
         }
 
         private var languagesMatch: Bool {
@@ -340,17 +358,22 @@
                 }
                 guard let request = latestPartialRequest else {
                     partialTranslationTask = nil
+                    nextPartialAllowedAt = nil
                     return
                 }
                 latestPartialRequest = nil
                 do {
-                    if request.cadenceInterval > 0 {
-                        try await Task.sleep(for: .milliseconds(
-                            Int((request.cadenceInterval * 1000).rounded(.up))
-                        ))
+                    // Throttle by request start, so a slow translation is followed immediately by the next one.
+                    let allowedAt = nextPartialAllowedAt ?? now().addingTimeInterval(request.cadenceInterval)
+                    nextPartialAllowedAt = allowedAt
+                    let delay = allowedAt.timeIntervalSince(now())
+                    if delay > 0 {
+                        try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
                     }
                     let latestRequest = latestPartialRequest ?? request
                     latestPartialRequest = nil
+                    guard !Task.isCancelled else { return }
+                    nextPartialAllowedAt = now().addingTimeInterval(latestRequest.cadenceInterval)
                     let result = try await translationExecutor(latestRequest)
                     hasSuccessfulTranslation = true
                     snapshot.errorMessage = nil
@@ -632,6 +655,7 @@
             partialTranslationTask = nil
             queuedFinalRequests.removeAll()
             latestPartialRequest = nil
+            nextPartialAllowedAt = nil
             latencyContextsByTranslationKey.removeAll()
         }
 
