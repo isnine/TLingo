@@ -1,0 +1,43 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-01T00:00:00Z"
+  },
+  "title": "TLingo",
+  "namespace": "TLingo",
+  "libraries": [],
+  "sections": {},
+  "groups": [
+    "Logos"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": [
+        "AppIcon-512.png"
+      ],
+      "files": {
+        "AppIcon-512.png": {
+          "name": "AppIcon-512.png",
+          "blob": "0d0cbf201a998413501e6d2bc73dfdf0",
+          "size": 193326,
+          "type": "image/png"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Zander Wang",
+    "at": "2026-10-01T12:00:00Z",
+    "via": "GitHub · isnine/TLingo (working tree)",
+    "note": "Unified tokens: accent-fill / on-accent (4.5:1), 4pt spacing, four radii, named glass styles, Reduce Transparency and Reduce Motion rules"
+  }
+}

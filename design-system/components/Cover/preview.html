@@ -1,0 +1,39 @@
+<!-- @dsCard height=288 -->
+<style>
+  html, body { margin: 0; }
+  .cv { position: relative; width: 960px; height: 288px; background: var(--background); overflow: hidden; font-family: var(--font-sans); }
+  .cv svg { position: absolute; left: 480px; top: 0; }
+  .blue { fill: var(--accent-blue); }
+  .orange { fill: var(--accent-orange); }
+  .ink { fill: var(--text-primary); }
+  .teal { fill: var(--accent-teal); }
+  .pill-off { fill: none; stroke: var(--text-secondary); stroke-width: 1.5; }
+  .slab { rx: var(--radius-18); }
+  .tile { rx: var(--radius-12); }
+  .name { position: absolute; left: 40px; bottom: 56px; max-width: 440px; margin: 0; font-size: 120px; line-height: .92; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); }
+  .tag { position: absolute; left: 44px; bottom: 28px; max-width: 440px; margin: 0; font-size: 14px; color: var(--text-secondary); }
+</style>
+<div class="cv">
+  <!--
+    blocks: accent-blue slab 216×196 (radius-18), text-primary tile 120×132 (radius-12), accent-orange disc ⌀112, accent-teal disc ⌀40
+    arrangement: tall blue slab bleeding off the top, ink tile bleeding off the right, orange disc left of the slab
+    pattern: capsules — "chips are capsules (radius-pill)": two rows of action-chip pills, 40px tall, space-12 apart, one selected in accent-blue
+    scales: space-12 gaps, space-20 insets, pill height 40, radius-12 / radius-18 / radius-pill
+  -->
+  <svg width="480" height="288" viewBox="0 0 480 288" aria-hidden="true">
+    <rect class="blue slab" x="148" y="-24" width="216" height="196" />
+    <rect class="ink tile" x="376" y="-14" width="120" height="132" />
+    <circle class="orange" cx="76" cy="96" r="56" />
+    <circle class="teal" cx="416" cy="152" r="20" />
+    <rect class="blue" x="20" y="192" width="104" height="40" rx="20" />
+    <rect class="pill-off" x="136" y="192.75" width="88" height="38.5" rx="19.25" />
+    <rect class="pill-off" x="236" y="192.75" width="128" height="38.5" rx="19.25" />
+    <rect class="pill-off" x="376" y="192.75" width="120" height="38.5" rx="19.25" />
+    <rect class="pill-off" x="76" y="244.75" width="112" height="38.5" rx="19.25" />
+    <rect class="pill-off" x="200" y="244.75" width="80" height="38.5" rx="19.25" />
+    <rect class="pill-off" x="292" y="244.75" width="136" height="38.5" rx="19.25" />
+  </svg>
+  <h1 class="name">TLingo</h1>
+  <p class="tag">Quiet surfaces, system type, one accent you choose.</p>
+</div>
+<script></script>
