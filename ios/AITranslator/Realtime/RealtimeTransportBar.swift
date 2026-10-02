@@ -51,12 +51,7 @@
             }
             .padding(8)
             .frame(maxWidth: .infinity)
-            .tlingoGlassSurface(
-                cornerRadius: 24,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.22),
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.22),
-                fallbackStroke: colors.divider
-            )
+            .tlingoGlassSurface(.panel, cornerRadius: TLingoRadius.extraLarge)
         }
 
         private var regularInputMenu: some View {
@@ -159,17 +154,7 @@
                 .buttonStyle(.plain)
                 .foregroundStyle(canStart && !isStarting ? Color.white : colors.textSecondary)
                 .disabled(!canStart || isStarting || store.isStopping)
-                .tlingoGlassSurface(
-                    cornerRadius: 20,
-                    tint: canStart && !isStarting
-                        ? colors.accent.opacity(0.82)
-                        : colors.cardBackground.opacity(0.10),
-                    interactive: canStart && !isStarting,
-                    fallbackTint: canStart && !isStarting
-                        ? colors.accent.opacity(0.82)
-                        : colors.cardBackground.opacity(0.10),
-                    fallbackStroke: canStart && !isStarting ? colors.accent.opacity(0.22) : colors.divider
-                )
+                .tlingoGlassSurface(canStart && !isStarting ? .prominent : .control, cornerRadius: TLingoRadius.large, interactive: canStart && !isStarting)
                 .help(startHelp)
             }
         }
@@ -185,13 +170,7 @@
             .buttonStyle(.plain)
             .foregroundStyle(store.hasImportedAudio ? colors.accent : colors.textPrimary)
             .disabled(isBusy)
-            .tlingoGlassSurface(
-                cornerRadius: 20,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                interactive: !isBusy,
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                fallbackStroke: colors.divider
-            )
+            .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.large, interactive: !isBusy)
             .help(store.importedAudioURL?.lastPathComponent ?? String(localized: "Import Audio"))
         }
 
@@ -228,13 +207,7 @@
                 .frame(width: 40, height: 40)
                 .buttonStyle(.plain)
                 .foregroundStyle(isInspectorPresented ? colors.accent : colors.textPrimary)
-                .tlingoGlassSurface(
-                    cornerRadius: 20,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                    interactive: true,
-                    fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.large, interactive: true)
                 .help(isInspectorPresented ? "Hide Realtime inspector" : "Show Realtime inspector")
                 .keyboardShortcut("i", modifiers: [.command, .option])
             }
@@ -252,13 +225,7 @@
                 .buttonStyle(.plain)
                 .foregroundStyle(isEnabled ? colors.textPrimary : colors.textSecondary)
                 .disabled(!isEnabled)
-                .tlingoGlassSurface(
-                    cornerRadius: 20,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                    interactive: isEnabled,
-                    fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.large, interactive: isEnabled)
                 .help(title)
         }
     }

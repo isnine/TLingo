@@ -30,8 +30,6 @@ struct SettingsView: View {
     @State private var testFlightAlertMessage = ""
     @State private var showDefaultTranslationOnboarding = false
     @State private var pendingDefaultTranslationUpgrade = false
-    @State private var showModels = false
-    @State private var showActions = false
     @State private var feedbackDraft: FeedbackMailDraft?
 
     @State private var showNetworkDebug = false
@@ -62,25 +60,38 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    header
-                    preferencesSection
-                    versionLabel
+            Form {
+                accountSection
+                translationSection
+                #if os(macOS)
+                    macControlsSection
+                    realtimeCaptionsSection
+                #endif
+                appearanceSection
+                if DeveloperMode.isEnabled {
+                    developerSection
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 28)
+                helpSection
             }
-            .background(colors.background.ignoresSafeArea())
-            .navigationTitle("")
-            .navigationDestination(isPresented: $showModels) {
-                ModelsView(embedsInNavigationStack: false)
-            }
-            .navigationDestination(isPresented: $showActions) {
-                ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
-            }
+            .formStyle(.grouped)
+            #if os(macOS)
+                // The macOS grouped form defaults to 13pt rows and 10pt subtitles, which read too small here.
+                .font(.system(size: 15))
+                .controlSize(.large)
+            #endif
+            .navigationTitle("Settings")
             #if os(iOS)
-            .toolbar(.hidden, for: .navigationBar)
+                .toolbar {
+                    if let onShowSidebarTap {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(action: onShowSidebarTap) {
+                                Image(systemName: "sidebar.left")
+                            }
+                            .accessibilityLabel("Show Sidebar")
+                            .accessibilityIdentifier("ipad_show_sidebar_button")
+                        }
+                    }
+                }
             #endif
         }
         .tint(colors.accent)
@@ -163,174 +174,100 @@ struct SettingsView: View {
         }
     }
 
-    private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            #if os(iOS)
-                if let onShowSidebarTap {
-                    Button(action: onShowSidebarTap) {
-                        Image(systemName: "sidebar.left")
-                            .font(.system(size: 20))
-                            .foregroundColor(colors.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Show Sidebar")
-                    .accessibilityIdentifier("ipad_show_sidebar_button")
-                    .padding(.top, 6)
-                }
-            #endif
+    // MARK: - Sections
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Settings")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(colors.textPrimary)
-
-                Text("App Preferences")
-                    .font(.system(size: 16))
-                    .foregroundColor(colors.textSecondary)
-            }
-        }
-    }
-
-    private var generalSectionContent: some View {
-        VStack(spacing: 0) {
+    private var accountSection: some View {
+        Section("Account") {
             subscriptionRow
-            Divider()
-                .padding(.leading, 52)
-            modelManagementRow
-            Divider()
-                .padding(.leading, 52)
-            actionManagementRow
-            Divider()
-                .padding(.leading, 52)
-            accentThemeRow
+        }
+    }
+
+    private var translationSection: some View {
+        Section("Translation") {
+            NavigationLink {
+                ModelsView(embedsInNavigationStack: false)
+            } label: {
+                settingsLabel("Models", systemImage: "cpu", subtitle: Text("Choose translation models"))
+            }
+            .accessibilityIdentifier("settings_models_row")
+
+            NavigationLink {
+                ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
+            } label: {
+                settingsLabel("Manage Actions", systemImage: "slider.horizontal.3")
+            }
+            .accessibilityIdentifier("settings_actions_row")
+
+            actionRow(value: voiceDisplayName) {
+                isVoicePickerPresented = true
+            } label: {
+                settingsLabel("Voice", systemImage: "waveform")
+            }
+
             #if os(iOS)
-                Divider()
-                    .padding(.leading, 52)
-                defaultTranslationAppRow
-            #endif
-            Divider()
-                .padding(.leading, 52)
-            voicePreferenceRow
-            #if os(macOS)
-                Divider()
-                    .padding(.leading, 52)
-                hotKeyPreferenceRow
-                Divider()
-                    .padding(.leading, 52)
-                realtimeCaptionPreferencesRow
-                Divider()
-                    .padding(.leading, 52)
-                replayOnboardingRow
-                Divider()
-                    .padding(.leading, 52)
-                textSelectionTranslationRow
+                actionRow {
+                    showDefaultTranslationOnboarding = true
+                } label: {
+                    settingsLabel(
+                        "Default Translation App",
+                        systemImage: "translate",
+                        subtitle: Text("Set TLingo as the system translator")
+                    )
+                }
             #endif
         }
     }
 
-    private var preferencesSection: some View {
-        VStack(spacing: 32) {
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            accentThemeRow
+        }
+    }
+
+    private var developerSection: some View {
+        Section("Developer") {
+            actionRow {
+                showLocalLog = true
+            } label: {
+                settingsLabel("Local Log", systemImage: "doc.text")
+            }
+            .accessibilityIdentifier("settings_local_log")
+
+            actionRow {
+                showNetworkDebug = true
+            } label: {
+                settingsLabel("Network Log", systemImage: "network", subtitle: Text("View all HTTP request history"))
+            }
+        }
+    }
+
+    private var helpSection: some View {
+        Section {
+            actionRow {
+                composeFeedbackEmail()
+            } label: {
+                settingsLabel(
+                    "Feedback",
+                    systemImage: "envelope",
+                    subtitle: Text("我们会回复你的每一封邮件 · iamzanderwang@outlook.com")
+                )
+            }
+
             #if os(macOS)
-                settingsSection(title: "Account", icon: "person.crop.circle") {
-                    subscriptionRow
-                }
-
-                settingsSection(title: "Translation", icon: "translate") {
-                    modelManagementRow
-                    Divider()
-                        .padding(.leading, 52)
-                    actionManagementRow
-                    Divider()
-                        .padding(.leading, 52)
-                    voicePreferenceRow
-                }
-
-                settingsSection(title: "Appearance", icon: "paintpalette") {
-                    accentThemeRow
-                }
-
-                settingsSection(title: "Mac Controls", icon: "keyboard") {
-                    hotKeyPreferenceRow
-                    Divider()
-                        .padding(.leading, 52)
-                    textSelectionTranslationRow
-                }
-
-                settingsSection(title: "Realtime Captions", icon: "captions.bubble") {
-                    realtimeCaptionPreferencesRow
-                }
-
-                settingsSection(title: "Help", icon: "questionmark.circle") {
-                    feedbackRow
-                    Divider()
-                        .padding(.leading, 52)
-                    replayOnboardingRow
-                }
-            #else
-
-                // MARK: - Feedback Section
-
-                settingsSection(title: "Feedback", icon: "envelope") {
-                    feedbackRow
-                }
-
-                // MARK: - General Section
-
-                settingsSection(title: "General", icon: "gearshape") {
-                    generalSectionContent
+                actionRow {
+                    showOnboarding = true
+                } label: {
+                    settingsLabel(
+                        "Replay Onboarding",
+                        systemImage: "sparkles",
+                        subtitle: Text("Walk through the setup guide again")
+                    )
                 }
             #endif
-
-            if DeveloperMode.isEnabled {
-                // MARK: - Developer Section
-
-                settingsSection(title: "Developer", icon: "ladybug") {
-                    Button {
-                        showLocalLog = true
-                    } label: {
-                        HStack(spacing: 16) {
-                            SettingsIconBadge(icon: "doc.text", color: .orange)
-                            Text("Local Log")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(colors.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(colors.textSecondary)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("settings_local_log")
-
-                    Button {
-                        showNetworkDebug = true
-                    } label: {
-                        HStack(spacing: 16) {
-                            SettingsIconBadge(icon: "network", color: .red)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Network Log")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(colors.textPrimary)
-                                Text("View all HTTP request history")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(colors.textSecondary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(colors.textSecondary.opacity(0.5))
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+        } header: {
+            Text("Help")
+        } footer: {
+            versionLabel
         }
     }
 
@@ -338,10 +275,10 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "–"
         let label = Text("TLingo v\(version) (\(build))")
-            .font(.system(size: 12))
-            .foregroundColor(colors.textSecondary)
+            .font(Self.subtitleFont)
+            .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
-            .padding(.top, 4)
+            .padding(.top, 8)
             .contentShape(Rectangle())
         // Direct distribution intentionally has no premium backdoor — entitlement
         // there is owned by the web subscription, not by client-side toggles.
@@ -369,71 +306,76 @@ struct SettingsView: View {
         #endif
     }
 
-    // MARK: - Section Builder
+    // MARK: - Row Builders
 
-    private func settingsSection<Content: View>(
-        title: LocalizedStringKey,
-        icon: String,
-        @ViewBuilder content: () -> Content
+    private func settingsLabel(
+        _ title: LocalizedStringKey,
+        systemImage: String,
+        subtitle: Text? = nil
     ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Section Header
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(colors.accent)
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(colors.textSecondary)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-            }
-            .padding(.horizontal, 4)
+        settingsLabel(Text(title), systemImage: systemImage, subtitle: subtitle)
+    }
 
-            // Section Content
-            content()
-                .background(sectionCardBackground)
+    private func settingsLabel(
+        _ title: Text,
+        systemImage: String,
+        subtitle: Text? = nil
+    ) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                title
+                    .foregroundStyle(colors.textPrimary)
+                if let subtitle {
+                    subtitle
+                        .font(Self.subtitleFont)
+                        .foregroundStyle(colors.textSecondary)
+                }
+            }
+            #if os(macOS)
+            .padding(.vertical, 3)
+            #endif
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(colors.accent)
+            #if os(macOS)
+                .font(.system(size: 17))
+                .frame(width: 24)
+            #endif
         }
     }
 
-    @ViewBuilder
-    private var sectionCardBackground: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(colors.cardBackground)
-    }
-}
+    #if os(macOS)
+        private static let subtitleFont = Font.system(size: 13)
+    #else
+        private static let subtitleFont = Font.footnote
+    #endif
 
-private extension SettingsView {
-    // MARK: - Row Style Components
-
-    var voicePreferenceRow: some View {
-        Button {
-            isVoicePickerPresented = true
-        } label: {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "waveform", color: .purple)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Voice")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text(voiceDisplayName)
-                        .font(.system(size: 13))
-                        .foregroundColor(colors.textSecondary)
-                }
-
+    /// A tappable row that opens a sheet or performs an action, styled like a navigation row.
+    private func actionRow(
+        value: String? = nil,
+        action: @escaping () -> Void,
+        @ViewBuilder label: () -> some View
+    ) -> some View {
+        Button(action: action) {
+            HStack {
+                label()
                 Spacer()
-
+                if let value {
+                    Text(value)
+                        .foregroundStyle(colors.textSecondary)
+                }
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(colors.textSecondary.opacity(0.5))
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
+}
+
+private extension SettingsView {
+    // MARK: - Rows
 
     private var voiceDisplayName: String {
         let voiceID = preferences.selectedVoiceID
@@ -442,10 +384,6 @@ private extension SettingsView {
             return voice.name
         }
         return voiceID.capitalized
-    }
-
-    var subscriptionSubtitle: String {
-        entitlement.state.settingsSubtitle
     }
 
     private var hasManageableAppStoreSubscription: Bool {
@@ -466,50 +404,21 @@ private extension SettingsView {
     }
 
     var subscriptionRow: some View {
-        Button {
-            handleSubscriptionTap()
-        } label: {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "crown.fill", color: .orange)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Subscription")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text(subscriptionSubtitle)
-                        .font(.system(size: 13))
-                        .foregroundColor(entitlement.isPro ? .orange : colors.textSecondary)
-                }
-
-                Spacer()
-
-                if entitlement.isPro {
-                    Text(subscriptionActionTitle)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.orange)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(Color.orange.opacity(0.15))
-                        )
-                } else {
-                    Text("Upgrade")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(Color.orange)
-                        )
-                }
+        LabeledContent {
+            if entitlement.isPro {
+                Button(subscriptionActionTitle, action: handleSubscriptionTap)
+                    .buttonStyle(.bordered)
+            } else {
+                Button("Upgrade", action: handleSubscriptionTap)
+                    .buttonStyle(.borderedProminent)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
+        } label: {
+            settingsLabel(
+                "Subscription",
+                systemImage: "crown",
+                subtitle: Text(entitlement.state.settingsSubtitle)
+            )
         }
-        .buttonStyle(.plain)
     }
 
     private func handleSubscriptionTap() {
@@ -522,87 +431,24 @@ private extension SettingsView {
         showPaywall = true
     }
 
-    var modelManagementRow: some View {
-        Button {
-            showModels = true
-        } label: {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "cpu", color: .blue)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Models")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text("Choose translation models")
-                        .font(.system(size: 13))
-                        .foregroundColor(colors.textSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(colors.textSecondary.opacity(0.5))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("settings_models_row")
-    }
-
-    var actionManagementRow: some View {
-        Button {
-            showActions = true
-        } label: {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "slider.horizontal.3", color: .orange)
-
-                Text("Manage Actions")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(colors.textPrimary)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(colors.textSecondary.opacity(0.5))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("settings_actions_row")
-    }
-
     var accentThemeRow: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "paintpalette.fill", color: preferences.accentTheme.color)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Theme Color")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text(entitlement.isPro ? preferences.accentTheme.displayName : String(localized: "Premium Feature"))
-                        .font(.system(size: 13))
-                        .foregroundColor(entitlement.isPro ? colors.textSecondary : colors.accent)
-                }
-
-                Spacer()
-
+            LabeledContent {
                 if !entitlement.isPro {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(colors.textSecondary.opacity(0.5))
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
                 }
+            } label: {
+                settingsLabel(
+                    "Theme Color",
+                    systemImage: "paintpalette",
+                    subtitle: Text(
+                        entitlement.isPro ? preferences.accentTheme.displayName : String(localized: "Premium Feature")
+                    )
+                )
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 14)
 
-            // Color swatches
             HStack(spacing: 10) {
                 ForEach(AccentTheme.allCases) { theme in
                     Button {
@@ -620,51 +466,19 @@ private extension SettingsView {
                                 .frame(width: 28, height: 28)
 
                             if preferences.accentTheme == theme {
-                                Circle()
-                                    .strokeBorder(.white, lineWidth: 2.5)
-                                    .frame(width: 28, height: 28)
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(colors.onAccent)
                             }
                         }
                         .opacity(entitlement.isPro || theme == .default ? 1 : 0.4)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(theme.displayName)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 14)
         }
-    }
-
-    var feedbackRow: some View {
-        Button {
-            composeFeedbackEmail()
-        } label: {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "envelope", color: .cyan)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Feedback")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text("我们会回复你的每一封邮件 · iamzanderwang@outlook.com")
-                        .font(.system(size: 12))
-                        .foregroundColor(colors.textSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(colors.textSecondary.opacity(0.5))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        .padding(.vertical, 4)
     }
 
     private func composeFeedbackEmail() {
@@ -679,35 +493,6 @@ private extension SettingsView {
     }
 
     #if os(iOS)
-        var defaultTranslationAppRow: some View {
-            Button {
-                showDefaultTranslationOnboarding = true
-            } label: {
-                HStack(spacing: 16) {
-                    SettingsIconBadge(icon: "translate", color: .blue)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Default Translation App")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(colors.textPrimary)
-                        Text("Set TLingo as the system translator")
-                            .font(.system(size: 12))
-                            .foregroundColor(colors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(colors.textSecondary.opacity(0.5))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-
         private func handleDefaultTranslationOnboardingDismiss() {
             preferences.setHasSeenDefaultTranslationOnboarding(true)
 
@@ -718,82 +503,53 @@ private extension SettingsView {
     #endif
 
     #if os(macOS)
-        var hotKeyPreferenceRow: some View {
-            let visibleHotKeyTypes = HotKeyType.allCases.filter { $0 != .screenshotOCR }
+        var macControlsSection: some View {
+            Section("Mac Controls") {
+                ForEach(HotKeyType.allCases.filter { $0 != .screenshotOCR }, id: \.self) { type in
+                    hotKeyRow(for: type)
+                }
+                textSelectionTranslationRow
+            }
+        }
 
-            return VStack(spacing: 0) {
-                ForEach(visibleHotKeyTypes, id: \.self) { type in
-                    let config = hotKeyManager.configuration(for: type)
-                    let isRecording = recordingHotKeyType == type
+        func hotKeyRow(for type: HotKeyType) -> some View {
+            let config = hotKeyManager.configuration(for: type)
+            let isRecording = recordingHotKeyType == type
 
-                    HStack(spacing: 16) {
-                        SettingsIconBadge(
-                            icon: type.iconName,
-                            color: type == .mainApp ? .purple : (type == .quickTranslate ? .orange : .blue)
-                        )
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(type.displayName)
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(colors.textPrimary)
-                            Text(type.description)
-                                .font(.system(size: 12))
-                                .foregroundColor(colors.textSecondary)
-                            if hotKeyManager.unavailableHotKeys.contains(type) {
-                                Text("This shortcut is used by another app.")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.red)
-                            }
-                        }
-
-                        Spacer()
-
-                        Button {
-                            startRecordingHotKey(for: type)
-                        } label: {
-                            Text(isRecording ? String(localized: "Press keys...") : config.displayString)
-                                .font(.system(size: 13, weight: .medium, design: config.isEmpty ? .default : .monospaced))
-                                .foregroundColor(
-                                    isRecording ? colors
-                                        .accent : (config.isEmpty ? colors.textSecondary : colors.textPrimary)
-                                )
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .tlingoGlassCapsule(
-                                    tint: isRecording ? colors.accent.opacity(0.18) : colors.cardBackground.opacity(0.12),
-                                    interactive: true,
-                                    fallbackTint: isRecording
-                                        ? colors.accent.opacity(0.12)
-                                        : colors.inputBackground.opacity(0.86),
-                                    fallbackStroke: isRecording ? colors.accent.opacity(0.45) : colors.divider
-                                )
-                        }
-                        .buttonStyle(.plain)
-
-                        if !config.isEmpty {
-                            Button {
-                                hotKeyManager.clearConfiguration(for: type)
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(colors.textSecondary.opacity(0.5))
-                                    .frame(width: 28, height: 28)
-                                    .tlingoGlassCircle(
-                                        tint: colors.cardBackground.opacity(0.10),
-                                        interactive: true,
-                                        fallbackTint: colors.inputBackground.opacity(0.82),
-                                        fallbackStroke: colors.divider
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                        }
+            return LabeledContent {
+                HStack(spacing: 6) {
+                    Button {
+                        startRecordingHotKey(for: type)
+                    } label: {
+                        Text(isRecording ? String(localized: "Press keys...") : config.displayString)
+                            .font(config.isEmpty ? .callout : .callout.monospaced())
+                            .foregroundStyle(
+                                isRecording ? colors.accent : (config.isEmpty ? colors.textSecondary : colors.textPrimary)
+                            )
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .buttonStyle(.bordered)
 
-                    if type != visibleHotKeyTypes.last {
-                        Divider()
-                            .padding(.leading, 68)
+                    if !config.isEmpty {
+                        Button {
+                            hotKeyManager.clearConfiguration(for: type)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    settingsLabel(
+                        Text(type.displayName),
+                        systemImage: type.iconName,
+                        subtitle: Text(type.description)
+                    )
+                    if hotKeyManager.unavailableHotKeys.contains(type) {
+                        Text("This shortcut is used by another app.")
+                            .font(Self.subtitleFont)
+                            .foregroundStyle(colors.error)
                     }
                 }
             }
@@ -840,35 +596,24 @@ private extension SettingsView {
             }
         }
 
-        var realtimeCaptionPreferencesRow: some View {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 16) {
-                    SettingsIconBadge(icon: "captions.bubble", color: .blue)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Realtime Captions")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(colors.textPrimary)
-                        Text(preferences.realtimeCaptionWindowMode.settingsDescription)
-                            .font(.system(size: 12))
-                            .foregroundColor(colors.textSecondary)
+        var realtimeCaptionsSection: some View {
+            Section {
+                Picker(selection: Binding(
+                    get: { preferences.realtimeCaptionWindowMode },
+                    set: { mode in
+                        preferences.setRealtimeCaptionWindowMode(mode)
+                        refreshRealtimeCaptionWindowIfVisible()
                     }
-
-                    Spacer()
-
-                    Picker("", selection: Binding(
-                        get: { preferences.realtimeCaptionWindowMode },
-                        set: { mode in
-                            preferences.setRealtimeCaptionWindowMode(mode)
-                            refreshRealtimeCaptionWindowIfVisible()
-                        }
-                    )) {
-                        ForEach(RealtimeCaptionWindowMode.allCases) { mode in
-                            Text(mode.title).tag(mode)
-                        }
+                )) {
+                    ForEach(RealtimeCaptionWindowMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
                     }
-                    .labelsHidden()
-                    .frame(width: 130)
+                } label: {
+                    settingsLabel(
+                        "Realtime Captions",
+                        systemImage: "captions.bubble",
+                        subtitle: Text(preferences.realtimeCaptionWindowMode.settingsDescription)
+                    )
                 }
 
                 Toggle(isOn: Binding(
@@ -878,15 +623,9 @@ private extension SettingsView {
                         refreshRealtimeCaptionWindowIfVisible()
                     }
                 )) {
-                    Text("Hide captions from screen sharing")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
+                    settingsLabel("Hide captions from screen sharing", systemImage: "eye.slash")
                 }
-                .toggleStyle(.switch)
-                .padding(.leading, 52)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
         }
 
         private func refreshRealtimeCaptionWindowIfVisible() {
@@ -894,68 +633,27 @@ private extension SettingsView {
             RealtimeFloatingCaptionWindowController.open(store: RealtimeSessionStore.shared)
         }
 
-        var replayOnboardingRow: some View {
-            Button {
-                showOnboarding = true
-            } label: {
-                HStack(spacing: 16) {
-                    SettingsIconBadge(icon: "sparkles", color: .blue)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Replay Onboarding")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(colors.textPrimary)
-                        Text("Walk through the setup guide again")
-                            .font(.system(size: 12))
-                            .foregroundColor(colors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(colors.textSecondary.opacity(0.5))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-            }
-            .buttonStyle(.plain)
-        }
-
         var textSelectionTranslationRow: some View {
-            HStack(spacing: 16) {
-                SettingsIconBadge(icon: "text.cursor", color: .green)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Text Selection Translation")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text(textSelectionTranslationSubtitle)
-                        .font(.system(size: 12))
-                        .foregroundColor(colors.textSecondary)
-                }
-
-                Spacer()
-
-                Toggle("", isOn: Binding(
-                    get: { preferences.textSelectionTranslationEnabled },
-                    set: { newValue in
-                        if newValue {
-                            if AXIsProcessTrusted() {
-                                preferences.setTextSelectionTranslationEnabled(true)
-                            } else {
-                                showAccessibilityOnboarding = true
-                            }
+            Toggle(isOn: Binding(
+                get: { preferences.textSelectionTranslationEnabled },
+                set: { newValue in
+                    if newValue {
+                        if AXIsProcessTrusted() {
+                            preferences.setTextSelectionTranslationEnabled(true)
                         } else {
-                            preferences.setTextSelectionTranslationEnabled(false)
+                            showAccessibilityOnboarding = true
                         }
+                    } else {
+                        preferences.setTextSelectionTranslationEnabled(false)
                     }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
+                }
+            )) {
+                settingsLabel(
+                    "Text Selection Translation",
+                    systemImage: "text.cursor",
+                    subtitle: Text(textSelectionTranslationSubtitle)
+                )
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
         }
 
         private var textSelectionTranslationSubtitle: LocalizedStringKey {
@@ -965,7 +663,6 @@ private extension SettingsView {
             return accessibilityPermissionManager
                 .isAccessibilityGranted ? "Select text in any app to translate" : "Requires Accessibility Permission"
         }
-
     #endif
 }
 
@@ -1282,21 +979,3 @@ struct ConfigEditorItem: Identifiable {
         }
     }
 #endif
-
-// MARK: - Settings Icon Badge
-
-private struct SettingsIconBadge: View {
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(color.opacity(0.15))
-                .frame(width: 36, height: 36)
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(color)
-        }
-    }
-}

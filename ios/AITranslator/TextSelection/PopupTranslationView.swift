@@ -93,12 +93,7 @@
                     }
                 }
                 .frame(minWidth: 320, minHeight: 200)
-                .tlingoGlassSurface(
-                    cornerRadius: 14,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.18 : 0.24),
-                    fallbackTint: colors.cardBackground.opacity(0.94),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassSurface(.panel, cornerRadius: TLingoRadius.medium)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .shadow(color: .black.opacity(colorScheme == .dark ? 0.28 : 0.14), radius: 18, x: 0, y: 8)
 

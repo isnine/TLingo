@@ -108,7 +108,7 @@ struct DownloadLanguagesGuideView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(colors.accent)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
     }

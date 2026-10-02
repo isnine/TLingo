@@ -178,7 +178,7 @@ public struct SelectableModelRow: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(background ?? color.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 

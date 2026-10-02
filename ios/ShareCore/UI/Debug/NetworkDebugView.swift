@@ -141,7 +141,7 @@ private struct RequestRowView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(methodColor, in: RoundedRectangle(cornerRadius: 4))
+                .background(methodColor, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(record.urlPath)
@@ -167,7 +167,7 @@ private struct RequestRowView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
-                            .background(.orange, in: RoundedRectangle(cornerRadius: 3))
+                            .background(.orange, in: RoundedRectangle(cornerRadius: 3, style: .continuous))
                     }
 
                     if record.errorDescription != nil {

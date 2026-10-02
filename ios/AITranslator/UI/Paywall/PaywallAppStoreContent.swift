@@ -321,13 +321,7 @@ struct PaywallAppStoreContent: View {
             .frame(maxWidth: .infinity)
             .frame(height: 50)
             .foregroundColor(hasSelection ? .white : colors.textSecondary.opacity(0.55))
-            .tlingoGlassSurface(
-                cornerRadius: 15,
-                tint: hasSelection ? colors.accent.opacity(0.76) : colors.cardBackground.opacity(0.12),
-                interactive: hasSelection && !storeManager.isPurchasing,
-                fallbackTint: hasSelection ? colors.accent : colors.chipSecondaryBackground.opacity(0.45),
-                fallbackStroke: hasSelection ? colors.accent.opacity(0.25) : colors.divider
-            )
+            .tlingoGlassSurface(hasSelection ? .prominent : .control, cornerRadius: 15, interactive: hasSelection && !storeManager.isPurchasing)
         }
         .buttonStyle(.plain)
         .disabled(selectedProduct == nil || storeManager.isPurchasing)

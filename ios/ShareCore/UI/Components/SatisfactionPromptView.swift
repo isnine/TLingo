@@ -58,12 +58,7 @@ struct SatisfactionPromptView: View {
                         .foregroundColor(colors.textPrimary)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .tlingoGlassCapsule(
-                            tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.18),
-                            interactive: true,
-                            fallbackTint: colors.inputBackground,
-                            fallbackStroke: colors.divider
-                        )
+                        .tlingoGlassCapsule(.chrome, interactive: true)
                 }
                 .buttonStyle(.plain)
 
@@ -75,12 +70,7 @@ struct SatisfactionPromptView: View {
                         .foregroundColor(colors.textSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .tlingoGlassCapsule(
-                            tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.08 : 0.12),
-                            interactive: true,
-                            fallbackTint: colors.inputBackground.opacity(0.45),
-                            fallbackStroke: colors.divider.opacity(0.7)
-                        )
+                        .tlingoGlassCapsule(.control, interactive: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -91,12 +81,7 @@ struct SatisfactionPromptView: View {
         .frame(maxWidth: 360)
         .background {
             Color.clear
-                .tlingoGlassSurface(
-                    cornerRadius: 18,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.22),
-                    fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.72 : 0.88),
-                    fallbackStroke: colors.divider.opacity(0.9)
-                )
+                .tlingoGlassSurface(.panel, cornerRadius: TLingoRadius.large)
                 .shadow(color: .black.opacity(colorScheme == .dark ? 0.22 : 0.12), radius: 14, x: 0, y: 8)
         }
     }

@@ -63,12 +63,7 @@
                                 .font(.system(size: 18))
                                 .foregroundColor(colors.textSecondary.opacity(0.6))
                                 .frame(width: 30, height: 30)
-                                .tlingoGlassCircle(
-                                    tint: colors.cardBackground.opacity(0.10),
-                                    interactive: true,
-                                    fallbackTint: colors.inputBackground.opacity(0.82),
-                                    fallbackStroke: colors.divider
-                                )
+                                .tlingoGlassCircle(.control, interactive: true)
                         }
                         .buttonStyle(.plain)
                     }

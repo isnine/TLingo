@@ -35,12 +35,7 @@
                 Capsule()
                     .fill(colors.textSecondary.opacity(isActive ? 0.42 : 0.22))
                     .frame(width: isActive ? 44 : 36, height: isActive ? 6 : 4)
-                    .tlingoGlassCapsule(
-                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.18),
-                        interactive: true,
-                        fallbackTint: colors.cardBackground.opacity(0.42),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCapsule(.chrome, interactive: true)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 14)
@@ -121,12 +116,7 @@
                 Capsule()
                     .fill(colors.textSecondary.opacity(isActive ? 0.42 : 0.22))
                     .frame(width: isActive ? 6 : 4, height: isActive ? 44 : 36)
-                    .tlingoGlassCapsule(
-                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.18),
-                        interactive: true,
-                        fallbackTint: colors.cardBackground.opacity(0.42),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCapsule(.chrome, interactive: true)
             }
             .frame(maxHeight: .infinity)
             .frame(width: 14)

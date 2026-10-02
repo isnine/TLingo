@@ -597,7 +597,7 @@ private struct RealtimeHistoryDetailContent: View {
             .padding(.horizontal, 9)
             .frame(height: 26)
             .background(colors.chipSecondaryBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -644,7 +644,7 @@ private struct RealtimeHistoryDetailContent: View {
                     .font(.system(size: 12, weight: .semibold))
                     .frame(width: 28, height: 26)
                     .background(colors.chipSecondaryBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
             .menuStyle(.borderlessButton)
             .help("More")
@@ -731,7 +731,7 @@ private struct RealtimeHistoryDetailContent: View {
                 .padding(.horizontal, 9)
                 .frame(height: 26)
                 .background(colors.chipSecondaryBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .help(progressTitle(reconstructionProgress))
                 .accessibilityLabel(progressTitle(reconstructionProgress))
             } else if !hasBuiltCaptions {
@@ -756,11 +756,11 @@ private struct RealtimeHistoryDetailContent: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.white)
                     .background(colors.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .padding(12)
                 .background(colors.chipSecondaryBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
         }
 
@@ -776,7 +776,7 @@ private struct RealtimeHistoryDetailContent: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.white)
                     .background(colors.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 280)

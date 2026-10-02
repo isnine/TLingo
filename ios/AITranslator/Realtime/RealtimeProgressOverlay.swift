@@ -34,12 +34,7 @@
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
                 .frame(width: 320)
-                .tlingoGlassSurface(
-                    cornerRadius: 18,
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.18 : 0.24),
-                    fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.18 : 0.24),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassSurface(.panel, cornerRadius: TLingoRadius.large)
                 .shadow(color: .black.opacity(colorScheme == .dark ? 0.32 : 0.16), radius: 22, x: 0, y: 10)
             }
             .transition(.opacity)

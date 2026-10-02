@@ -37,7 +37,7 @@ private struct ImageThumbnailView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .padding(.top, 8)
                 .padding(.trailing, 8)
 
@@ -69,7 +69,7 @@ public struct ImageAttachmentInline: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 80, height: 80)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
             }
         }

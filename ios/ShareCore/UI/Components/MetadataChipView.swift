@@ -23,16 +23,16 @@ public struct MetadataChipView: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: TLingoSpacing.xxs) {
             Image(systemName: icon)
                 .font(.system(size: 10))
             Text(text)
                 .font(.system(size: 12))
         }
-        .foregroundColor(isPrimary ? .white : colors.textSecondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(isPrimary ? colors.accent : colors.chipSecondaryBackground)
-        .clipShape(Capsule())
+        .foregroundColor(isPrimary ? colors.onAccent : colors.textSecondary)
+        .padding(.horizontal, TLingoSpacing.xs)
+        .padding(.vertical, TLingoSpacing.xxs)
+        .background(isPrimary ? colors.accentFill : colors.chipSecondaryBackground)
+        .clipShape(Capsule(style: .continuous))
     }
 }

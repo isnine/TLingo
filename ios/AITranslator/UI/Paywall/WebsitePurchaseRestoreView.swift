@@ -73,13 +73,7 @@ struct WebsitePurchaseRestoreView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .foregroundColor(.white)
-                    .tlingoGlassSurface(
-                        cornerRadius: 14,
-                        tint: colors.accent.opacity(0.72),
-                        interactive: true,
-                        fallbackTint: colors.accent,
-                        fallbackStroke: colors.accent.opacity(0.22)
-                    )
+                    .tlingoGlassSurface(.prominent, cornerRadius: TLingoRadius.medium, interactive: true)
                 }
                 .buttonStyle(.plain)
                 .disabled(restore.inFlight)
@@ -95,12 +89,7 @@ struct WebsitePurchaseRestoreView: View {
                             .font(.system(size: 13, weight: .medium))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .tlingoGlassCapsule(
-                                tint: colors.cardBackground.opacity(0.12),
-                                interactive: true,
-                                fallbackTint: colors.inputBackground.opacity(0.84),
-                                fallbackStroke: colors.divider
-                            )
+                            .tlingoGlassCapsule(.control, interactive: true)
                     }
                     .buttonStyle(.plain)
                 }

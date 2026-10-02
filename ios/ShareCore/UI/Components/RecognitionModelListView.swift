@@ -156,7 +156,7 @@
                     ProgressView()
                         .controlSize(.small)
                 }
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(.tint)
                     .frame(width: 9, height: 9)
                     .opacity(progress == nil ? 0 : 1)

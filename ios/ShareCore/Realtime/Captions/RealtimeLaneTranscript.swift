@@ -13,7 +13,7 @@
         var body: some View {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 12) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         if let error = snapshot?.errorMessage, !error.isEmpty {
                             Label(error, systemImage: "exclamationmark.triangle.fill")
                                 .font(.body)
@@ -30,14 +30,19 @@
                             .frame(maxWidth: .infinity, minHeight: 220)
                         } else {
                             ForEach(captionLines) { line in
+                                // Matches the iOS caption hierarchy, scaled down for side-by-side lanes.
                                 Text(line.text)
-                                    .font(line.kind == .source ? .body : .headline)
+                                    .font(
+                                        line.kind == .source
+                                            ? .system(size: 15, weight: .medium, design: .rounded)
+                                            : .system(size: 20, weight: .semibold, design: .rounded)
+                                    )
                                     .foregroundStyle(
                                         line.isPending
                                             ? colors.accent
                                             : (line.kind == .source ? colors.textSecondary : colors.textPrimary)
                                     )
-                                    .lineSpacing(2)
+                                    .lineSpacing(line.kind == .source ? 3 : 5)
                                     .frame(maxWidth: .infinity, alignment: .topLeading)
                                     .textSelection(.enabled)
                                     .id(line.id)

@@ -96,7 +96,7 @@ public struct MessageBubbleView: View {
                         } label: {
                             Image(systemName: isSpeakingThis ? "stop.fill" : "speaker.wave.2.fill")
                                 .font(.system(size: 11))
-                                .foregroundColor(isSpeakingThis ? .red : colors.textSecondary)
+                                .foregroundColor(isSpeakingThis ? colors.error : colors.textSecondary)
                         }
                         .buttonStyle(.plain)
                         .help(isSpeakingThis ? "Stop Speaking" : "Speak")
@@ -268,10 +268,10 @@ private struct StreamingIndicator: View {
 
 private extension View {
     func bubbleBackground(_ fill: Color) -> some View {
-        padding(.horizontal, 11)
-            .padding(.vertical, 8)
+        padding(.horizontal, TLingoSpacing.sm)
+            .padding(.vertical, TLingoSpacing.xs)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
                     .fill(fill)
             )
     }

@@ -129,14 +129,6 @@ public struct LanguageSwitcherView: View {
         usesCompactMetrics ? 116 : 156
     }
 
-    private var glassChipTint: Color {
-        colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14)
-    }
-
-    private var glassChipFallbackTint: Color {
-        colors.chipSecondaryBackground.opacity(0.65)
-    }
-
     private var directionalIconWidth: CGFloat {
         usesCompactMetrics ? 30 : 38
     }
@@ -349,12 +341,7 @@ public struct LanguageSwitcherView: View {
 
         if showsControlBackgrounds {
             content
-                .tlingoGlassCapsule(
-                    tint: glassChipTint,
-                    interactive: true,
-                    fallbackTint: glassChipFallbackTint,
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCapsule(.control, interactive: true)
         } else {
             content
         }
@@ -529,12 +516,7 @@ public struct LanguageSwitcherView: View {
     private func glassLanguageChip(@ViewBuilder content: () -> some View) -> some View {
         if showsControlBackgrounds {
             languageChipFrame(content: content)
-                .tlingoGlassCapsule(
-                    tint: glassChipTint,
-                    interactive: true,
-                    fallbackTint: glassChipFallbackTint,
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCapsule(.control, interactive: true)
         } else {
             languageChipFrame(content: content)
         }

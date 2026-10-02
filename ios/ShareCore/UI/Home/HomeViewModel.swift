@@ -409,6 +409,8 @@ public final class HomeViewModel: ObservableObject {
         let cachedIsPremium: Bool
         /// History record for on-demand sentence-pair runs, kept apart from the main result.
         var sentencePairsHistoryRequestID = UUID()
+        /// The input was answered as a dictionary entry, so sentence pairs do not apply.
+        var isWordLookup = false
 
         func withAction(_ action: ActionConfig, historyRequestID: UUID) -> RequestContext {
             var context = RequestContext(
@@ -423,6 +425,7 @@ public final class HomeViewModel: ObservableObject {
                 cachedIsPremium: cachedIsPremium
             )
             context.sentencePairsHistoryRequestID = sentencePairsHistoryRequestID
+            context.isWordLookup = isWordLookup
             return context
         }
     }
@@ -1028,7 +1031,10 @@ public final class HomeViewModel: ObservableObject {
             return
         }
         let text = action.category == .translation ? InputTextNormalizer.normalize(rawText) : rawText
-        if action.id == BuiltInActionCatalog.translateActionID, WordLookupDetector.isWordOrPhrase(rawText) {
+        let isWordLookup = preferences.wordLookupEnabled
+            && action.id == BuiltInActionCatalog.translateActionID
+            && WordLookupDetector.isWordOrPhrase(rawText)
+        if isWordLookup {
             action.prompt = BuiltInActionCatalog.wordLookupPrompt
         }
 
@@ -1079,7 +1085,7 @@ public final class HomeViewModel: ObservableObject {
         setDetectedSourceLanguage(nil, reason: "Starting selected action request")
 
         let generation = UUID()
-        let context = RequestContext(
+        var context = RequestContext(
             generation: generation,
             historyRequestID: generation,
             text: text,
@@ -1090,6 +1096,7 @@ public final class HomeViewModel: ObservableObject {
             refreshEntitlement: refreshEntitlement,
             cachedIsPremium: cachedIsPremium
         )
+        context.isWordLookup = isWordLookup
         let runTokens = Dictionary(uniqueKeysWithValues: modelsToUse.map { ($0.id, UUID()) })
         activeRequestContext = context
         requestGenerationTracker.begin(generation: generation, runTokens: runTokens)
@@ -1098,13 +1105,29 @@ public final class HomeViewModel: ObservableObject {
             ModelRunViewState(model: $0, status: .running(start: Date()))
         }
 
-        currentRequestTask = Task { [weak self] in
-            await self?.executeRequest(
-                context: context,
-                models: modelsToUse,
-                runTokens: runTokens,
-                taskOwner: .primary
-            )
+        // Runs that open as sentence pairs request them directly instead of the whole translation first.
+        let sentencePairsRunIndices = preferences.defaultsToSentencePairs
+            && action.id == BuiltInActionCatalog.translateActionID
+            ? modelRuns.indices.filter { canShowSentencePairs(for: modelRuns[$0]) }
+            : []
+        let sentencePairsModelIDs = Set(sentencePairsRunIndices.map { modelRuns[$0].id })
+        let primaryModels = modelsToUse.filter { !sentencePairsModelIDs.contains($0.id) }
+
+        if !primaryModels.isEmpty {
+            currentRequestTask = Task { [weak self] in
+                await self?.executeRequest(
+                    context: context,
+                    models: primaryModels,
+                    runTokens: runTokens,
+                    taskOwner: .primary
+                )
+            }
+        }
+        if let sentencePairsContext = requestContext(for: .sentencePairs, base: context) {
+            for index in sentencePairsRunIndices {
+                modelRuns[index].presentation = .sentencePairs
+                startSingleRun(at: index, context: sentencePairsContext)
+            }
         }
     }
 
@@ -1129,6 +1152,7 @@ public final class HomeViewModel: ObservableObject {
     public func canShowSentencePairs(for run: ModelRunViewState) -> Bool {
         guard let context = activeRequestContext,
               context.action.outputType == .translate,
+              !context.isWordLookup,
               !run.model.isDirectTranslation,
               sentenceTranslateAction != nil
         else {

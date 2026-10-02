@@ -47,6 +47,21 @@ public enum AccentTheme: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Darker variant used for filled controls and for accent text in light mode;
+    /// every value keeps white text at or above 4.5:1.
+    public var strongColor: Color {
+        switch self {
+        case .orange: return Color(red: 202 / 255, green: 76 / 255, blue: 22 / 255)
+        case .blue: return Color(red: 60 / 255, green: 104 / 255, blue: 247 / 255)
+        case .purple: return Color(red: 142 / 255, green: 86 / 255, blue: 224 / 255)
+        case .pink: return Color(red: 220 / 255, green: 44 / 255, blue: 93 / 255)
+        case .green: return Color(red: 41 / 255, green: 133 / 255, blue: 66 / 255)
+        case .red: return Color(red: 211 / 255, green: 61 / 255, blue: 61 / 255)
+        case .teal: return Color(red: 29 / 255, green: 129 / 255, blue: 119 / 255)
+        case .indigo: return Color(red: 83 / 255, green: 82 / 255, blue: 196 / 255)
+        }
+    }
+
     public static let `default`: AccentTheme = .blue
 }
 
@@ -63,10 +78,6 @@ public enum AppColors {
         light: Color.white,
         dark: Color(red: 38 / 255, green: 38 / 255, blue: 44 / 255)
     )
-    private static let accent = AdaptiveColor(
-        light: Color(red: 232 / 255, green: 98 / 255, blue: 40 / 255),
-        dark: Color(red: 232 / 255, green: 98 / 255, blue: 40 / 255)
-    )
     private static let textPrimary = AdaptiveColor(
         light: Color(red: 28 / 255, green: 28 / 255, blue: 34 / 255),
         dark: Color.white
@@ -75,17 +86,9 @@ public enum AppColors {
         light: Color.black.opacity(0.6),
         dark: Color.white.opacity(0.65)
     )
-    private static let chipPrimaryBackground = AdaptiveColor(
-        light: Color(red: 232 / 255, green: 98 / 255, blue: 40 / 255),
-        dark: Color(red: 232 / 255, green: 98 / 255, blue: 40 / 255)
-    )
     private static let chipSecondaryBackground = AdaptiveColor(
         light: Color.black.opacity(0.05),
         dark: Color.white.opacity(0.25)
-    )
-    private static let chipPrimaryText = AdaptiveColor(
-        light: Color.white,
-        dark: Color.white
     )
     private static let chipSecondaryText = AdaptiveColor(
         light: Color.black.opacity(0.7),
@@ -124,12 +127,17 @@ public enum AppColors {
         public var background: Color { AppColors.background.resolve(colorScheme) }
         public var cardBackground: Color { AppColors.cardBackground.resolve(colorScheme) }
         public var inputBackground: Color { AppColors.inputBackground.resolve(colorScheme) }
-        public var accent: Color { accentTheme.color }
+        /// Accent for text, icons and tints. Light mode uses the stronger variant so
+        /// links and icons stay legible on white.
+        public var accent: Color { colorScheme == .dark ? accentTheme.color : accentTheme.strongColor }
+        /// Fill behind `onAccent` content: selected chips, send buttons, primary capsules.
+        public var accentFill: Color { accentTheme.strongColor }
+        public var onAccent: Color { Color.white }
         public var textPrimary: Color { AppColors.textPrimary.resolve(colorScheme) }
         public var textSecondary: Color { AppColors.textSecondary.resolve(colorScheme) }
-        public var chipPrimaryBackground: Color { accentTheme.color }
+        public var chipPrimaryBackground: Color { accentFill }
         public var chipSecondaryBackground: Color { AppColors.chipSecondaryBackground.resolve(colorScheme) }
-        public var chipPrimaryText: Color { AppColors.chipPrimaryText.resolve(colorScheme) }
+        public var chipPrimaryText: Color { onAccent }
         public var chipSecondaryText: Color { AppColors.chipSecondaryText.resolve(colorScheme) }
         public var divider: Color { AppColors.divider.resolve(colorScheme) }
         public var skeleton: Color { AppColors.skeleton.resolve(colorScheme) }

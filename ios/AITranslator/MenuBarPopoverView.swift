@@ -273,12 +273,7 @@
                             .font(.system(size: 18))
                             .foregroundColor(colors.textSecondary)
                             .frame(width: 30, height: 30)
-                            .tlingoGlassCircle(
-                                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.16),
-                                interactive: true,
-                                fallbackTint: colors.cardBackground.opacity(0.64),
-                                fallbackStroke: colors.divider
-                            )
+                            .tlingoGlassCircle(.control, interactive: true)
                     }
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
@@ -373,12 +368,7 @@
                         .foregroundColor(canTranslate ? .white : colors.textSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .tlingoGlassCapsule(
-                            tint: canTranslate ? colors.accent.opacity(0.78) : colors.cardBackground.opacity(0.10),
-                            interactive: canTranslate,
-                            fallbackTint: canTranslate ? colors.accent.opacity(0.82) : colors.cardBackground.opacity(0.52),
-                            fallbackStroke: canTranslate ? colors.accent.opacity(0.22) : colors.divider
-                        )
+                        .tlingoGlassCapsule(canTranslate ? .prominent : .control, interactive: canTranslate)
                     }
                     .buttonStyle(.plain)
                     .disabled(!canTranslate)
@@ -491,14 +481,7 @@
         @ViewBuilder
         private func chipBackground(isSelected: Bool) -> some View {
             Color.clear
-                .tlingoGlassCapsule(
-                    tint: isSelected
-                        ? colors.accent.opacity(0.78)
-                        : colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.16),
-                    interactive: true,
-                    fallbackTint: isSelected ? colors.accent.opacity(0.82) : colors.cardBackground.opacity(0.58),
-                    fallbackStroke: isSelected ? colors.accent.opacity(0.20) : colors.divider
-                )
+                .tlingoGlassCapsule(isSelected ? .prominent : .control, interactive: true)
         }
     }
 

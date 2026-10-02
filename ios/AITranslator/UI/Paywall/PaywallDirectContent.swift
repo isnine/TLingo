@@ -102,13 +102,7 @@ struct PaywallDirectContent: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .tlingoGlassSurface(
-                        cornerRadius: 15,
-                        tint: colors.accent.opacity(0.76),
-                        interactive: true,
-                        fallbackTint: colors.accent,
-                        fallbackStroke: colors.accent.opacity(0.25)
-                    )
+                    .tlingoGlassSurface(.prominent, cornerRadius: 15, interactive: true)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
@@ -130,12 +124,7 @@ struct PaywallDirectContent: View {
                     .foregroundColor(colors.accent)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .tlingoGlassCapsule(
-                        tint: colors.cardBackground.opacity(0.12),
-                        interactive: true,
-                        fallbackTint: colors.chipSecondaryBackground.opacity(0.45),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCapsule(.control, interactive: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -168,13 +157,7 @@ struct PaywallDirectContent: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .tlingoGlassSurface(
-                        cornerRadius: 15,
-                        tint: colors.accent.opacity(0.76),
-                        interactive: true,
-                        fallbackTint: colors.accent,
-                        fallbackStroke: colors.accent.opacity(0.25)
-                    )
+                    .tlingoGlassSurface(.prominent, cornerRadius: 15, interactive: true)
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
@@ -195,12 +178,7 @@ struct PaywallDirectContent: View {
                 .foregroundColor(isRefreshing ? colors.textSecondary : colors.accent)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .tlingoGlassCapsule(
-                    tint: colors.cardBackground.opacity(0.12),
-                    interactive: !isRefreshing,
-                    fallbackTint: colors.chipSecondaryBackground.opacity(0.45),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCapsule(.control, interactive: !isRefreshing)
             }
             .buttonStyle(.plain)
             .disabled(isRefreshing)
@@ -220,12 +198,7 @@ struct PaywallDirectContent: View {
                     .foregroundColor(colors.accent)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .tlingoGlassCapsule(
-                        tint: colors.cardBackground.opacity(0.12),
-                        interactive: true,
-                        fallbackTint: colors.chipSecondaryBackground.opacity(0.45),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCapsule(.control, interactive: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -311,7 +284,7 @@ struct PaywallDirectContent: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.red))
+                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.red))
                 }
                 .buttonStyle(.plain)
             }
@@ -319,7 +292,7 @@ struct PaywallDirectContent: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.red.opacity(0.08))
         )
         .padding(.horizontal, 20)

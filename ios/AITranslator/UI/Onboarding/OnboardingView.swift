@@ -175,12 +175,7 @@
                             .foregroundColor(colors.textSecondary)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 20)
-                            .tlingoGlassCapsule(
-                                tint: colors.cardBackground.opacity(0.12),
-                                interactive: true,
-                                fallbackTint: colors.inputBackground.opacity(0.84),
-                                fallbackStroke: colors.divider
-                            )
+                            .tlingoGlassCapsule(.control, interactive: true)
                     }
                     .buttonStyle(.plain)
                 }
@@ -196,12 +191,7 @@
                             .foregroundColor(colors.textSecondary)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 20)
-                            .tlingoGlassCapsule(
-                                tint: colors.cardBackground.opacity(0.12),
-                                interactive: true,
-                                fallbackTint: colors.inputBackground.opacity(0.84),
-                                fallbackStroke: colors.divider
-                            )
+                            .tlingoGlassCapsule(.control, interactive: true)
                     }
                     .buttonStyle(.plain)
                 }
@@ -215,12 +205,7 @@
                             .foregroundColor(colors.textSecondary)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 20)
-                            .tlingoGlassCapsule(
-                                tint: colors.cardBackground.opacity(0.12),
-                                interactive: true,
-                                fallbackTint: colors.inputBackground.opacity(0.84),
-                                fallbackStroke: colors.divider
-                            )
+                            .tlingoGlassCapsule(.control, interactive: true)
                     }
                     .buttonStyle(.plain)
                 }
@@ -234,12 +219,7 @@
                             .foregroundColor(primaryButtonEnabled ? .white : colors.textSecondary)
                             .padding(.vertical, 10)
                             .padding(.horizontal, 28)
-                            .tlingoGlassCapsule(
-                                tint: primaryButtonEnabled ? colors.accent.opacity(0.72) : colors.cardBackground.opacity(0.12),
-                                interactive: primaryButtonEnabled,
-                                fallbackTint: primaryButtonEnabled ? colors.accent : colors.inputBackground.opacity(0.84),
-                                fallbackStroke: primaryButtonEnabled ? colors.accent.opacity(0.22) : colors.divider
-                            )
+                            .tlingoGlassCapsule(primaryButtonEnabled ? .prominent : .control, interactive: primaryButtonEnabled)
                     }
                     .buttonStyle(.plain)
                     .disabled(!primaryButtonEnabled)

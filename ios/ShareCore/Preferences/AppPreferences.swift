@@ -28,6 +28,10 @@ public final class AppPreferences: ObservableObject {
     @Published public private(set) var voiceActionHintDismissed: Bool
     @Published public private(set) var enabledModelIDs: Set<String>
     @Published public private(set) var modelResultOrder: ModelResultOrder
+    /// Translating a single word or short phrase returns a dictionary-style entry.
+    @Published public private(set) var wordLookupEnabled: Bool
+    /// AI translation results open as sentence pairs instead of one block.
+    @Published public private(set) var defaultsToSentencePairs: Bool
     @Published public private(set) var chatModelID: String?
     @Published public private(set) var selectedVoiceID: String
     @Published public private(set) var isPremium: Bool
@@ -133,6 +137,8 @@ public final class AppPreferences: ObservableObject {
         voiceActionHintDismissed = defaults.bool(forKey: StorageKeys.voiceActionHintDismissed)
         enabledModelIDs = AppPreferences.readEnabledModelIDs(from: defaults)
         modelResultOrder = AppPreferences.readModelResultOrder(from: defaults)
+        wordLookupEnabled = defaults.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true
+        defaultsToSentencePairs = defaults.bool(forKey: StorageKeys.defaultsToSentencePairs)
         chatModelID = defaults.string(forKey: StorageKeys.chatModelID)
         selectedVoiceID = defaults.string(forKey: StorageKeys.selectedVoiceID) ?? VoiceConfig.defaultVoiceID
         isPremium = defaults.bool(forKey: StorageKeys.isPremium)
@@ -231,6 +237,18 @@ public final class AppPreferences: ObservableObject {
         guard modelResultOrder != order else { return }
         modelResultOrder = order
         defaults.set(order.rawValue, forKey: StorageKeys.modelResultOrder)
+    }
+
+    public func setWordLookupEnabled(_ enabled: Bool) {
+        guard wordLookupEnabled != enabled else { return }
+        wordLookupEnabled = enabled
+        defaults.set(enabled, forKey: StorageKeys.wordLookupEnabled)
+    }
+
+    public func setDefaultsToSentencePairs(_ enabled: Bool) {
+        guard defaultsToSentencePairs != enabled else { return }
+        defaultsToSentencePairs = enabled
+        defaults.set(enabled, forKey: StorageKeys.defaultsToSentencePairs)
     }
 
     private static func readModelResultOrder(from defaults: UserDefaults) -> ModelResultOrder {
@@ -548,6 +566,16 @@ public final class AppPreferences: ObservableObject {
         let storedResultOrder = AppPreferences.readModelResultOrder(from: defaults)
         if modelResultOrder != storedResultOrder {
             modelResultOrder = storedResultOrder
+        }
+
+        let storedWordLookupEnabled = defaults.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true
+        if wordLookupEnabled != storedWordLookupEnabled {
+            wordLookupEnabled = storedWordLookupEnabled
+        }
+
+        let storedDefaultsToSentencePairs = defaults.bool(forKey: StorageKeys.defaultsToSentencePairs)
+        if defaultsToSentencePairs != storedDefaultsToSentencePairs {
+            defaultsToSentencePairs = storedDefaultsToSentencePairs
         }
 
         let resolved = AppPreferences.readTargetLanguage(from: defaults)
@@ -896,6 +924,8 @@ public final class AppPreferences: ObservableObject {
 
 private enum StorageKeys {
     static let modelResultOrder = "model_result_order"
+    static let wordLookupEnabled = "word_lookup_enabled"
+    static let defaultsToSentencePairs = "defaults_to_sentence_pairs"
     static let currentConfigName = "current_config_name"
     static let useICloudForConfig = "use_icloud_for_config"
     static let voiceActionHintDismissed = "voice_action_hint_dismissed"

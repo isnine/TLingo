@@ -35,9 +35,9 @@
             }
             .frame(minWidth: minimumWidth, maxWidth: .infinity, maxHeight: .infinity)
             .background(colors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(colors.divider, lineWidth: 1)
             }
         }

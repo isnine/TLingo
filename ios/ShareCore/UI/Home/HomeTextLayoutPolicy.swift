@@ -135,6 +135,21 @@ enum HomeTextLayoutPolicy {
         )
     }
 
+    /// Splits a line budget across collapsed result previews. Every preview keeps at least one line;
+    /// short previews take only what they need and the rest is shared evenly by longer ones.
+    static func collapsedPreviewLineLimits(neededLines: [Int], lineBudget: Int) -> [Int] {
+        var limits = neededLines.map { _ in 1 }
+        var remainingBudget = max(lineBudget, neededLines.count)
+        var remainingCount = neededLines.count
+        for index in neededLines.indices.sorted(by: { neededLines[$0] < neededLines[$1] }) {
+            let share = remainingBudget / remainingCount
+            limits[index] = max(1, min(neededLines[index], share))
+            remainingBudget -= limits[index]
+            remainingCount -= 1
+        }
+        return limits
+    }
+
     private static func finitePositive(_ value: CGFloat) -> CGFloat {
         value.isFinite ? max(0, value) : 0
     }

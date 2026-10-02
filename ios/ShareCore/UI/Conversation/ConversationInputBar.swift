@@ -121,11 +121,7 @@ public struct ConversationInputBar: View {
             actionButton
                 .padding(4)
         }
-        .tlingoGlassCapsule(
-            tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.18),
-            fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.72),
-            fallbackStroke: colors.divider
-        )
+        .tlingoGlassCapsule(.chrome)
     }
 
     @ViewBuilder
@@ -189,12 +185,7 @@ public struct ConversationInputBar: View {
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(colors.textPrimary)
                 .frame(width: 40, height: 40)
-                .tlingoGlassCircle(
-                    tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                    interactive: true,
-                    fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.72),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCircle(.control, interactive: true)
         }
         .buttonStyle(.plain)
         .disabled(onAddImages == nil)
@@ -299,30 +290,18 @@ public struct ConversationInputBar: View {
                 Button(action: onStop) {
                     Image(systemName: "stop.fill")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(colors.onAccent)
                         .frame(width: 32, height: 32)
-                        .tlingoGlassCircle(
-                            tint: colors.error.opacity(0.78),
-                            interactive: true,
-                            fallbackTint: colors.error,
-                            fallbackStroke: colors.error.opacity(0.25)
-                        )
+                        .tlingoGlassCircle(.destructive, interactive: true)
                 }
                 .buttonStyle(.plain)
             } else {
                 Button(action: onSend) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(canSend ? colors.background : colors.textSecondary.opacity(0.45))
+                        .foregroundColor(canSend ? colors.onAccent : colors.textSecondary.opacity(0.45))
                         .frame(width: 32, height: 32)
-                        .tlingoGlassCircle(
-                            tint: canSend ? colors.textPrimary.opacity(0.82) : colors.cardBackground.opacity(
-                                colorScheme == .dark ? 0.10 : 0.14
-                            ),
-                            interactive: canSend,
-                            fallbackTint: canSend ? colors.textPrimary : colors.chipSecondaryBackground.opacity(0.45),
-                            fallbackStroke: canSend ? colors.textPrimary.opacity(0.25) : colors.divider
-                        )
+                        .tlingoGlassCircle(canSend ? .prominent : .control, interactive: canSend)
                 }
                 .buttonStyle(.plain)
                 .disabled(!canSend)

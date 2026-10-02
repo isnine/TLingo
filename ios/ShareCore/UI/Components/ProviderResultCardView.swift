@@ -89,13 +89,13 @@ public struct ProviderResultCardView: View {
                 onChat: onChat
             )
         }
-        .padding(usesCompactSnapshotMetrics ? 8 : 14)
+        .padding(usesCompactSnapshotMetrics ? TLingoSpacing.xs : TLingoSpacing.md)
         .background(cardBackground)
     }
 
     @ViewBuilder
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
+        RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
             .fill(colors.cardBackground)
     }
 }

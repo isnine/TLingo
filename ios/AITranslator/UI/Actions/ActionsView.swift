@@ -247,12 +247,7 @@ struct ActionsView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(colors.accent)
                         .frame(width: 30, height: 30)
-                        .tlingoGlassCircle(
-                            tint: colors.cardBackground.opacity(0.14),
-                            interactive: true,
-                            fallbackTint: colors.inputBackground.opacity(0.86),
-                            fallbackStroke: colors.divider
-                        )
+                        .tlingoGlassCircle(.control, interactive: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -372,12 +367,7 @@ struct ActionsView: View {
                 .font(.system(size: 22, weight: .regular))
                 .foregroundColor(colors.textSecondary)
                 .frame(width: 34, height: 34)
-                .tlingoGlassCircle(
-                    tint: colors.cardBackground.opacity(0.12),
-                    interactive: true,
-                    fallbackTint: colors.inputBackground.opacity(0.84),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCircle(.control, interactive: true)
         }
         .padding(.top, 6)
     }
@@ -404,12 +394,7 @@ struct ActionsView: View {
                     .foregroundColor(colors.chipPrimaryText)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .tlingoGlassCapsule(
-                        tint: colors.accent.opacity(0.72),
-                        interactive: true,
-                        fallbackTint: colors.accent,
-                        fallbackStroke: colors.accent.opacity(0.22)
-                    )
+                    .tlingoGlassCapsule(.prominent, interactive: true)
             }
             .buttonStyle(.plain)
 
@@ -420,22 +405,12 @@ struct ActionsView: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .tlingoGlassCircle(
-                        tint: colors.cardBackground.opacity(0.10),
-                        interactive: true,
-                        fallbackTint: colors.inputBackground.opacity(0.84),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCircle(.control, interactive: true)
             }
             .buttonStyle(.plain)
         }
         .padding(14)
-        .tlingoGlassSurface(
-            cornerRadius: 12,
-            tint: colors.cardBackground.opacity(0.14),
-            fallbackTint: colors.cardBackground.opacity(0.86),
-            fallbackStroke: colors.divider
-        )
+        .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.medium)
     }
 
     private var emptyStateView: some View {

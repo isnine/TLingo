@@ -148,12 +148,7 @@ struct PaywallView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(colors.textSecondary.opacity(0.6))
                 .frame(width: 32, height: 32)
-                .tlingoGlassCircle(
-                    tint: colors.cardBackground.opacity(0.12),
-                    interactive: true,
-                    fallbackTint: colors.inputBackground.opacity(0.84),
-                    fallbackStroke: colors.divider
-                )
+                .tlingoGlassCircle(.control, interactive: true)
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
@@ -267,10 +262,10 @@ struct PaywallCard: View {
     let colors: AppColorPalette
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(colors.cardBackground)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(colors.divider, lineWidth: 1)
             )
     }

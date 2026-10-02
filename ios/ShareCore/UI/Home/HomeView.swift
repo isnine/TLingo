@@ -35,6 +35,7 @@ import WebKit
 public struct HomeView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
@@ -59,6 +60,9 @@ public struct HomeView: View {
     /// so switching to sentence pairs never collapses the row before new content streams in.
     @State private var resultContentHeights: [String: CGFloat] = [:]
     @State private var heldResultHeights: [String: CGFloat] = [:]
+    /// Flat panel and its collapsed preview block, measured to size previews to the visible area.
+    @State private var flatResultsPanelHeight: CGFloat = 0
+    @State private var collapsedResultsSize: CGSize = .zero
     #if os(iOS)
         @State private var selectedResult: SelectedResult?
         @State private var resultDetailDetent: PresentationDetent = .medium
@@ -198,6 +202,15 @@ public struct HomeView: View {
         usesNativeNavigationChrome && currentTextLayoutIdiom == .phone
     }
 
+    /// iPhone and Mac show results as a flat panel with per-row sentence pairs; iPad keeps cards.
+    private var usesFlatResultsPanel: Bool {
+        #if os(macOS)
+            return true
+        #else
+            return usesPhoneComposerChrome
+        #endif
+    }
+
     private var currentTextLayoutIdiom: HomeTextLayoutIdiom {
         #if os(macOS)
             return .mac
@@ -296,9 +309,6 @@ public struct HomeView: View {
         #endif
             .toolbar {
                 #if os(macOS)
-                    ToolbarItem(placement: .navigation) {
-                        resultOrderMenu
-                    }
                     if activeConversationSession != nil {
                         ToolbarItem(placement: .primaryAction) {
                             conversationInspectorToggleButton
@@ -632,10 +642,13 @@ public struct HomeView: View {
                                 hintLabel
                                     .padding(.top, 24)
                             }
-                        } else if usesPhoneComposerChrome {
-                            #if os(iOS)
-                                phoneResultsPanel
-                            #endif
+                        } else if usesFlatResultsPanel {
+                            flatResultsPanel(
+                                viewportHeight: geometry.size.height
+                                    - bottomComposerHeights(availableHeight: geometry.size.height).dockHeight
+                                    - bottomComposerResultsTopPadding
+                                    - bottomComposerResultsBottomPadding
+                            )
                         } else {
                             providerResultsSection
                         }
@@ -643,8 +656,8 @@ public struct HomeView: View {
                     .frame(maxWidth: bottomComposerContentMaxWidth, alignment: .topLeading)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .padding(.horizontal, 20)
-                    .padding(.top, usesPhoneComposerChrome ? 8 : 28)
-                    .padding(.bottom, 16)
+                    .padding(.top, bottomComposerResultsTopPadding)
+                    .padding(.bottom, bottomComposerResultsBottomPadding)
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     bottomComposerDock(availableHeight: geometry.size.height)
@@ -658,6 +671,14 @@ public struct HomeView: View {
                 #endif
             }
         }
+    }
+
+    private var bottomComposerResultsTopPadding: CGFloat {
+        usesPhoneComposerChrome ? 8 : 28
+    }
+
+    private var bottomComposerResultsBottomPadding: CGFloat {
+        16
     }
 
     private func centeredEmptyComposerLayout(availableHeight: CGFloat) -> some View {
@@ -913,12 +934,12 @@ public struct HomeView: View {
                 } label: {
                     Label("Love it", systemImage: "heart.fill")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(colors.onAccent)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(
                             Capsule(style: .continuous)
-                                .fill(colors.accent)
+                                .fill(colors.accentFill)
                         )
                 }
                 .buttonStyle(.plain)
@@ -960,14 +981,14 @@ public struct HomeView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.88)
         }
-        .padding(16)
+        .padding(TLingoSpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(providerResultCardBackground)
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
                 .stroke(colors.divider, lineWidth: 1)
         )
-        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
         .task(id: showSatisfactionToast) {
             guard showSatisfactionToast else { return }
             try? await Task.sleep(for: .seconds(10))
@@ -1058,23 +1079,13 @@ public struct HomeView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
-            .tlingoGlassSurface(
-                cornerRadius: 18,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.24),
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.82),
-                fallbackStroke: colors.divider
-            )
+            .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
         }
     }
 
     private var inputComposerBackground: some View {
         Color.clear
-            .tlingoGlassSurface(
-                cornerRadius: 18,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.18),
-                fallbackTint: colors.cardBackground.opacity(colorScheme == .dark ? 0.16 : 0.72),
-                fallbackStroke: colors.divider
-            )
+            .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
     }
 
     private var inputEditorMinHeight: CGFloat {
@@ -1147,12 +1158,7 @@ public struct HomeView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .tlingoGlassCapsule(
-                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                        interactive: true,
-                        fallbackTint: colors.chipSecondaryBackground.opacity(0.55),
-                        fallbackStroke: colors.divider
-                    )
+                    .tlingoGlassCapsule(.control, interactive: true)
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(colors.textSecondary)
@@ -1220,16 +1226,36 @@ public struct HomeView: View {
                 Text(order.title).tag(order)
             }
         }
+        // Lists the options directly in the enclosing menu instead of a nested submenu.
+        .pickerStyle(.inline)
     }
 
     private var resultOrderMenu: some View {
         Menu {
-            resultOrderPicker
+            resultOptionsMenuContent(showsResultOrder: true)
         } label: {
-            Label("Result Order", systemImage: "arrow.up.arrow.down")
+            Label("Result Options", systemImage: "slider.horizontal.3")
         }
         .accessibilityIdentifier("home_result_order")
         .accessibilityValue(preferences.modelResultOrder.title)
+    }
+
+    /// Result preferences offered next to the results; they mirror the Translation settings.
+    @ViewBuilder
+    private func resultOptionsMenuContent(showsResultOrder: Bool) -> some View {
+        if showsResultOrder {
+            resultOrderPicker
+        }
+        Section {
+            Toggle("Look Up Single Words", isOn: Binding(
+                get: { preferences.wordLookupEnabled },
+                set: { preferences.setWordLookupEnabled($0) }
+            ))
+            Toggle("Sentence by Sentence by Default", isOn: Binding(
+                get: { preferences.defaultsToSentencePairs },
+                set: { preferences.setDefaultsToSentencePairs($0) }
+            ))
+        }
     }
 
     @ViewBuilder
@@ -1353,16 +1379,9 @@ public struct HomeView: View {
         #if os(macOS)
             Image(systemName: "arrow.up")
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(viewModel.canSend ? .white : colors.textSecondary.opacity(0.45))
+                .foregroundColor(viewModel.canSend ? colors.onAccent : colors.textSecondary.opacity(0.45))
                 .frame(width: 32, height: 32)
-                .tlingoGlassCircle(
-                    tint: viewModel.canSend ? colors.accent.opacity(0.74) : colors.cardBackground.opacity(
-                        colorScheme == .dark ? 0.10 : 0.14
-                    ),
-                    interactive: viewModel.canSend,
-                    fallbackTint: viewModel.canSend ? colors.accent : colors.chipSecondaryBackground.opacity(0.45),
-                    fallbackStroke: viewModel.canSend ? colors.accent.opacity(0.25) : colors.divider
-                )
+                .tlingoGlassCircle(viewModel.canSend ? .prominent : .control, interactive: viewModel.canSend)
         #else
             HStack(spacing: 6) {
                 Text("Send")
@@ -1402,7 +1421,7 @@ public struct HomeView: View {
                 }
             }
             .buttonStyle(.glass)
-            .tint(viewModel.isSpeakingInputText ? .red : colors.accent)
+            .tint(viewModel.isSpeakingInputText ? colors.error : colors.accent)
             .buttonBorderShape(.circle)
         }
     }
@@ -1430,14 +1449,8 @@ public struct HomeView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .tlingoGlassSurface(
-                cornerRadius: 14,
-                tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.10 : 0.14),
-                interactive: true,
-                fallbackTint: colors.inputBackground.opacity(0.70),
-                fallbackStroke: colors.divider
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.medium, interactive: true)
+            .contentShape(RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -1624,65 +1637,80 @@ public struct HomeView: View {
             .foregroundColor(colors.textSecondary)
             .padding(.horizontal, 4)
         }
+    #endif
 
-        // MARK: - iPhone result panel
+    // MARK: - Flat result panel
 
-        /// Flat result panel: one prominent result, other models folded into a preview list.
-        private var phoneResultsPanel: some View {
-            let runs = viewModel.displayedModelRuns
-            let showsComparison = isComparingResults && runs.count > 1
+    /// Flat result panel: one prominent result, other models folded into a preview list.
+    private func flatResultsPanel(viewportHeight: CGFloat) -> some View {
+        let runs = viewModel.displayedModelRuns
+        let showsComparison = isComparingResults && runs.count > 1
 
-            return VStack(alignment: .leading, spacing: 0) {
-                if showsComparison {
-                    phoneComparisonHeader(resultCount: runs.count)
-                    ForEach(Array(runs.enumerated()), id: \.element.id) { index, run in
-                        if index > 0 {
-                            Divider()
-                        }
-                        phoneResultRow(for: run, isPrimary: false)
-                    }
-                } else if let primaryRun = runs.first {
-                    phoneResultRow(for: primaryRun, isPrimary: true)
-                    if runs.count > 1 {
+        return VStack(alignment: .leading, spacing: 0) {
+            if showsComparison {
+                comparisonHeader(resultCount: runs.count)
+                ForEach(Array(runs.enumerated()), id: \.element.id) { index, run in
+                    if index > 0 {
                         Divider()
-                        phoneCollapsedResults(Array(runs.dropFirst()))
                     }
+                    flatResultRow(for: run, isPrimary: false)
                 }
-
-                if shouldShowInlineSatisfactionPrompt {
-                    satisfactionPromptResultCell
-                        .padding(.top, 16)
+            } else if let primaryRun = runs.first {
+                flatResultRow(for: primaryRun, isPrimary: true)
+                if runs.count > 1 {
+                    let collapsedRuns = Array(runs.dropFirst())
+                    Divider()
+                    collapsedResults(
+                        collapsedRuns,
+                        lineLimits: collapsedPreviewLineLimits(for: collapsedRuns, viewportHeight: viewportHeight)
+                    )
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: showsComparison)
+
+            if !runs.isEmpty {
+                resultOptionsFooter(showsResultOrder: runs.count > 1)
+            }
+
+            if shouldShowInlineSatisfactionPrompt {
+                satisfactionPromptResultCell
+                    .padding(.top, 16)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showsComparison)
+        .onHeightChange { height in
+            updateMeasuredHeight(height, current: flatResultsPanelHeight) {
+                flatResultsPanelHeight = $0
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func flatResultRow(for run: HomeViewModel.ModelRunViewState, isPrimary: Bool) -> some View {
+        let runID = run.id
+        let isLoading = isRunLoading(run)
+        let row = VStack(alignment: .leading, spacing: 8) {
+            flatResultHeader(for: run)
+            content(for: run, textPreset: isPrimary ? .prominent : .compact, showsInlineActions: false)
+                .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
+                // Outgoing content fades inside the row instead of overlapping the next one.
+                .clipped()
+                .onHeightChange { height in
+                    guard heldResultHeights[runID] == nil else { return }
+                    updateMeasuredHeight(height, current: resultContentHeights[runID] ?? 0) {
+                        resultContentHeights[runID] = $0
+                    }
+                }
+        }
+        .padding(.vertical, isPrimary ? 8 : 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: isLoading) { _, loading in
+            guard !loading, heldResultHeights[runID] != nil else { return }
+            withAnimation(.smooth(duration: 0.35)) {
+                heldResultHeights[runID] = nil
+            }
         }
 
-        @ViewBuilder
-        private func phoneResultRow(for run: HomeViewModel.ModelRunViewState, isPrimary: Bool) -> some View {
-            let runID = run.id
-            let isLoading = isRunLoading(run)
-            let row = VStack(alignment: .leading, spacing: 8) {
-                phoneResultHeader(for: run)
-                content(for: run, textPreset: isPrimary ? .prominent : .compact, showsInlineActions: false)
-                    .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
-                    // Outgoing content fades inside the row instead of overlapping the next one.
-                    .clipped()
-                    .onHeightChange { height in
-                        guard heldResultHeights[runID] == nil else { return }
-                        updateMeasuredHeight(height, current: resultContentHeights[runID] ?? 0) {
-                            resultContentHeights[runID] = $0
-                        }
-                    }
-            }
-            .padding(.vertical, isPrimary ? 8 : 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .onChange(of: isLoading) { _, loading in
-                guard !loading, heldResultHeights[runID] != nil else { return }
-                withAnimation(.smooth(duration: 0.35)) {
-                    heldResultHeights[runID] = nil
-                }
-            }
-
+        #if os(iOS)
             if isSuccessfulRun(run) {
                 row
                     .contentShape(Rectangle())
@@ -1700,218 +1728,298 @@ public struct HomeView: View {
             } else {
                 row
             }
-        }
+        #else
+            // macOS has no result detail sheet; the text stays selectable in place.
+            row
+        #endif
+    }
 
-        private func phoneResultHeader(for run: HomeViewModel.ModelRunViewState) -> some View {
-            HStack(spacing: 8) {
-                Text(run.modelDisplayName)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-                    .lineLimit(1)
+    private func flatResultHeader(for run: HomeViewModel.ModelRunViewState) -> some View {
+        HStack(spacing: 8) {
+            Text(run.modelDisplayName)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(colors.textSecondary)
+                .lineLimit(1)
+
+            switch run.status {
+            case .idle, .running, .streaming, .streamingSentencePairs:
+                ProgressView()
+                    .controlSize(.mini)
+            case .failure:
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(colors.error)
+            case .success:
+                EmptyView()
+            }
+
+            if DeveloperMode.isEnabled {
+                providerInfoButton(runID: run.id)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 16) {
+                if viewModel.canShowSentencePairs(for: run) {
+                    sentencePairsToggle(for: run)
+                }
 
                 switch run.status {
-                case .idle, .running, .streaming, .streamingSentencePairs:
-                    ProgressView()
-                        .controlSize(.mini)
+                case let .success(result):
+                    speakResultButton(text: result.copyText, runID: run.id)
+                    // On iPhone the conversation entry lives in the result detail sheet.
+                    actionButtons(copyText: result.copyText, runID: run.id, showsChat: !usesPhoneComposerChrome)
                 case .failure:
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(colors.error)
-                case .success:
+                    Button {
+                        viewModel.retryRun(runID: run.id)
+                    } label: {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(colors.accent)
+                    }
+                    .buttonStyle(.plain)
+                default:
                     EmptyView()
-                }
-
-                if DeveloperMode.isEnabled {
-                    providerInfoButton(runID: run.id)
-                }
-
-                Spacer(minLength: 8)
-
-                HStack(spacing: 16) {
-                    if viewModel.canShowSentencePairs(for: run) {
-                        sentencePairsToggle(for: run)
-                    }
-
-                    switch run.status {
-                    case let .success(result):
-                        speakResultButton(text: result.copyText, runID: run.id)
-                        actionButtons(copyText: result.copyText, runID: run.id, showsChat: false)
-                    case .failure:
-                        Button {
-                            viewModel.retryRun(runID: run.id)
-                        } label: {
-                            Label("Retry", systemImage: "arrow.clockwise")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(colors.accent)
-                        }
-                        .buttonStyle(.plain)
-                    default:
-                        EmptyView()
-                    }
                 }
             }
         }
+    }
 
-        /// Switches this row between the whole translation and sentence pairs; other rows stay as they are.
-        private func sentencePairsToggle(for run: HomeViewModel.ModelRunViewState) -> some View {
-            let isOn = run.presentation == .sentencePairs
+    /// Switches this row between the whole translation and sentence pairs; other rows stay as they are.
+    private func sentencePairsToggle(for run: HomeViewModel.ModelRunViewState) -> some View {
+        let isOn = run.presentation == .sentencePairs
 
-            return Button {
-                toggleSentencePairs(runID: run.id)
-            } label: {
-                Image(systemName: "rectangle.split.1x2")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(isOn ? colors.chipPrimaryText : colors.accent)
-                    .frame(width: 28, height: 22)
-                    .background {
-                        if isOn {
-                            Capsule(style: .continuous)
-                                .fill(colors.accent)
-                        }
+        return Button {
+            toggleSentencePairs(runID: run.id)
+        } label: {
+            Image(systemName: "rectangle.split.1x2")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(isOn ? colors.onAccent : colors.accent)
+                .frame(width: 28, height: 22)
+                .background {
+                    if isOn {
+                        Capsule(style: .continuous)
+                            .fill(colors.accentFill)
                     }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Sentence by Sentence")
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .accessibilityIdentifier("home_sentence_pairs_toggle")
+    }
+
+    /// Content swaps without a cross-fade; only the row height animates, from the held height
+    /// to the new content once it is ready.
+    private func toggleSentencePairs(runID: String) {
+        heldResultHeights[runID] = resultContentHeights[runID]
+        viewModel.toggleSentencePairs(runID: runID)
+        // A cached result is ready now; release the hold after one frame so the height animates.
+        if let run = viewModel.modelRuns.first(where: { $0.id == runID }), !isRunLoading(run) {
+            DispatchQueue.main.async {
+                withAnimation(.smooth(duration: 0.3)) {
+                    heldResultHeights[runID] = nil
+                }
+            }
+        }
+    }
+
+    private func isRunLoading(_ run: HomeViewModel.ModelRunViewState) -> Bool {
+        switch run.status {
+        case .idle, .running, .streaming, .streamingSentencePairs:
+            return true
+        case .success, .failure:
+            return false
+        }
+    }
+
+    private func speakResultButton(text: String, runID: String) -> some View {
+        let isSpeaking = viewModel.isSpeaking(runID: runID)
+
+        return Button {
+            if isSpeaking {
+                viewModel.stopSpeaking()
+            } else {
+                viewModel.speakResult(text, runID: runID)
+            }
+        } label: {
+            Image(systemName: isSpeaking ? "stop.fill" : "speaker.wave.2")
+                .font(.system(size: 14))
+                .foregroundColor(colors.accent)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isSpeaking ? "Stop Speaking" : "Speak")
+    }
+
+    private static let collapsedPreviewFontSize: CGFloat = 14
+    private static let collapsedPreviewLabelWidth: CGFloat = 92
+    private static let collapsedPreviewColumnSpacing: CGFloat = 12
+    private static let collapsedResultsRowSpacing: CGFloat = 10
+    private static let collapsedResultsVerticalPadding: CGFloat = 14
+
+    private func collapsedResults(
+        _ runs: [HomeViewModel.ModelRunViewState],
+        lineLimits: [String: Int]
+    ) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isComparingResults = true
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: Self.collapsedResultsRowSpacing) {
+                HStack(spacing: 4) {
+                    Text("\(runs.count) more models")
+                    Spacer()
+                    Text("Compare")
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(colors.textSecondary)
+
+                ForEach(runs) { run in
+                    HStack(alignment: .firstTextBaseline, spacing: Self.collapsedPreviewColumnSpacing) {
+                        Text(run.modelDisplayName)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(colors.textSecondary)
+                            .lineLimit(1)
+                            .frame(width: Self.collapsedPreviewLabelWidth, alignment: .leading)
+                        Text(resultPreview(for: run))
+                            .font(.system(size: Self.collapsedPreviewFontSize))
+                            .foregroundColor(colors.textPrimary.opacity(0.8))
+                            .lineLimit(lineLimits[run.id] ?? 1)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .padding(.vertical, Self.collapsedResultsVerticalPadding)
+            .contentShape(Rectangle())
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
+                guard abs(size.width - collapsedResultsSize.width) > 0.5
+                    || abs(size.height - collapsedResultsSize.height) > 0.5
+                else { return }
+                collapsedResultsSize = size
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home_compare_results_button")
+    }
+
+    private func resultOptionsFooter(showsResultOrder: Bool) -> some View {
+        HStack {
+            Spacer()
+            Menu {
+                resultOptionsMenuContent(showsResultOrder: showsResultOrder)
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "slider.horizontal.3")
+                    Text("Result Options")
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(colors.textSecondary)
+            }
+            #if os(macOS)
+            .menuStyle(.borderlessButton)
+            #endif
+            .fixedSize()
+            .accessibilityIdentifier("home_result_order")
+            .accessibilityValue(preferences.modelResultOrder.title)
+        }
+        .padding(.top, 4)
+    }
+
+    private func comparisonHeader(resultCount: Int) -> some View {
+        HStack(spacing: 14) {
+            Text("\(resultCount) results")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(colors.textSecondary)
+
+            Spacer()
+
+            // Result order lives in the result options menu below the results.
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isComparingResults = false
+                }
+            } label: {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Sentence by Sentence")
-            .accessibilityAddTraits(isOn ? .isSelected : [])
-            .accessibilityIdentifier("home_sentence_pairs_toggle")
+            .foregroundColor(colors.accent)
+            .accessibilityLabel("Collapse")
         }
+        .padding(.bottom, 4)
+    }
 
-        /// Content swaps without a cross-fade; only the row height animates, from the held height
-        /// to the new content once it is ready.
-        private func toggleSentencePairs(runID: String) {
-            heldResultHeights[runID] = resultContentHeights[runID]
-            viewModel.toggleSentencePairs(runID: runID)
-            // A cached result is ready now; release the hold after one frame so the height animates.
-            if let run = viewModel.modelRuns.first(where: { $0.id == runID }), !isRunLoading(run) {
-                DispatchQueue.main.async {
-                    withAnimation(.smooth(duration: 0.3)) {
-                        heldResultHeights[runID] = nil
-                    }
-                }
-            }
-        }
-
-        private func isRunLoading(_ run: HomeViewModel.ModelRunViewState) -> Bool {
-            switch run.status {
-            case .idle, .running, .streaming, .streamingSentencePairs:
-                return true
-            case .success, .failure:
-                return false
-            }
-        }
-
-        private func speakResultButton(text: String, runID: String) -> some View {
-            let isSpeaking = viewModel.isSpeaking(runID: runID)
-
-            return Button {
-                if isSpeaking {
-                    viewModel.stopSpeaking()
-                } else {
-                    viewModel.speakResult(text, runID: runID)
-                }
-            } label: {
-                Image(systemName: isSpeaking ? "stop.fill" : "speaker.wave.2")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.accent)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(isSpeaking ? "Stop Speaking" : "Speak")
-        }
-
-        private func phoneCollapsedResults(_ runs: [HomeViewModel.ModelRunViewState]) -> some View {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isComparingResults = true
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 4) {
-                        Text("\(runs.count) more models")
-                        Spacer()
-                        Text("Compare")
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 11, weight: .semibold))
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-
-                    ForEach(runs) { run in
-                        HStack(alignment: .firstTextBaseline, spacing: 12) {
-                            Text(run.modelDisplayName)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(colors.textSecondary)
-                                .lineLimit(1)
-                                .frame(width: 92, alignment: .leading)
-                            Text(phoneResultPreview(for: run))
-                                .font(.system(size: 14))
-                                .foregroundColor(colors.textPrimary.opacity(0.8))
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                .padding(.vertical, 14)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("home_compare_results_button")
-        }
-
-        private func phoneComparisonHeader(resultCount: Int) -> some View {
-            HStack(spacing: 14) {
-                Text("\(resultCount) results")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-
-                Spacer()
-
-                Menu {
-                    resultOrderPicker
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(preferences.modelResultOrder.title)
-                        Image(systemName: "arrow.up.arrow.down")
-                    }
-                    .font(.system(size: 13, weight: .medium))
-                }
-                .accessibilityIdentifier("home_result_order")
-
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isComparingResults = false
-                    }
-                } label: {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 13, weight: .semibold))
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(colors.accent)
-                .accessibilityLabel("Collapse")
-            }
-            .padding(.bottom, 4)
-        }
-
-        private func phoneResultPreview(for run: HomeViewModel.ModelRunViewState) -> String {
-            let text: String
-            switch run.status {
-            case .idle, .running:
+    /// Model output is Markdown, so previews render its inline styling instead of raw markers.
+    private func resultPreview(for run: HomeViewModel.ModelRunViewState) -> AttributedString {
+        let text: String
+        switch run.status {
+        case .idle, .running:
+            text = String(localized: "Generating...")
+        case let .streaming(streamedText, _):
+            if streamedText.isEmpty {
                 text = String(localized: "Generating...")
-            case let .streaming(streamedText, _):
-                text = streamedText.isEmpty ? String(localized: "Generating...") : streamedText
-            case let .streamingSentencePairs(pairs, _):
-                text = pairs.isEmpty
-                    ? String(localized: "Translating...")
-                    : pairs.map(\.translation).joined(separator: " ")
-            case let .success(result):
-                text = result.copyText
-            case .failure:
-                text = String(localized: "Request Failed")
+            } else {
+                return MarkdownPreviewText.attributed(from: streamedText)
             }
-            return text.replacingOccurrences(of: "\n", with: " ")
+        case let .streamingSentencePairs(pairs, _):
+            text = pairs.isEmpty
+                ? String(localized: "Translating...")
+                : pairs.map(\.translation).joined(separator: " ")
+        case let .success(result):
+            return MarkdownPreviewText.attributed(from: result.copyText)
+        case .failure:
+            text = String(localized: "Request Failed")
         }
-    #endif
+        return AttributedString(text.replacingOccurrences(of: "\n", with: " "))
+    }
+
+    /// On Mac, collapsed previews grow to fill the visible area below the primary result,
+    /// so comparing models rarely needs scrolling. iPhone keeps one line per preview.
+    private func collapsedPreviewLineLimits(
+        for runs: [HomeViewModel.ModelRunViewState],
+        viewportHeight: CGFloat
+    ) -> [String: Int] {
+        #if os(macOS)
+            let font = NSFont.systemFont(ofSize: Self.collapsedPreviewFontSize)
+            let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+            let textWidth = collapsedResultsSize.width - Self.collapsedPreviewLabelWidth
+                - Self.collapsedPreviewColumnSpacing
+            guard textWidth > 0, lineHeight > 0, flatResultsPanelHeight > 0, collapsedResultsSize.height > 0 else {
+                return [:]
+            }
+
+            // Everything in the panel except the collapsed block keeps its height whatever the line limits are.
+            let fixedHeight = flatResultsPanelHeight - collapsedResultsSize.height
+            let blockChromeHeight = Self.collapsedResultsVerticalPadding * 2 + lineHeight
+                + Self.collapsedResultsRowSpacing * CGFloat(runs.count)
+            let previewHeight = viewportHeight - fixedHeight - blockChromeHeight
+            let lineBudget = previewHeight.isFinite ? Int((previewHeight / lineHeight).rounded(.down)) : 0
+
+            let neededLines = runs.map { run in
+                let text = String(resultPreview(for: run).characters) as NSString
+                let height = text.boundingRect(
+                    with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    attributes: [.font: font]
+                ).height
+                return max(1, Int((height / lineHeight).rounded(.up)))
+            }
+            let limits = HomeTextLayoutPolicy.collapsedPreviewLineLimits(
+                neededLines: neededLines,
+                lineBudget: lineBudget
+            )
+            return Dictionary(zip(runs.map(\.id), limits)) { first, _ in first }
+        #else
+            return [:]
+        #endif
+    }
 
     private func performInputActionIfPossible() {
         guard viewModel.canSend else { return }
@@ -1935,7 +2043,7 @@ public struct HomeView: View {
     }
 
     private func actionChipsStack(onActionSelected: @escaping (UUID) -> Void) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: TLingoSpacing.sm) {
             ForEach(chipActions) { action in
                 let isSelected = action.id == viewModel.selectedAction?.id
 
@@ -1953,7 +2061,7 @@ public struct HomeView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(isSelected ? colors.chipPrimaryText : colors.textPrimary)
                         .lineLimit(1)
-                        .padding(.horizontal, 18)
+                        .padding(.horizontal, TLingoSpacing.md)
                         .padding(.vertical, 10)
                         .background {
                             Capsule(style: .continuous)
@@ -1979,10 +2087,10 @@ public struct HomeView: View {
         }
     }
 
-    /// On iPhone, sentence pairs live on each result row instead of in the chip row
+    /// With the flat result panel, sentence pairs live on each result row instead of in the chip row
     /// (kept while it is the selected action so the selection stays visible).
     private var chipActions: [ActionConfig] {
-        guard usesPhoneComposerChrome else { return viewModel.actions }
+        guard usesFlatResultsPanel else { return viewModel.actions }
         let sentenceID = BuiltInActionCatalog.sentenceTranslateActionID
         return viewModel.actions.filter { $0.id != sentenceID || $0.id == viewModel.selectedAction?.id }
     }
@@ -2025,7 +2133,7 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var providerResultCardBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
+        RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
             .fill(colors.cardBackground)
     }
 
