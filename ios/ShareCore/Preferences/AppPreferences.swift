@@ -934,8 +934,8 @@ private enum StorageKeys {
     static let selectedVoiceID = "selected_voice_id"
     /// Key for premium subscription status
     static let isPremium = "is_premium_subscriber"
-    /// Key for data sharing consent
-    static let hasAcceptedDataSharing = "has_accepted_data_sharing"
+    // Require fresh consent after expanding the disclosure beyond Azure.
+    static let hasAcceptedDataSharing = "has_accepted_data_sharing_v2"
     /// Key for one-time iOS first-run paywall onboarding presentation
     static let hasSeenIOSPaywallOnboarding = "has_seen_ios_paywall_onboarding"
     static let hasSeenDefaultTranslationOnboarding = "ios_default_translation_onboarding_seen"

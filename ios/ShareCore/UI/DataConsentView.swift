@@ -20,7 +20,7 @@ public struct DataConsentView: View {
     }
 
     private static let privacyPolicyURL = URL(
-        string: "https://www.notion.so/isnine/Privacy-Policy-6ab3eecbf72f4e14b6ed8df977a84b43"
+        string: "https://tlingo.zanderwang.com/privacy/"
     )!
 
     public init(onAccept: @escaping () -> Void, onDecline: @escaping () -> Void = {}) {
@@ -43,11 +43,15 @@ public struct DataConsentView: View {
 
             // Description
             VStack(alignment: .leading, spacing: 10) {
-                Text("TLingo sends your input text and images to **Microsoft Azure OpenAI Service** to generate translations.")
+                Text("Cloud models send text and images to their provider, sometimes through TLingo's servers:")
                     .font(.subheadline)
                     .foregroundColor(colors.textSecondary)
 
-                Text("Your data is encrypted in transit and not stored after processing.")
+                Text(verbatim: "Microsoft Azure · Google · DeepSeek · OpenRouter · AICODE007 · Apple Private Cloud Compute")
+                    .font(.subheadline.bold())
+                    .foregroundColor(colors.textSecondary)
+
+                Text("Cloud connections are encrypted. Provider privacy policies apply. On-device translation stays on your Mac.")
                     .font(.subheadline)
                     .foregroundColor(colors.textSecondary)
             }

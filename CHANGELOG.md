@@ -12,10 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added a deep link that opens the realtime speech recognition model picker.
+- Added optional text popup input from the standalone TLingoHelper on macOS.
 
 ### Improved
 
 - Improved speech model download buttons and progress, and history browsing.
+- Clarified cloud translation data sharing and renewed consent for the updated provider disclosure on macOS.
+- Added a shortcut to word options when a lookup falls back to translation.
 
 ### Fixed
 
