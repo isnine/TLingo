@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
 		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
 		AF1100000000000000000010 /* AITranslator/TextSelection/AccessibilityGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */; };
@@ -324,6 +325,7 @@
 			files = (
 				CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */,
 				C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */,
+				CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,6 +547,7 @@
 			);
 			name = TLingo;
 			packageProductDependencies = (
+				CE7F10032FF5000000000001 /* PermissionFlow */,
 			);
 			productName = TLingo;
 			productReference = CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */;

@@ -89,6 +89,23 @@
             .padding(24)
             .frame(width: 520, height: 540)
             .background(colors.background)
+            .overlay(alignment: .topTrailing) {
+                if isSingleStep {
+                    Button {
+                        isPresented = false
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(colors.textSecondary.opacity(0.6))
+                            .frame(width: 32, height: 32)
+                            .tlingoGlassCircle(.control, interactive: true)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
+                    .keyboardShortcut(.cancelAction)
+                    .padding(16)
+                }
+            }
             .interactiveDismissDisabled(true)
             .onChange(of: step, initial: true) {
                 if isNavigatingBack {

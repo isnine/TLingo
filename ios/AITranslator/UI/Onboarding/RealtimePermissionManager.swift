@@ -3,9 +3,7 @@
     import AVFoundation
     import Combine
     import CoreGraphics
-    #if DIRECT_DISTRIBUTION
-        import PermissionFlow
-    #endif
+    import PermissionFlow
     import Speech
 
     enum RealtimePermissionState {
@@ -33,9 +31,7 @@
         @Published private(set) var hasRequestedInitialPermissions = false
 
         private var pollTimer: Timer?
-        #if DIRECT_DISTRIBUTION
-            private var permissionFlow: PermissionFlowController?
-        #endif
+        private var permissionFlow: PermissionFlowController?
 
         var allGranted: Bool {
             speechRecognition.isGranted && microphone.isGranted && screenAndSystemAudio.isGranted
@@ -71,9 +67,7 @@
             let newScreenAndSystemAudio: RealtimePermissionState = CGPreflightScreenCaptureAccess()
                 ? .granted
                 : (hasRequestedInitialPermissions ? .denied : .notDetermined)
-            #if DIRECT_DISTRIBUTION
-                let screenAndSystemAudioWasGranted = screenAndSystemAudio.isGranted
-            #endif
+            let screenAndSystemAudioWasGranted = screenAndSystemAudio.isGranted
 
             // Avoid no-op @Published writes — the 1.5s poll fires unconditionally and
             // every write triggers SwiftUI re-renders even when nothing changed.
@@ -87,12 +81,10 @@
                 screenAndSystemAudio = newScreenAndSystemAudio
             }
 
-            #if DIRECT_DISTRIBUTION
-                if newScreenAndSystemAudio.isGranted, !screenAndSystemAudioWasGranted {
-                    permissionFlow?.closePanel(returnToPreviousApp: true)
-                    permissionFlow = nil
-                }
-            #endif
+            if newScreenAndSystemAudio.isGranted, !screenAndSystemAudioWasGranted {
+                permissionFlow?.closePanel(returnToPreviousApp: true)
+                permissionFlow = nil
+            }
 
             if allGranted {
                 pollTimer?.invalidate()
@@ -112,10 +104,8 @@
         func stopPolling() {
             pollTimer?.invalidate()
             pollTimer = nil
-            #if DIRECT_DISTRIBUTION
-                permissionFlow?.closePanel()
-                permissionFlow = nil
-            #endif
+            permissionFlow?.closePanel()
+            permissionFlow = nil
         }
 
         func openFirstMissingSettings() {
@@ -140,17 +130,13 @@
             case .microphone:
                 openPrivacyPane("Privacy_Microphone")
             case .screenAndSystemAudio:
-                #if DIRECT_DISTRIBUTION
-                    permissionFlow = permissionFlow ?? PermissionFlowController(
-                        configuration: .init(promptForAccessibilityTrust: false)
-                    )
-                    permissionFlow?.authorize(
-                        pane: .screenRecording,
-                        suggestedAppURLs: [Bundle.main.bundleURL]
-                    )
-                #else
-                    openPrivacyPane("Privacy_ScreenCapture")
-                #endif
+                permissionFlow = permissionFlow ?? PermissionFlowController(
+                    configuration: .init(promptForAccessibilityTrust: false)
+                )
+                permissionFlow?.authorize(
+                    pane: .screenRecording,
+                    suggestedAppURLs: [Bundle.main.bundleURL]
+                )
             }
         }
 
