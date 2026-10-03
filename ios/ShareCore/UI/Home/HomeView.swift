@@ -1685,29 +1685,35 @@ public struct HomeView: View {
 
     // MARK: - Flat result panel
 
-    /// Flat result panel: one prominent result, other models folded into a preview list.
+    /// The first result stays in place while the remaining models expand below it.
     private func flatResultsPanel(viewportHeight: CGFloat) -> some View {
         let runs = viewModel.displayedModelRuns
         let showsComparison = isComparingResults && runs.count > 1
 
         return VStack(alignment: .leading, spacing: 0) {
-            if showsComparison {
-                comparisonHeader(resultCount: runs.count)
-                ForEach(Array(runs.enumerated()), id: \.element.id) { index, run in
-                    if index > 0 {
-                        Divider()
-                    }
-                    flatResultRow(for: run, isPrimary: false)
-                }
-            } else if let primaryRun = runs.first {
+            if let primaryRun = runs.first {
                 flatResultRow(for: primaryRun, isPrimary: true)
                 if runs.count > 1 {
-                    let collapsedRuns = Array(runs.dropFirst())
+                    let remainingRuns = Array(runs.dropFirst())
                     Divider()
-                    collapsedResults(
-                        collapsedRuns,
-                        lineLimits: collapsedPreviewLineLimits(for: collapsedRuns, viewportHeight: viewportHeight)
-                    )
+                    VStack(alignment: .leading, spacing: 0) {
+                        if showsComparison {
+                            comparisonHeader(remainingModelCount: remainingRuns.count)
+                                .padding(.top, Self.collapsedResultsVerticalPadding)
+                            ForEach(Array(remainingRuns.enumerated()), id: \.element.id) { index, run in
+                                if index > 0 {
+                                    Divider()
+                                }
+                                flatResultRow(for: run, isPrimary: false)
+                            }
+                        } else {
+                            collapsedResults(
+                                remainingRuns,
+                                lineLimits: collapsedPreviewLineLimits(for: remainingRuns, viewportHeight: viewportHeight)
+                            )
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: showsComparison)
                 }
             }
 
@@ -1720,7 +1726,6 @@ public struct HomeView: View {
                     .padding(.top, 16)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showsComparison)
         .onHeightChange { height in
             updateMeasuredHeight(height, current: flatResultsPanelHeight) {
                 flatResultsPanelHeight = $0
@@ -1734,7 +1739,7 @@ public struct HomeView: View {
         let isLoading = isRunLoading(run)
         let row = VStack(alignment: .leading, spacing: 8) {
             flatResultHeader(for: run)
-            content(for: run, textPreset: isPrimary ? .prominent : .compact, showsInlineActions: false)
+            content(for: run, textPreset: .compact, showsInlineActions: false)
                 .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
                 // Outgoing content fades inside the row instead of overlapping the next one.
                 .clipped()
@@ -1974,9 +1979,9 @@ public struct HomeView: View {
         .padding(.top, 4)
     }
 
-    private func comparisonHeader(resultCount: Int) -> some View {
+    private func comparisonHeader(remainingModelCount: Int) -> some View {
         HStack(spacing: 14) {
-            Text("\(resultCount) results")
+            Text("\(remainingModelCount) more models")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(colors.textSecondary)
 
