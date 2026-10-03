@@ -46,7 +46,7 @@ private struct HelperMenu: View {
             }
         }
         Divider()
-        Button("Open TLingo") { TLingoLink.openTLingo() }
+        Button("Open TLingo") { model.openTLingo() }
         Button("Settings…") { openSettings() }
             .keyboardShortcut(",")
         Divider()
@@ -153,7 +153,7 @@ struct HelperSettingsView: View {
 
     private var tlingoRow: some View {
         LabeledContent {
-            Button("Open TLingo") { TLingoLink.openTLingo() }
+            Button("Open TLingo") { model.openTLingo() }
                 .disabled(model.tlingoStatus == .notInstalled)
         } label: {
             HStack(spacing: 10) {

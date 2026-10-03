@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Allow TLingoHelper in System Settings › General › Login Items." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在“系统设置 › 通用 › 登录项”中允许 TLingoHelper。"
+          }
+        }
+      }
+    },
     "Accessibility" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11,12 +21,22 @@
         }
       }
     },
-    "Couldn't read the selected text." : {
+    "Couldn't read the selected text. Select it again and retry." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法读取选中的文字。"
+            "value" : "无法读取选中的文字，请重新选中后重试。"
+          }
+        }
+      }
+    },
+    "Grant Access…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权…"
           }
         }
       }
@@ -31,12 +51,12 @@
         }
       }
     },
-    "Grant Access…" : {
+    "Grant TLingoHelper Accessibility access, then try again." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授权…"
+            "value" : "请授予 TLingoHelper 辅助功能权限后重试。"
           }
         }
       }
@@ -91,6 +111,16 @@
         }
       }
     },
+    "Open at Login" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时打开"
+          }
+        }
+      }
+    },
     "Open TLingo" : {
       "localizations" : {
         "zh-Hans" : {
@@ -101,12 +131,12 @@
         }
       }
     },
-    "Open at Login" : {
+    "Opening TLingo and sending selected text…" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "登录时打开"
+            "value" : "正在打开 TLingo 并发送选中的文字…"
           }
         }
       }
@@ -151,6 +181,16 @@
         }
       }
     },
+    "Reading selected text…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取选中的文字…"
+          }
+        }
+      }
+    },
     "Reads the text you select in other apps." : {
       "localizations" : {
         "zh-Hans" : {
@@ -191,35 +231,22 @@
         }
       }
     },
+    "Selection capture was cancelled. Select the text again and retry." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字读取已取消，请重新选中后重试。"
+          }
+        }
+      }
+    },
     "Settings…" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "设置…"
-          }
-        }
-      }
-    },
-    "TLingo quit before the text was sent. Try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TLingo 在收到文字前已退出，请重试。"
-          }
-        }
-      }
-    },
-    "TLingoHelper" : {
-      "shouldTranslate" : false
-    },
-    "Text Selection Translation" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选词翻译"
           }
         }
       }
@@ -234,6 +261,26 @@
         }
       }
     },
+    "Text Selection Translation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选词翻译"
+          }
+        }
+      }
+    },
+    "Text selection translation is paused. Turn it on in TLingoHelper." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选词翻译已暂停，请在 TLingoHelper 中打开。"
+          }
+        }
+      }
+    },
     "The selected text is too long to send to TLingo." : {
       "localizations" : {
         "zh-Hans" : {
@@ -243,6 +290,22 @@
           }
         }
       }
+    },
+    "TLingo" : {
+
+    },
+    "TLingo quit before the text was sent. Try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 在收到文字前已退出，请重试。"
+          }
+        }
+      }
+    },
+    "TLingoHelper" : {
+      "shouldTranslate" : false
     },
     "Translate selected text" : {
       "localizations" : {

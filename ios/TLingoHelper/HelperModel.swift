@@ -57,8 +57,8 @@ final class HelperModel: ObservableObject {
             self?.triggerIconController.show(near: point)
         }
         selectionMonitor.onMouseDown = { [weak self] _ in
-            self?.triggerIconController.dismissSilently()
             self?.notice.dismiss()
+            self?.triggerIconController.dismissSilently()
             // A click elsewhere closes TLingo's popup on its own; a click inside makes it key.
             self?.forgetOpenPopup()
         }
@@ -66,7 +66,19 @@ final class HelperModel: ObservableObject {
             self?.selectionMonitor.suppressBriefly()
         }
         triggerIconController.onCaptureFailed = { [weak self] in
-            self?.showNotice(String(localized: "Couldn't read the selected text."))
+            guard let self else { return }
+            showNotice(
+                unavailableMessage ?? String(localized: "Couldn't read the selected text. Select it again and retry.")
+            )
+        }
+        triggerIconController.onCaptureStarted = { [weak self] in
+            self?.notice.show(String(localized: "Reading selected text…"), isProgress: true)
+        }
+        triggerIconController.onCaptureCancelled = { [weak self] in
+            guard let self else { return }
+            showNotice(
+                unavailableMessage ?? String(localized: "Selection capture was cancelled. Select the text again and retry.")
+            )
         }
         triggerIconController.onTranslateRequested = { [weak self] selection in
             self?.translate(selection.text)
@@ -107,8 +119,12 @@ final class HelperModel: ObservableObject {
             }
         } catch {
             logger.error("Login item update failed: \(error.localizedDescription, privacy: .public)")
+            showNotice(error.localizedDescription)
         }
         opensAtLogin = SMAppService.mainApp.status == .enabled
+        if enabled, SMAppService.mainApp.status == .requiresApproval {
+            showNotice(String(localized: "Allow TLingoHelper in System Settings › General › Login Items."))
+        }
     }
 
     func refreshTLingoStatus() {
@@ -137,21 +153,55 @@ final class HelperModel: ObservableObject {
 
     // MARK: - Handoff
 
+    private var unavailableMessage: String? {
+        if !isEnabled {
+            return String(localized: "Text selection translation is paused. Turn it on in TLingoHelper.")
+        }
+        if !AXIsProcessTrusted() {
+            return String(localized: "Grant TLingoHelper Accessibility access, then try again.")
+        }
+        return nil
+    }
+
+    func openTLingo() {
+        Task {
+            do {
+                try await TLingoLink.openTLingo()
+            } catch {
+                showNotice(error.localizedDescription)
+            }
+            refreshTLingoStatus()
+        }
+    }
+
     private func translate(_ text: String) {
         let point = NSEvent.mouseLocation
         let request = TextPopupRequest.Translation(text: text, screenX: point.x, screenY: point.y)
         let previous = sendTask
+        notice.show(String(localized: "Opening TLingo and sending selected text…"), near: point, isProgress: true)
+        let feedbackID = notice.presentationID
         sendTask = Task {
             await previous?.value
+            defer { refreshTLingoStatus() }
             do {
+                _ = try TextPopupRequest.url(for: .translate(request))
+                if let message = unavailableMessage {
+                    showNotice(message, near: point)
+                    return
+                }
                 let application = try await TLingoLink.targetApplication()
-                guard state == .ready else { return }
-                try TLingoLink.send(.translate(request), to: application)
+                if let message = unavailableMessage {
+                    showNotice(message, near: point)
+                    return
+                }
+                try await TLingoLink.sendTranslation(request, to: application)
+                if notice.presentationID == feedbackID {
+                    notice.dismiss()
+                }
                 rememberOpenPopup(request.id, in: application)
             } catch {
                 showNotice(error.localizedDescription, near: point)
             }
-            refreshTLingoStatus()
         }
     }
 
@@ -170,7 +220,11 @@ final class HelperModel: ObservableObject {
         notice.dismiss()
         guard let openPopup else { return }
         forgetOpenPopup()
-        try? TLingoLink.send(.dismiss(openPopup.id), to: openPopup.application)
+        do {
+            try TLingoLink.send(.dismiss(openPopup.id), to: openPopup.application)
+        } catch {
+            showNotice(error.localizedDescription)
+        }
     }
 
     private func forgetOpenPopup() {

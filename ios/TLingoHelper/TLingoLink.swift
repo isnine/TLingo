@@ -64,27 +64,47 @@ enum TLingoLink {
     static func send(_ command: TextPopupRequest.Command, to application: NSRunningApplication) throws {
         guard !application.isTerminated else { throw LinkError.processExited }
         let url = try TextPopupRequest.url(for: command)
+        try deliver(url.absoluteString, to: application.processIdentifier, waitsForReply: false)
+    }
+
+    static func sendTranslation(_ request: TextPopupRequest.Translation, to application: NSRunningApplication) async throws {
+        guard !application.isTerminated else { throw LinkError.processExited }
+        let url = try TextPopupRequest.url(for: .translate(request)).absoluteString
+        let pid = application.processIdentifier
+        // Waiting for TLingo's handler must not block the helper's UI or permission polling.
+        try await Task.detached {
+            try deliver(url, to: pid, waitsForReply: true)
+        }.value
+    }
+
+    private nonisolated static func deliver(_ url: String, to pid: pid_t, waitsForReply: Bool) throws {
         let event = NSAppleEventDescriptor(
             eventClass: AEEventClass(kInternetEventClass),
             eventID: AEEventID(kAEGetURL),
-            targetDescriptor: NSAppleEventDescriptor(processIdentifier: application.processIdentifier),
+            targetDescriptor: NSAppleEventDescriptor(processIdentifier: pid),
             returnID: AEReturnID(kAutoGenerateReturnID),
             transactionID: AETransactionID(kAnyTransactionID)
         )
-        event.setParam(NSAppleEventDescriptor(string: url.absoluteString), forKeyword: AEKeyword(keyDirectObject))
+        event.setParam(NSAppleEventDescriptor(string: url), forKeyword: AEKeyword(keyDirectObject))
         // Targeting the PID delivers the URL without activating TLingo.
-        _ = try event.sendEvent(options: [.noReply, .neverInteract, .dontRecord], timeout: 1)
+        let options: NSAppleEventDescriptor.SendOptions = waitsForReply
+            ? [.waitForReply, .neverInteract, .dontRecord]
+            : [.noReply, .neverInteract, .dontRecord]
+        let reply = try event.sendEvent(options: options, timeout: waitsForReply ? 5 : 1)
+        if let error = reply.paramDescriptor(forKeyword: AEKeyword(keyErrorNumber))?.int32Value, error != noErr {
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(error))
+        }
     }
 
     /// Brings up TLingo's main window, launching it if needed.
-    static func openTLingo() {
+    static func openTLingo() async throws {
         let url: URL? = switch status() {
         case let .running(application): application.bundleURL
         case let .installed(url): url
         case .needsUpdate, .notInstalled: NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier)
         }
-        guard let url else { return }
-        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+        guard let url else { throw LinkError.notInstalled }
+        _ = try await NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
     private static func isCompatible(_ url: URL) -> Bool {

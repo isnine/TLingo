@@ -4,12 +4,13 @@ import SwiftUI
 /// A transient, non-activating notice near the pointer, so failures never steal focus from the user's app.
 @MainActor
 final class HelperNotice {
+    private(set) var presentationID = UUID()
     private var panel: NSPanel?
     private var hideTask: Task<Void, Never>?
 
-    func show(_ message: String, near point: CGPoint = NSEvent.mouseLocation) {
+    func show(_ message: String, near point: CGPoint = NSEvent.mouseLocation, isProgress: Bool = false) {
         dismiss()
-        let hostingView = NSHostingView(rootView: NoticeView(message: message))
+        let hostingView = NSHostingView(rootView: NoticeView(message: message, isProgress: isProgress))
         let size = hostingView.fittingSize
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: size),
@@ -40,6 +41,7 @@ final class HelperNotice {
         }
         self.panel = panel
 
+        guard !isProgress else { return }
         hideTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }
@@ -48,6 +50,7 @@ final class HelperNotice {
     }
 
     func dismiss(animated: Bool = false) {
+        presentationID = UUID()
         hideTask?.cancel()
         hideTask = nil
         guard let panel else { return }
@@ -66,6 +69,7 @@ final class HelperNotice {
 
 private struct NoticeView: View {
     let message: String
+    let isProgress: Bool
 
     var body: some View {
         Label {
@@ -73,8 +77,12 @@ private struct NoticeView: View {
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {
-            Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(.orange)
+            if isProgress {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundStyle(.orange)
+            }
         }
         .font(.callout)
         .padding(.horizontal, 14)

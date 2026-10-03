@@ -123,6 +123,8 @@
         var onTranslateRequested: ((SelectionTextGrabber.Selection) -> Void)?
         var onDismissed: (() -> Void)?
         var onCaptureFailed: (() -> Void)?
+        var onCaptureStarted: (() -> Void)?
+        var onCaptureCancelled: (() -> Void)?
 
         private var panel: TriggerIconPanel?
         private var trackingView: TriggerTrackingView?
@@ -207,8 +209,12 @@
         }
 
         func dismissSilently() {
+            let wasCapturing = grabTask != nil
             grabTask?.cancel()
             grabTask = nil
+            if wasCapturing {
+                onCaptureCancelled?()
+            }
             guard let panel else { return }
             cancelAllTimers()
             panel.contentView = nil
@@ -247,24 +253,27 @@
         }
 
         private func triggerTranslation() {
-            guard let point = anchorPoint else { return }
+            guard let point = anchorPoint, let panel else {
+                onCaptureFailed?()
+                return
+            }
             cancelAllTimers()
 
-            guard let panel else { return }
             panel.contentView = nil
             panel.close()
             cleanup()
+            onCaptureStarted?()
 
             grabTask = Task { @MainActor [weak self] in
                 let selection = await SelectionTextGrabber.grab(near: point)
                 guard !Task.isCancelled else { return }
+                self?.grabTask = nil
                 guard let selection,
                       !selection.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 else {
                     self?.onCaptureFailed?()
                     return
                 }
-                self?.grabTask = nil
                 self?.onTranslateRequested?(selection)
             }
         }
