@@ -24,7 +24,8 @@ flowchart LR
 | Area | Ownership |
 | --- | --- |
 | `ios/AITranslator/` | App lifecycle, navigation, onboarding, paywall, History and Realtime UI |
-| `ios/AITranslator/TextSelection/` | macOS selection capture (AX → browser AppleScript → Cmd+C → menu bar Copy), trigger icon and popup |
+| `ios/AITranslator/TextSelection/` | Direct/Helper selection capture (AX → browser AppleScript → Cmd+C → menu bar Copy); permission-free text popup in the App Store app |
+| `ios/TLingoHelper/` | Standalone, non-sandboxed macOS selection input; no ShareCore, translation, account or billing dependency |
 | `ios/AITranslator/Screenshot/` | macOS screen region capture and clipboard image OCR entry points |
 | `ios/ShareCore/Configuration/` | Actions, models, configuration persistence |
 | `ios/ShareCore/Networking/` | Translation, LLM, speech and voice requests |
@@ -42,6 +43,9 @@ flowchart LR
 - Translation-category requests send `InputTextNormalizer` output (identifier splitting, comment markers, hard-wrap and Apple Books cleanup); the input field keeps the raw text.
 - The built-in Translate action switches to `BuiltInActionCatalog.wordLookupPrompt` for LLM runs when `WordLookupDetector` classifies the input as a word or short phrase; direct translation providers are unchanged.
 - `OCRTextRecognizer` runs Vision OCR and merges line observations into paragraphs; macOS screenshot, screenshot OCR and clipboard translate hotkeys feed its text into the selection popup.
+- macOS external popup input uses `TextPopupRequest`. `PopupURLEventRouter`, installed in `applicationWillFinishLaunching`, consumes popup Get URL events before SwiftUI can activate a window and forwards all other URLs; the newest cold-launch request is held until launch setup finishes. If the router cannot be installed, popup URLs degrade to the regular `tlingo://translate` deep link. Helper sends data only; TLingo owns translation, consent, entitlement checks and History. App Store builds never start Direct selection monitoring, even when old shared preferences enable it.
+- PermissionFlow is linked only by Direct and Helper. The App Store app opens the native Screen Recording settings pane for realtime permission guidance instead of carrying PermissionFlow's cross-app accessibility UI helpers.
+- Helper (`TLingoLink`) sends popup URLs to the most recently launched compatible TLingo PID, or launches the preferred registered installation in the background. An incompatible running TLingo (Direct or older) yields an update notice instead of a second instance. Popup dismissal uses the original receiving PID and never starts an app.
 - `LLMService` routes Worker models through the Worker and Apple Foundation Models through `FoundationModelService`: `apple-foundation-model` runs on-device, while `apple-private-cloud` uses Private Cloud Compute.
 - `RealtimeSessionStore` owns one Realtime session generation, shared producer lifecycle, macOS lane configuration and final History snapshot.
 - On macOS, `RealtimePipelineCoordinator` owns the shared recognition/translation execution graph. Recognition nodes are keyed by model ID, Azure audio translation is shared, and lane runtimes own independent transcript and translation state.

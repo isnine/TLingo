@@ -13,6 +13,33 @@ review_triggers:
 
 `TLingo-Direct` 由独立的 Xcode Cloud 工作流构建。App Store 工作流继续使用 `TLingo` scheme，两个流程不得共享发布动作。
 
+`TLingoHelper` 是独立的选词输入工具，不是 Direct 的替代发行渠道。其 scheme、
+bundle ID 和产物独立，不响应现有 Direct 发布流程，不写入 Direct appcast。
+Helper 正式分发前须单独配置 Xcode Cloud、Developer ID 导出、公证和 staple；
+当前仅提供本地原型，尚未建立 Helper 云端发布工作流。
+
+Helper 只向支持 `TLingoTextPopupProtocolVersion = 1` 的主 App 发送文本，不保存固定安装路径。
+有兼容的运行进程时使用最近启动的那个；Direct 和旧版本共用 bundle ID 但不兼容，若只有它们在运行，
+Helper 提示更新 TLingo，不另起第二个实例。
+
+没有运行中的 TLingo 时，从 Launch Services 已注册的兼容安装中依次优先 `/Applications`、
+`~/Applications`，再其他位置，带 `-TLingoTextPopupLaunch` 后台启动，再按 PID 发送请求。
+翻译与关闭请求均通过目标 PID 的标准 Get URL Apple Event 传输，不激活目标；
+关闭请求固定发送给创建该浮窗的进程，进程退出后不重新唤起它。
+Helper 为菜单栏应用（`LSUIElement`），失败提示以不抢焦点的浮动提示显示在指针附近。
+
+App Store 主 App 不下载、安装或嵌入 Helper，也不依赖它提供独立翻译功能。
+若正式发布联动功能，App Review Notes 必须说明 Helper 的安装方式、数据输入协议及
+如何检查该功能；本地构建、公证成功不代表 App Review 已接受这种联动。
+
+文本浮窗协议使用 `tlingo://translate`，参数为 `presentation=popup`、`version=1`、
+`request=<UUID>`、`text=<text>`、`x=<screen x>`、`y=<screen y>`。坐标为 AppKit 全局
+屏幕坐标。关闭请求使用同一 request ID 和 `dismiss=1`，不附 text。
+完整 URL 编码后上限为 48 KiB，超限明确拒绝，不截断。本地离线沙盒原型已验证
+49152-byte URL 的实际 Launch Services 传输、冷启动、无主窗口状态下再次输入、
+过期关闭请求，以及保留用户主动打开的主窗口。Helper 的真实跨应用取词仍需用户
+亲自授权辅助功能后验收，不能从上述文本输入验证推断权限已获批。
+
 ## 云端工作流
 
 Direct 工作流使用以下固定配置：

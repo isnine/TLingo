@@ -5,7 +5,7 @@
 //  Text selection via macOS Accessibility API (Tier 1).
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
     import ApplicationServices
 

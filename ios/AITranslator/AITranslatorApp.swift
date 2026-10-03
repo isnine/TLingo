@@ -90,7 +90,7 @@ struct AITranslatorApp: App {
         .windowToolbarStyle(.unified(showsTitle: false))
         .defaultSize(width: MainWindowMetrics.defaultWidth, height: MainWindowMetrics.defaultHeight)
         .windowResizability(.contentMinSize)
-        .defaultLaunchBehavior(Self.isSnapshotMode ? .suppressed : .presented)
+        .defaultLaunchBehavior(Self.isSnapshotMode || AppDelegate.isTextPopupLaunch ? .suppressed : .presented)
         #endif
         // Match BOTH URL schemes so deeplinks reuse the existing window instead
         // of spawning a new one. `tlingo-direct://oauth/callback` (Supabase OAuth
@@ -186,6 +186,9 @@ struct AITranslatorApp: App {
                 .onAppear {
                     AppDelegate.shared?.openWindowAction = openWindow
 
+                    if AppDelegate.shared?.isInitialTextPopupLaunch == true {
+                        return
+                    }
                     if AITranslatorApp.isSnapshotMode {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             AITranslatorApp.configureSnapshotWindow()
@@ -216,7 +219,15 @@ struct AITranslatorApp: App {
         private var mainWindow: NSWindow?
         private var windowObservers: [NSObjectProtocol] = []
         private let selectionTranslationCoordinator = SelectionTranslationCoordinator()
-        private var selectionTranslationCancellable: AnyCancellable?
+        private var popupURLEventRouter: PopupURLEventRouter?
+        private var isReadyForTextPopups = false
+        private var pendingTextPopup: TextPopupRequest.Translation?
+        /// TLingoHelper launches TLingo in the background; keep it windowless until the user opens it.
+        static let isTextPopupLaunch = ProcessInfo.processInfo.arguments.contains("-TLingoTextPopupLaunch")
+        private(set) var isInitialTextPopupLaunch = isTextPopupLaunch
+        #if DIRECT_DISTRIBUTION
+            private var selectionTranslationCancellable: AnyCancellable?
+        #endif
 
         override init() {
             super.init()
@@ -228,40 +239,42 @@ struct AITranslatorApp: App {
             _ = AppleTranslationWindowManager.shared
         }
 
-        @MainActor
-        func showSelectionTrigger(near point: CGPoint) {
-            selectionTranslationCoordinator.showTrigger(near: point)
-        }
+        #if DIRECT_DISTRIBUTION
+            @MainActor
+            func showSelectionTrigger(near point: CGPoint) {
+                selectionTranslationCoordinator.showTrigger(near: point)
+            }
 
-        @MainActor
-        func dismissSelectionTrigger() {
-            selectionTranslationCoordinator.dismissTrigger()
-        }
+            @MainActor
+            func dismissSelectionTrigger() {
+                selectionTranslationCoordinator.dismissTrigger()
+            }
 
-        @MainActor
-        func setSelectionTrialCallbacks(
-            actionName: String? = nil,
-            trialModels: [ModelConfig] = [],
-            onTriggerHovered: @escaping () -> Void,
-            onTranslationSucceeded: @escaping () -> Void
-        ) {
-            selectionTranslationCoordinator.setSelectionTrialCallbacks(
-                actionName: actionName,
-                trialModels: trialModels,
-                onTriggerHovered: onTriggerHovered,
-                onTranslationSucceeded: onTranslationSucceeded
-            )
-        }
+            @MainActor
+            func setSelectionTrialCallbacks(
+                actionName: String? = nil,
+                trialModels: [ModelConfig] = [],
+                onTriggerHovered: @escaping () -> Void,
+                onTranslationSucceeded: @escaping () -> Void
+            ) {
+                selectionTranslationCoordinator.setSelectionTrialCallbacks(
+                    actionName: actionName,
+                    trialModels: trialModels,
+                    onTriggerHovered: onTriggerHovered,
+                    onTranslationSucceeded: onTranslationSucceeded
+                )
+            }
 
-        @MainActor
-        func clearSelectionTrialCallbacks() {
-            selectionTranslationCoordinator.clearSelectionTrialCallbacks()
-        }
+            @MainActor
+            func clearSelectionTrialCallbacks() {
+                selectionTranslationCoordinator.clearSelectionTrialCallbacks()
+            }
 
-        @MainActor
-        func translateCurrentSelection() {
-            selectionTranslationCoordinator.translateCurrentSelection()
-        }
+            @MainActor
+            func translateCurrentSelection() {
+                selectionTranslationCoordinator.translateCurrentSelection()
+            }
+        #endif
 
         @MainActor
         func translateScreenshot() {
@@ -294,9 +307,27 @@ struct AITranslatorApp: App {
             }
         }
 
+        func applicationWillFinishLaunching(_: Notification) {
+            // Installed before launch events are dispatched so a cold-launch popup URL is routed too.
+            let router = PopupURLEventRouter { [weak self] url in
+                self?.receiveTextPopupURL(url)
+            }
+            do {
+                try router.install()
+                popupURLEventRouter = router
+            } catch {
+                // Popup URLs then fall back to the regular tlingo://translate deep link.
+                logger.error("Could not install popup URL routing: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+
         func applicationDidFinishLaunching(_: Notification) {
             // In snapshot mode, skip menu bar/hotkey setup and force window creation
             if AITranslatorApp.isSnapshotMode {
+                flushPendingTextPopup()
+                if Self.isTextPopupLaunch {
+                    return
+                }
                 NSApp.setActivationPolicy(.regular)
                 NSApp.activate(ignoringOtherApps: true)
 
@@ -333,14 +364,17 @@ struct AITranslatorApp: App {
             // Observe window lifecycle for smart Dock icon management
             setupWindowObservers()
 
-            selectionTranslationCancellable = AppPreferences.shared.$textSelectionTranslationEnabled
-                .sink { [weak self] enabled in
-                    if enabled {
-                        self?.selectionTranslationCoordinator.start()
-                    } else {
-                        self?.selectionTranslationCoordinator.stop()
+            #if DIRECT_DISTRIBUTION
+                selectionTranslationCancellable = AppPreferences.shared.$textSelectionTranslationEnabled
+                    .sink { [weak self] enabled in
+                        if enabled {
+                            self?.selectionTranslationCoordinator.start()
+                        } else {
+                            self?.selectionTranslationCoordinator.stop()
+                        }
                     }
-                }
+            #endif
+            flushPendingTextPopup()
         }
 
         func applicationWillTerminate(_: Notification) {
@@ -350,8 +384,10 @@ struct AITranslatorApp: App {
             // Unregister global hotkey
             HotKeyManager.shared.unregister()
 
-            selectionTranslationCoordinator.stop()
-            selectionTranslationCancellable?.cancel()
+            #if DIRECT_DISTRIBUTION
+                selectionTranslationCoordinator.stop()
+                selectionTranslationCancellable?.cancel()
+            #endif
 
             // Teardown menu bar
             Task { @MainActor in
@@ -370,6 +406,9 @@ struct AITranslatorApp: App {
         }
 
         func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+            if isInitialTextPopupLaunch, !NSApp.isActive {
+                return false
+            }
             openMainWindow()
             return true
         }
@@ -413,6 +452,47 @@ struct AITranslatorApp: App {
                 // posting before the view mounts (cold launch / menu-bar-only)
                 // would silently drop the payload.
             }
+        }
+
+        private func receiveTextPopupURL(_ url: URL) {
+            let command: TextPopupRequest.Command
+            do {
+                command = try TextPopupRequest.parse(url)
+            } catch {
+                logger.error("Rejected text popup request: \(error.localizedDescription, privacy: .public)")
+                return
+            }
+            switch command {
+            case let .translate(request) where isReadyForTextPopups:
+                showTextPopup(request)
+            case let .translate(request):
+                // Cold launch: hold the newest request until launch setup finishes.
+                pendingTextPopup = request
+            case let .dismiss(id):
+                if pendingTextPopup?.id == id {
+                    pendingTextPopup = nil
+                }
+                selectionTranslationCoordinator.dismissPopup(requestID: id)
+            }
+        }
+
+        private func flushPendingTextPopup() {
+            isReadyForTextPopups = true
+            if let request = pendingTextPopup {
+                pendingTextPopup = nil
+                showTextPopup(request)
+            }
+        }
+
+        private func showTextPopup(_ request: TextPopupRequest.Translation) {
+            logger.info(
+                "Text popup request \(request.id.uuidString, privacy: .public) bytes=\(request.text.utf8.count, privacy: .public)"
+            )
+            selectionTranslationCoordinator.translate(
+                text: request.text,
+                near: CGPoint(x: request.screenX, y: request.screenY),
+                requestID: request.id
+            )
         }
 
         // MARK: - Smart Dock Icon Management
@@ -459,6 +539,7 @@ struct AITranslatorApp: App {
 
         /// Opens or brings the main window to front
         func openMainWindow() {
+            isInitialTextPopupLaunch = false
             activateRegularMode()
 
             if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {

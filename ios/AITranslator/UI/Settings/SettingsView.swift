@@ -40,8 +40,10 @@ struct SettingsView: View {
         @State private var recordingHotKeyType: HotKeyType?
         @State private var localEventMonitor: Any?
         @State private var showOnboarding = false
-        @State private var showAccessibilityOnboarding = false
-        @StateObject private var accessibilityPermissionManager = AccessibilityPermissionManager()
+        #if DIRECT_DISTRIBUTION
+            @State private var showAccessibilityOnboarding = false
+            @StateObject private var accessibilityPermissionManager = AccessibilityPermissionManager()
+        #endif
     #endif
 
     private var colors: AppColorPalette {
@@ -149,7 +151,7 @@ struct SettingsView: View {
                 .frame(minWidth: 600, minHeight: 500)
             #endif
         }
-        #if os(macOS)
+        #if os(macOS) && DIRECT_DISTRIBUTION
         .sheet(isPresented: $showAccessibilityOnboarding) {
             AccessibilityOnboardingView(
                 permissionManager: accessibilityPermissionManager,
@@ -505,10 +507,12 @@ private extension SettingsView {
     #if os(macOS)
         var macControlsSection: some View {
             Section("Mac Controls") {
-                ForEach(HotKeyType.allCases.filter { $0 != .screenshotOCR }, id: \.self) { type in
+                ForEach(HotKeyType.availableCases.filter { $0 != .screenshotOCR }, id: \.self) { type in
                     hotKeyRow(for: type)
                 }
-                textSelectionTranslationRow
+                #if DIRECT_DISTRIBUTION
+                    textSelectionTranslationRow
+                #endif
             }
         }
 
@@ -633,36 +637,38 @@ private extension SettingsView {
             RealtimeFloatingCaptionWindowController.open(store: RealtimeSessionStore.shared)
         }
 
-        var textSelectionTranslationRow: some View {
-            Toggle(isOn: Binding(
-                get: { preferences.textSelectionTranslationEnabled },
-                set: { newValue in
-                    if newValue {
-                        if AXIsProcessTrusted() {
-                            preferences.setTextSelectionTranslationEnabled(true)
+        #if DIRECT_DISTRIBUTION
+            var textSelectionTranslationRow: some View {
+                Toggle(isOn: Binding(
+                    get: { preferences.textSelectionTranslationEnabled },
+                    set: { newValue in
+                        if newValue {
+                            if AXIsProcessTrusted() {
+                                preferences.setTextSelectionTranslationEnabled(true)
+                            } else {
+                                showAccessibilityOnboarding = true
+                            }
                         } else {
-                            showAccessibilityOnboarding = true
+                            preferences.setTextSelectionTranslationEnabled(false)
                         }
-                    } else {
-                        preferences.setTextSelectionTranslationEnabled(false)
                     }
+                )) {
+                    settingsLabel(
+                        "Text Selection Translation",
+                        systemImage: "text.cursor",
+                        subtitle: Text(textSelectionTranslationSubtitle)
+                    )
                 }
-            )) {
-                settingsLabel(
-                    "Text Selection Translation",
-                    systemImage: "text.cursor",
-                    subtitle: Text(textSelectionTranslationSubtitle)
-                )
             }
-        }
 
-        private var textSelectionTranslationSubtitle: LocalizedStringKey {
-            if preferences.textSelectionTranslationEnabled {
-                return "Ready in other apps"
+            private var textSelectionTranslationSubtitle: LocalizedStringKey {
+                if preferences.textSelectionTranslationEnabled {
+                    return "Ready in other apps"
+                }
+                return accessibilityPermissionManager
+                    .isAccessibilityGranted ? "Select text in any app to translate" : "Requires Accessibility Permission"
             }
-            return accessibilityPermissionManager
-                .isAccessibilityGranted ? "Select text in any app to translate" : "Requires Accessibility Permission"
-        }
+        #endif
     #endif
 }
 

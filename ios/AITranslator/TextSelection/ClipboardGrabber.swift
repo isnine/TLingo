@@ -5,7 +5,7 @@
 //  Text selection via clipboard simulation (Tier 3).
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
     import os
 

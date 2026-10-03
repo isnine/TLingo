@@ -5,7 +5,7 @@
 //  Manages Accessibility permission state with polling.
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
     import Combine
     import PermissionFlow

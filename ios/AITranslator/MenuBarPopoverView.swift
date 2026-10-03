@@ -257,7 +257,7 @@
                     .help("Open current translation in the main app window")
 
                     Menu {
-                        ForEach(MenuBarAction.allCases, id: \.self) { action in
+                        ForEach(MenuBarAction.availableCases, id: \.self) { action in
                             if action.startsSection {
                                 Divider()
                             }

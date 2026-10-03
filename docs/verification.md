@@ -33,8 +33,8 @@ Xcode Cloud 会在 post-clone 和 pre-xcodebuild 阶段重新生成该文件；�
 
 ```text
 project: ios/AITranslator.xcodeproj
-targets: TLingo, TLingoTranslation, TLingoBroadcastUpload, ShareCore, ShareCoreTests, TLingoUITests, TLingo-Direct
-schemes: ShareCore, TLingo, TLingo-Direct, TLingoBroadcastUpload, TLingoTranslation, TLingoUITests
+targets: TLingo, TLingoTranslation, TLingoBroadcastUpload, ShareCore, ShareCoreTests, TLingoUITests, TLingo-Direct, TLingoHelper
+schemes: ShareCore, TLingo, TLingo-Direct, TLingoHelper, TLingoBroadcastUpload, TLingoTranslation, TLingoUITests
 ```
 
 | Change | Required gate |
@@ -44,8 +44,14 @@ schemes: ShareCore, TLingo, TLingo-Direct, TLingoBroadcastUpload, TLingoTranslat
 | macOS UI | `TLingo` macOS build |
 | macOS MLX / MOSS | `TLingo` macOS build with `-skipPackagePluginValidation` |
 | Direct-only | `TLingo-Direct` macOS build |
+| Helper / cross-app selection boundary | `TLingoHelper` and `TLingo-Direct` macOS builds + sandboxed `TLingo` Release build + real-Mac selection/focus checks |
 | Cross-platform shared UI | iOS Simulator and macOS builds |
 | Realtime lifecycle | Targeted tests plus real/synthetic producer drain scenario |
+
+Helper protocol changes also require `TextPopupRequestTests` and `DeepLinkTests`.
+Verify cold launch, menu-bar-only operation, multi-screen positioning, Escape,
+permission denial/revocation, absent/incompatible TLingo, encoded URL length limits,
+and the absence of a Replace action. The Helper never updates or installs TLingo.
 
 完整逻辑测试：
 

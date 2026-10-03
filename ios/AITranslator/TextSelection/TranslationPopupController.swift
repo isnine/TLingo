@@ -18,13 +18,33 @@
         private var panel: TranslationPopupPanel?
         private var dismissMonitor: PopupDismissMonitor?
         private var currentViewModel: HomeViewModel?
+        private var currentRequestID: UUID?
+
+        #if DIRECT_DISTRIBUTION
+            func showAtCursor(
+                selection: SelectionTextGrabber.Selection,
+                actionName: String? = nil,
+                trialModels: [ModelConfig] = []
+            ) {
+                showAtCursor(
+                    text: selection.text,
+                    actionName: actionName,
+                    trialModels: trialModels,
+                    onReplace: { text in await selection.replace(with: text) }
+                )
+            }
+        #endif
 
         func showAtCursor(
-            selection: SelectionTextGrabber.Selection,
+            text: String,
+            near point: CGPoint? = nil,
+            requestID: UUID? = nil,
             actionName: String? = nil,
-            trialModels: [ModelConfig] = []
+            trialModels: [ModelConfig] = [],
+            onReplace: ((String) async -> Bool)? = nil
         ) {
             dismiss()
+            currentRequestID = requestID
 
             let viewModel = HomeViewModel(onboardingTrialModels: trialModels)
             currentViewModel = viewModel
@@ -32,6 +52,19 @@
             let initialSize = AppPreferences.shared.selectionPopupSize
             let newPanel = TranslationPopupPanel(contentRect: NSRect(origin: .zero, size: initialSize))
 
+            let replace: ((String) -> Void)? = onReplace.map { operation in
+                { [weak self, weak newPanel] text in
+                    Task { @MainActor in
+                        // Hide the key panel before Direct synthesizes a paste.
+                        newPanel?.orderOut(nil)
+                        guard await operation(text) else {
+                            newPanel?.makeKeyAndOrderFront(nil)
+                            return
+                        }
+                        self?.dismiss()
+                    }
+                }
+            }
             let contentView = PopupTranslationView(
                 viewModel: viewModel,
                 onResizeDrag: { [weak self] delta in
@@ -43,28 +76,20 @@
                 onTranslationSucceeded: { [weak self] in
                     self?.onTranslationSucceeded?()
                 },
-                onReplace: { [weak self, weak newPanel] text in
-                    Task { @MainActor in
-                        // A key popup would receive the synthesized ⌘V of the clipboard fallback.
-                        newPanel?.orderOut(nil)
-                        guard await selection.replace(with: text) else {
-                            newPanel?.makeKeyAndOrderFront(nil)
-                            return
-                        }
-                        self?.dismiss()
-                    }
-                }
+                onReplace: replace
             )
             let hostingView = NSHostingView(rootView: contentView)
             hostingView.sizingOptions = []
             newPanel.contentView = hostingView
 
             // Position near cursor
-            let cursorPos = NSEvent.mouseLocation
+            let requestedPoint = point ?? NSEvent.mouseLocation
+            let cursorPos = NSScreen.screens.contains(where: { $0.frame.contains(requestedPoint) })
+                ? requestedPoint : NSEvent.mouseLocation
             let screen = NSScreen.screens.first(where: { $0.frame.contains(cursorPos) })
                 ?? NSScreen.main
                 ?? NSScreen.screens.first
-            let savedOrigin = AppPreferences.shared.selectionPopupOrigin
+            let savedOrigin = point == nil ? AppPreferences.shared.selectionPopupOrigin : nil
             let savedScreen = savedOrigin.flatMap { origin in
                 NSScreen.screens.first(where: { $0.frame.contains(origin) })
             }
@@ -97,7 +122,9 @@
                 if originY < visibleFrame.minY {
                     originY = cursorPos.y + offset
                 }
-                if originX < visibleFrame.minX { originX = visibleFrame.minX + 8 }
+                if originX < visibleFrame.minX {
+                    originX = visibleFrame.minX + 8
+                }
                 if originY + initialSize.height > visibleFrame.maxY {
                     originY = visibleFrame.maxY - initialSize.height - 8
                 }
@@ -113,10 +140,14 @@
             newPanel.orderFront(nil)
             startDismissMonitor()
 
+            if HomeViewModel.isSnapshotMode {
+                viewModel.inputText = text
+                return
+            }
             if let actionName {
-                viewModel.applyDeepLink(text: selection.text, actionName: actionName, configName: nil)
+                viewModel.applyDeepLink(text: text, actionName: actionName, configName: nil)
             } else {
-                viewModel.inputText = selection.text
+                viewModel.inputText = text
                 viewModel.performSelectedAction(
                     refreshEntitlement: false,
                     allowModelFallback: true
@@ -132,7 +163,13 @@
             panel?.close()
             panel = nil
             currentViewModel = nil
+            currentRequestID = nil
             onDismiss?()
+        }
+
+        func dismiss(requestID: UUID) {
+            guard currentRequestID == requestID else { return }
+            dismiss()
         }
 
         var isVisible: Bool {

@@ -45,9 +45,7 @@ public final class AppPreferences: ObservableObject {
     #if os(macOS)
         @Published public private(set) var hasCompletedOnboarding: Bool
         @Published public private(set) var lastCompletedOnboardingVersion: String?
-        // Always present in ShareCore (framework is compiled once). Gated at
-        // the UI layer (#if DIRECT_DISTRIBUTION) so App Store builds
-        // hide the toggle but the storage path stays consistent.
+        // Shared storage stays compatible; only Direct observes this value to start capture.
         @Published public private(set) var textSelectionTranslationEnabled: Bool
         /// User-resizable height for the menu bar quick translate popover.
         /// Height defaults to 420pt and can grow up to 80% of the active

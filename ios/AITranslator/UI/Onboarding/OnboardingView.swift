@@ -16,7 +16,9 @@
         @Binding var isPresented: Bool
         @Environment(\.colorScheme) private var colorScheme
 
-        @StateObject private var permissionManager = AccessibilityPermissionManager()
+        #if DIRECT_DISTRIBUTION
+            @StateObject private var permissionManager = AccessibilityPermissionManager()
+        #endif
         @StateObject private var realtimePermissionManager = RealtimePermissionManager()
         @ObservedObject private var prefs = AppPreferences.shared
         @ObservedObject private var hotKeyManager = HotKeyManager.shared
@@ -34,7 +36,11 @@
         private let hadExistingModelSelection: Bool
         private let isSingleStep: Bool
 
-        private static let firstStep = 0
+        #if DIRECT_DISTRIBUTION
+            private static let firstStep = 0
+        #else
+            private static let firstStep = 1
+        #endif
 
         private static let lastStep = 5
 
@@ -42,10 +48,10 @@
         private static let contentHeight: CGFloat = 384
         private static let footerHeight: CGFloat = 40
 
-        init(isPresented: Binding<Bool>, initialStep: Int = 0, isSingleStep: Bool = false) {
+        init(isPresented: Binding<Bool>, initialStep: Int? = nil, isSingleStep: Bool = false) {
             let existingModelIDs = AppPreferences.shared.enabledModelIDs
             _isPresented = isPresented
-            _step = State(initialValue: initialStep)
+            _step = State(initialValue: initialStep ?? Self.firstStep)
             _selectedModelIDs = State(initialValue: existingModelIDs)
             hadExistingModelSelection = !existingModelIDs.isEmpty
             self.isSingleStep = isSingleStep
@@ -91,9 +97,11 @@
                     advancePastCompletedSetup()
                 }
             }
+            #if DIRECT_DISTRIBUTION
             .onChange(of: permissionManager.isAccessibilityGranted) {
                 advancePastCompletedSetup()
             }
+            #endif
             .onChange(of: hotKeyManager.quickTranslateConfiguration) {
                 advancePastCompletedSetup()
             }
@@ -116,10 +124,14 @@
         private var stepContent: some View {
             switch step {
             case 0:
-                OnboardingStep1TextSelection(
-                    permissionManager: permissionManager,
-                    colors: colors
-                )
+                #if DIRECT_DISTRIBUTION
+                    OnboardingStep1TextSelection(
+                        permissionManager: permissionManager,
+                        colors: colors
+                    )
+                #else
+                    EmptyView()
+                #endif
             case 1:
                 OnboardingStepTextSelectionTrial(
                     isCompleted: $isTextSelectionTrialCompleted,
@@ -230,7 +242,11 @@
         private var primaryButtonTitle: LocalizedStringKey {
             switch step {
             case 0:
-                return permissionManager.isAccessibilityGranted ? "Try translating selected text" : "Open System Settings"
+                #if DIRECT_DISTRIBUTION
+                    return permissionManager.isAccessibilityGranted ? "Try translating selected text" : "Open System Settings"
+                #else
+                    return "Continue"
+                #endif
             case 1:
                 return "Continue"
             case 2:
@@ -247,7 +263,9 @@
             case 4:
                 return "Continue"
             case 5:
-                if storeManager.isPurchasing { return "Starting…" }
+                if storeManager.isPurchasing {
+                    return "Starting…"
+                }
                 if let duration = trialDurationText {
                     return "Try for \(duration)"
                 }
@@ -291,12 +309,14 @@
         private func handlePrimary() {
             switch step {
             case 0:
-                if permissionManager.isAccessibilityGranted {
-                    prefs.setTextSelectionTranslationEnabled(true)
-                    withAnimation { step = 1 }
-                } else {
-                    permissionManager.openAccessibilitySettings()
-                }
+                #if DIRECT_DISTRIBUTION
+                    if permissionManager.isAccessibilityGranted {
+                        prefs.setTextSelectionTranslationEnabled(true)
+                        withAnimation { step = 1 }
+                    } else {
+                        permissionManager.openAccessibilitySettings()
+                    }
+                #endif
             case 1:
                 withAnimation { step = 2 }
             case 2:
@@ -338,8 +358,10 @@
 
             let nextStep: Int
             switch step {
-            case 0 where permissionManager.isAccessibilityGranted:
-                nextStep = 1
+            #if DIRECT_DISTRIBUTION
+                case 0 where permissionManager.isAccessibilityGranted:
+                    nextStep = 1
+            #endif
             case 2 where !hotKeyManager.quickTranslateConfiguration.isEmpty:
                 nextStep = 3
             case 3 where hadExistingModelSelection:

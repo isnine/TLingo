@@ -5,7 +5,7 @@
 //  Resolves the currently selected text via AX → browser AppleScript → Cmd+C → menu bar Copy.
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
 
     @MainActor

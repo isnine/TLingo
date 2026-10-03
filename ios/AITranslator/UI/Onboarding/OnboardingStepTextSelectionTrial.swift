@@ -29,6 +29,9 @@
         let trialModels: [ModelConfig]
         @State private var sampleText = ""
         @State private var guidanceStep = GuidanceStep.selectText
+        #if !DIRECT_DISTRIBUTION
+            @State private var popupController = TranslationPopupController()
+        #endif
 
         let colors: AppColorPalette
 
@@ -57,13 +60,25 @@
                 OnboardingSelectionTextEditor(text: $sampleText) { hasSelection in
                     updateTrigger(hasSelection: hasSelection)
                 }
-                    .padding(10)
-                    .frame(height: 92)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(colors.cardBackground)
-                    )
+                .padding(10)
+                .frame(height: 92)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(colors.cardBackground)
+                )
 
+                #if !DIRECT_DISTRIBUTION
+                    Button {
+                        popupController.showAtCursor(
+                            text: sampleText,
+                            actionName: actionName,
+                            trialModels: trialModels
+                        )
+                    } label: {
+                        Text(mode == .polish ? "Polish" : "Translate")
+                    }
+                    .buttonStyle(.borderedProminent)
+                #endif
                 Spacer(minLength: 0)
             }
             .onAppear {
@@ -93,43 +108,60 @@
         }
 
         private func updateTrigger(hasSelection: Bool) {
-            if hasSelection {
-                advanceGuidance(to: .moveToTrigger)
-            } else if guidanceStep != .completed {
-                advanceGuidance(to: .selectText)
-            }
-
-            Task { @MainActor in
+            #if DIRECT_DISTRIBUTION
                 if hasSelection {
-                    AppDelegate.shared?.showSelectionTrigger(near: NSEvent.mouseLocation)
-                } else {
-                    AppDelegate.shared?.dismissSelectionTrigger()
+                    advanceGuidance(to: .moveToTrigger)
+                } else if guidanceStep != .completed {
+                    advanceGuidance(to: .selectText)
                 }
-            }
+
+                Task { @MainActor in
+                    if hasSelection {
+                        AppDelegate.shared?.showSelectionTrigger(near: NSEvent.mouseLocation)
+                    } else {
+                        AppDelegate.shared?.dismissSelectionTrigger()
+                    }
+                }
+            #endif
         }
 
         private func dismissTrigger() {
-            Task { @MainActor in
-                AppDelegate.shared?.dismissSelectionTrigger()
-            }
+            #if DIRECT_DISTRIBUTION
+                Task { @MainActor in
+                    AppDelegate.shared?.dismissSelectionTrigger()
+                }
+            #else
+                popupController.dismiss()
+            #endif
         }
 
         private func configureGuidanceCallbacks() {
-            AppDelegate.shared?.setSelectionTrialCallbacks(
-                actionName: actionName,
-                trialModels: trialModels,
-                onTriggerHovered: {
-                    advanceGuidance(to: .clickAction)
-                },
-                onTranslationSucceeded: {
+            #if DIRECT_DISTRIBUTION
+                AppDelegate.shared?.setSelectionTrialCallbacks(
+                    actionName: actionName,
+                    trialModels: trialModels,
+                    onTriggerHovered: {
+                        advanceGuidance(to: .clickAction)
+                    },
+                    onTranslationSucceeded: {
+                        advanceGuidance(to: .completed)
+                        isCompleted = true
+                    }
+                )
+            #else
+                popupController.onTranslationSucceeded = {
                     advanceGuidance(to: .completed)
                     isCompleted = true
                 }
-            )
+            #endif
         }
 
         private func clearGuidanceCallbacks() {
-            AppDelegate.shared?.clearSelectionTrialCallbacks()
+            #if DIRECT_DISTRIBUTION
+                AppDelegate.shared?.clearSelectionTrialCallbacks()
+            #else
+                popupController.onTranslationSucceeded = nil
+            #endif
         }
 
         private func advanceGuidance(to step: GuidanceStep) {
@@ -163,16 +195,23 @@
         }
 
         private var guidanceInstruction: LocalizedStringKey {
-            switch guidanceStep {
-            case .selectText:
-                return "1. Select a sentence"
-            case .moveToTrigger:
-                return "2. Move to the blue dot"
-            case .clickAction:
-                return mode == .polish ? "3. Choose Polish" : "3. Choose Translate"
-            case .completed:
-                return completionSubtitle
-            }
+            #if !DIRECT_DISTRIBUTION
+                if guidanceStep == .completed {
+                    return completionSubtitle
+                }
+                return mode == .polish ? "Try AI Writing Polish" : "Try translating selected text"
+            #else
+                switch guidanceStep {
+                case .selectText:
+                    return "1. Select a sentence"
+                case .moveToTrigger:
+                    return "2. Move to the blue dot"
+                case .clickAction:
+                    return mode == .polish ? "3. Choose Polish" : "3. Choose Translate"
+                case .completed:
+                    return completionSubtitle
+                }
+            #endif
         }
 
         private var completionSubtitle: LocalizedStringKey {

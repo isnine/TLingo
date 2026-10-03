@@ -5,7 +5,7 @@
 //  Text selection via AppleScript for Safari and Chromium browsers (Tier 2).
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
 
     enum AppleScriptGrabber {

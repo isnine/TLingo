@@ -5,7 +5,7 @@
 //  Step 1 of first-launch onboarding: enable text selection translation.
 //
 
-#if os(macOS)
+#if os(macOS) && DIRECT_DISTRIBUTION
     import ShareCore
     import SwiftUI
 

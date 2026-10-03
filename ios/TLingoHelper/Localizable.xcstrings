@@ -1,0 +1,279 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Accessibility" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辅助功能"
+          }
+        }
+      }
+    },
+    "Couldn't read the selected text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取选中的文字。"
+          }
+        }
+      }
+    },
+    "Grant Accessibility Access…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授予辅助功能权限…"
+          }
+        }
+      }
+    },
+    "Grant Access…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权…"
+          }
+        }
+      }
+    },
+    "Granted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授权"
+          }
+        }
+      }
+    },
+    "If TLingoHelper is already listed, remove it with − and add it again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果列表中已有 TLingoHelper，请用 − 移除后重新添加。"
+          }
+        }
+      }
+    },
+    "Install TLingo to translate selected text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请安装 TLingo 以翻译选中的文字。"
+          }
+        }
+      }
+    },
+    "Invalid text popup request." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本翻译浮窗请求无效。"
+          }
+        }
+      }
+    },
+    "Needs Accessibility Access" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要辅助功能权限"
+          }
+        }
+      }
+    },
+    "Open TLingo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 TLingo"
+          }
+        }
+      }
+    },
+    "Open at Login" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时打开"
+          }
+        }
+      }
+    },
+    "Opens in the background when you translate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻译时会在后台自动打开"
+          }
+        }
+      }
+    },
+    "Paused" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂停"
+          }
+        }
+      }
+    },
+    "Permission" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限"
+          }
+        }
+      }
+    },
+    "Quit TLingoHelper" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 TLingoHelper"
+          }
+        }
+      }
+    },
+    "Reads the text you select in other apps." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取你在其他应用中选中的文字。"
+          }
+        }
+      }
+    },
+    "Ready in other apps" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已准备好在其他应用中使用"
+          }
+        }
+      }
+    },
+    "Running %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行中 %@"
+          }
+        }
+      }
+    },
+    "Select text in any app, then click the dot to translate it with TLingo." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任意应用中选中文字，然后点击圆点，用 TLingo 翻译。"
+          }
+        }
+      }
+    },
+    "Settings…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置…"
+          }
+        }
+      }
+    },
+    "TLingo quit before the text was sent. Try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 在收到文字前已退出，请重试。"
+          }
+        }
+      }
+    },
+    "TLingoHelper" : {
+      "shouldTranslate" : false
+    },
+    "Text Selection Translation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选词翻译"
+          }
+        }
+      }
+    },
+    "Text is sent to TLingo only when you click the dot. Translation, history and subscriptions stay in TLingo." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有点击圆点时才会把文字发送给 TLingo。翻译、历史记录和订阅都由 TLingo 处理。"
+          }
+        }
+      }
+    },
+    "The selected text is too long to send to TLingo." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选中的文字过长，无法发送给 TLingo。"
+          }
+        }
+      }
+    },
+    "Translate selected text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻译选中的文字"
+          }
+        }
+      }
+    },
+    "Turn on TLingoHelper, not TLingo, in Privacy & Security › Accessibility." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在“隐私与安全性 › 辅助功能”中打开 TLingoHelper，而不是 TLingo。"
+          }
+        }
+      }
+    },
+    "Update TLingo to use it with TLingoHelper." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请更新 TLingo 以配合 TLingoHelper 使用。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

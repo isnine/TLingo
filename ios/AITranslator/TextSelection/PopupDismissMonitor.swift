@@ -29,13 +29,15 @@
                 }
             }
 
-            globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                if event.keyCode == 53 { // Escape
-                    Task { @MainActor in
-                        self?.onDismiss()
+            #if DIRECT_DISTRIBUTION
+                globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                    if event.keyCode == 53 { // Escape
+                        Task { @MainActor in
+                            self?.onDismiss()
+                        }
                     }
                 }
-            }
+            #endif
 
             localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [
                 .leftMouseDown,

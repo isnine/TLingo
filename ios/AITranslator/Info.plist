@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TLingoTextPopupProtocolVersion</key>
+	<integer>1</integer>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -13,8 +15,6 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSAccessibilityUsageDescription</key>
-	<string>TLingo needs Accessibility access to translate text you select in any app.</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>TLingo needs audio capture access to create realtime subtitles from Mac audio.</string>
 	<key>NSServices</key>

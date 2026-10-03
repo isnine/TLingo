@@ -6,7 +6,7 @@
 //  Does not read text — that happens lazily when the user engages with the trigger icon.
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
     import os
 
@@ -16,6 +16,7 @@
     final class SelectionMonitor {
         var onTextSelected: ((CGPoint) -> Void)?
         var onMouseDown: ((CGPoint) -> Void)?
+        var ignoredApplications: Set<String> = []
 
         private nonisolated(unsafe) var globalMonitor: Any?
         private nonisolated(unsafe) var mouseDownMonitor: Any?
@@ -68,10 +69,13 @@
 
             localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseUp]) { [weak self] event in
                 guard !(event.window is TriggerIconPanel),
-                      !(event.window is TranslationPopupPanel),
-                      !(event.window?.sheetParent is TranslationPopupPanel),
                       event.window.map({ String(describing: type(of: $0)).contains("FloatingDropPanel") }) != true
                 else { return event }
+                #if DIRECT_DISTRIBUTION
+                    guard !(event.window is TranslationPopupPanel),
+                          !(event.window?.sheetParent is TranslationPopupPanel)
+                    else { return event }
+                #endif
                 let screenPoint = NSEvent.mouseLocation
                 let eventType = event.type
                 let clickCount = event.clickCount
@@ -119,7 +123,8 @@
 
         private func handleMouseUp(at point: CGPoint, clickCount: Int, isShiftClick: Bool) {
             guard !isSuppressed,
-                  !Self.ignoredBundleIDs.contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
+                  !Self.ignoredBundleIDs.union(ignoredApplications)
+                  .contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
             else { return }
 
             var dragDistance: CGFloat = 0

@@ -20,6 +20,14 @@
         case clipboardTranslate
         case quit
 
+        static var availableCases: [Self] {
+            #if DIRECT_DISTRIBUTION
+                allCases
+            #else
+                allCases.filter { $0 != .selectionTranslate }
+            #endif
+        }
+
         var title: String {
             switch self {
             case .openMainWindow:
@@ -204,7 +212,7 @@
         private func showContextMenu() {
             let menu = NSMenu()
 
-            for action in MenuBarAction.allCases {
+            for action in MenuBarAction.availableCases {
                 if action.startsSection {
                     menu.addItem(.separator())
                 }
@@ -242,7 +250,9 @@
             case .screenshotTranslate:
                 AppDelegate.shared?.translateScreenshot()
             case .selectionTranslate:
-                AppDelegate.shared?.translateCurrentSelection()
+                #if DIRECT_DISTRIBUTION
+                    AppDelegate.shared?.translateCurrentSelection()
+                #endif
             case .clipboardTranslate:
                 AppDelegate.shared?.translateClipboard()
             case .quit:

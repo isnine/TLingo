@@ -58,6 +58,14 @@
         case screenshotOCR = 5
         case clipboardTranslate = 6
 
+        static var availableCases: [Self] {
+            #if DIRECT_DISTRIBUTION
+                allCases
+            #else
+                allCases.filter { $0 != .selectionTranslate }
+            #endif
+        }
+
         var displayName: String {
             switch self {
             case .mainApp: return String(localized: "Main App")
@@ -163,7 +171,7 @@
 
         /// Returns another hotkey type already using the given shortcut.
         func conflictingType(for configuration: HotKeyConfiguration, excluding type: HotKeyType) -> HotKeyType? {
-            HotKeyType.allCases.first { $0 != type && self.configuration(for: $0) == configuration }
+            HotKeyType.availableCases.first { $0 != type && self.configuration(for: $0) == configuration }
         }
 
         /// Updates the hotkey configuration for a specific type
@@ -238,6 +246,7 @@
 
         /// Registers a specific hotkey with the system
         private func registerHotKey(for type: HotKeyType) {
+            guard HotKeyType.availableCases.contains(type) else { return }
             guard registeredHotKeys[type] == nil else { return }
 
             let config = configuration(for: type)
@@ -322,7 +331,9 @@
             case .quickTranslate:
                 NotificationCenter.default.post(name: .toggleMenuBarPopover, object: nil)
             case .selectionTranslate:
-                MainActor.assumeIsolated { AppDelegate.shared?.translateCurrentSelection() }
+                #if DIRECT_DISTRIBUTION
+                    MainActor.assumeIsolated { AppDelegate.shared?.translateCurrentSelection() }
+                #endif
             case .screenshotTranslate:
                 MainActor.assumeIsolated { AppDelegate.shared?.translateScreenshot() }
             case .screenshotOCR:

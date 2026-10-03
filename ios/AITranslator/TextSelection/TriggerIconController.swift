@@ -5,9 +5,11 @@
 //  Manages trigger icon lifecycle: show near cursor, hover/click to translate, auto-dismiss.
 //
 
-#if os(macOS)
+#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
     import AppKit
-    import ShareCore
+    #if !TLINGO_HELPER
+        import ShareCore
+    #endif
     import SwiftUI
 
     // MARK: - TriggerIconGlassView
@@ -22,12 +24,16 @@
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
                         .frame(width: TriggerIconPanel.size, height: TriggerIconPanel.size)
+                    #if TLINGO_HELPER
+                        .glassEffect(.regular.tint(Color.accentColor.opacity(0.18)).interactive(), in: .circle)
+                    #else
                         .tlingoGlassCircle(
                             tint: Color.accentColor.opacity(0.18),
                             interactive: true,
                             fallbackTint: Color.primary.opacity(0.10),
                             fallbackStroke: Color.secondary.opacity(0.36)
                         )
+                    #endif
                 } else {
                     Circle()
                         .fill(Color.accentColor)
@@ -67,7 +73,9 @@
         }
 
         @available(*, unavailable)
-        required init?(coder _: NSCoder) { fatalError() }
+        required init?(coder _: NSCoder) {
+            fatalError()
+        }
 
         override func updateTrackingAreas() {
             super.updateTrackingAreas()
@@ -114,6 +122,7 @@
         var onTriggerHovered: (() -> Void)?
         var onTranslateRequested: ((SelectionTextGrabber.Selection) -> Void)?
         var onDismissed: (() -> Void)?
+        var onCaptureFailed: (() -> Void)?
 
         private var panel: TriggerIconPanel?
         private var trackingView: TriggerTrackingView?
@@ -149,10 +158,18 @@
 
             if let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) ?? NSScreen.main {
                 let visibleFrame = screen.visibleFrame
-                if x + size > visibleFrame.maxX { x = point.x - size - offset }
-                if y + size > visibleFrame.maxY { y = point.y - size - offset }
-                if x < visibleFrame.minX { x = visibleFrame.minX }
-                if y < visibleFrame.minY { y = visibleFrame.minY }
+                if x + size > visibleFrame.maxX {
+                    x = point.x - size - offset
+                }
+                if y + size > visibleFrame.maxY {
+                    y = point.y - size - offset
+                }
+                if x < visibleFrame.minX {
+                    x = visibleFrame.minX
+                }
+                if y < visibleFrame.minY {
+                    y = visibleFrame.minY
+                }
             }
 
             panel.setFrame(NSRect(x: x, y: y, width: size, height: size), display: true)
@@ -174,10 +191,10 @@
             guard let panel else { return }
             cancelAllTimers()
 
-            NSAnimationContext.runAnimationGroup({ ctx in
+            NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 0.15
                 panel.animator().alphaValue = 0
-            }, completionHandler: { [weak self] in
+            } completionHandler: { [weak self] in
                 Task { @MainActor in
                     panel.contentView = nil
                     panel.close()
@@ -186,7 +203,7 @@
                     self.cleanup()
                     self.onDismissed?()
                 }
-            })
+            }
         }
 
         func dismissSilently() {
@@ -239,10 +256,14 @@
             cleanup()
 
             grabTask = Task { @MainActor [weak self] in
-                guard let selection = await SelectionTextGrabber.grab(near: point),
-                      !selection.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !Task.isCancelled
-                else { return }
+                let selection = await SelectionTextGrabber.grab(near: point)
+                guard !Task.isCancelled else { return }
+                guard let selection,
+                      !selection.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                else {
+                    self?.onCaptureFailed?()
+                    return
+                }
                 self?.grabTask = nil
                 self?.onTranslateRequested?(selection)
             }

@@ -5,7 +5,7 @@
 //  First-enable onboarding sheet for Accessibility permission.
 //
 
-#if os(macOS)
+#if os(macOS) && DIRECT_DISTRIBUTION
     import ShareCore
     import SwiftUI
 

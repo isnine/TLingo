@@ -9,6 +9,16 @@
 /* Begin PBXBuildFile section */
 		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
 		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
+		AF1100000000000000000010 /* AITranslator/TextSelection/AccessibilityGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */; };
+		AF1100000000000000000011 /* AITranslator/TextSelection/AppleScriptGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000021 /* AITranslator/TextSelection/AppleScriptGrabber.swift */; };
+		AF1100000000000000000012 /* AITranslator/TextSelection/ClipboardGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000022 /* AITranslator/TextSelection/ClipboardGrabber.swift */; };
+		AF1100000000000000000013 /* AITranslator/TextSelection/SelectionTextGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000023 /* AITranslator/TextSelection/SelectionTextGrabber.swift */; };
+		AF1100000000000000000014 /* AITranslator/TextSelection/SelectionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000024 /* AITranslator/TextSelection/SelectionMonitor.swift */; };
+		AF1100000000000000000015 /* AITranslator/TextSelection/TriggerIconController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000025 /* AITranslator/TextSelection/TriggerIconController.swift */; };
+		AF1100000000000000000016 /* AITranslator/TextSelection/TriggerIconPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000026 /* AITranslator/TextSelection/TriggerIconPanel.swift */; };
+		AF1100000000000000000017 /* AITranslator/TextSelection/AccessibilityPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000027 /* AITranslator/TextSelection/AccessibilityPermissionManager.swift */; };
+		AF1100000000000000000018 /* ShareCore/Utilities/TextPopupRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000028 /* ShareCore/Utilities/TextPopupRequest.swift */; };
+		AF1100000000000000000019 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		BB249D1C81B6D81D3A945314 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CB052C0DD54E66D1CAEC997 /* FluidAudio */; };
 		C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C470DB9D2F37431400517417 /* StoreKit.framework */; };
 		CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
@@ -22,7 +32,6 @@
 		CE4EB10F2EA33CAD00DDDFA5 /* TLingoTranslation.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CE4EB12B2EA4F4B000DDDFA5 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
 		CE6A10012FF4400000AA0001 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = CE6A10032FF4400000AA0001 /* SnapshotTesting */; };
-		CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		CE7F10022FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		CE9B52832F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
 		CE9B52842F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
@@ -153,6 +162,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/AccessibilityGrabber.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000021 /* AITranslator/TextSelection/AppleScriptGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/AppleScriptGrabber.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000022 /* AITranslator/TextSelection/ClipboardGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/ClipboardGrabber.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000023 /* AITranslator/TextSelection/SelectionTextGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/SelectionTextGrabber.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000024 /* AITranslator/TextSelection/SelectionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/SelectionMonitor.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000025 /* AITranslator/TextSelection/TriggerIconController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/TriggerIconController.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000026 /* AITranslator/TextSelection/TriggerIconPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/TriggerIconPanel.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000027 /* AITranslator/TextSelection/AccessibilityPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/AccessibilityPermissionManager.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000028 /* ShareCore/Utilities/TextPopupRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore/Utilities/TextPopupRequest.swift; sourceTree = SOURCE_ROOT; };
+		AF1100000000000000000029 /* Helper.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Helper.xcconfig; sourceTree = "<group>"; };
+		AF110000000000000000002A /* TLingoHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = TLingoHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C470DB9D2F37431400517417 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		CE23B5982EAA44B40033543C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CE266B512FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -170,6 +190,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AF1100000000000000000030 /* Exceptions for "TLingoHelper" folder in "TLingoHelper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AF1100000000000000000040 /* TLingoHelper */;
+		};
 		CE4EB1132EA33CAD00DDDFA5 /* Exceptions for "TranslationUI" folder in "TLingoTranslation" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -208,6 +235,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		AF1100000000000000000031 /* TLingoHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AF1100000000000000000030 /* Exceptions for "TLingoHelper" folder in "TLingoHelper" target */,
+			);
+			path = TLingoHelper;
+			sourceTree = "<group>";
+		};
 		CE3703402F3E000000000002 /* ShareCoreTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ShareCoreTests;
@@ -259,6 +294,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AF1100000000000000000032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF1100000000000000000019 /* PermissionFlow in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE3703402F3E000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -281,7 +324,6 @@
 			files = (
 				CE2263882EB2509600BB7BEF /* ShareCore.framework in Frameworks */,
 				C470DB9E2F37431400517417 /* StoreKit.framework in Frameworks */,
-				CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,11 +368,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AF1100000000000000000033 /* Helper Shared Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */,
+				AF1100000000000000000021 /* AITranslator/TextSelection/AppleScriptGrabber.swift */,
+				AF1100000000000000000022 /* AITranslator/TextSelection/ClipboardGrabber.swift */,
+				AF1100000000000000000023 /* AITranslator/TextSelection/SelectionTextGrabber.swift */,
+				AF1100000000000000000024 /* AITranslator/TextSelection/SelectionMonitor.swift */,
+				AF1100000000000000000025 /* AITranslator/TextSelection/TriggerIconController.swift */,
+				AF1100000000000000000026 /* AITranslator/TextSelection/TriggerIconPanel.swift */,
+				AF1100000000000000000027 /* AITranslator/TextSelection/AccessibilityPermissionManager.swift */,
+				AF1100000000000000000028 /* ShareCore/Utilities/TextPopupRequest.swift */,
+			);
+			name = "Helper Shared Sources";
+			sourceTree = "<group>";
+		};
 		CE3703302F2E40000039FC39 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
 				CE3703262F2E39700039FC39 /* Base.xcconfig */,
 				CED126502FB0733E00A567CE /* Direct.xcconfig */,
+				AF1100000000000000000029 /* Helper.xcconfig */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -342,6 +401,8 @@
 				CE23B5982EAA44B40033543C /* Localizable.xcstrings */,
 				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
 				CED126602FB0733E00A567CE /* Direct */,
+				AF1100000000000000000031 /* TLingoHelper */,
+				AF1100000000000000000033 /* Helper Shared Sources */,
 				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
 				CEAB00072FB5000000000001 /* TLingoBroadcastUpload */,
 				CE4EB11F2EA4F47400DDDFA5 /* ShareCore */,
@@ -363,6 +424,7 @@
 				CE3703402F3E000000000001 /* ShareCoreTests.xctest */,
 				CE37034F2F3E000000000001 /* TLingoUITests.xctest */,
 				CED1264B2FB0733E00A567CD /* TLingo.app */,
+				AF110000000000000000002A /* TLingoHelper.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -390,6 +452,29 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		AF1100000000000000000040 /* TLingoHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF1100000000000000000041 /* Build configuration list for PBXNativeTarget "TLingoHelper" */;
+			buildPhases = (
+				AF1100000000000000000034 /* Sources */,
+				AF1100000000000000000032 /* Frameworks */,
+				AF1100000000000000000035 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AF1100000000000000000031 /* TLingoHelper */,
+			);
+			name = TLingoHelper;
+			packageProductDependencies = (
+				CE7F10032FF5000000000001 /* PermissionFlow */,
+			);
+			productName = TLingoHelper;
+			productReference = AF110000000000000000002A /* TLingoHelper.app */;
+			productType = "com.apple.product-type.application";
+		};
 		CE3703402F3E000000000007 /* ShareCoreTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE3703402F3E00000000000A /* Build configuration list for PBXNativeTarget "ShareCoreTests" */;
@@ -460,7 +545,6 @@
 			);
 			name = TLingo;
 			packageProductDependencies = (
-				CE7F10032FF5000000000001 /* PermissionFlow */,
 			);
 			productName = TLingo;
 			productReference = CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */;
@@ -628,11 +712,19 @@
 				CE3703402F3E000000000007 /* ShareCoreTests */,
 				CE37034F2F3E000000000006 /* TLingoUITests */,
 				CED126382FB0733E00A567CD /* TLingo-Direct */,
+				AF1100000000000000000040 /* TLingoHelper */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		AF1100000000000000000035 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE3703402F3E000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -693,6 +785,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AF1100000000000000000034 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF1100000000000000000010 /* AITranslator/TextSelection/AccessibilityGrabber.swift in Sources */,
+				AF1100000000000000000011 /* AITranslator/TextSelection/AppleScriptGrabber.swift in Sources */,
+				AF1100000000000000000012 /* AITranslator/TextSelection/ClipboardGrabber.swift in Sources */,
+				AF1100000000000000000013 /* AITranslator/TextSelection/SelectionTextGrabber.swift in Sources */,
+				AF1100000000000000000014 /* AITranslator/TextSelection/SelectionMonitor.swift in Sources */,
+				AF1100000000000000000015 /* AITranslator/TextSelection/TriggerIconController.swift in Sources */,
+				AF1100000000000000000016 /* AITranslator/TextSelection/TriggerIconPanel.swift in Sources */,
+				AF1100000000000000000017 /* AITranslator/TextSelection/AccessibilityPermissionManager.swift in Sources */,
+				AF1100000000000000000018 /* ShareCore/Utilities/TextPopupRequest.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE3703402F3E000000000005 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -790,6 +898,21 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		AF1100000000000000000042 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AF1100000000000000000029 /* Helper.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+			};
+			name = Debug;
+		};
+		AF1100000000000000000043 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AF1100000000000000000029 /* Helper.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 		CE3703402F3E000000000008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
@@ -1451,6 +1574,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AF1100000000000000000041 /* Build configuration list for PBXNativeTarget "TLingoHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF1100000000000000000042 /* Debug */,
+				AF1100000000000000000043 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CE3703402F3E00000000000A /* Build configuration list for PBXNativeTarget "ShareCoreTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
