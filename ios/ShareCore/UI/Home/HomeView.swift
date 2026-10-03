@@ -54,6 +54,7 @@ public struct HomeView: View {
     @State private var pendingPremiumPresentation = false
     @State private var bottomComposerActionChipsHeight: CGFloat = 0
     @State private var bottomComposerLanguageSelectorHeight: CGFloat = 0
+    @State private var bottomComposerWordLookupHintHeight: CGFloat = 0
     @State private var bottomComposerEditorContentHeight: CGFloat = 0
     @State private var isComparingResults = false
     /// Settled content height per result row, and the height held while a row reloads,
@@ -606,6 +607,9 @@ public struct HomeView: View {
                     inputComposer()
                 }
                 actionChips
+                if viewModel.isWordLookupFallback {
+                    wordLookupFallbackHint
+                }
                 if viewModel.modelRuns.isEmpty {
                     hintLabel
                 } else {
@@ -731,6 +735,15 @@ public struct HomeView: View {
         let heights = bottomComposerHeights(availableHeight: availableHeight)
 
         return VStack(alignment: .leading, spacing: bottomComposerDockSpacing) {
+            if viewModel.isWordLookupFallback {
+                wordLookupFallbackHint
+                    .onHeightChange { height in
+                        updateMeasuredHeight(height, current: bottomComposerWordLookupHintHeight) {
+                            bottomComposerWordLookupHintHeight = $0
+                        }
+                    }
+                    .transition(.opacity)
+            }
             #if os(iOS)
                 if shouldShowMatchFallbackHint,
                    let source = viewModel.detectedSourceLanguage,
@@ -792,6 +805,7 @@ public struct HomeView: View {
 
     private var bottomComposerChromeHeight: CGFloat {
         let measuredRows = [
+            viewModel.isWordLookupFallback ? bottomComposerWordLookupHintHeight : 0,
             bottomComposerActionChipsHeight,
             bottomComposerLanguageSelectorHeight,
         ].filter { $0 > 0 }
@@ -1638,6 +1652,36 @@ public struct HomeView: View {
             .padding(.horizontal, 4)
         }
     #endif
+
+    private var wordLookupFallbackHint: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "arrow.turn.down.right")
+                .font(.system(size: 11, weight: .semibold))
+            Text("Switched to word lookup")
+
+            Spacer(minLength: 8)
+
+            Menu {
+                resultOptionsMenuContent(showsResultOrder: viewModel.modelRuns.count > 1)
+            } label: {
+                HStack(spacing: 3) {
+                    Text("Word Options")
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 9, weight: .semibold))
+                }
+                .foregroundColor(colors.accent)
+            }
+            #if os(macOS)
+            .menuStyle(.borderlessButton)
+            #endif
+            .fixedSize()
+            .accessibilityIdentifier("home_word_lookup_options")
+        }
+        .font(.system(size: 13))
+        .foregroundColor(colors.textSecondary)
+        .padding(.horizontal, 4)
+        .accessibilityIdentifier("home_word_lookup_fallback_hint")
+    }
 
     // MARK: - Flat result panel
 

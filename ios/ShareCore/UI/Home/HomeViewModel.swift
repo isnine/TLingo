@@ -251,6 +251,11 @@ public final class HomeViewModel: ObservableObject {
     @Published public var selectedActionID: UUID?
     @Published public private(set) var modelRuns: [ModelRunViewState] = []
 
+    public var isWordLookupFallback: Bool {
+        activeRequestContext?.isWordLookup == true
+            && modelRuns.contains { !$0.model.isDirectTranslation }
+    }
+
     public var displayedModelRuns: [ModelRunViewState] {
         Self.sortModelRuns(
             modelRuns,
