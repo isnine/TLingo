@@ -15,8 +15,18 @@ review_triggers:
 
 `TLingoHelper` 是独立的选词输入工具，不是 Direct 的替代发行渠道。其 scheme、
 bundle ID 和产物独立，不响应现有 Direct 发布流程，不写入 Direct appcast。
-Helper 正式分发前须单独配置 Xcode Cloud、Developer ID 导出、公证和 staple；
-当前仅提供本地原型，尚未建立 Helper 云端发布工作流。
+Helper 可独立在本地 archive，使用 Developer ID 导出、Apple 公证并 staple 后通过网页分发。
+当前尚未建立 Helper 云端发布工作流；若迁移到 Xcode Cloud，须单独配置，不能复用 Direct appcast。
+本地 archive 使用手动 ad-hoc 签名（`CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=-`）和
+`DEVELOPMENT_TEAM=JW2LR94V6G`，避免 PermissionFlow 资源包的自动签名设置冲突；
+再通过 `xcodebuild -exportArchive` 的 `developer-id` 导出完成分发签名。
+分发前须验证 app 与最终 DMG 的签名、公证票据及 Gatekeeper，下载文件使用独立的
+`helper/` 路径，不能覆盖 TLingo Direct 的发布产物。
+
+Helper 1.0.0 预览版下载页为
+[`helper/index.html`](https://updates.tlingo.zanderwang.com/helper/index.html)，
+DMG 为 [`TLingoHelper-v1.0.0.dmg`](https://updates.tlingo.zanderwang.com/helper/TLingoHelper-v1.0.0.dmg)。
+预览版支持 macOS 26+、Apple Silicon 和 Intel；使用时须安装支持浮窗协议的 TLingo。
 
 Helper 只向支持 `TLingoTextPopupProtocolVersion = 1` 的主 App 发送文本，不保存固定安装路径。
 有兼容的运行进程时使用最近启动的那个；Direct 和旧版本共用 bundle ID 但不兼容，若只有它们在运行，
