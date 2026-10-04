@@ -363,6 +363,14 @@ public final class HomeViewModel: ObservableObject {
     /// Set by the host app (AITranslator) via `AppleTranslationWindowManager`.
     public var appleTranslationRequestHandler: ((Locale.Language?, TargetLanguageOption) -> Void)?
 
+    /// True when the last Apple Translate run stopped because its language pack is not
+    /// downloaded. The result card then offers a Download button instead of Retry.
+    @Published public private(set) var appleTranslateNeedsLanguageDownload = false
+
+    /// Set by the Download button so the next Apple Translate run may present the
+    /// system download sheet; otherwise a missing pack fails without any system UI.
+    private var allowsAppleTranslateDownloadPrompt = false
+
     // MARK: - TTS Playback State
 
     @Published public private(set) var speakingModels: Set<String> = []
@@ -1150,6 +1158,12 @@ public final class HomeViewModel: ObservableObject {
         startSingleRun(at: index, context: runContext)
     }
 
+    /// Re-runs Apple Translate and lets it present the system language download sheet.
+    public func downloadAppleTranslateLanguage(runID: String) {
+        allowsAppleTranslateDownloadPrompt = true
+        retryRun(runID: runID)
+    }
+
     private var sentenceTranslateAction: ActionConfig? {
         let id = BuiltInActionCatalog.sentenceTranslateActionID
         return allActions.first { $0.id == id } ?? BuiltInActionCatalog.actions.first { $0.id == id }
@@ -1797,6 +1811,9 @@ public final class HomeViewModel: ObservableObject {
         // Kick off Apple Translate if present.
         if hasAppleTranslate {
             guard let appleRunToken = runTokens[ModelConfig.appleTranslateID] else { return }
+            let allowsDownloadPrompt = allowsAppleTranslateDownloadPrompt
+            allowsAppleTranslateDownloadPrompt = false
+            appleTranslateNeedsLanguageDownload = false
             if action.supportsAppleTranslate {
                 if supportsAppleTranslate {
                     // SwiftUI context: prefer the direct TranslationSession(installedSource:target:)
@@ -1853,6 +1870,30 @@ public final class HomeViewModel: ObservableObject {
                                             result,
                                             context: context,
                                             runToken: appleRunToken
+                                        )
+                                    } else if status == .supported, !allowsDownloadPrompt {
+                                        // Ask in the result card before the system download sheet appears.
+                                        self.appleTranslateNeedsLanguageDownload = true
+                                        let result = ModelExecutionResult(
+                                            modelID: ModelConfig.appleTranslateID,
+                                            duration: 0,
+                                            response: .failure(
+                                                LocalProviderError.translationFailed(
+                                                    AppleTranslationErrorFormatter.withLanguagePair(
+                                                        String(
+                                                            localized: "Apple Translate needs to download this language pair before translating."
+                                                        ),
+                                                        source: sourceLocale,
+                                                        target: resolvedTarget
+                                                    )
+                                                )
+                                            )
+                                        )
+                                        self.apply(
+                                            result: result,
+                                            context: context,
+                                            runToken: appleRunToken,
+                                            allowDiff: false
                                         )
                                     } else {
                                         // Language pack not installed; need .translationTask() to trigger download UI.

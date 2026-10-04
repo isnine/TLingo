@@ -73,24 +73,12 @@
 
                     Divider().opacity(0.72)
 
-                    ScrollView {
-                        VStack(spacing: 8) {
-                            ForEach(viewModel.displayedModelRuns) { run in
-                                ProviderResultCardView(
-                                    run: run,
-                                    showModelName: viewModel.modelRuns.count > 1,
-                                    viewModel: viewModel,
-                                    onCopy: { text in
-                                        NSPasteboard.general.clearContents()
-                                        NSPasteboard.general.setString(text, forType: .string)
-                                    },
-                                    onReplace: onReplace
-                                )
-                            }
-                        }
-                        .padding(12)
-                        .padding(.bottom, 40)
-                    }
+                    HomeView(
+                        viewModel: viewModel,
+                        showsOnlyResults: true,
+                        onResultReplace: onReplace
+                    )
+                    .padding(.bottom, 28)
                 }
                 .frame(minWidth: 320, minHeight: 200)
                 .tlingoGlassSurface(.panel, cornerRadius: TLingoRadius.medium)

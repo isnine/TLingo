@@ -241,6 +241,9 @@ public struct HomeView: View {
     private let onRealtimeTap: (() -> Void)?
     private let onPremiumRequired: (() -> Void)?
     private let usesNativeNavigationHeader: Bool
+    private let showsOnlyResults: Bool
+    private let onResultReplace: ((String) -> Void)?
+    private let onResultConversation: ((ConversationSession) -> Void)?
 
     private var colors: AppColorPalette {
         AppColors.palette(for: colorScheme)
@@ -271,9 +274,15 @@ public struct HomeView: View {
         onShowSidebarTap: (() -> Void)? = nil,
         onRealtimeTap: (() -> Void)? = nil,
         onPremiumRequired: (() -> Void)? = nil,
-        viewModel: HomeViewModel? = nil
+        viewModel: HomeViewModel? = nil,
+        showsOnlyResults: Bool = false,
+        onResultReplace: ((String) -> Void)? = nil,
+        onResultConversation: ((ConversationSession) -> Void)? = nil
     ) {
         self.context = context
+        self.showsOnlyResults = showsOnlyResults
+        self.onResultReplace = onResultReplace
+        self.onResultConversation = onResultConversation
         self.usesNativeNavigationHeader = usesNativeNavigationHeader
         self.onHistoryTap = onHistoryTap
         self.onManageActionsTap = onManageActionsTap
@@ -291,6 +300,40 @@ public struct HomeView: View {
     }
 
     public var body: some View {
+        if showsOnlyResults {
+            embeddedResultsContent
+        } else {
+            fullHomeContent
+        }
+    }
+
+    /// Compact hosts reuse the result UI while keeping input, consent and request routing in the host.
+    private var embeddedResultsContent: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    if viewModel.isWordLookupFallback {
+                        wordLookupFallbackHint
+                    }
+                    flatResultsPanel(viewportHeight: max(0, geometry.size.height - 24))
+                }
+                .padding(12)
+            }
+        }
+        .onAppear {
+            preferences.refreshFromDefaults()
+        }
+        .sheet(item: $viewModel.selectedDebugNetworkRecord) { record in
+            NavigationStack {
+                NetworkRequestDetailView(record: record)
+            }
+            #if os(macOS)
+            .frame(minWidth: 520, minHeight: 520)
+            #endif
+        }
+    }
+
+    private var fullHomeContent: some View {
         ZStack {
             homeContentLayout
 
@@ -1322,6 +1365,10 @@ public struct HomeView: View {
     }
 
     private func presentConversation(_ session: ConversationSession) {
+        if showsOnlyResults {
+            onResultConversation?(session)
+            return
+        }
         activeConversationSession = session
         isConversationInspectorPresented = usesConversationInspectorPresentation
     }
@@ -1665,7 +1712,7 @@ public struct HomeView: View {
                 resultOptionsMenuContent(showsResultOrder: viewModel.modelRuns.count > 1)
             } label: {
                 HStack(spacing: 3) {
-                    Text("Word Options")
+                    Text("Result Options")
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 9, weight: .semibold))
                 }
@@ -1817,16 +1864,13 @@ public struct HomeView: View {
                 case let .success(result):
                     speakResultButton(text: result.copyText, runID: run.id)
                     // On iPhone the conversation entry lives in the result detail sheet.
-                    actionButtons(copyText: result.copyText, runID: run.id, showsChat: !usesPhoneComposerChrome)
+                    actionButtons(
+                        copyText: result.copyText,
+                        runID: run.id,
+                        showsChat: !usesPhoneComposerChrome && (!showsOnlyResults || onResultConversation != nil)
+                    )
                 case .failure:
-                    Button {
-                        viewModel.retryRun(runID: run.id)
-                    } label: {
-                        Label("Retry", systemImage: "arrow.clockwise")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(colors.accent)
-                    }
-                    .buttonStyle(.plain)
+                    retryButton(runID: run.id)
                 default:
                     EmptyView()
                 }
@@ -2380,16 +2424,32 @@ public struct HomeView: View {
                 Spacer()
 
                 // Retry button (retry only this run)
-                Button {
-                    viewModel.retryRun(runID: runID)
-                } label: {
-                    Label("Retry", systemImage: "arrow.clockwise")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(colors.accent)
-                }
-                .buttonStyle(.plain)
+                retryButton(runID: runID)
             }
         }
+    }
+
+    /// Retries one run, or asks for the Apple Translate language download when that is what failed.
+    private func retryButton(runID: String) -> some View {
+        let downloadsLanguage = runID == ModelConfig.appleTranslateID && viewModel.appleTranslateNeedsLanguageDownload
+        return Button {
+            if downloadsLanguage {
+                viewModel.downloadAppleTranslateLanguage(runID: runID)
+            } else {
+                viewModel.retryRun(runID: runID)
+            }
+        } label: {
+            Group {
+                if downloadsLanguage {
+                    Label("Download", systemImage: "arrow.down.circle")
+                } else {
+                    Label("Retry", systemImage: "arrow.clockwise")
+                }
+            }
+            .font(.system(size: 13, weight: .medium))
+            .foregroundColor(colors.accent)
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -2400,7 +2460,18 @@ public struct HomeView: View {
         if showsChat {
             chatButton(for: runID)
         }
-        #if os(iOS)
+        #if os(macOS)
+            if let onResultReplace {
+                Button {
+                    onResultReplace(copyText)
+                } label: {
+                    Label("Replace", systemImage: "arrow.left.arrow.right")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(colors.accent)
+            }
+        #elseif os(iOS)
             if let context, context.allowsReplacement {
                 Button {
                     context.finish(translation: AttributedString(copyText))
@@ -2661,7 +2732,7 @@ public struct HomeView: View {
                 }
 
                 // Suggested action chips
-                if !result.suggestedActions.isEmpty {
+                if !result.suggestedActions.isEmpty, !showsOnlyResults || onResultConversation != nil {
                     suggestedActionChips(actions: result.suggestedActions, runID: runID)
                 }
 

@@ -54,6 +54,7 @@ public struct ProviderResultCardView: View {
         let hasDiff = viewModel.hasDiff(for: run.id)
         let isShowingDiff = viewModel.isDiffShown(for: run.id)
         let isSpeaking = viewModel.isSpeaking(runID: run.id)
+        let offersLanguageDownload = run.id == ModelConfig.appleTranslateID && viewModel.appleTranslateNeedsLanguageDownload
         let copyText: String = {
             if case let .success(result) = run.status { return result.copyText }
             return ""
@@ -83,10 +84,17 @@ public struct ProviderResultCardView: View {
                 isSpeaking: isSpeaking,
                 onSpeak: { viewModel.speakResult(copyText, runID: run.id) },
                 onStopSpeaking: { viewModel.stopSpeaking() },
-                onRetry: { viewModel.retryRun(runID: run.id) },
+                onRetry: {
+                    if offersLanguageDownload {
+                        viewModel.downloadAppleTranslateLanguage(runID: run.id)
+                    } else {
+                        viewModel.retryRun(runID: run.id)
+                    }
+                },
                 onCopy: onCopy,
                 onReplace: onReplace,
-                onChat: onChat
+                onChat: onChat,
+                offersLanguageDownload: offersLanguageDownload
             )
         }
         .padding(usesCompactSnapshotMetrics ? TLingoSpacing.xs : TLingoSpacing.md)
@@ -309,6 +317,8 @@ struct ResultBottomInfoBar: View {
     let onCopy: (String) -> Void
     let onReplace: ((String) -> Void)?
     let onChat: (() -> Void)?
+    /// Shows Download instead of Retry when Apple Translate is missing its language pack.
+    var offersLanguageDownload = false
 
     private var colors: AppColorPalette {
         AppColors.palette(for: colorScheme)
@@ -436,9 +446,15 @@ struct ResultBottomInfoBar: View {
             Button {
                 onRetry()
             } label: {
-                Label("Retry", systemImage: "arrow.clockwise")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(colors.accent)
+                Group {
+                    if offersLanguageDownload {
+                        Label("Download", systemImage: "arrow.down.circle")
+                    } else {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                    }
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(colors.accent)
             }
             .buttonStyle(.plain)
         }

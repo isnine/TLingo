@@ -66,12 +66,6 @@
                 viewModel.refreshConfiguration()
                 loadClipboardAndExecute()
             }
-            .sheet(item: $viewModel.selectedDebugNetworkRecord) { record in
-                NavigationStack {
-                    NetworkRequestDetailView(record: record)
-                }
-                .frame(minWidth: 520, minHeight: 520)
-            }
             .sheet(isPresented: $showFeaturePaywall) {
                 PaywallView(context: .featureLocked)
                     .presentationDetents([.large])
@@ -428,38 +422,14 @@
 
         // MARK: - Result Section
 
-        @ViewBuilder
         private var resultSection: some View {
-            let showModelName = true
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(viewModel.displayedModelRuns) { run in
-                        let inspectRequest: (() -> Void)? = DeveloperMode.isEnabled ? {
-                            viewModel.presentDebugRequestDetails(for: run.id)
-                        } : nil
-
-                        ProviderResultCardView(
-                            run: run,
-                            showModelName: showModelName,
-                            viewModel: viewModel,
-                            onCopy: { text in
-                                PasteboardHelper.copy(text)
-                            },
-                            onChat: run.model.isDirectTranslation ? nil : {
-                                if let session = viewModel.createConversation(from: run) {
-                                    activeConversationSession = session
-                                }
-                            },
-                            onSuggestedAction: run.model.isDirectTranslation ? nil : { action in
-                                if let session = viewModel.createConversationWithFollowUp(from: run, followUp: action) {
-                                    activeConversationSession = session
-                                }
-                            },
-                            onInspectRequest: inspectRequest
-                        )
-                    }
+            HomeView(
+                viewModel: viewModel,
+                showsOnlyResults: true,
+                onResultConversation: { session in
+                    activeConversationSession = session
                 }
-            }
+            )
         }
 
         // MARK: - Liquid Glass Backgrounds
