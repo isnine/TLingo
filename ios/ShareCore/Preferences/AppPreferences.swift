@@ -28,6 +28,7 @@ public final class AppPreferences: ObservableObject {
     @Published public private(set) var voiceActionHintDismissed: Bool
     @Published public private(set) var enabledModelIDs: Set<String>
     @Published public private(set) var modelResultOrder: ModelResultOrder
+    @Published public private(set) var modelListOrder: ModelListOrder
     /// Translating a single word or short phrase returns a dictionary-style entry.
     @Published public private(set) var wordLookupEnabled: Bool
     /// AI translation results open as sentence pairs instead of one block.
@@ -135,6 +136,7 @@ public final class AppPreferences: ObservableObject {
         voiceActionHintDismissed = defaults.bool(forKey: StorageKeys.voiceActionHintDismissed)
         enabledModelIDs = AppPreferences.readEnabledModelIDs(from: defaults)
         modelResultOrder = AppPreferences.readModelResultOrder(from: defaults)
+        modelListOrder = AppPreferences.readModelListOrder(from: defaults)
         wordLookupEnabled = defaults.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true
         defaultsToSentencePairs = defaults.bool(forKey: StorageKeys.defaultsToSentencePairs)
         chatModelID = defaults.string(forKey: StorageKeys.chatModelID)
@@ -247,6 +249,19 @@ public final class AppPreferences: ObservableObject {
         guard defaultsToSentencePairs != enabled else { return }
         defaultsToSentencePairs = enabled
         defaults.set(enabled, forKey: StorageKeys.defaultsToSentencePairs)
+    }
+
+    public func setModelListOrder(_ order: ModelListOrder) {
+        guard modelListOrder != order, let data = try? JSONEncoder().encode(order) else { return }
+        modelListOrder = order
+        defaults.set(data, forKey: StorageKeys.modelListOrder)
+    }
+
+    private static func readModelListOrder(from defaults: UserDefaults) -> ModelListOrder {
+        guard let data = defaults.data(forKey: StorageKeys.modelListOrder),
+              let order = try? JSONDecoder().decode(ModelListOrder.self, from: data)
+        else { return ModelListOrder() }
+        return order
     }
 
     private static func readModelResultOrder(from defaults: UserDefaults) -> ModelResultOrder {
@@ -564,6 +579,11 @@ public final class AppPreferences: ObservableObject {
         let storedResultOrder = AppPreferences.readModelResultOrder(from: defaults)
         if modelResultOrder != storedResultOrder {
             modelResultOrder = storedResultOrder
+        }
+
+        let storedListOrder = AppPreferences.readModelListOrder(from: defaults)
+        if modelListOrder != storedListOrder {
+            modelListOrder = storedListOrder
         }
 
         let storedWordLookupEnabled = defaults.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true
@@ -922,6 +942,7 @@ public final class AppPreferences: ObservableObject {
 
 private enum StorageKeys {
     static let modelResultOrder = "model_result_order"
+    static let modelListOrder = "model_list_order"
     static let wordLookupEnabled = "word_lookup_enabled"
     static let defaultsToSentencePairs = "defaults_to_sentence_pairs"
     static let currentConfigName = "current_config_name"

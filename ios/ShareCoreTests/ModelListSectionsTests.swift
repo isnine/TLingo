@@ -63,4 +63,20 @@ struct ModelListSectionsTests {
         #expect(sections.visiblePremiumModels.isEmpty)
         #expect(sections.collapsedPremiumModels.isEmpty)
     }
+
+    @Test("Custom ordering preserves hidden-model visibility rules")
+    func customOrderKeepsHiddenModelsCollapsedUntilEnabled() {
+        var order = ModelListOrder()
+        order.modelIDsBySection[ModelListSection.free.rawValue] = [hiddenFree.id, visibleFree.id]
+        let collapsed = ModelListSections(
+            cloudModels: [visibleFree, hiddenFree], enabledIDs: [], order: order
+        )
+        #expect(collapsed.visibleFreeModels == [visibleFree])
+        #expect(collapsed.collapsedFreeModels == [hiddenFree])
+        let enabled = ModelListSections(
+            cloudModels: [visibleFree, hiddenFree], enabledIDs: [hiddenFree.id], order: order
+        )
+        #expect(enabled.visibleFreeModels == [hiddenFree, visibleFree])
+        #expect(enabled.collapsedFreeModels.isEmpty)
+    }
 }

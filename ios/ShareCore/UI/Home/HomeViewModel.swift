@@ -260,7 +260,7 @@ public final class HomeViewModel: ObservableObject {
         Self.sortModelRuns(
             modelRuns,
             order: preferences.modelResultOrder,
-            catalog: ModelListSections.resultOrder(cloudModels: models)
+            catalog: ModelListSections.resultOrder(cloudModels: models, order: preferences.modelListOrder)
         )
     }
 
@@ -507,13 +507,15 @@ public final class HomeViewModel: ObservableObject {
         }
         .store(in: &cancellables)
 
-        preferences.$modelResultOrder
-            .dropFirst()
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
-            .store(in: &cancellables)
+        Publishers.Merge(
+            preferences.$modelResultOrder.dropFirst().map { _ in () },
+            preferences.$modelListOrder.dropFirst().map { _ in () }
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        .store(in: &cancellables)
     }
 
     // MARK: - Snapshot Mock Data
