@@ -11596,6 +11596,9 @@
         }
       }
     },
+    "Apple Translate needs to download this language pair before translating." : {
+
+    },
     "Apple Translate timed out after %d seconds. Please try again." : {
       "comment" : "Shown when Apple Translate does not finish before the timeout",
       "localizations" : {
@@ -21171,6 +21174,130 @@
         }
       }
     },
+    "Cloud connections are encrypted. Provider privacy policies apply. On-device translation stays on your Mac." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاتصالات مشفّرة. تنطبق سياسة خصوصية المزوّد على المعالجة السحابية. تحتفظ الترجمة على الجهاز بمدخلاتك على جهاز Mac."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbindelser er krypterede. Udbyderens privatlivspolitik gælder for behandling i skyen. Oversættelse på enheden holder dine data på din Mac."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungen sind verschlüsselt. Für die Cloud-Verarbeitung gilt die Datenschutzerklärung des Anbieters. Bei Übersetzungen auf dem Gerät bleibt Ihre Eingabe auf Ihrem Mac."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud connections are encrypted. Provider privacy policies apply. On-device translation stays on your Mac."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las conexiones están cifradas. Al procesamiento en la nube se aplica la política de privacidad del proveedor. La traducción en el dispositivo mantiene tus datos en tu Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les connexions sont chiffrées. La politique de confidentialité du fournisseur s’applique au traitement dans le cloud. La traduction sur l’appareil conserve vos données sur votre Mac."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koneksi dienkripsi. Kebijakan privasi penyedia berlaku untuk pemrosesan cloud. Terjemahan di perangkat menyimpan input Anda di Mac."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le connessioni sono crittografate. Al trattamento nel cloud si applica l’informativa sulla privacy del fornitore. La traduzione sul dispositivo conserva i dati sul Mac."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続は暗号化されます。クラウド処理には提供元のプライバシーポリシーが適用されます。デバイス上の翻訳では、入力は Mac 内に保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결은 암호화됩니다. 클라우드 처리에는 제공업체의 개인정보 처리방침이 적용됩니다. 기기 내 번역은 입력을 Mac에 보관합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sambungan disulitkan. Dasar privasi penyedia terpakai pada pemprosesan awan. Terjemahan pada peranti mengekalkan input anda pada Mac."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbindelser er kryptert. Leverandørens personvernerklæring gjelder for behandling i skyen. Oversettelse på enheten holder dataene dine på Macen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindingen zijn versleuteld. Het privacybeleid van de aanbieder geldt voor verwerking in de cloud. Vertaling op het apparaat houdt uw invoer op uw Mac."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączenia są szyfrowane. Przetwarzanie w chmurze podlega polityce prywatności dostawcy. Tłumaczenie na urządzeniu zachowuje dane na Macu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As conexões são criptografadas. A política de privacidade do provedor se aplica ao processamento na nuvem. A tradução no dispositivo mantém seus dados no Mac."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anslutningar är krypterade. Leverantörens integritetspolicy gäller för bearbetning i molnet. Översättning på enheten håller dina data på din Mac."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağlantılar şifrelenir. Bulut işlemeye sağlayıcının gizlilik politikası uygulanır. Cihaz üzerinde çeviri, girdilerinizi Mac’inizde tutar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接采用加密传输。云端处理适用服务提供商的隐私政策。设备端翻译会将您的输入保留在 Mac 上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線採用加密傳輸。雲端處理適用服務供應商的隱私政策。裝置端翻譯會將您的輸入保留在 Mac 上。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連線採用加密傳輸。雲端處理適用服務供應商的私隱政策。裝置端翻譯會將您的輸入保留在 Mac 上。"
+          }
+        }
+      }
+    },
     "Cloud Models" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -21292,6 +21419,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "雲端模型"
+          }
+        }
+      }
+    },
+    "Cloud models send text and images to their provider, sometimes through TLingo's servers:" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تشارك الترجمة السحابية النصوص والصور مع مزوّد النموذج المحدد. قد تمر الطلبات عبر خوادم TLingo:"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudoversættelse deler din tekst og dine billeder med udbyderen af den valgte model. Anmodninger kan gå gennem TLingos servere:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Cloud-Übersetzung teilt Ihre Texte und Bilder mit dem Anbieter des ausgewählten Modells. Anfragen können über die Server von TLingo laufen:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud models send text and images to their provider, sometimes through TLingo's servers:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La traducción en la nube comparte tus textos e imágenes con el proveedor del modelo seleccionado. Las solicitudes pueden pasar por los servidores de TLingo:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La traduction dans le cloud partage vos textes et images avec le fournisseur du modèle sélectionné. Les requêtes peuvent passer par les serveurs de TLingo :"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terjemahan cloud membagikan teks dan gambar Anda kepada penyedia model yang dipilih. Permintaan dapat melewati server TLingo:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La traduzione nel cloud condivide testi e immagini con il fornitore del modello selezionato. Le richieste possono passare attraverso i server di TLingo:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラウド翻訳では、選択したモデルの提供元とテキストや画像を共有します。リクエストは TLingo のサーバーを経由する場合があります："
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "클라우드 번역은 선택한 모델의 제공업체와 텍스트 및 이미지를 공유합니다. 요청은 TLingo 서버를 거칠 수 있습니다:"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terjemahan awan berkongsi teks dan imej anda dengan penyedia model yang dipilih. Permintaan mungkin melalui pelayan TLingo:"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skyoversettelse deler teksten og bildene dine med leverandøren av den valgte modellen. Forespørsler kan gå gjennom TLingos servere:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudvertaling deelt uw tekst en afbeeldingen met de aanbieder van het geselecteerde model. Verzoeken kunnen via de servers van TLingo lopen:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tłumaczenie w chmurze udostępnia tekst i obrazy dostawcy wybranego modelu. Żądania mogą przechodzić przez serwery TLingo:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tradução na nuvem compartilha seus textos e imagens com o provedor do modelo selecionado. As solicitações podem passar pelos servidores do TLingo:"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Molnöversättning delar din text och dina bilder med leverantören av den valda modellen. Förfrågningar kan gå genom TLingos servrar:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulut çevirisi, metin ve görüntülerinizi seçilen modelin sağlayıcısıyla paylaşır. İstekler TLingo sunucularından geçebilir:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "云端翻译会将您的文字和图像分享给所选模型的服务提供商。请求可能经过 TLingo 的服务器："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雲端翻譯會將您的文字和圖片分享給所選模型的服務供應商。請求可能經過 TLingo 的伺服器："
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雲端翻譯會將您的文字及圖片分享給所選模型的服務供應商。請求可能經過 TLingo 的伺服器："
           }
         }
       }
@@ -35220,6 +35471,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "免費"
+          }
+        }
+      }
+    },
+    "Free Models" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نماذج مجانية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratis modeller"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kostenlose Modelle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free Models"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelos gratuitos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèles gratuits"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model gratis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelli gratuiti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無料モデル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "무료 모델"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model percuma"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratis modeller"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratis modellen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modele bezpłatne"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelos gratuitos"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratismodeller"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ücretsiz modeller"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "免费模型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "免費模型"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "免費模型"
           }
         }
       }
@@ -74719,6 +75094,130 @@
         }
       }
     },
+    "Results sorted by Model List Order follow this order." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم فرز النتائج حسب ترتيب قائمة النماذج وتتبع هذا الترتيب."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultater sorteret efter rækkefølgen i modellisten følger denne orden."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisse, die nach der Reihenfolge der Modellliste sortiert sind, folgen dieser Reihenfolge."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results sorted by Model List Order follow this order."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los resultados ordenados por el orden de la lista de modelos siguen este orden."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les résultats triés selon l'ordre de la liste de modèles suivent cet ordre."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil yang diurutkan berdasarkan urutan daftar model mengikuti urutan ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I risultati ordinati in base all'ordine della lista dei modelli seguono questo ordine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルリスト順で並べられた結果は、この順序に従います。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 목록 순서에 따라 정렬된 결과는 이 순서를 따릅니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keputusan yang disusun mengikut susunan senarai model mengikuti susunan ini."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultater sortert etter rekkefølgen i modellisten følger denne rekkefølgen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultaten die zijn gesorteerd op de volgorde van de modellijst volgen deze volgorde."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyniki posortowane według kolejności na liście modeli podążają za tą kolejnością."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados ordenados pela ordem da lista de modelos seguem esta ordem."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultat som sorteras efter modellistans ordning följer denna ordning."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model listesi sırasına göre sıralanan sonuçlar bu sırayı takip eder."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按模型列表排序时，结果遵循此顺序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按模型列表順序排序的結果會遵循此順序。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按模型列表順序排序的結果會遵循此順序。"
+          }
+        }
+      }
+    },
     "Resume" : {
       "localizations" : {
         "ar" : {
@@ -99980,130 +100479,6 @@
         }
       }
     },
-    "Cloud models send text and images to their provider, sometimes through TLingo's servers:" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloud models send text and images to their provider, sometimes through TLingo's servers:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "云端翻译会将您的文字和图像分享给所选模型的服务提供商。请求可能经过 TLingo 的服务器："
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "雲端翻譯會將您的文字和圖片分享給所選模型的服務供應商。請求可能經過 TLingo 的伺服器："
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "雲端翻譯會將您的文字及圖片分享給所選模型的服務供應商。請求可能經過 TLingo 的伺服器："
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "クラウド翻訳では、選択したモデルの提供元とテキストや画像を共有します。リクエストは TLingo のサーバーを経由する場合があります："
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "클라우드 번역은 선택한 모델의 제공업체와 텍스트 및 이미지를 공유합니다. 요청은 TLingo 서버를 거칠 수 있습니다:"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Cloud-Übersetzung teilt Ihre Texte und Bilder mit dem Anbieter des ausgewählten Modells. Anfragen können über die Server von TLingo laufen:"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La traduction dans le cloud partage vos textes et images avec le fournisseur du modèle sélectionné. Les requêtes peuvent passer par les serveurs de TLingo :"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La traducción en la nube comparte tus textos e imágenes con el proveedor del modelo seleccionado. Las solicitudes pueden pasar por los servidores de TLingo:"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La traduzione nel cloud condivide testi e immagini con il fornitore del modello selezionato. Le richieste possono passare attraverso i server di TLingo:"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A tradução na nuvem compartilha seus textos e imagens com o provedor do modelo selecionado. As solicitações podem passar pelos servidores do TLingo:"
-          }
-        },
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تشارك الترجمة السحابية النصوص والصور مع مزوّد النموذج المحدد. قد تمر الطلبات عبر خوادم TLingo:"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloudoversættelse deler din tekst og dine billeder med udbyderen af den valgte model. Anmodninger kan gå gennem TLingos servere:"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terjemahan cloud membagikan teks dan gambar Anda kepada penyedia model yang dipilih. Permintaan dapat melewati server TLingo:"
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terjemahan awan berkongsi teks dan imej anda dengan penyedia model yang dipilih. Permintaan mungkin melalui pelayan TLingo:"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skyoversettelse deler teksten og bildene dine med leverandøren av den valgte modellen. Forespørsler kan gå gjennom TLingos servere:"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloudvertaling deelt uw tekst en afbeeldingen met de aanbieder van het geselecteerde model. Verzoeken kunnen via de servers van TLingo lopen:"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tłumaczenie w chmurze udostępnia tekst i obrazy dostawcy wybranego modelu. Żądania mogą przechodzić przez serwery TLingo:"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Molnöversättning delar din text och dina bilder med leverantören av den valda modellen. Förfrågningar kan gå genom TLingos servrar:"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bulut çevirisi, metin ve görüntülerinizi seçilen modelin sağlayıcısıyla paylaşır. İstekler TLingo sunucularından geçebilir:"
-          }
-        }
-      }
-    },
     "TLingo v%@ (%@)" : {
       "localizations" : {
         "ar" : {
@@ -105573,7 +105948,6 @@
       }
     },
     "Try AI Writing Polish" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -113172,6 +113546,7 @@
       }
     },
     "Word Options" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -114534,130 +114909,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你已準備好進行翻譯"
-          }
-        }
-      }
-    },
-    "Cloud connections are encrypted. Provider privacy policies apply. On-device translation stays on your Mac." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cloud connections are encrypted. Provider privacy policies apply. On-device translation stays on your Mac."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接采用加密传输。云端处理适用服务提供商的隐私政策。设备端翻译会将您的输入保留在 Mac 上。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "連線採用加密傳輸。雲端處理適用服務供應商的隱私政策。裝置端翻譯會將您的輸入保留在 Mac 上。"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "連線採用加密傳輸。雲端處理適用服務供應商的私隱政策。裝置端翻譯會將您的輸入保留在 Mac 上。"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "接続は暗号化されます。クラウド処理には提供元のプライバシーポリシーが適用されます。デバイス上の翻訳では、入力は Mac 内に保持されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연결은 암호화됩니다. 클라우드 처리에는 제공업체의 개인정보 처리방침이 적용됩니다. 기기 내 번역은 입력을 Mac에 보관합니다."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindungen sind verschlüsselt. Für die Cloud-Verarbeitung gilt die Datenschutzerklärung des Anbieters. Bei Übersetzungen auf dem Gerät bleibt Ihre Eingabe auf Ihrem Mac."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les connexions sont chiffrées. La politique de confidentialité du fournisseur s’applique au traitement dans le cloud. La traduction sur l’appareil conserve vos données sur votre Mac."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las conexiones están cifradas. Al procesamiento en la nube se aplica la política de privacidad del proveedor. La traducción en el dispositivo mantiene tus datos en tu Mac."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le connessioni sono crittografate. Al trattamento nel cloud si applica l’informativa sulla privacy del fornitore. La traduzione sul dispositivo conserva i dati sul Mac."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As conexões são criptografadas. A política de privacidade do provedor se aplica ao processamento na nuvem. A tradução no dispositivo mantém seus dados no Mac."
-          }
-        },
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاتصالات مشفّرة. تنطبق سياسة خصوصية المزوّد على المعالجة السحابية. تحتفظ الترجمة على الجهاز بمدخلاتك على جهاز Mac."
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forbindelser er krypterede. Udbyderens privatlivspolitik gælder for behandling i skyen. Oversættelse på enheden holder dine data på din Mac."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koneksi dienkripsi. Kebijakan privasi penyedia berlaku untuk pemrosesan cloud. Terjemahan di perangkat menyimpan input Anda di Mac."
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sambungan disulitkan. Dasar privasi penyedia terpakai pada pemprosesan awan. Terjemahan pada peranti mengekalkan input anda pada Mac."
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forbindelser er kryptert. Leverandørens personvernerklæring gjelder for behandling i skyen. Oversettelse på enheten holder dataene dine på Macen."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindingen zijn versleuteld. Het privacybeleid van de aanbieder geldt voor verwerking in de cloud. Vertaling op het apparaat houdt uw invoer op uw Mac."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Połączenia są szyfrowane. Przetwarzanie w chmurze podlega polityce prywatności dostawcy. Tłumaczenie na urządzeniu zachowuje dane na Macu."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anslutningar är krypterade. Leverantörens integritetspolicy gäller för bearbetning i molnet. Översättning på enheten håller dina data på din Mac."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bağlantılar şifrelenir. Bulut işlemeye sağlayıcının gizlilik politikası uygulanır. Cihaz üzerinde çeviri, girdilerinizi Mac’inizde tutar."
           }
         }
       }
