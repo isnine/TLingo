@@ -10,7 +10,10 @@ struct TLingoHelperApp: App {
         MenuBarExtra {
             HelperMenu(model: model)
         } label: {
-            Image(systemName: model.state.symbol)
+            Image(nsImage: HelperMenuBarIcon.image(for: model.state))
+                .renderingMode(.template)
+                .accessibilityLabel("TLingoHelper")
+                .help(model.state.title)
         }
 
         Window("TLingoHelper", id: HelperSettingsView.windowID) {
@@ -21,6 +24,41 @@ struct TLingoHelperApp: App {
         .restorationBehavior(.disabled)
         // A menu bar helper only needs a window when setup is incomplete.
         .defaultLaunchBehavior(AXIsProcessTrusted() ? .suppressed : .presented)
+    }
+}
+
+@MainActor
+private enum HelperMenuBarIcon {
+    private static let ready = makeImage(badge: HelperModel.State.ready.symbol)
+    private static let paused = makeImage(badge: HelperModel.State.paused.symbol)
+    private static let needsAccessibility = makeImage(badge: HelperModel.State.needsAccessibility.symbol)
+
+    static func image(for state: HelperModel.State) -> NSImage {
+        switch state {
+        case .ready: ready
+        case .paused: paused
+        case .needsAccessibility: needsAccessibility
+        }
+    }
+
+    private static func makeImage(badge symbol: String) -> NSImage {
+        let base = NSImage(systemSymbolName: "character.bubble", accessibilityDescription: nil)!
+        let badge = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)!
+        let size = NSSize(width: base.size.width + 2, height: base.size.height + 2)
+        let image = NSImage(size: size, flipped: false) { _ in
+            base.draw(in: NSRect(origin: NSPoint(x: 0, y: 2), size: base.size))
+            let badgeRect = NSRect(x: size.width - 7, y: 0, width: 7, height: 9)
+            // Clear the bubble beneath the badge so template tinting preserves the gap.
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current?.compositingOperation = .copy
+            NSColor.clear.setFill()
+            NSBezierPath(roundedRect: badgeRect.insetBy(dx: -1, dy: -1), xRadius: 2, yRadius: 2).fill()
+            NSGraphicsContext.restoreGraphicsState()
+            badge.draw(in: badgeRect)
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 }
 
@@ -152,19 +190,29 @@ struct HelperSettingsView: View {
     }
 
     private var tlingoRow: some View {
-        LabeledContent {
-            Button("Open TLingo") { model.openTLingo() }
-                .disabled(model.tlingoStatus == .notInstalled)
-        } label: {
-            HStack(spacing: 10) {
-                Image(nsImage: tlingoIcon)
-                    .resizable()
-                    .frame(width: 28, height: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: "TLingo")
-                    tlingoStatusText
-                        .font(.subheadline)
+        VStack(alignment: .leading, spacing: 4) {
+            LabeledContent {
+                Button("Open TLingo") { model.openTLingo() }
+                    .disabled(model.tlingoStatus == .notInstalled)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(nsImage: tlingoIcon)
+                        .resizable()
+                        .frame(width: 28, height: 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: "TLingo")
+                        tlingoStatusText
+                            .font(.subheadline)
+                    }
                 }
+            }
+            if let url = tlingoURL {
+                Text(verbatim: url.path)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 38)
             }
         }
     }
@@ -187,13 +235,16 @@ struct HelperSettingsView: View {
         }
     }
 
-    private var tlingoIcon: NSImage {
-        let url: URL? = switch model.tlingoStatus {
+    private var tlingoURL: URL? {
+        switch model.tlingoStatus {
         case let .running(application): application.bundleURL
         case let .installed(url): url
         case .needsUpdate, .notInstalled: nil
         }
-        return url.map { NSWorkspace.shared.icon(forFile: $0.path) }
+    }
+
+    private var tlingoIcon: NSImage {
+        tlingoURL.map { NSWorkspace.shared.icon(forFile: $0.path) }
             ?? NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil)!
     }
 
