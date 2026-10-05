@@ -148,7 +148,7 @@ struct ResultContentView: View {
                         textColor: colors.textPrimary,
                         secondaryTextColor: colors.textSecondary,
                         accentColor: colors.accent,
-                        animatesText: true
+                        animatesText: false
                     )
                 )
                 .contentDirectionAware(text)

@@ -133,9 +133,9 @@ public final class HomeViewModel: ObservableObject {
         }
 
         public struct LatencyBreakdown {
-            /// Azure Functions ↔ Model (upstream TTFB)
+            /// Worker to upstream response headers, not the first content token.
             public let upstreamTTFB: TimeInterval
-            /// Client ↔ Azure Functions (estimated)
+            /// Client header wait excluding upstream header wait; includes Worker overhead.
             public let clientToAzure: TimeInterval
             /// Detailed network timing from URLSessionTaskMetrics
             public let networkMetrics: NetworkTimingMetrics?
@@ -164,6 +164,7 @@ public final class HomeViewModel: ObservableObject {
 
         public let model: ModelConfig
         public let markdownStreamSource = ConversationMarkdownStreamSource()
+        public var timingTrace: TranslationTimingTrace?
         public var status: Status
         public var presentation: Presentation = .standard
         /// Finished status per presentation, so switching back never re-requests.
@@ -405,8 +406,6 @@ public final class HomeViewModel: ObservableObject {
     private var allActions: [ActionConfig]
     public private(set) var currentRequestInputText: String = ""
     private var currentRequestImages: [ImageAttachment] = []
-    /// Timestamp-based throttle for streaming UI updates (~15Hz).
-    private var lastStreamingUpdateTime: [String: Date] = [:]
     /// When true, `performSelectedAction()` will be called automatically once models finish loading.
     private var pendingAutoAction: Bool = false
 
@@ -1000,6 +999,7 @@ public final class HomeViewModel: ObservableObject {
         refreshEntitlement: Bool = true,
         allowModelFallback: Bool = false
     ) {
+        let submittedAt = ContinuousClock.now
         cancelActiveRequest(clearResults: false)
         if refreshEntitlement {
             currentRequestTask = Task { [weak self] in
@@ -1008,20 +1008,23 @@ public final class HomeViewModel: ObservableObject {
                 // Already refreshed once; per-model requests reuse the cached result.
                 self?.performSelectedActionWithCurrentEntitlement(
                     refreshEntitlement: false,
-                    allowModelFallback: allowModelFallback
+                    allowModelFallback: allowModelFallback,
+                    submittedAt: submittedAt
                 )
             }
         } else {
             performSelectedActionWithCurrentEntitlement(
                 refreshEntitlement: false,
-                allowModelFallback: allowModelFallback
+                allowModelFallback: allowModelFallback,
+                submittedAt: submittedAt
             )
         }
     }
 
     private func performSelectedActionWithCurrentEntitlement(
         refreshEntitlement: Bool,
-        allowModelFallback: Bool
+        allowModelFallback: Bool,
+        submittedAt: ContinuousClock.Instant
     ) {
         // Check data sharing consent before sending any data (macOS only).
         // Direct distribution bypasses this notice — Direct users explicitly opted into
@@ -1093,9 +1096,6 @@ public final class HomeViewModel: ObservableObject {
         // Clear pending flag since we're now executing
         pendingAutoAction = false
 
-        // Clear throttle timestamps for this request
-        lastStreamingUpdateTime.removeAll()
-
         setResolvedTargetLanguage(nil, reason: "Starting selected action request")
         setDetectedSourceLanguage(nil, reason: "Starting selected action request")
 
@@ -1117,7 +1117,10 @@ public final class HomeViewModel: ObservableObject {
         requestGenerationTracker.begin(generation: generation, runTokens: runTokens)
 
         modelRuns = modelsToUse.map {
-            ModelRunViewState(model: $0, status: .running(start: Date()))
+            ModelRunViewState(
+                model: $0, timingTrace: TranslationTimingTrace(startedAt: submittedAt),
+                status: .running(start: Date())
+            )
         }
 
         // Runs that open as sentence pairs request them directly instead of the whole translation first.
@@ -1236,6 +1239,7 @@ public final class HomeViewModel: ObservableObject {
 
         // Reset UI state for this specific run
         modelRuns[index].markdownStreamSource.reset()
+        modelRuns[index].timingTrace = TranslationTimingTrace()
         modelRuns[index].status = .running(start: Date())
         if !keepsResultOrder {
             modelRuns[index].firstOutputAt = nil
@@ -1262,6 +1266,17 @@ public final class HomeViewModel: ObservableObject {
         }
         // Pull latest cross-process logs (extension may have written to file)
         NetworkRequestLogger.shared.reloadFromFile()
+
+        if let timing = modelRuns.first(where: { $0.id == runID })?.timingTrace?.snapshot(),
+           var record = NetworkRequestLogger.shared.records.first(where: {
+               $0.requestHeaders.contains { $0.key.caseInsensitiveCompare("X-Request-ID") == .orderedSame
+                   && $0.value == timing.requestID }
+           })
+        {
+            record.translationTiming = timing
+            selectedDebugNetworkRecord = record
+            return
+        }
 
         let path = "/\(runID)/chat/completions"
 
@@ -2085,10 +2100,12 @@ public final class HomeViewModel: ObservableObject {
                     apply(result: shortCircuit, context: context, runToken: serviceRunToken, allowDiff: false)
                 } else {
                     let sourceCode: String? = resolved.sourceCode
+                    let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
                     Task { [weak self] in
                         guard let self else { return }
                         let result = await MicrosoftTranslateService.shared.translate(
-                            text: text, sourceCode: sourceCode, targetCode: resolvedTarget.rawValue
+                            text: text, sourceCode: sourceCode, targetCode: resolvedTarget.rawValue,
+                            timingTrace: timingTrace
                         )
                         guard self.isRunStillValid(
                             context,
@@ -2123,6 +2140,29 @@ public final class HomeViewModel: ObservableObject {
             return
         }
 
+        let coalescers = Dictionary(uniqueKeysWithValues: cloudModels.map { model in
+            (model.id, StreamingUpdateCoalescer { [weak self] update in
+                guard let self, let token = runTokens[model.id],
+                      self.isRunStillValid(context, runID: model.id, runToken: token),
+                      let index = self.modelRuns.firstIndex(where: { $0.id == model.id })
+                else { return }
+                let now = Date()
+                let startDate = self.modelRuns[index].startDate ?? now
+                self.modelRuns[index].timingTrace?.mark(.firstUIUpdate)
+                if self.modelRuns[index].firstOutputAt == nil {
+                    self.modelRuns[index].firstOutputAt = now
+                }
+                switch update {
+                case let .text(text):
+                    self.modelRuns[index].markdownStreamSource.yield(text)
+                    self.modelRuns[index].status = .streaming(text: text, start: startDate)
+                case let .sentencePairs(pairs):
+                    self.modelRuns[index].status = .streamingSentencePairs(pairs: pairs, start: startDate)
+                }
+            })
+        })
+        defer { coalescers.values.forEach { $0.cancel() } }
+
         let results = await llmService.perform(
             text: text,
             with: action,
@@ -2133,50 +2173,22 @@ public final class HomeViewModel: ObservableObject {
             onboardingTrial: !onboardingTrialModels.isEmpty,
             refreshEntitlement: context.refreshEntitlement,
             cachedIsPremium: context.cachedIsPremium,
+            timingTraces: Dictionary(uniqueKeysWithValues: modelRuns.compactMap { run in
+                run.timingTrace.map { (run.id, $0) }
+            }),
             partialHandler: { [weak self] modelID, update in
                 guard let self else { return }
                 guard let runToken = runTokens[modelID],
                       self.isRunStillValid(context, runID: modelID, runToken: runToken)
                 else { return }
-                guard let index = self.modelRuns.firstIndex(where: { $0.id == modelID }) else {
-                    return
-                }
-
-                // Throttle streaming UI updates to ~15Hz (66ms)
-                let now = Date()
-                if let lastUpdate = self.lastStreamingUpdateTime[modelID],
-                   now.timeIntervalSince(lastUpdate) < 0.066
-                {
-                    return
-                }
-                self.lastStreamingUpdateTime[modelID] = now
-
-                let startDate = self.modelRuns[index].startDate ?? Date()
-                switch update {
-                case let .text(partialText):
-                    if !partialText.isEmpty, self.modelRuns[index].firstOutputAt == nil {
-                        self.modelRuns[index].firstOutputAt = now
-                    }
-                    self.modelRuns[index].markdownStreamSource.yield(partialText)
-                    self.modelRuns[index].status = .streaming(
-                        text: partialText,
-                        start: startDate
-                    )
-                case let .sentencePairs(pairs):
-                    if !pairs.isEmpty, self.modelRuns[index].firstOutputAt == nil {
-                        self.modelRuns[index].firstOutputAt = now
-                    }
-                    self.modelRuns[index].status = .streamingSentencePairs(
-                        pairs: pairs,
-                        start: startDate
-                    )
-                }
+                coalescers[modelID]?.append(update)
             },
             completionHandler: { [weak self] result in
                 guard let self else { return }
                 guard let runToken = runTokens[result.modelID],
                       self.isRunStillValid(context, runID: result.modelID, runToken: runToken)
                 else { return }
+                coalescers[result.modelID]?.flush()
                 self.modelRuns.first { $0.id == result.modelID }?.markdownStreamSource.finish()
                 self.apply(
                     result: result,
@@ -2410,6 +2422,7 @@ public final class HomeViewModel: ObservableObject {
                         latencyBreakdown: latencyBreakdown,
                         suggestedActions: result.suggestedActions
                     ))
+                    self.modelRuns[currentIndex].timingTrace?.mark(.resultApplied)
                 }
             } else {
                 modelRuns[index].status = .success(ModelRunViewState.SuccessResult(
@@ -2422,6 +2435,7 @@ public final class HomeViewModel: ObservableObject {
                     latencyBreakdown: latencyBreakdown,
                     suggestedActions: result.suggestedActions
                 ))
+                modelRuns[index].timingTrace?.mark(.resultApplied)
             }
 
         case let .failure(error):
@@ -2438,6 +2452,7 @@ public final class HomeViewModel: ObservableObject {
                 duration: result.duration,
                 responseBody: responseBody
             )
+            modelRuns[index].timingTrace?.mark(.resultApplied)
             let failedRun = modelRuns.remove(at: index)
             modelRuns.append(failedRun)
         }

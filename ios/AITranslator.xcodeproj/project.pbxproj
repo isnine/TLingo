@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
 		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
 		AF1100000000000000000010 /* AITranslator/TextSelection/AccessibilityGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */; };
@@ -33,6 +32,7 @@
 		CE4EB10F2EA33CAD00DDDFA5 /* TLingoTranslation.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CE4EB12B2EA4F4B000DDDFA5 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
 		CE6A10012FF4400000AA0001 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = CE6A10032FF4400000AA0001 /* SnapshotTesting */; };
+		CE7F10012FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		CE7F10022FF5000000000001 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = CE7F10032FF5000000000001 /* PermissionFlow */; };
 		CE9B52832F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };
 		CE9B52842F70331F00914308 /* TLingo: AI Translator.storekit in Resources */ = {isa = PBXBuildFile; fileRef = CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */; };

@@ -27,6 +27,7 @@ public struct NetworkRequestRecord: Identifiable, Codable, Sendable {
     public var responseBodyByteCount: Int?
     public var latency: TimeInterval?
     public var errorDescription: String?
+    public var translationTiming: TranslationTimingTrace.Snapshot?
 
     public enum Source: String, Codable, Sendable {
         case app
@@ -47,7 +48,8 @@ public struct NetworkRequestRecord: Identifiable, Codable, Sendable {
         responseBody: Data? = nil,
         responseBodyByteCount: Int? = nil,
         latency: TimeInterval? = nil,
-        errorDescription: String? = nil
+        errorDescription: String? = nil,
+        translationTiming: TranslationTimingTrace.Snapshot? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -63,6 +65,7 @@ public struct NetworkRequestRecord: Identifiable, Codable, Sendable {
         self.responseBodyByteCount = responseBodyByteCount
         self.latency = latency
         self.errorDescription = errorDescription
+        self.translationTiming = translationTiming
     }
 }
 
@@ -142,7 +145,8 @@ extension NetworkRequestRecord {
             responseBody: Self.sanitizedBody(responseBody),
             responseBodyByteCount: responseBodyByteCount ?? responseBody?.count,
             latency: latency,
-            errorDescription: errorDescription.map(FeedbackLogSanitizer.sanitizeLogMessage)
+            errorDescription: errorDescription.map(FeedbackLogSanitizer.sanitizeLogMessage),
+            translationTiming: translationTiming
         )
     }
 
@@ -228,6 +232,20 @@ extension NetworkRequestRecord {
             guard let data else { return "<not captured; \(count.map(String.init) ?? "unknown") bytes>" }
             return String(decoding: data, as: UTF8.self)
         }
+        let timingReport = safe.translationTiming.map { timing in
+            let milestones = timing.milliseconds.sorted { $0.value < $1.value }
+                .map { "\($0.key): \(String(format: "%.1f", $0.value)) ms" }.joined(separator: "\n")
+            return """
+            ## Translation timing
+            Correlation ID: \(timing.requestID)
+            Milestones relative to submission (monotonic clock):
+            \(milestones)
+            Content delta events (not tokenizer tokens): \(timing.contentChunks)
+            Upstream response headers: \(timing.upstreamHeaderMilliseconds.map { String(format: "%.1f ms", $0) } ?? "unavailable")
+            Server-Timing: \(timing.serverTiming ?? "unavailable")
+            Display callbacks, when present, are frame approximations, not pixel visibility measurements.
+            """
+        } ?? ""
         return """
         # TLingo Network Debug
         App: \(version) (\(build))
@@ -250,6 +268,8 @@ extension NetworkRequestRecord {
         \(headers(safe.responseHeaders ?? [:]))
         Body bytes: \(safe.responseBodyByteCount.map(String.init) ?? "unknown")
         \(safe.responseForReport ?? body(nil, count: safe.responseBodyByteCount))
+
+        \(timingReport)
         """
     }
 }

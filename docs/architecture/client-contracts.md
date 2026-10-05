@@ -41,6 +41,24 @@ headers = X-Timestamp, X-Signature
 
 `/models` 返回的 `tags` 是有序字符串数组。可选 `tagStyles` 按标签文字匹配，每项可提供 `textColor` 和 `backgroundColor`（`#RRGGBB`）；缺省或无法解析时使用默认颜色。
 
+`Recommended` 标签仅用于 `gemini-3.8-flash`，不改变免费默认模型或用户已保存的选择。
+会员目录包含 `deepseek-v4-pro`（DeepSeek-V4-Pro），其 `isPremium: true`、`supportsVision: false`；
+沿用聊天请求及结构化输出契约，不支持图片输入。`deepseek-flash` 继续保留且支持图片。
+
+## 文本流式计时
+
+聊天请求发送随机 UUID `X-Request-ID`，仅用于关联诊断，不包含输入、身份或设备标识，也不改变 HMAC。
+支持新埋点的 Worker 回显该 header，并返回
+`Server-Timing: preupstream;dur=<ms>, upstream;dur=<ms>`；旧服务端只返回 `upstream` 仍兼容。
+`X-Upstream-TTFB` 表示上游响应 header 等待时间，不代表首个内容 token。
+末个内容、`[DONE]` 与传输 EOF 只能在流中或结束日志里测量，不能事后补写已发出的响应 header。
+
+客户端使用单调时钟，分别记录提交后请求准备、响应 header、首个/末个非空内容 delta、
+首个可展示的解析结果、首个 UI 更新和最终结果应用。JSON 前缀、reasoning、usage、空 delta
+不能当作用户已经看到翻译。内容 delta 是流式事件片段，不等于 tokenizer token。
+header 等待减上游 header 等待仅是包含 Worker 前置开销的估计，不得用完整生成耗时推算网络延迟。
+非流式返回一次显示完整内容，不模拟逐字播放。
+
 ## 微软翻译
 
 `POST /api/translate/microsoft` 接收 `{text, sourceCode?, targetCode}`，省略源语言时自动检测，返回 `{text}`。文本上限 50000 UTF-16 code units。

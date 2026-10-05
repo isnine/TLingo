@@ -278,6 +278,23 @@ struct LLMServiceSuggestionTests {
         #expect(payload.contains("\"stream\":false"))
     }
 
+    @Test("Non-streaming fallback publishes the complete response once without a typewriter delay")
+    func fallbackPublishesCompleteResponse() async throws {
+        let capture = ConversationResponseCapture()
+        let session = URLSession(configuration: MockLLMURLProtocol.configuration)
+        MockLLMURLProtocol.reset()
+        let text = String(repeating: "Translated paragraph. ", count: 200)
+        MockLLMURLProtocol.responseBody = try Self.chatResponse(content: text)
+        let service = LLMService(urlSession: session)
+        let response = try await service.sendContinuation(
+            messages: [.init(role: "user", content: "Reply.")],
+            model: Self.model,
+            partialHandler: { capture.values.append($0) }
+        )
+        #expect(capture.values == [response])
+        #expect(response.content == text.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
     private static let model = ModelConfig(id: "gpt-test", displayName: "GPT Test")
 
     private static func chatResponse(content: String, reasoning: String? = nil) throws -> Data {

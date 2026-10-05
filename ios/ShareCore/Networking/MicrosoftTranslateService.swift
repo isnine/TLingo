@@ -8,7 +8,10 @@ public final class MicrosoftTranslateService: Sendable {
         self.session = session
     }
 
-    public func translate(text: String, sourceCode: String?, targetCode: String) async -> ModelExecutionResult {
+    public func translate(
+        text: String, sourceCode: String?, targetCode: String,
+        timingTrace: TranslationTimingTrace? = nil
+    ) async -> ModelExecutionResult {
         let start = Date()
         do {
             var request = URLRequest(url: CloudServiceConstants.endpoint.appendingPathComponent("translate/microsoft"))
@@ -16,11 +19,16 @@ public final class MicrosoftTranslateService: Sendable {
             request.timeoutInterval = 20
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            if let timingTrace {
+                request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
+            }
             CloudAuthHelper.applyAuth(to: &request, path: "/translate/microsoft")
             var body = ["text": text, "targetCode": targetCode]
             body["sourceCode"] = sourceCode
             request.httpBody = try JSONEncoder().encode(body)
+            timingTrace?.mark(.requestPrepared)
             let (data, response) = try await session.data(for: request)
+            timingTrace?.mark(.streamFinished)
             guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
             guard http.statusCode == 200 else {
                 throw ModelsServiceError.httpError(statusCode: http.statusCode, body: nil)

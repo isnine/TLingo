@@ -83,7 +83,15 @@ struct AITranslatorApp: App {
             #if os(macOS)
                 MainWindowContent()
             #else
-                RootTabView()
+                #if DEBUG
+                    if ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK"] == "1" {
+                        TextTranslationBenchmarkView()
+                    } else {
+                        RootTabView()
+                    }
+                #else
+                    RootTabView()
+                #endif
             #endif
         }
         #if os(macOS)

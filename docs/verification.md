@@ -69,6 +69,26 @@ xcodebuild -project ios/AITranslator.xcodeproj -scheme TLingoUITests \
   -only-testing:TLingoUITests/ModelResultOrderUITests test
 ```
 
+## 文本翻译延迟 benchmark（仅 Debug iOS，显式启用）
+
+在指定模拟器安装 Debug App 后，用 `simctl launch` 传入：
+
+```bash
+SIMCTL_CHILD_TLINGO_TEXT_BENCHMARK=1 \
+SIMCTL_CHILD_TLINGO_TEXT_BENCHMARK_REPEATS=3 \
+SIMCTL_CHILD_TLINGO_TEXT_BENCHMARK_OUTPUT=<app-data-container>/Documents/text-benchmark \
+xcrun simctl launch --terminate-running-process <UDID> com.zanderwang.AITranslator
+```
+
+可用 `SIMCTL_CHILD_TLINGO_TEXT_BENCHMARK_MODELS=<comma-separated-IDs>` 限定模型。
+benchmark 使用隔离的偏好、生产 `HomeViewModel`、鉴权、请求及结果卡片，英文译为简体中文；
+短文本重复指定次数，长段落一次，模型串行执行。不会改变用户模型选择、默认模型或会员权限。
+输出 `models.json`、`inputs.json`、逐条持久化的 `results.json` 和成功结束标记 `complete.txt`。
+HTTP 成功不等于翻译质量正确；失败与不可用模型不纳入成功延迟统计。
+`firstUIFrame` / `finalUIFrame` 是结果卡片更新后第二个 display callback 的近似值，
+不是像素可见性或 Markdown 解析完成的精确证明；必须结合截图或录屏检查，
+不可将后台/屏幕外的 UI 更新当作用户已经看到完整结果。
+
 ## 文档
 
 - Markdown 相对链接必须解析到 tracked 文件。

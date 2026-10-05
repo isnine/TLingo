@@ -106,17 +106,11 @@ public final class LLMService {
         return (stripped, [])
     }
 
-    /// Extracts upstream TTFB and estimates client-to-Azure latency from response headers.
-    private func extractLatency(
-        from response: HTTPURLResponse,
-        totalDuration: TimeInterval
-    ) -> (upstreamTTFB: TimeInterval, clientToAzure: TimeInterval)? {
+    private func extractUpstreamTTFB(from response: HTTPURLResponse) -> TimeInterval? {
         guard let ttfbString = response.value(forHTTPHeaderField: "X-Upstream-TTFB"),
-              let ttfbMs = Double(ttfbString)
+              let ttfbMs = Double(ttfbString), ttfbMs.isFinite, ttfbMs >= 0
         else { return nil }
-        let upstream = ttfbMs / 1000.0
-        let clientAzure = max(totalDuration - upstream, 0)
-        return (upstream, clientAzure)
+        return ttfbMs / 1000
     }
 
     public func perform(
@@ -129,6 +123,7 @@ public final class LLMService {
         onboardingTrial: Bool = false,
         refreshEntitlement: Bool = true,
         cachedIsPremium: Bool? = nil,
+        timingTraces: [String: TranslationTimingTrace] = [:],
         partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)? = nil,
         completionHandler: (@MainActor @Sendable (ModelExecutionResult) -> Void)? = nil
     ) async -> [ModelExecutionResult] {
@@ -171,6 +166,7 @@ public final class LLMService {
                             onboardingTrial: onboardingTrial,
                             refreshEntitlement: refreshEntitlement,
                             cachedIsPremium: cachedIsPremium,
+                            timingTrace: timingTraces[model.id] ?? TranslationTimingTrace(),
                             partialHandler: partialHandler
                         )
                     } catch is CancellationError {
@@ -205,6 +201,7 @@ public final class LLMService {
         onboardingTrial: Bool = false,
         refreshEntitlement: Bool = true,
         cachedIsPremium: Bool? = nil,
+        timingTrace: TranslationTimingTrace,
         partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
         let start = Date()
@@ -216,6 +213,7 @@ public final class LLMService {
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
 
         let path = "/\(model.id)/chat/completions"
         if onboardingTrial {
@@ -322,6 +320,7 @@ public final class LLMService {
             )
 
             try Task.checkCancellation()
+            timingTrace.mark(.requestPrepared)
 
             if enableStreaming, let partialHandler {
                 return try await handleModelStreamingRequest(
@@ -330,12 +329,15 @@ public final class LLMService {
                     model: model,
                     decoder: decoder,
                     structuredOutputConfig: structuredOutputConfig,
+                    timingTrace: timingTrace,
                     partialHandler: partialHandler
                 )
             } else {
                 let (data, response) = try await urlSession.data(for: request)
 
                 let httpResponse = try response.asHTTP(or: URLError(.badServerResponse))
+                timingTrace.recordResponseMetadata(httpResponse)
+                timingTrace.mark(.streamFinished)
 
                 let responseString = String(data: data, encoding: .utf8) ?? ""
                 logger.debug("Response from \(model.displayName, privacy: .public): bytes=\(data.count, privacy: .public)")
@@ -352,7 +354,7 @@ public final class LLMService {
                 guard !trimmed.isEmpty else { throw LLMServiceError.emptyContent }
                 let (cleanedText, suggestions) = Self.extractSuggestedActions(from: trimmed)
                 let duration = Date().timeIntervalSince(start)
-                let latency = extractLatency(from: httpResponse, totalDuration: duration)
+                let upstreamTTFB = extractUpstreamTTFB(from: httpResponse)
                 return ModelExecutionResult(
                     modelID: model.id,
                     duration: duration,
@@ -361,8 +363,8 @@ public final class LLMService {
                     supplementalTexts: parsed.supplementalTexts,
                     sentencePairs: parsed.sentencePairs,
                     suggestedActions: suggestions,
-                    upstreamTTFB: latency?.upstreamTTFB,
-                    clientToAzureLatency: latency?.clientToAzure
+                    upstreamTTFB: upstreamTTFB,
+                    clientToAzureLatency: nil
                 )
             }
         } catch is CancellationError {
@@ -382,6 +384,7 @@ public final class LLMService {
         model: ModelConfig,
         decoder: JSONDecoder,
         structuredOutputConfig: ActionConfig.StructuredOutputConfig?,
+        timingTrace: TranslationTimingTrace,
         partialHandler: @escaping @MainActor @Sendable (String, StreamingUpdate) -> Void
     ) async throws -> ModelExecutionResult {
         let (bytes, response) = try await urlSession.bytes(for: request)
@@ -389,8 +392,9 @@ public final class LLMService {
         try Task.checkCancellation()
 
         let httpResponse = try response.asHTTP(or: URLError(.badServerResponse))
+        timingTrace.receiveHeaders(httpResponse)
 
-        let upstreamTTFBMs = (httpResponse.value(forHTTPHeaderField: "X-Upstream-TTFB")).flatMap(Double.init)
+        let upstreamTTFBMs = timingTrace.snapshot().upstreamHeaderMilliseconds
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
             var errorBytes: [UInt8] = []
@@ -421,26 +425,33 @@ public final class LLMService {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard trimmedLine.hasPrefix("data:") else { continue }
                 let payload = trimmedLine.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
-                if payload == "[DONE]" {
-                    break
-                }
+                if payload == "[DONE]" { break }
 
                 guard let data = payload.data(using: .utf8), !data.isEmpty else { continue }
                 let chunk = try decoder.decode(ChatCompletionsStreamChunk.self, from: data)
                 let deltaText = chunk.combinedText
                 guard !deltaText.isEmpty else { continue }
+                timingTrace.receiveContent()
                 aggregatedText.append(deltaText)
 
                 if let parser = sentencePairParser {
                     let pairs = parser.append(deltaText)
+                    if !pairs.isEmpty {
+                        timingTrace.mark(.firstUsefulContent)
+                    }
                     await partialHandler(model.id, .sentencePairs(pairs))
                 } else if let parser = structuredParser {
                     let displayText = parser.append(deltaText)
+                    if !displayText.isEmpty {
+                        timingTrace.mark(.firstUsefulContent)
+                    }
                     await partialHandler(model.id, .text(displayText))
                 } else {
+                    timingTrace.mark(.firstUsefulContent)
                     await partialHandler(model.id, .text(aggregatedText))
                 }
             }
+            timingTrace.mark(.streamFinished)
 
             let finalText = aggregatedText.trimmingCharacters(in: .whitespacesAndNewlines)
             try Task.checkCancellation()
@@ -466,7 +477,7 @@ public final class LLMService {
                     sentencePairs: pairs,
                     suggestedActions: suggestions,
                     upstreamTTFB: upstream,
-                    clientToAzureLatency: upstream.map { max(duration - $0, 0) }
+                    clientToAzureLatency: timingTrace.clientHeaderOverhead
                 )
             }
 
@@ -485,7 +496,7 @@ public final class LLMService {
                         sentencePairs: [],
                         suggestedActions: suggestions,
                         upstreamTTFB: upstream,
-                        clientToAzureLatency: upstream.map { max(duration - $0, 0) }
+                        clientToAzureLatency: timingTrace.clientHeaderOverhead
                     )
                 }
             }
@@ -499,7 +510,7 @@ public final class LLMService {
                 response: .success(cleanedFinalText),
                 suggestedActions: suggestions,
                 upstreamTTFB: upstream,
-                clientToAzureLatency: upstream.map { max(duration - $0, 0) }
+                clientToAzureLatency: timingTrace.clientHeaderOverhead
             )
         } else {
             var responseBytes: [UInt8] = []
@@ -507,6 +518,7 @@ public final class LLMService {
                 try Task.checkCancellation()
                 responseBytes.append(chunk)
             }
+            timingTrace.mark(.streamFinished)
             let data = Data(responseBytes)
 
             logger.debug("Non-stream response from \(model.displayName, privacy: .public): bytes=\(data.count, privacy: .public)")
@@ -533,7 +545,7 @@ public final class LLMService {
                 sentencePairs: parsed.sentencePairs,
                 suggestedActions: suggestions,
                 upstreamTTFB: upstreamTTFBMs.map { $0 / 1000.0 },
-                clientToAzureLatency: upstreamTTFBMs.map { max(Date().timeIntervalSince(start) - $0 / 1000.0, 0) }
+                clientToAzureLatency: timingTrace.clientHeaderOverhead
             )
         }
     }
@@ -820,13 +832,9 @@ public final class LLMService {
         _ text: String,
         publish: @escaping @MainActor @Sendable (String) -> Void
     ) async throws {
-        let characterCount = text.count
-        for endOffset in stride(from: 16, through: characterCount + 15, by: 16) {
-            try Task.checkCancellation()
-            let endIndex = text.index(text.startIndex, offsetBy: min(endOffset, characterCount))
-            await publish(String(text[..<endIndex]))
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        try Task.checkCancellation()
+        await publish(text)
+        try Task.checkCancellation()
     }
 
     private func runHistoryAnnotationTool(
