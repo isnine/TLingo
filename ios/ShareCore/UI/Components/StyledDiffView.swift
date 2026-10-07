@@ -32,7 +32,7 @@ struct StyledDiffView: View {
     }
 
     private func diffBlock(
-        title: String,
+        title: LocalizedStringKey,
         systemImage: String,
         segments: [TextDiffBuilder.Segment],
         tint: Color

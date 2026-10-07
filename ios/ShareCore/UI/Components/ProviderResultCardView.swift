@@ -365,7 +365,7 @@ struct ResultBottomInfoBar: View {
         }
     }
 
-    private func streamingBar(statusText: String, start: Date) -> some View {
+    private func streamingBar(statusText: LocalizedStringKey, start: Date) -> some View {
         HStack(spacing: 8) {
             ProgressView()
                 .progressViewStyle(.circular)
