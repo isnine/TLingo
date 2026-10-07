@@ -2135,10 +2135,23 @@ public struct HomeView: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.vertical, 4)
             }
+            // Bleed past the container's 20pt padding to the screen edge on iPhone,
+            // while resting content stays aligned with the rows above and below.
+            .contentMargins(.horizontal, actionChipsEdgeBleed, for: .scrollContent)
+            .padding(.horizontal, -actionChipsEdgeBleed)
             .onChange(of: viewModel.selectedActionID) { _, actionID in
                 scrollActionChip(actionID, proxy: proxy)
             }
         }
+    }
+
+    /// Wide layouts center a width-limited column, so bleeding there would overshoot it.
+    private var actionChipsEdgeBleed: CGFloat {
+        #if os(iOS)
+            horizontalSizeClass == .compact ? 20 : 0
+        #else
+            0
+        #endif
     }
 
     private func actionChipsStack(onActionSelected: @escaping (ActionConfig.ID) -> Void) -> some View {
