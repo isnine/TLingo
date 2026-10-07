@@ -7,9 +7,9 @@ import Foundation
 
 public enum ModelListSection: String, CaseIterable, Codable, Identifiable, Sendable {
     case translation
-    case appleIntelligence
     case free
     case premium
+    case appleIntelligence
 
     public var id: String {
         rawValue

@@ -30,8 +30,8 @@ struct ModelResultOrderTests {
         let secondPremium = ModelConfig(id: "premium-2", displayName: "Premium 2", isPremium: true)
         let catalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium])
         #expect(catalog.map(\.id) == ModelConfig.translationServices.map(\.id)
-            + ModelConfig.appleIntelligenceModels.map(\.id)
-            + [free.id, premium.id, secondPremium.id])
+            + [free.id, premium.id, secondPremium.id]
+            + ModelConfig.appleIntelligenceModels.map(\.id))
     }
 
     @Test func customGroupAndModelOrderControlsResults() {
@@ -58,7 +58,7 @@ struct ModelResultOrderTests {
         var order = ModelListOrder()
         order.sections = [.free, .free]
         order.modelIDsBySection[ModelListSection.free.rawValue] = ["removed", free.id, free.id]
-        #expect(order.orderedSections == [.free, .translation, .appleIntelligence, .premium])
+        #expect(order.orderedSections == [.free, .translation, .premium, .appleIntelligence])
         #expect(order.models(in: .free, cloudModels: [newModel, premium, free]).map(\.id)
             == [free.id, newModel.id])
         #expect(order.models(in: .premium, cloudModels: [newModel, premium, free]) == [premium])
