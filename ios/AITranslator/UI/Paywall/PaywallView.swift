@@ -285,6 +285,7 @@ struct CelebrationOverlay: View {
     let colors: AppColorPalette
     let title: LocalizedStringKey
     let subtitle: LocalizedStringKey
+    let toastTopInset: CGFloat?
 
     private static let pieces: [ConfettiPiece] = (0 ..< 70).map { _ in ConfettiPiece.random() }
 
@@ -293,11 +294,13 @@ struct CelebrationOverlay: View {
     init(
         colors: AppColorPalette,
         title: LocalizedStringKey = "Thank You for Subscribing!",
-        subtitle: LocalizedStringKey = "Premium features are now unlocked."
+        subtitle: LocalizedStringKey = "Premium features are now unlocked.",
+        toastTopInset: CGFloat? = nil
     ) {
         self.colors = colors
         self.title = title
         self.subtitle = subtitle
+        self.toastTopInset = toastTopInset
     }
 
     var body: some View {
@@ -359,6 +362,8 @@ struct CelebrationOverlay: View {
             .opacity(animate ? 1 : 0)
             .scaleEffect(animate ? 1 : 0.85)
             .animation(.spring(response: 0.5, dampingFraction: 0.75), value: animate)
+            .padding(.top, toastTopInset ?? 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: toastTopInset == nil ? .center : .top)
         }
         .ignoresSafeArea()
         .onAppear { animate = true }

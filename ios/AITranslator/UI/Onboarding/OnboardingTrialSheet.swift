@@ -48,7 +48,7 @@
                     onReplace: nil,
                     onConversation: nil
                 )
-                .navigationTitle("Translate with TLingo")
+                .navigationTitle("Grammar Check")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -80,6 +80,11 @@
                 return
             }
             viewModel.refreshConfiguration()
+            guard let grammarAction = viewModel.actions.first(where: { $0.outputType == .grammarCheck }) else {
+                logger.error("Trial sheet found no Grammar Check action; skipping auto-trigger")
+                return
+            }
+            viewModel.selectAction(grammarAction)
             viewModel.inputText = trimmed
             viewModel.performSelectedAction()
         }

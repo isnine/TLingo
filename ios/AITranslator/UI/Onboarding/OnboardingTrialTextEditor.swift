@@ -164,7 +164,7 @@
             )
 
             // `.standardEdit` already contains Copy/Paste/Select; placing the
-            // custom action ahead of it surfaces "Translate" as the first
+            // custom action ahead of it surfaces the trial action as the first
             // entry, mirroring where iOS normally lists its Translate item.
             builder.insertSibling(menu, beforeMenu: .standardEdit)
         }

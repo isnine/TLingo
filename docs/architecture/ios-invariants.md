@@ -22,6 +22,11 @@ review_triggers:
 - On-device Foundation Model requests never use the Worker and do not count toward the free cloud-model limit.
 - Private Cloud Compute selection requires `PrivateCloudComputeLanguageModel.availability == .available`; the App Store app and translation extension carry the managed PCC entitlement, PCC never uses the Worker, and the selection remains enabled when quota or service errors occur.
 
+## Default Translation Onboarding
+
+- Opening the translation extension unlocks Continue; it never advances the onboarding page automatically.
+- During the trial, the extension invocation notification immediately triggers the existing celebration overlay in the main app, independently of translation completion. Its toast sits below the top safe area so it remains visible above the extension sheet. The extension UI remains unchanged.
+
 ## Language Resolution
 
 - Detection equivalence and translation equivalence are separate concepts.

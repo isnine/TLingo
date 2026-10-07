@@ -163,14 +163,16 @@
         @State private var step: Step = .intro
         @State private var showCelebration = false
         @State private var didTriggerSuccessEffects = false
-        @State private var trialCompletedAtEntry = false
+        @State private var showTrialCelebration = false
+        @State private var didCelebrateTrialInvocation = false
+        @State private var trialInvocationAtEntry: Date?
         @State private var showSkipOption = false
         @State private var premiumStage: PremiumStage?
         @State private var premiumModels: [ModelConfig] = []
         @State private var selectedPremiumIDs: Set<String> = []
         @State private var trialProduct: Product?
         /// Editable text the user can preview through the picked premium model.
-        @State private var trialInputText: String = Self.practiceText
+        @State private var trialInputText: String = Self.grammarPracticeText
         @State private var trialSheetRequest: TrialSheetRequest?
         @State private var feedbackDraft: FeedbackMailDraft?
         /// nil = not resolved yet, true/false once `loadTrialProduct()` ran.
@@ -268,6 +270,9 @@
         }
 
         private static let practiceText = "The quickest way to learn a language is to use it in real moments."
+        private static let grammarPracticeText = "Yesterday I go to the library to study English. " +
+            "My friend help me with my homework, and we was happy with the progress. " +
+            "I want to practice more so I can speaks confidently."
 
         private var colors: AppColorPalette {
             AppColors.Palette(colorScheme: colorScheme, accentTheme: preferences.accentTheme)
@@ -294,11 +299,12 @@
                         scrollingLayout(metrics: metrics)
                     }
 
-                    if showCelebration {
+                    if showCelebration || showTrialCelebration {
                         CelebrationOverlay(
                             colors: colors,
-                            title: celebrationTitle,
-                            subtitle: celebrationSubtitle
+                            title: showTrialCelebration ? "TLingo is ready" : celebrationTitle,
+                            subtitle: showTrialCelebration ? "Selected text translation is working." : celebrationSubtitle,
+                            toastTopInset: showTrialCelebration ? proxy.safeAreaInsets.top + 24 : nil
                         )
                         .transition(.opacity)
                         .allowsHitTesting(false)
@@ -309,15 +315,16 @@
             .tint(colors.accent)
             .onAppear {
                 preferences.refreshFromDefaults()
-                advanceToSuccessIfNeeded()
+                celebrateTrialInvocationIfNeeded()
                 if trialNotifierToken == nil {
                     trialNotifierToken = DefaultTranslationTrialNotifier.addObserver {
                         preferences.refreshFromDefaults()
-                        advanceToSuccessIfNeeded()
+                        celebrateTrialInvocationIfNeeded()
                     }
                 }
             }
             .onDisappear {
+                showTrialCelebration = false
                 if let token = trialNotifierToken {
                     DefaultTranslationTrialNotifier.removeObserver(token)
                     trialNotifierToken = nil
@@ -327,10 +334,12 @@
                 handleScenePhaseChange(phase)
             }
             .onChange(of: step) { _, newStep in
+                showTrialCelebration = false
                 switch newStep {
                 case .tryIt:
                     preferences.refreshFromDefaults()
-                    trialCompletedAtEntry = preferences.hasCompletedDefaultTranslationTrial
+                    trialInvocationAtEntry = preferences.lastDefaultTranslationTrialAt
+                    didCelebrateTrialInvocation = false
                     showSkipOption = false
                 case .settings:
                     // Warm the ModelsService cache the moment the user heads
@@ -348,6 +357,17 @@
             .task(id: step) {
                 guard step == .tryIt else { return }
                 await pollForTrialCompletion()
+            }
+            .task(id: showTrialCelebration) {
+                guard showTrialCelebration else { return }
+                do {
+                    try await Task.sleep(for: .milliseconds(Constants.Timing.celebrationVisibleMs))
+                } catch {
+                    return
+                }
+                withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
+                    showTrialCelebration = false
+                }
             }
             .onChange(of: storeManager.isPremium) { _, isPremium in
                 guard isPremium else { return }
@@ -674,7 +694,7 @@
                         .foregroundColor(colors.textPrimary)
                         .multilineTextAlignment(.center)
 
-                    Text("Translate selected text without copying and pasting. Try a model that preserves your meaning.")
+                    Text("Translate selected text without copying and pasting. Try checking grammar with premium models.")
                         .font(.system(size: Constants.FontSize.body))
                         .foregroundColor(colors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -747,18 +767,18 @@
         @ViewBuilder
         private var tryPremiumHeader: some View {
             VStack(spacing: Constants.Layout.textBlockSpacing) {
-                Text("Try a more natural translation")
+                Text("Try Grammar Check")
                     .font(.system(size: Constants.FontSize.pageTitle, weight: .bold))
                     .foregroundColor(colors.textPrimary)
                     .multilineTextAlignment(.center)
 
-                Text("Select this sentence, then tap Translate from the text menu.")
+                Text("Select the text below, then tap Grammar Check from the text menu.")
                     .font(.system(size: Constants.FontSize.body))
                     .foregroundColor(colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(Constants.Layout.bodyLineSpacing)
 
-                Text("Compare a translation that preserves your meaning and sounds natural.")
+                Text("See how premium models correct grammar mistakes and explain the changes.")
                     .font(.system(size: Constants.FontSize.body))
                     .foregroundColor(colors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -771,7 +791,7 @@
             OnboardingTrialTextEditor(
                 text: $trialInputText,
                 font: .preferredFont(forTextStyle: .body),
-                customActionTitle: String(localized: "Translate"),
+                customActionTitle: String(localized: "Grammar Check"),
                 onCustomAction: { selectedText in
                     presentTrialSheet(inputText: selectedText)
                 },
@@ -1182,7 +1202,7 @@
         private var successFooter: some View {
             switch premiumStage {
             case .none:
-                primaryButton("Try a more natural translation", isDisabled: selectedPremiumIDs.isEmpty) {
+                primaryButton("Try Grammar Check", isDisabled: selectedPremiumIDs.isEmpty) {
                     advanceToTryPremium()
                 }
                 secondaryButton("Start translating") {
@@ -1333,18 +1353,21 @@
             UIApplication.shared.open(settingsURL)
         }
 
-        private func advanceToSuccessIfNeeded() {
-            guard step == .tryIt, preferences.hasCompletedDefaultTranslationTrial else { return }
-            guard !trialCompletedAtEntry else { return }
-            withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
-                step = .success
-            }
-        }
-
         private func handleScenePhaseChange(_ phase: ScenePhase) {
             guard phase == .active else { return }
             preferences.refreshFromDefaults()
-            advanceToSuccessIfNeeded()
+            celebrateTrialInvocationIfNeeded()
+        }
+
+        private func celebrateTrialInvocationIfNeeded() {
+            guard step == .tryIt, !didCelebrateTrialInvocation else { return }
+            // Only an invocation recorded after entering .tryIt counts; a late
+            // notification from an earlier invocation must not celebrate.
+            guard preferences.lastDefaultTranslationTrialAt != trialInvocationAtEntry else { return }
+            didCelebrateTrialInvocation = true
+            withAnimation(.easeOut(duration: Constants.Animation.celebrationIn)) {
+                showTrialCelebration = true
+            }
         }
 
         private func pollForTrialCompletion() async {
@@ -1357,8 +1380,10 @@
             var second = 0
             while !Task.isCancelled {
                 preferences.refreshFromDefaults()
-                if preferences.hasCompletedDefaultTranslationTrial {
-                    advanceToSuccessIfNeeded()
+                celebrateTrialInvocationIfNeeded()
+                // Continue is gated on the completion flag, so keep polling until
+                // it is visible even if a notification already triggered the toast.
+                if didCelebrateTrialInvocation, hasCompletedTrial {
                     return
                 }
                 if second == Constants.Timing.skipRevealSecond {
