@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.5] - 2026-10-07
+
+### Added
+
+- Added customizable model ordering and a standalone macOS text selection helper with optional popup input.
+- Added a Debug translation timing benchmark.
+
+### Improved
+
+- Unified Quick Translator results and result preferences.
+- Added a Grammar Check trial to onboarding and kept Continue under user control after opening the translation extension.
+- Improved trial celebration feedback, Helper status indicators, app location display, and handoff feedback.
+- Refreshed Premium model descriptions and localized result labels and trial instructions.
+- Improved macOS realtime permission guidance and cloud data-sharing disclosure.
+
+### Fixed
+
+- Kept the primary translation result stable and added word options after lookup fallback.
+- Improved realtime partial scheduling and separated source text in prompts.
+
 ## [3.8.4] - 2026-10-01
 
 ### Added
