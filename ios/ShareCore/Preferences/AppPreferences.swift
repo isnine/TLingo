@@ -565,6 +565,35 @@ public final class AppPreferences: ObservableObject {
         defaults.set(Date(), forKey: StorageKeys.satisfactionPromptLastResponseDate)
     }
 
+    // MARK: - System Review Prompt
+
+    static let systemReviewSuccessStreakThreshold = 3
+
+    /// Records a finished translation request and returns `true` when the system review
+    /// prompt should be requested: the latest consecutive requests all succeeded.
+    public func recordTranslationOutcomeForReview(succeeded: Bool) -> Bool {
+        guard succeeded else {
+            defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
+            return false
+        }
+        let streak = defaults.integer(forKey: StorageKeys.systemReviewSuccessStreak) + 1
+        guard streak >= Self.systemReviewSuccessStreakThreshold else {
+            defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            return false
+        }
+        // StoreKit caps actual display at three times per year; the 7-day gap and streak
+        // reset avoid spending those slots back to back.
+        if let lastDate = defaults.object(forKey: StorageKeys.systemReviewLastRequestDate) as? Date,
+           Date().timeIntervalSince(lastDate) < 7 * 24 * 3600
+        {
+            defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            return false
+        }
+        defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
+        defaults.set(Date(), forKey: StorageKeys.systemReviewLastRequestDate)
+        return true
+    }
+
     /// Returns the iCloud Documents directory URL if available
     public static var iCloudDocumentsURL: URL? {
         FileManager.default.url(forUbiquityContainerIdentifier: nil)?
@@ -989,4 +1018,6 @@ private enum StorageKeys {
         static let realtimeDualInputHistoryRecordingEnabled = "realtime_dual_input_history_recording_enabled"
     #endif
     static let satisfactionPromptLastResponseDate = "satisfaction_prompt_last_response_date"
+    static let systemReviewSuccessStreak = "system_review_success_streak"
+    static let systemReviewLastRequestDate = "system_review_last_request_date"
 }

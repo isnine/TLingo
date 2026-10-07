@@ -502,6 +502,12 @@ public struct HomeView: View {
                 viewModel.showSatisfactionPrompt = false
             }
         }
+        .onChange(of: viewModel.requestSystemReview) { _, newValue in
+            if newValue {
+                requestReview()
+                viewModel.requestSystemReview = false
+            }
+        }
         .onChange(of: satisfactionPromptChrome) { oldValue, newValue in
             if oldValue == .resultCell, newValue == .none, showSatisfactionToast {
                 dismissSatisfactionToast()

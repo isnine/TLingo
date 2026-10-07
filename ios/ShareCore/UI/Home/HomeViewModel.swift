@@ -380,6 +380,8 @@ public final class HomeViewModel: ObservableObject {
     @Published public var showDataConsentRequest: Bool = false
     /// Set to `true` when the satisfaction prompt toast should be displayed.
     @Published public var showSatisfactionPrompt: Bool = false
+    /// Set to `true` when the system App Store review prompt should be requested directly.
+    @Published public var requestSystemReview: Bool = false
     /// Incremented each time a translation request completes with at least one success.
     @Published public private(set) var successfulTranslationCount: Int = 0
     private let ttsService: TTSPreviewService
@@ -1516,9 +1518,9 @@ public final class HomeViewModel: ObservableObject {
         if let system = promptMessages.system {
             chatMessages.append(ChatMessage(role: "system", content: system))
         }
+        chatMessages.append(ChatMessage(role: "user", content: promptMessages.user, images: currentRequestImages))
 
         // Add the assistant's response
-        chatMessages.append(ChatMessage(role: "user", content: promptMessages.user, images: currentRequestImages))
         chatMessages.append(ChatMessage(role: "assistant", content: assistantText))
 
         return ConversationSession(
@@ -2197,13 +2199,21 @@ public final class HomeViewModel: ObservableObject {
         }
         guard !validResults.isEmpty else { return }
 
-        let hasSuccess = validResults.contains { result in
+        let successFlags = validResults.map { result in
             if case .success = result.response { return true }
             return false
         }
+        let hasSuccess = successFlags.contains(true)
+        let shouldRequestReview = preferences.recordTranslationOutcomeForReview(
+            succeeded: !successFlags.contains(false)
+        )
         if hasSuccess {
             successfulTranslationCount += 1
-            if preferences.shouldShowSatisfactionPrompt {
+            if shouldRequestReview {
+                // Skip the custom prompt so two review surfaces never stack.
+                preferences.markSatisfactionPromptResponded()
+                requestSystemReview = true
+            } else if preferences.shouldShowSatisfactionPrompt {
                 showSatisfactionPrompt = true
             }
         }
