@@ -20,7 +20,7 @@ struct LLMServiceSuggestionTests {
         let action = ActionConfig(
             name: "Rewrite",
             prompt: "Rewrite in {{targetLanguage}}: {{text}}",
-            outputType: .plain,
+            outputType: .markdown,
             category: .general
         )
 
@@ -49,7 +49,7 @@ struct LLMServiceSuggestionTests {
         let action = ActionConfig(
             name: "Rewrite",
             prompt: "Rewrite: {{text}}",
-            outputType: .plain,
+            outputType: .markdown,
             category: .general
         )
 

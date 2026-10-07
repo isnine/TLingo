@@ -242,37 +242,20 @@ public final class LLMService {
         let messages: [LLMRequestPayload.Message]
         let imageDataURLs = images.map { $0.base64DataURL }
 
-        if action.prompt.isEmpty {
+        let promptMessages = action.promptMessages(
+            text: text,
+            targetLanguage: targetLanguageDescriptor,
+            sourceLanguage: sourceLanguageDescriptor
+        )
+        if let system = promptMessages.system {
             messages = [
-                .init(
-                    role: "user",
-                    text: text,
-                    imageDataURLs: imageDataURLs
-                ),
+                .init(role: "system", content: system),
+                .init(role: "user", text: promptMessages.user, imageDataURLs: imageDataURLs),
             ]
         } else {
-            let processedPrompt = PromptSubstitution.substitute(
-                prompt: action.prompt,
-                text: text,
-                targetLanguage: targetLanguageDescriptor,
-                sourceLanguage: sourceLanguageDescriptor
-            )
-            let promptContainsTextPlaceholder = PromptSubstitution.containsTextPlaceholder(action.prompt)
-
-            if promptContainsTextPlaceholder {
-                messages = [
-                    .init(
-                        role: "user",
-                        text: processedPrompt,
-                        imageDataURLs: imageDataURLs
-                    ),
-                ]
-            } else {
-                messages = [
-                    .init(role: "system", content: processedPrompt),
-                    .init(role: "user", text: text, imageDataURLs: imageDataURLs),
-                ]
-            }
+            messages = [
+                .init(role: "user", text: promptMessages.user, imageDataURLs: imageDataURLs),
+            ]
         }
 
         let requestTuning = Self.requestTuning(for: model, action: action)

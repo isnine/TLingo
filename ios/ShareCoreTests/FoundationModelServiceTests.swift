@@ -55,6 +55,21 @@ struct FoundationModelServiceTests {
         #expect(resolved.prompt == "hello")
     }
 
+    @Test("Built-in prompt wraps user text in source tags")
+    func builtInPromptWrapsSource() throws {
+        let action = try #require(AppConfigurationStore.builtInActions.first { $0.name == "Polish" })
+
+        let resolved = FoundationModelService.resolvePrompt(
+            text: "hello",
+            action: action,
+            targetLanguageDescriptor: "",
+            sourceLanguageDescriptor: ""
+        )
+
+        #expect(resolved.instructions == action.prompt)
+        #expect(resolved.prompt == "<source>\nhello\n</source>")
+    }
+
     @Test("Sentence pairs map to the existing result shape")
     func sentencePairResult() throws {
         let pairs = [

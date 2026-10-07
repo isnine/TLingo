@@ -152,20 +152,12 @@ public final class FoundationModelService: Sendable {
         targetLanguageDescriptor: String,
         sourceLanguageDescriptor: String
     ) -> ResolvedPrompt {
-        guard !action.prompt.isEmpty else {
-            return ResolvedPrompt(instructions: nil, prompt: text)
-        }
-
-        let processedPrompt = PromptSubstitution.substitute(
-            prompt: action.prompt,
+        let messages = action.promptMessages(
             text: text,
             targetLanguage: targetLanguageDescriptor,
             sourceLanguage: sourceLanguageDescriptor
         )
-        if PromptSubstitution.containsTextPlaceholder(action.prompt) {
-            return ResolvedPrompt(instructions: nil, prompt: processedPrompt)
-        }
-        return ResolvedPrompt(instructions: processedPrompt, prompt: text)
+        return ResolvedPrompt(instructions: messages.system, prompt: messages.user)
     }
 
     public func perform(
@@ -207,7 +199,7 @@ public final class FoundationModelService: Sendable {
                     start: start,
                     partialHandler: partialHandler
                 )
-            case .plain, .diff, .translate:
+            case .markdown, .diff, .translate:
                 return try await performPlainText(
                     session: session,
                     prompt: resolved.prompt,

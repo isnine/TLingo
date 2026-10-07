@@ -281,7 +281,7 @@ struct ActionsView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
-                                .draggable(action.id.uuidString) {
+                                .draggable(action.id) {
                                     ActionRowView(
                                         action: action,
                                         modelInfo: modelInfo(for: action),
@@ -295,11 +295,7 @@ struct ActionsView: View {
                                     .opacity(0.9)
                                 }
                                 .dropDestination(for: String.self) { items, _ in
-                                    guard let draggedIDString = items.first,
-                                          let draggedID = UUID(uuidString: draggedIDString)
-                                    else {
-                                        return false
-                                    }
+                                    guard let draggedID = items.first else { return false }
                                     reorderAction(from: draggedID, to: action.id)
                                     return true
                                 }
@@ -597,7 +593,7 @@ struct ActionsView: View {
         }
     }
 
-    private func reorderAction(from sourceID: UUID, to destinationID: UUID) {
+    private func reorderAction(from sourceID: ActionConfig.ID, to destinationID: ActionConfig.ID) {
         guard sourceID != destinationID else { return }
         var actions = configurationStore.customActions
         guard let sourceIndex = actions.firstIndex(where: { $0.id == sourceID }),

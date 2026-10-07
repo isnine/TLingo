@@ -55,14 +55,10 @@ enum BuiltInActionCatalog {
         #"- **<antonyms label>:** <antonym> (<gloss>); <antonym> (<gloss>)"#,
         "",
         "Separate expression blocks with one blank line.",
-        "",
-        "<source>",
-        "{{text}}",
-        "</source>",
     ].joined(separator: "\n")
 
-    static let translateActionID = UUID(uuidString: "A17A0000-0000-4000-8000-000000000001")!
-    static let sentenceTranslateActionID = UUID(uuidString: "A17A0000-0000-4000-8000-000000000002")!
+    static let translateActionID = "translate"
+    static let sentenceTranslateActionID = "sentence-translate"
 
     static let wordLookupPrompt = [
         "Look up the {{sourceLanguage}} word or phrase inside the <source> tags " +
@@ -79,10 +75,6 @@ enum BuiltInActionCatalog {
         "- One bullet per part of speech: *<part of speech>* <concise {{targetLanguage}} meanings>",
         "- 2–3 natural example sentences, each followed by its {{targetLanguage}} translation",
         "- Common collocations or related forms, only if useful",
-        "",
-        "<source>",
-        "{{text}}",
-        "</source>",
     ].joined(separator: "\n")
 
     static let actions: [ActionConfig] = [
@@ -101,10 +93,6 @@ enum BuiltInActionCatalog {
                 "- Use natural, fluent {{targetLanguage}}.",
                 "- Do NOT add explanations or alternatives.",
                 "- Return only the translated text.",
-                "",
-                "<source>",
-                "{{text}}",
-                "</source>",
             ].joined(separator: "\n"),
             outputType: .translate,
             category: .translation
@@ -121,16 +109,12 @@ enum BuiltInActionCatalog {
                 "- Preserve the original meaning, tone, and style.",
                 "- Use natural, fluent {{targetLanguage}} for each translation.",
                 "- Return original-translation pairs only.",
-                "",
-                "<source>",
-                "{{text}}",
-                "</source>",
             ].joined(separator: "\n"),
             outputType: .sentencePairs,
             category: .translation
         ),
         ActionConfig(
-            id: UUID(uuidString: "A17A0000-0000-4000-8000-000000000005")!,
+            id: "simplify",
             name: "Simplify",
             prompt: [
                 "Rewrite the text inside the <source> tags to be simpler and more concise.",
@@ -146,14 +130,10 @@ enum BuiltInActionCatalog {
                 "- Make the rewritten text natural, coherent, and grammatically correct.",
                 "- Do NOT add new information.",
                 "- Return only the rewritten text.",
-                "",
-                "<source>",
-                "{{text}}",
-                "</source>",
             ].joined(separator: "\n")
         ),
         ActionConfig(
-            id: UUID(uuidString: "A17A0000-0000-4000-8000-000000000003")!,
+            id: "grammar-check",
             name: "Grammar Check",
             prompt: [
                 "Check the grammar of the text inside the <source> tags.",
@@ -169,15 +149,11 @@ enum BuiltInActionCatalog {
                 "- Under Meaning, translate the corrected text into {appLanguage} and include that translation as a block quote.",
                 "- Do NOT use code fences, HTML, tables, images, or remote media in additional_text.",
                 "- Do NOT add unrelated commentary.",
-                "",
-                "<source>",
-                "{{text}}",
-                "</source>",
             ].joined(separator: "\n"),
             outputType: .grammarCheck
         ),
         ActionConfig(
-            id: UUID(uuidString: "A17A0000-0000-4000-8000-000000000004")!,
+            id: "polish",
             name: "Polish",
             prompt: [
                 "Polish the text inside the <source> tags to sound natural and fluent.",
@@ -191,30 +167,17 @@ enum BuiltInActionCatalog {
                 "- Do NOT add Markdown structure that was not present in the input.",
                 "- Do NOT add new information.",
                 "- Return only the polished text.",
-                "",
-                "<source>",
-                "{{text}}",
-                "</source>",
             ].joined(separator: "\n"),
             outputType: .diff
         ),
         ActionConfig(
-            id: UUID(uuidString: "A17A0000-0000-4000-8000-000000000006")!,
+            id: "sentence-analysis",
             name: "Sentence Analysis",
             prompt: sentenceAnalysisPrompt
         ),
     ]
 
-    private static let actionNames = Set(actions.map(\.name))
     private static let actionIDs = Set(actions.map(\.id))
-
-    static func isBuiltInActionName(_ name: String) -> Bool {
-        actionNames.contains(name)
-    }
-
-    static func prompt(named name: String) -> String? {
-        actions.first { $0.name == name }?.prompt
-    }
 
     static func isBuiltInAction(_ action: ActionConfig) -> Bool {
         actionIDs.contains(action.id)
@@ -225,33 +188,13 @@ enum BuiltInActionCatalog {
         return displayName(forActionName: action.name)
     }
 
+    /// History records store the action's English name, so built-ins are localized by name.
     static func displayName(forActionName name: String) -> String {
-        guard isBuiltInActionName(name) else { return name }
+        guard actions.contains(where: { $0.name == name }) else { return name }
         return NSLocalizedString(name, comment: "Built-in action name")
     }
 
     static func customActions(from actions: [ActionConfig]) -> [ActionConfig] {
         actions.filter { !isBuiltInAction($0) }
-    }
-
-    static func customConfiguration(from config: AppConfiguration) -> (config: AppConfiguration, removedBuiltInActions: Bool) {
-        let customEntries = config.actions.filter { !isPersistedBuiltInAction($0) }
-        var filtered = config
-        filtered.actions = customEntries
-        return (filtered, customEntries.count != config.actions.count)
-    }
-
-    private static func isPersistedBuiltInAction(_ entry: AppConfiguration.ActionEntry) -> Bool {
-        if let id = entry.id {
-            return actionIDs.contains(id)
-        }
-
-        let candidate = entry.toActionConfig()
-        return actions.contains { builtIn in
-            candidate.name == builtIn.name &&
-                candidate.prompt == builtIn.prompt &&
-                candidate.outputType == builtIn.outputType &&
-                candidate.category == builtIn.category
-        }
     }
 }

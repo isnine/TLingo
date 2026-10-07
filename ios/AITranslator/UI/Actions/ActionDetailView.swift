@@ -13,7 +13,7 @@ struct ActionDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var configurationStore: AppConfigurationStore
 
-    private let actionID: UUID
+    private let actionID: ActionConfig.ID
     private let isNewAction: Bool
     private let isReadOnly: Bool
     @State private var name: String
@@ -50,11 +50,11 @@ struct ActionDetailView: View {
             _prompt = State(initialValue: action.prompt)
             _outputType = State(initialValue: action.outputType)
         } else {
-            actionID = UUID()
+            actionID = UUID().uuidString
             isNewAction = true
             _name = State(initialValue: "")
             _prompt = State(initialValue: #"Translate: "{text}" to {targetLanguage} with tone: fluent"#)
-            _outputType = State(initialValue: .plain)
+            _outputType = State(initialValue: .markdown)
         }
     }
 
@@ -152,25 +152,46 @@ struct ActionDetailView: View {
                     highlightColor: colors.accent,
                     isEditable: !isReadOnly
                 )
-                .frame(minHeight: 160)
+                .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(colors.inputBackground)
                 )
+
+                if !isReadOnly {
+                    promptModeHint
+                }
             }
         }
         .disabled(isReadOnly)
     }
 
+    private var promptModeHint: some View {
+        Label {
+            if PromptSubstitution.containsTextPlaceholder(prompt) {
+                Text("Contains {text}: the whole template is sent as one message, with your input inserted at {text}.")
+            } else {
+                Text("No {text}: the template is sent as the system prompt, and your input as a separate message.")
+            }
+        } icon: {
+            Image(systemName: "info.circle")
+        }
+        .font(.system(size: 12))
+        .foregroundColor(colors.textSecondary)
+    }
+
     private var outputTypeSummary: String {
         switch outputType {
-        case .plain: return String(localized: "Plain Text")
-        case .diff: return String(localized: "Show Diff")
-        case .sentencePairs: return String(localized: "Translator Sentence Pairs")
-        case .grammarCheck: return String(localized: "Grammar Check")
-        case .translate: return String(localized: "Translate")
+        case .translate, .sentencePairs: return String(localized: "Translate")
+        case .diff: return String(localized: "Rewrite")
+        case .grammarCheck: return String(localized: "Rewrite with Explanation")
+        case .markdown: return String(localized: "Markdown")
         }
+    }
+
+    private var isRewrite: Bool {
+        outputType == .diff || outputType == .grammarCheck
     }
 
     private var optionsSection: some View {
@@ -181,30 +202,46 @@ struct ActionDetailView: View {
         ) {
             VStack(spacing: 12) {
                 outputTypeRow(
-                    type: .plain,
-                    title: "Plain Text",
-                    description: "Standard text output without special formatting"
-                )
-                outputTypeRow(
-                    type: .diff,
-                    title: "Show Diff",
-                    description: "Highlights differences between original and AI output"
-                )
-                outputTypeRow(
-                    type: .sentencePairs,
-                    title: "Translator Sentence Pairs",
-                    description: "Display original and translation side by side, supports Apple Translate"
-                )
-                outputTypeRow(
-                    type: .grammarCheck,
-                    title: "Grammar Check",
-                    description: "Show revised text with grammar explanations"
-                )
-                outputTypeRow(
-                    type: .translate,
                     title: "Translate",
-                    description: "Translation output — enables Apple Translate support"
-                )
+                    description: "Supports Apple Translate and sentence-by-sentence view",
+                    isSelected: outputType == .translate || outputType == .sentencePairs
+                ) {
+                    if outputType != .sentencePairs {
+                        outputType = .translate
+                    }
+                }
+                outputTypeRow(
+                    title: "Rewrite",
+                    description: "Highlights differences between your input and the result",
+                    isSelected: isRewrite
+                ) {
+                    if !isRewrite {
+                        outputType = .diff
+                    }
+                }
+                if isRewrite {
+                    Toggle(isOn: Binding(
+                        get: { outputType == .grammarCheck },
+                        set: { outputType = $0 ? .grammarCheck : .diff }
+                    )) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Include Explanation")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(colors.textPrimary)
+                            Text("Adds notes below the revised text, such as grammar issues")
+                                .font(.system(size: 13))
+                                .foregroundColor(colors.textSecondary)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                }
+                outputTypeRow(
+                    title: "Markdown",
+                    description: "Free-form output rendered as Markdown",
+                    isSelected: outputType == .markdown
+                ) {
+                    outputType = .markdown
+                }
             }
         }
         .disabled(isReadOnly)
@@ -227,14 +264,12 @@ struct ActionDetailView: View {
     }
 
     private func outputTypeRow(
-        type: OutputType,
         title: LocalizedStringKey,
-        description: LocalizedStringKey
+        description: LocalizedStringKey,
+        isSelected: Bool,
+        select: @escaping () -> Void
     ) -> some View {
-        let isSelected = outputType == type
-        return Button {
-            outputType = type
-        } label: {
+        Button(action: select) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)

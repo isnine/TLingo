@@ -70,7 +70,8 @@ public struct ActionConfig: Identifiable, Hashable, Codable, Sendable {
         }
     }
 
-    public let id: UUID
+    /// Built-in actions use a fixed slug; custom actions use a generated UUID string.
+    public let id: String
     public var name: String
     public var prompt: String
     public var outputType: OutputType
@@ -96,7 +97,7 @@ public struct ActionConfig: Identifiable, Hashable, Codable, Sendable {
 
     /// Whether Apple Translate can handle this action.
     public var supportsAppleTranslate: Bool {
-        outputType == .translate || outputType == .sentencePairs
+        category == .translation
     }
 
     public var languageDependencies: PromptLanguageDependencies {
@@ -107,18 +108,41 @@ public struct ActionConfig: Identifiable, Hashable, Codable, Sendable {
         BuiltInActionCatalog.displayName(for: self)
     }
 
+    /// Splits the action into model messages. A prompt containing `{text}` is sent inline as a
+    /// single user message; otherwise the prompt is the system message and the input is the user message.
+    /// Built-in prompts reference `<source>` tags, so their input is wrapped accordingly.
+    public func promptMessages(
+        text: String,
+        targetLanguage: String,
+        sourceLanguage: String
+    ) -> (system: String?, user: String) {
+        guard !prompt.isEmpty else { return (nil, text) }
+
+        let processedPrompt = PromptSubstitution.substitute(
+            prompt: prompt,
+            text: text,
+            targetLanguage: targetLanguage,
+            sourceLanguage: sourceLanguage
+        )
+        if PromptSubstitution.containsTextPlaceholder(prompt) {
+            return (nil, processedPrompt)
+        }
+        let userText = BuiltInActionCatalog.isBuiltInAction(self) ? "<source>\n\(text)\n</source>" : text
+        return (processedPrompt, userText)
+    }
+
     /// Primary initializer
     public init(
-        id: UUID = UUID(),
+        id: String = UUID().uuidString,
         name: String,
         prompt: String,
-        outputType: OutputType = .plain,
-        category: ActionCategory = .general
+        outputType: OutputType = .markdown,
+        category: ActionCategory? = nil
     ) {
         self.id = id
         self.name = name
         self.prompt = prompt
         self.outputType = outputType
-        self.category = category
+        self.category = category ?? outputType.defaultCategory
     }
 }

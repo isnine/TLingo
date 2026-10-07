@@ -170,10 +170,6 @@ struct PromptSubstitutionTests {
             "- Use natural, fluent Simplified Chinese.",
             "- Do NOT add explanations or alternatives.",
             "- Return only the translated text.",
-            "",
-            "<source>",
-            "Hello world",
-            "</source>",
         ].joined(separator: "\n"))
     }
 

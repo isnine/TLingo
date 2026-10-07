@@ -48,9 +48,7 @@ public final class ConfigurationService: Sendable {
     ) -> Result<AppConfiguration, ConfigurationError> {
         do {
             let decoder = JSONDecoder()
-            let decodedConfig = try decoder.decode(AppConfiguration.self, from: data)
-            let (migratedConfig, _) = ConfigurationMigrator.migrateIfNeeded(decodedConfig)
-            let config = BuiltInActionCatalog.customConfiguration(from: migratedConfig).config
+            let config = try decoder.decode(AppConfiguration.self, from: data)
 
             // Use ConfigurationValidator for comprehensive validation
             let validationResult = ConfigurationValidator.shared.validate(config)

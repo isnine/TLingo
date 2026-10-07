@@ -2135,7 +2135,7 @@ public struct HomeView: View {
         }
     }
 
-    private func actionChipsStack(onActionSelected: @escaping (UUID) -> Void) -> some View {
+    private func actionChipsStack(onActionSelected: @escaping (ActionConfig.ID) -> Void) -> some View {
         HStack(spacing: TLingoSpacing.sm) {
             ForEach(chipActions) { action in
                 let isSelected = action.id == viewModel.selectedAction?.id
@@ -2188,7 +2188,7 @@ public struct HomeView: View {
         return viewModel.actions.filter { $0.id != sentenceID || $0.id == viewModel.selectedAction?.id }
     }
 
-    private func scrollActionChip(_ actionID: UUID?, proxy: ScrollViewProxy) {
+    private func scrollActionChip(_ actionID: ActionConfig.ID?, proxy: ScrollViewProxy) {
         guard let actionID else { return }
         withAnimation(.easeInOut(duration: 0.22)) {
             proxy.scrollTo(actionID, anchor: .center)

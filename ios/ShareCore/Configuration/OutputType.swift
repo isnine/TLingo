@@ -9,8 +9,8 @@ import Foundation
 
 /// Defines how the LLM response should be processed and displayed.
 public enum OutputType: String, Codable, CaseIterable, Sendable {
-    /// Plain text output (default)
-    case plain
+    /// Markdown text output (default)
+    case markdown
 
     /// Diff comparison display (original strikethrough + new highlight)
     case diff
@@ -24,12 +24,34 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
     /// Translation output — marks the action as a translation task
     case translate
 
+    /// Accepts the legacy `plain` value stored by earlier versions.
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "markdown", "plain": self = .markdown
+        case "diff": self = .diff
+        case "sentencePairs": self = .sentencePairs
+        case "grammarCheck": self = .grammarCheck
+        case "translate": self = .translate
+        default: return nil
+        }
+    }
+
+    /// Category implied by this output type when an action does not set one explicitly.
+    public var defaultCategory: ActionConfig.ActionCategory {
+        switch self {
+        case .translate, .sentencePairs:
+            return .translation
+        case .markdown, .diff, .grammarCheck:
+            return .general
+        }
+    }
+
     /// Whether to show diff comparison in the UI
     public var showsDiff: Bool {
         switch self {
         case .diff, .grammarCheck:
             return true
-        case .plain, .sentencePairs, .translate:
+        case .markdown, .sentencePairs, .translate:
             return false
         }
     }
@@ -39,7 +61,7 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
         switch self {
         case .sentencePairs:
             return .sentencePairs
-        case .plain, .diff, .grammarCheck, .translate:
+        case .markdown, .diff, .grammarCheck, .translate:
             return .standard
         }
     }
@@ -53,7 +75,7 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
             return .grammarCheck
         case .diff, .translate:
             return .textResponse
-        case .plain:
+        case .markdown:
             return nil
         }
     }
@@ -61,7 +83,7 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
     /// SF Symbol name for this output type
     public var systemImageName: String {
         switch self {
-        case .plain:
+        case .markdown:
             return "doc.text"
         case .diff:
             return "arrow.left.arrow.right"
@@ -77,8 +99,8 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
     /// Localized display name for this output type
     public var displayName: String {
         switch self {
-        case .plain:
-            return String(localized: "Plain Text", comment: "Output type name")
+        case .markdown:
+            return String(localized: "Markdown", comment: "Output type name")
         case .diff:
             return String(localized: "Show Diff", comment: "Output type name")
         case .sentencePairs:

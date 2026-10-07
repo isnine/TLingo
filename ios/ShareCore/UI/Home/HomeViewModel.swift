@@ -249,7 +249,7 @@ public final class HomeViewModel: ObservableObject {
     @Published public private(set) var isLoadingModels = false
     /// Cached catalogs can be stale, so enabled model IDs are reconciled only against a server response.
     private var hasFetchedModels = false
-    @Published public var selectedActionID: UUID?
+    @Published public var selectedActionID: ActionConfig.ID?
     @Published public private(set) var modelRuns: [ModelRunViewState] = []
 
     public var isWordLookupFallback: Bool {
@@ -691,13 +691,13 @@ public final class HomeViewModel: ObservableObject {
     public struct StateSnapshot {
         public let inputText: String
         public let currentRequestInputText: String
-        public let selectedActionID: UUID?
+        public let selectedActionID: ActionConfig.ID?
         public let modelRuns: [ModelRunViewState]
 
         public init(
             inputText: String,
             currentRequestInputText: String,
-            selectedActionID: UUID?,
+            selectedActionID: ActionConfig.ID?,
             modelRuns: [ModelRunViewState]
         ) {
             self.inputText = inputText
@@ -1505,30 +1505,20 @@ public final class HomeViewModel: ObservableObject {
         var chatMessages: [ChatMessage] = []
 
         let text = currentRequestInputText
-        let prompt = activeRequestContext?.action.prompt ?? action.prompt
-
-        if prompt.isEmpty {
-            chatMessages.append(ChatMessage(role: "user", content: text, images: currentRequestImages))
-        } else {
-            // Target language is always the user preference (never auto-redirected).
-            let resolvedTarget = resolvedTargetLanguage ?? preferences.targetLanguage
-            let processedPrompt = PromptSubstitution.substitute(
-                prompt: prompt,
-                text: text,
-                targetLanguage: resolvedTarget.promptDescriptor,
-                sourceLanguage: detectedSourceLanguage?.promptDescriptor ?? ""
-            )
-            let promptContainsTextPlaceholder = PromptSubstitution.containsTextPlaceholder(prompt)
-
-            if promptContainsTextPlaceholder {
-                chatMessages.append(ChatMessage(role: "user", content: processedPrompt, images: currentRequestImages))
-            } else {
-                chatMessages.append(ChatMessage(role: "system", content: processedPrompt))
-                chatMessages.append(ChatMessage(role: "user", content: text, images: currentRequestImages))
-            }
+        let requestAction = activeRequestContext?.action ?? action
+        // Target language is always the user preference (never auto-redirected).
+        let resolvedTarget = resolvedTargetLanguage ?? preferences.targetLanguage
+        let promptMessages = requestAction.promptMessages(
+            text: text,
+            targetLanguage: resolvedTarget.promptDescriptor,
+            sourceLanguage: detectedSourceLanguage?.promptDescriptor ?? ""
+        )
+        if let system = promptMessages.system {
+            chatMessages.append(ChatMessage(role: "system", content: system))
         }
 
         // Add the assistant's response
+        chatMessages.append(ChatMessage(role: "user", content: promptMessages.user, images: currentRequestImages))
         chatMessages.append(ChatMessage(role: "assistant", content: assistantText))
 
         return ConversationSession(

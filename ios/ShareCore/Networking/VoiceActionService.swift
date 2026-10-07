@@ -133,7 +133,7 @@ public final class VoiceActionService: Sendable {
         - action_config: Object with:
           - name: Display name for the action
           - prompt: The prompt template. MUST include {text} placeholder. May include {targetLanguage} if relevant.
-          - output_type: One of "plain", "diff", "sentencePairs", "grammarCheck"
+          - output_type: One of "markdown", "diff", "sentencePairs", "grammarCheck"
           - usage_scenes: Array from ["app", "contextRead", "contextEdit"]. Default to all three.
 
         Respond with a JSON object containing:
@@ -190,7 +190,7 @@ public final class VoiceActionService: Sendable {
         }
 
         func toActionConfig() -> ActionConfig {
-            let output = OutputType(rawValue: outputType) ?? .plain
+            let output = OutputType(rawValue: outputType) ?? .markdown
             return ActionConfig(name: name, prompt: prompt, outputType: output)
         }
     }
@@ -212,7 +212,7 @@ public final class VoiceActionService: Sendable {
                 actionConfig: ActionConfig(
                     name: String(localized: "Custom Action"),
                     prompt: "Based on the user's request: \"\(transcript)\"\n\nTranslate \"{text}\" to {targetLanguage}.",
-                    outputType: .plain
+                    outputType: .markdown
                 )
             )
             options.append(fallback)
