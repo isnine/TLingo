@@ -17,6 +17,13 @@ import UniformTypeIdentifiers
 #endif
 
 struct SettingsView: View {
+    // Child screens push value-based links, so these rows must use value-based routes too;
+    // mixing them with view-destination links reorders the navigation stack.
+    private enum Route: Hashable {
+        case models
+        case actions
+    }
+
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var preferences: AppPreferences
     @ObservedObject private var configStore: AppConfigurationStore
@@ -82,6 +89,14 @@ struct SettingsView: View {
                 .controlSize(.large)
             #endif
             .navigationTitle("Settings")
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .models:
+                    ModelsView(embedsInNavigationStack: false)
+                case .actions:
+                    ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
+                }
+            }
             #if os(iOS)
                 .toolbar {
                     if let onShowSidebarTap {
@@ -186,16 +201,12 @@ struct SettingsView: View {
 
     private var translationSection: some View {
         Section("Translation") {
-            NavigationLink {
-                ModelsView(embedsInNavigationStack: false)
-            } label: {
+            NavigationLink(value: Route.models) {
                 settingsLabel("Models", systemImage: "cpu", subtitle: Text("Choose translation models"))
             }
             .accessibilityIdentifier("settings_models_row")
 
-            NavigationLink {
-                ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
-            } label: {
+            NavigationLink(value: Route.actions) {
                 settingsLabel("Manage Actions", systemImage: "slider.horizontal.3")
             }
             .accessibilityIdentifier("settings_actions_row")
