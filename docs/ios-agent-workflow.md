@@ -36,11 +36,7 @@ review_triggers:
 
 5. 按 [`verification.md`](./verification.md) 选择最小构建门槛。只需要编译时使用 simulator build；需要 UI
    验证时，再安装并启动刚生成的 App。
-6. 第一次设备交互前执行 sim-use preflight：
-
-   ```bash
-   python3 "$CODEX_HOME/skills/public/sim-use/scripts/preflight.py" --device <UDID>
-   ```
+6. 第一次设备交互前按 sim-use skill 执行 preflight（skill 目录下的 `scripts/preflight.py --device <UDID>`）。
 
 7. UI 操作遵循 `observe -> act -> verify`。优先使用 Accessibility label、identifier 或 sim-use alias；坐标仅作为
    最后手段。
