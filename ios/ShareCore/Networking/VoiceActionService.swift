@@ -85,7 +85,7 @@ public final class VoiceActionService: Sendable {
         CloudAuthHelper.applyAuth(to: &request, path: path)
 
         if isPremium {
-            request.setValue("true", forHTTPHeaderField: "X-Premium")
+            CloudAuthHelper.applyPremiumProof(to: &request)
         }
 
         let systemPrompt = Self.buildSystemPrompt(locale: locale)

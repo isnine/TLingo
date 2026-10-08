@@ -65,11 +65,20 @@ public final class StoreManager: ObservableObject {
     // write is atomic on our target architectures.
     private nonisolated(unsafe) static var isTestFlightEnvironmentCached: Bool = false
 
-    /// Whether TestFlight premium override is currently active.
-    @Published public private(set) var isTestFlightOverride: Bool = false
+    #if DEBUG
+        /// Debug builds grant local premium unless the developer toggles it off.
+        @Published public private(set) var isDebugPremiumDisabled: Bool = false
 
-    private static let testFlightOverrideKey = "testflight_premium_override"
-    private static var isAppExtension: Bool { Bundle.main.bundleURL.pathExtension == "appex" }
+        private static let debugPremiumDisabledKey = "debug_premium_disabled"
+    #endif
+
+    /// Signed StoreKit transaction for the active premium product, sent to the
+    /// Worker as proof of purchase. Shared through the App Group for extensions.
+    public nonisolated static var premiumTransactionJWS: String? {
+        AppPreferences.sharedDefaults.string(forKey: premiumTransactionJWSKey)
+    }
+
+    private nonisolated static let premiumTransactionJWSKey = "storekit_premium_transaction_jws"
 
     // MARK: - Init
 
@@ -87,8 +96,8 @@ public final class StoreManager: ObservableObject {
 
         #if DEBUG
             // Auto-enable premium in development builds unless user toggled it off
-            isTestFlightOverride = AppPreferences.sharedDefaults.bool(forKey: Self.testFlightOverrideKey)
-            if isTestFlightOverride {
+            isDebugPremiumDisabled = AppPreferences.sharedDefaults.bool(forKey: Self.debugPremiumDisabledKey)
+            if isDebugPremiumDisabled {
                 isPremium = false
                 logger.debug("DEBUG build – premium disabled via override toggle")
             } else {
@@ -106,19 +115,8 @@ public final class StoreManager: ObservableObject {
             // Read cached premium status from App Group defaults
             isPremium = AppPreferences.sharedDefaults.bool(forKey: Self.premiumKey)
             usageAppStoreSubjectID = AppPreferences.sharedDefaults.string(forKey: Self.usageAppStoreSubjectIDKey)
-
-            // Restore TestFlight override if previously enabled
-            if Self.isTestFlight || Self.isAppExtension {
-                isTestFlightOverride = AppPreferences.sharedDefaults.bool(forKey: Self.testFlightOverrideKey)
-                if isTestFlightOverride {
-                    isPremium = true
-                    premiumSourceDisplayName = String(localized: "TestFlight")
-                    logger.debug("TestFlight override restored – premium enabled")
-                }
-            } else {
-                // Clean up any stale TF override from a previous TestFlight install
-                AppPreferences.sharedDefaults.removeObject(forKey: Self.testFlightOverrideKey)
-            }
+            // Earlier builds let TestFlight testers grant premium locally.
+            AppPreferences.sharedDefaults.removeObject(forKey: "testflight_premium_override")
 
             // Start listening for transaction updates
             transactionListener = listenForTransactions()
@@ -250,27 +248,14 @@ public final class StoreManager: ObservableObject {
 
     public func checkSubscriptionStatus() async {
         #if DEBUG
-            let hasDebugPremium = !isTestFlightOverride
+            let hasDebugPremium = !isDebugPremiumDisabled
             premiumSourceDisplayName = hasDebugPremium ? String(localized: "Debug") : nil
             updatePremiumStatus(hasDebugPremium)
         #else
-            if Self.isTestFlight || Self.isAppExtension {
-                isTestFlightOverride = AppPreferences.sharedDefaults.bool(forKey: Self.testFlightOverrideKey)
-            } else {
-                isTestFlightOverride = false
-                AppPreferences.sharedDefaults.removeObject(forKey: Self.testFlightOverrideKey)
-            }
-
-            // TestFlight override takes precedence
-            if isTestFlightOverride {
-                premiumSourceDisplayName = String(localized: "TestFlight")
-                updatePremiumStatus(true)
-                return
-            }
-
             premiumSourceDisplayName = nil
             var hasActiveSubscription = false
             var activeProductID: String?
+            var activeTransactionJWS: String?
 
             for await result in Transaction.currentEntitlements {
                 guard let transaction = try? checkVerified(result) else { continue }
@@ -283,12 +268,14 @@ public final class StoreManager: ObservableObject {
                         let currentPriority = activeProductID.map { PremiumProduct.tierPriority(for: $0) } ?? -1
                         if newPriority > currentPriority {
                             activeProductID = transaction.productID
+                            activeTransactionJWS = result.jwsRepresentation
                         }
                     }
                 }
             }
 
             activePremiumProductID = activeProductID
+            AppPreferences.sharedDefaults.set(activeTransactionJWS, forKey: Self.premiumTransactionJWSKey)
             updatePremiumStatus(hasActiveSubscription)
         #endif
     }
@@ -303,56 +290,27 @@ public final class StoreManager: ObservableObject {
         do {
             let verification = try await AppTransaction.shared
             let transaction = try checkVerified(verification)
-            let isSandbox = transaction.environment == .sandbox
-            Self.isTestFlightEnvironmentCached = isSandbox
+            Self.isTestFlightEnvironmentCached = transaction.environment == .sandbox
             logger.info("AppTransaction environment: \(String(describing: transaction.environment), privacy: .public)")
-
-            if isSandbox {
-                let storedOverride = AppPreferences.sharedDefaults.bool(forKey: Self.testFlightOverrideKey)
-                if storedOverride, !isTestFlightOverride {
-                    isTestFlightOverride = true
-                    premiumSourceDisplayName = String(localized: "TestFlight")
-                    updatePremiumStatus(true)
-                }
-            }
         } catch {
             logger.error("AppTransaction probe failed: \(error, privacy: .public)")
         }
     }
 
-    // MARK: - TestFlight Premium Toggle
+    // MARK: - Debug Premium Toggle
 
-    @discardableResult
-    public func toggleTestFlightPremium() -> Bool {
-        // The Direct distribution channel must never grant premium via the
-        // TestFlight backdoor — premium there comes exclusively from the
-        // web entitlement (Supabase + Dodo).
-        if BuildEnvironment.isDirectDistribution {
-            logger.warning("TestFlight backdoor invoked in Direct build — ignoring")
-            return isPremium
+    #if DEBUG
+        /// Toggles the local Debug-build premium grant. Returns the new premium state.
+        @discardableResult
+        public func toggleDebugPremium() -> Bool {
+            let disabled = !isDebugPremiumDisabled
+            isDebugPremiumDisabled = disabled
+            AppPreferences.sharedDefaults.set(disabled, forKey: Self.debugPremiumDisabledKey)
+            premiumSourceDisplayName = disabled ? nil : String(localized: "Debug")
+            updatePremiumStatus(!disabled)
+            return !disabled
         }
-        #if DEBUG
-            let newValue = !isTestFlightOverride
-            isTestFlightOverride = newValue
-            AppPreferences.sharedDefaults.set(newValue, forKey: Self.testFlightOverrideKey)
-            premiumSourceDisplayName = newValue ? nil : String(localized: "Debug")
-            updatePremiumStatus(!newValue)
-            DebugNetworkProtocol.refreshLoggingEnabled()
-            return !newValue
-        #else
-            guard Self.isTestFlight else { return false }
-            let newValue = !isTestFlightOverride
-            isTestFlightOverride = newValue
-            AppPreferences.sharedDefaults.set(newValue, forKey: Self.testFlightOverrideKey)
-            premiumSourceDisplayName = newValue ? String(localized: "TestFlight") : nil
-            updatePremiumStatus(newValue)
-            DebugNetworkProtocol.refreshLoggingEnabled()
-            if !newValue {
-                Task { await checkSubscriptionStatus() }
-            }
-            return newValue
-        #endif
-    }
+    #endif
 
     // MARK: - Transaction Listener
 

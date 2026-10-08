@@ -293,27 +293,25 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
             .contentShape(Rectangle())
-        // Direct distribution intentionally has no premium backdoor — entitlement
-        // there is owned by the web subscription, not by client-side toggles.
+        // Premium is never granted by client-side toggles outside Debug builds;
+        // the Worker verifies App Store transactions. TestFlight only toggles
+        // developer tools.
         #if DIRECT_DISTRIBUTION
             return label
         #else
             return label.onTapGesture(count: 2) {
-                if StoreManager.isTestFlight {
-                    let enabled = storeManager.toggleTestFlightPremium()
+                #if DEBUG
+                    let enabled = storeManager.toggleDebugPremium()
                     testFlightAlertMessage = enabled
-                        ? "Premium activated (TestFlight)"
-                        : "Premium deactivated (TestFlight)"
-                } else {
-                    #if DEBUG
-                        let enabled = storeManager.toggleTestFlightPremium()
-                        testFlightAlertMessage = enabled
-                            ? "Premium activated (Debug)"
-                            : "Premium deactivated (Debug)"
-                    #else
-                        testFlightAlertMessage = "TestFlight override is only available in TestFlight builds."
-                    #endif
-                }
+                        ? "Premium activated (Debug)"
+                        : "Premium deactivated (Debug)"
+                #else
+                    guard StoreManager.isTestFlight else { return }
+                    let enabled = DeveloperMode.toggleTestFlightDeveloperMode()
+                    testFlightAlertMessage = enabled
+                        ? "Developer mode on (TestFlight)"
+                        : "Developer mode off (TestFlight)"
+                #endif
                 showTestFlightAlert = true
             }
         #endif

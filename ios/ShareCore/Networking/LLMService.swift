@@ -216,20 +216,17 @@ public final class LLMService {
         request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
 
         let path = "/\(model.id)/chat/completions"
+        CloudAuthHelper.applyAuth(to: &request, path: path)
         if onboardingTrial {
-            // Trial signature lets the Worker bypass `hasPremiumAccess` for the
-            // whitelisted onboarding model set without exposing a separate secret.
-            // Skip the X-Premium header so the bypass path is unambiguous in logs.
-            CloudAuthHelper.applyOnboardingTrialAuth(to: &request, path: path)
-        } else {
-            CloudAuthHelper.applyAuth(to: &request, path: path)
-
-            if await hasPremiumEntitlement(
-                refresh: refreshEntitlement,
-                cachedIsPremium: cachedIsPremium
-            ) {
-                request.setValue("true", forHTTPHeaderField: "X-Premium")
-            }
+            // The Worker spends this device's trial quota instead of checking
+            // premium. Skip premium proof so the trial path is unambiguous in logs.
+            let deviceID = try await OnboardingTrialService.deviceID(using: urlSession)
+            request.setValue(deviceID, forHTTPHeaderField: "X-Onboarding-Device")
+        } else if await hasPremiumEntitlement(
+            refresh: refreshEntitlement,
+            cachedIsPremium: cachedIsPremium
+        ) {
+            CloudAuthHelper.applyPremiumProof(to: &request)
         }
         await applyUsageSubjectHeaders(to: &request)
 
@@ -672,7 +669,7 @@ public final class LLMService {
         let path = "/\(model.id)/chat/completions"
         CloudAuthHelper.applyAuth(to: &request, path: path)
         if await hasPremiumEntitlement(refresh: true) {
-            request.setValue("true", forHTTPHeaderField: "X-Premium")
+            CloudAuthHelper.applyPremiumProof(to: &request)
         }
         await applyUsageSubjectHeaders(to: &request)
         return request

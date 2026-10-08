@@ -4,8 +4,7 @@
 //
 //  Runtime gate that exposes debug-only features (currently the network
 //  request inspector) to a hard-coded developer email on Direct builds,
-//  and preserves the existing TestFlight override toggle on TestFlight
-//  builds. Local Debug builds also expose the inspector. App Store builds never see these features.
+//  and to TestFlight builds where the tester toggled developer mode on. Local Debug builds also expose the inspector. App Store builds never see these features.
 //
 
 import Foundation
@@ -15,7 +14,7 @@ import Foundation
 ///
 /// Enabled for local Debug builds, or when:
 /// - The Direct build is signed in via OAuth as the developer's email, OR
-/// - The TestFlight build has the existing TestFlight override active.
+/// - The TestFlight build has developer mode toggled on.
 ///
 /// App Store production builds (no TestFlight, no Direct) always return
 /// `false`, so the App Store binary never exposes inspector UI even though
@@ -33,10 +32,21 @@ public enum DeveloperMode {
         if isEnabledNonisolated {
             return true
         }
-        if StoreManager.isTestFlight, StoreManager.shared.isTestFlightOverride {
+        if StoreManager.isTestFlight, AppPreferences.sharedDefaults.bool(forKey: testFlightDeveloperModeKey) {
             return true
         }
         return false
+    }
+
+    /// TestFlight-only developer mode switch. Returns the new state.
+    @MainActor
+    @discardableResult
+    public static func toggleTestFlightDeveloperMode() -> Bool {
+        guard StoreManager.isTestFlight else { return false }
+        let enabled = !AppPreferences.sharedDefaults.bool(forKey: testFlightDeveloperModeKey)
+        AppPreferences.sharedDefaults.set(enabled, forKey: testFlightDeveloperModeKey)
+        DebugNetworkProtocol.refreshLoggingEnabled()
+        return enabled
     }
 
     /// Direct-only check: signed-in OAuth email matches the developer.
@@ -51,8 +61,8 @@ public enum DeveloperMode {
     /// Non-isolated probe usable from any actor — including the URLProtocol
     /// hot path (`DebugNetworkProtocol.canInit`) which runs off the main
     /// actor. Mirrors `isEnabled` without touching `StoreManager.shared`
-    /// (which is `@MainActor`) by reading the persisted TestFlight override
-    /// flag directly from UserDefaults.
+    /// (which is `@MainActor`) by reading the persisted TestFlight developer
+    /// mode flag directly from UserDefaults.
     public static var isEnabledNonisolated: Bool {
         #if DEBUG
             return true
@@ -60,17 +70,17 @@ public enum DeveloperMode {
             if isDeveloperSignedInDirect {
                 return true
             }
-            // App Store / TestFlight: the override is persisted in the App Group
+            // App Store / TestFlight: the flag is persisted in the App Group
             // defaults and only meaningful in TestFlight builds. We can't call
             // `StoreManager.isTestFlight` here cheaply (it's main-actor isolated
             // for caching), so fall back to the bundle path probe — same logic
             // `StoreManager.isTestFlight` uses on first read.
             guard isLikelyTestFlight else { return false }
-            return AppPreferences.sharedDefaults.bool(forKey: testFlightOverrideKey)
+            return AppPreferences.sharedDefaults.bool(forKey: testFlightDeveloperModeKey)
         #endif
     }
 
-    private static let testFlightOverrideKey = "testflight_premium_override"
+    private static let testFlightDeveloperModeKey = "testflight_developer_mode"
 
     private static var isLikelyTestFlight: Bool {
         var appURL = Bundle.main.bundleURL

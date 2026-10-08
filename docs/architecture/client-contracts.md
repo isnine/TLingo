@@ -57,6 +57,14 @@ headers = X-Timestamp, X-Signature
 App Store 会员（`appAccountToken`）、设备（`device`）。设备标识是首次使用时生成的随机 UUID，存于 Keychain
 （`ThisDeviceOnly`，不随 iCloud 同步），不来自硬件或广告标识符。Worker 仅将其用于 AI Gateway 日志归属。
 
+会员请求附带 `X-AppStore-Transaction`：当前有效会员交易的 StoreKit 2 JWS（`jwsRepresentation`），
+由服务端校验；TestFlight 沙盒购买同样有效。`X-Premium: true` 仅为兼容旧服务端保留。客户端不再提供
+TestFlight 本地开通会员的入口，TestFlight 双击版本号只切换开发者模式；Debug 构建保留本地会员开关。
+
+新手试用先以 `POST /onboarding/trial` 提交 `{deviceID, deviceToken}`（设备 UUID 与 DeviceCheck token），
+成功后试用请求携带 `X-Onboarding-Device: <deviceID>`。服务端按设备计数，超额返回 403
+`{"error":"trial_exhausted"}`，客户端显示“试用次数已用完”提示；设备不支持 DeviceCheck 或服务不可用时显示试用暂不可用。
+
 客户端使用单调时钟，分别记录提交后请求准备、响应 header、首个/末个非空内容 delta、
 首个可展示的解析结果、首个 UI 更新和最终结果应用。JSON 前缀、reasoning、usage、空 delta
 不能当作用户已经看到翻译。内容 delta 是流式事件片段，不等于 tokenizer token。
