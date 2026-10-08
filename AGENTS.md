@@ -37,6 +37,8 @@ The app schemes are `TLingo` and `TLingo-Direct`. The cloud Worker and Web front
 
 Use the smallest relevant gate from [`docs/verification.md`](docs/verification.md). Read [`docs/ios-agent-workflow.md`](docs/ios-agent-workflow.md) before building, launching, or runtime-verifying the app.
 
+For small changes, compile-check with a single Debug build of the most relevant scheme and platform. Build Release or additional schemes and platforms only when the change touches their conditional code (such as `DIRECT_DISTRIBUTION` or platform `#if` branches) or before a release.
+
 ## Configuration And Secrets
 
 - Built-in actions are defined in `ios/ShareCore/Configuration/BuiltInActionCatalog.swift`.
