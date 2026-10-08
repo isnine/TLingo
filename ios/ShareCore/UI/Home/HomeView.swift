@@ -1245,6 +1245,7 @@ public struct HomeView: View {
                     if usesPhoneComposerChrome {
                         modelSelectionButton
                         Spacer()
+                        imageTextInputButton
                         inputSpeakButton
                         phonePrimaryInputButton
                     } else {
@@ -1265,6 +1266,9 @@ public struct HomeView: View {
             modelSelectionButton
         }
 
+        #if os(iOS)
+            imageTextInputButton
+        #endif
         inputSpeakButton
         inputSendButton
     }
@@ -1609,6 +1613,17 @@ public struct HomeView: View {
             if let onSettingsTap {
                 Button("Settings", systemImage: "gearshape", action: onSettingsTap)
                     .accessibilityIdentifier("tab_settings")
+            }
+        }
+
+        /// Main app only, and only while the input is empty so it never competes with speak and send.
+        @ViewBuilder
+        private var imageTextInputButton: some View {
+            if context == nil, viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                ImageTextInputButton(tint: colors.accent) { text in
+                    viewModel.inputText = text
+                    isInputExpanded = true
+                }
             }
         }
 

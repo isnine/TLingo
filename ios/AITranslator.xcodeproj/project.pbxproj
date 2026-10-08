@@ -1184,6 +1184,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TLingo uses the camera to capture text you want to translate.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1247,6 +1248,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TLingo uses the camera to capture text you want to translate.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
