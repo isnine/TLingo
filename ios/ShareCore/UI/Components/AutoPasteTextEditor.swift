@@ -70,7 +70,8 @@ private let languageShortcutLogger = os.Logger(
 
             context.coordinator.update(parent: self)
 
-            if textView.string != text {
+            // Overwriting during IME composition (e.g. Pinyin) discards the marked text.
+            if !textView.hasMarkedText(), textView.string != text {
                 textView.string = text
             }
 
@@ -121,6 +122,11 @@ private let languageShortcutLogger = os.Logger(
 
             func textDidChange(_ notification: Notification) {
                 guard let textView = notification.object as? NSTextView else { return }
+                // Publish only committed text so composing input doesn't trigger detection or re-renders.
+                guard !textView.hasMarkedText() else {
+                    reportContentHeight(for: textView)
+                    return
+                }
                 let updated = textView.string
                 if parent.text != updated {
                     parent.text = updated
@@ -368,7 +374,8 @@ private let languageShortcutLogger = os.Logger(
 
         func updateUIView(_ uiView: PastingTextView, context: Context) {
             context.coordinator.update(parent: self)
-            if uiView.text != text {
+            // Overwriting during IME composition (e.g. Pinyin) discards the marked text.
+            if uiView.markedTextRange == nil, uiView.text != text {
                 uiView.text = text
             }
             uiView.onPaste = onPaste
@@ -391,6 +398,11 @@ private let languageShortcutLogger = os.Logger(
             }
 
             func textViewDidChange(_ textView: UITextView) {
+                // Publish only committed text so composing input doesn't trigger detection or re-renders.
+                guard textView.markedTextRange == nil else {
+                    reportContentHeight(for: textView)
+                    return
+                }
                 let updated = textView.text ?? ""
                 if parent.text != updated {
                     parent.text = updated
