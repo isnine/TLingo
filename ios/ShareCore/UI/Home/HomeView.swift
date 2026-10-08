@@ -2491,6 +2491,9 @@ public struct HomeView: View {
         // Full action buttons for bottom bar (plain text mode)
         diffToggleButton(for: runID)
         compactCopyButton(for: copyText)
+        if let draft = viewModel.vocabularyDraft(forRunID: runID) {
+            VocabularySaveButton(draft: draft, iconSize: 14)
+        }
         if showsChat {
             chatButton(for: runID)
         }

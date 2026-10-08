@@ -31,6 +31,7 @@ flowchart LR
 | `ios/ShareCore/Networking/` | Translation, LLM, speech and voice requests |
 | `ios/ShareCore/Realtime/` | Audio input, recognition, translation, captions and session state |
 | `ios/ShareCore/History/` | SwiftData records, Realtime audio storage, export and post-processing |
+| `ios/ShareCore/Vocabulary/` | Saved terms and flashcard review state in a separate SwiftData store |
 | `ios/ShareCore/OAuth/` | Activation, PKCE, token persistence and website restore |
 | `ios/ShareCore/UI/` | Shared Home, result, conversation and language components |
 | `ios/TranslationUI/` | System translation extension adapter |
@@ -58,6 +59,7 @@ flowchart LR
 - Realtime snapshots may carry stable recognition segments and one pending segment so model EOU boundaries survive Caption, History and LRC rendering.
 - A macOS realtime lane may select `None` as its translation provider to publish and persist source transcription without creating a translation node.
 - `TranslationHistoryService` owns persistent records and the transaction boundary with external audio files.
+- `VocabularyStore` owns saved terms in `Vocabulary.store`, apart from the History store so neither schema migrates the other. Entries are unique per normalized term and target language; Home offers saving for successful translation-category results without images.
 - `AppConfigurationStore` owns the active configuration and its persistence.
 - `OAuthCoordinator` owns one token state and serializes activation, restore and refresh writers.
 - SwiftUI views issue commands and render state; they must not persist whole stale domain snapshots.

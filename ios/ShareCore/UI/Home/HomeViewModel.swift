@@ -1180,6 +1180,25 @@ public final class HomeViewModel: ObservableObject {
         return true
     }
 
+    /// The vocabulary entry a successful translation-category result can be saved as.
+    public func vocabularyDraft(forRunID runID: String) -> VocabularyDraft? {
+        guard let context = activeRequestContext,
+              context.action.category == .translation,
+              context.images.isEmpty,
+              let run = modelRuns.first(where: { $0.id == runID }),
+              case let .success(result) = run.status
+        else {
+            return nil
+        }
+        let draft = VocabularyDraft(
+            term: context.text,
+            translation: result.copyText,
+            sourceLanguageCode: context.languages.sourceCode,
+            targetLanguageCode: context.languages.target.rawValue
+        )
+        return draft.term.isEmpty || draft.translation.isEmpty ? nil : draft
+    }
+
     /// Switches one run between the whole translation and sentence pairs. Only this run
     /// reloads (or restores its cached result); other runs are untouched.
     public func toggleSentencePairs(runID: String) {

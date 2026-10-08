@@ -47,6 +47,7 @@ struct RootTabView: View {
     enum TabItem: String, CaseIterable, Identifiable {
         case home
         case history
+        case vocabulary
         case actions
         case models
         case realtime
@@ -61,6 +62,8 @@ struct RootTabView: View {
                 return "Text"
             case .history:
                 return "History"
+            case .vocabulary:
+                return "Vocabulary"
             case .actions:
                 return "Actions"
             case .models:
@@ -80,6 +83,8 @@ struct RootTabView: View {
                 return "text.alignleft"
             case .history:
                 return "clock.arrow.circlepath"
+            case .vocabulary:
+                return "bookmark"
             case .actions:
                 return "bolt.fill"
             case .models:
@@ -333,6 +338,16 @@ extension RootTabView {
                 }, viewModel: homeViewModel)
                 .navigationDestination(isPresented: $showHistory) {
                     HistoryView()
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                NavigationLink {
+                                    VocabularyView()
+                                } label: {
+                                    Label("Vocabulary", systemImage: "bookmark")
+                                }
+                                .accessibilityIdentifier("history_vocabulary_button")
+                            }
+                        }
                 }
             }
             .realtimeSavedNotice(store: realtimeStore) { _ in

@@ -319,6 +319,10 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             case .history:
                 let _ = assertionFailure("History tab should not appear in macOS sidebar")
                 EmptyView()
+            case .vocabulary:
+                NavigationStack {
+                    VocabularyView()
+                }
             case .actions:
                 ActionsView(configurationStore: configStore)
             case .models:
@@ -565,6 +569,10 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 )
             case .history:
                 HistoryView()
+            case .vocabulary:
+                NavigationStack {
+                    VocabularyView()
+                }
             case .actions:
                 ActionsView(configurationStore: configStore)
             case .models:
