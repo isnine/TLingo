@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.8.5] - 2026-10-07
+## [3.8.5] - 2026-10-08
 
 ### Added
 
 - Added customizable model ordering and a standalone macOS text selection helper with optional popup input.
 - Added a Debug translation timing benchmark.
+- Added Picture in Picture for realtime captions.
+- Added an App Store review request after a streak of successful translations.
 
 ### Improved
 
@@ -21,11 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved trial celebration feedback, Helper status indicators, app location display, and handoff feedback.
 - Refreshed Premium model descriptions and localized result labels and trial instructions.
 - Improved macOS realtime permission guidance and cloud data-sharing disclosure.
+- Simplified action configuration, reordered default model sections, and sorted failed model results last.
+- Verified Premium access with StoreKit transactions and DeviceCheck-registered trials, and showed trial quota errors.
+- Sent a detailed client User-Agent and a device usage subject fallback.
 
 ### Fixed
 
 - Kept the primary translation result stable and added word options after lookup fallback.
 - Improved realtime partial scheduling and separated source text in prompts.
+- Kept IME composition intact in the text editor, stabilized settings navigation, and extended action chip scrolling to the edges.
 
 ## [3.8.4] - 2026-10-01
 
