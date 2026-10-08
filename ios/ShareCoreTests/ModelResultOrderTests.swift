@@ -99,7 +99,7 @@ struct ModelResultOrderTests {
         #expect(HomeViewModel.sortModelRuns(
             [failed, pending, completed(free, at: 10)],
             order: .modelList, catalog: [ModelConfig.appleTranslate, premium, free]
-        ).map(\.id) == [ModelConfig.appleTranslateID, premium.id, free.id])
+        ).map(\.id) == [premium.id, free.id, ModelConfig.appleTranslateID])
     }
 
     @Test func equalTimesAndUnknownModelsHaveStableOrder() {

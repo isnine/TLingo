@@ -275,8 +275,13 @@ public final class HomeViewModel: ObservableObject {
             uniquingKeysWith: { first, _ in first }
         )
         return runs.enumerated().sorted { lhs, rhs in
+            // Failures sink to the end in every order so the leading result is usable.
+            let leftFailed = if case .failure = lhs.element.status { true } else { false }
+            let rightFailed = if case .failure = rhs.element.status { true } else { false }
+            if leftFailed != rightFailed {
+                return !leftFailed
+            }
             if order == .firstCompletedFirst {
-                // Runs keep their slot once output appears, even if they later fail.
                 switch (lhs.element.firstOutputAt, rhs.element.firstOutputAt) {
                 case let (left?, right?):
                     if left != right {
@@ -287,19 +292,7 @@ public final class HomeViewModel: ObservableObject {
                 case (nil, _?):
                     return false
                 case (nil, nil):
-                    let leftFailed = if case .failure = lhs.element.status {
-                        true
-                    } else {
-                        false
-                    }
-                    let rightFailed = if case .failure = rhs.element.status {
-                        true
-                    } else {
-                        false
-                    }
-                    if leftFailed != rightFailed {
-                        return !leftFailed
-                    }
+                    break
                 }
             }
             let leftRank = ranks[lhs.element.id] ?? Int.max
