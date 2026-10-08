@@ -53,6 +53,10 @@ headers = X-Timestamp, X-Signature
 `X-Upstream-TTFB` 表示上游响应 header 等待时间，不代表首个内容 token。
 末个内容、`[DONE]` 与传输 EOF 只能在流中或结束日志里测量，不能事后补写已发出的响应 header。
 
+聊天请求附带 `X-Usage-Subject-Type/ID/Label` 标识请求主体，按优先级为：邮箱（OAuth 或网站购买恢复）、
+App Store 会员（`appAccountToken`）、设备（`device`）。设备标识是首次使用时生成的随机 UUID，存于 Keychain
+（`ThisDeviceOnly`，不随 iCloud 同步），不来自硬件或广告标识符。Worker 仅将其用于 AI Gateway 日志归属。
+
 客户端使用单调时钟，分别记录提交后请求准备、响应 header、首个/末个非空内容 delta、
 首个可展示的解析结果、首个 UI 更新和最终结果应用。JSON 前缀、reasoning、usage、空 delta
 不能当作用户已经看到翻译。内容 delta 是流式事件片段，不等于 tokenizer token。
