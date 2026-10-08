@@ -50,6 +50,7 @@ struct AITranslatorApp: App {
         #if DIRECT_DISTRIBUTION
             BuildEnvironment.markAsDirectDistribution()
         #endif
+        MetricKitReporter.shared.start()
 
         // Debug: Print configuration on launch
         #if DEBUG

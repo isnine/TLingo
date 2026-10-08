@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Monotonic, request-scoped milestones. Content chunks are not tokenizer tokens.
 public final class TranslationTimingTrace: @unchecked Sendable {
@@ -24,20 +25,42 @@ public final class TranslationTimingTrace: @unchecked Sendable {
     private var upstreamHeaderMilliseconds: Double?
     private var serverTiming: String?
     private var responseContentType: String?
+    private let signpostID = PerformanceSignposts.signposter.makeSignpostID()
+    private var signpostInterval: OSSignpostIntervalState?
 
     public init(startedAt: ContinuousClock.Instant = .now) {
         self.startedAt = startedAt
+        signpostInterval = PerformanceSignposts.signposter.beginInterval("Translation Run", id: signpostID)
+    }
+
+    deinit {
+        if let signpostInterval {
+            PerformanceSignposts.signposter.endInterval("Translation Run", signpostInterval, "incomplete")
+        }
     }
 
     public func mark(_ stage: Stage, at instant: ContinuousClock.Instant = .now) {
         let duration = startedAt.duration(to: instant).components
         let milliseconds = Double(duration.seconds) * 1000 + Double(duration.attoseconds) / 1e15
-        lock.withLock {
-            if stage == .lastContent {
-                stages[stage.rawValue] = milliseconds
-            } else if stages[stage.rawValue] == nil {
+        let (isFirstMark, endingInterval) = lock.withLock { () -> (Bool, OSSignpostIntervalState?) in
+            let isFirstMark = stages[stage.rawValue] == nil
+            if stage == .lastContent || isFirstMark {
                 stages[stage.rawValue] = milliseconds
             }
+            guard isFirstMark, stage == .resultApplied, let interval = signpostInterval else { return (isFirstMark, nil) }
+            signpostInterval = nil
+            return (isFirstMark, interval)
+        }
+        // lastContent fires per chunk; only first marks become events.
+        if isFirstMark, stage != .lastContent {
+            PerformanceSignposts.signposter.emitEvent(
+                "Translation Stage",
+                id: signpostID,
+                "\(stage.rawValue, privacy: .public) \(milliseconds, format: .fixed(precision: 0), privacy: .public)ms"
+            )
+        }
+        if let endingInterval {
+            PerformanceSignposts.signposter.endInterval("Translation Run", endingInterval)
         }
     }
 

@@ -144,7 +144,8 @@ public enum DiagnosticLogExporter {
         let text = FeedbackLogFormatter.makeLog(
             records: records,
             title: "diagnostic log generated",
-            unifiedLogLines: unifiedLogLines()
+            unifiedLogLines: unifiedLogLines(),
+            metricKitLines: MetricKitReporter.shared.logLines()
         )
         try text.write(to: fileURL, atomically: true, encoding: .utf8)
     }
@@ -314,7 +315,8 @@ enum FeedbackLogFormatter {
         records: [NetworkRequestRecord],
         generatedAt: Date = Date(),
         title: String = "feedback log generated",
-        unifiedLogLines: [String] = []
+        unifiedLogLines: [String] = [],
+        metricKitLines: [String] = []
     ) -> String {
         var lines: [String] = []
         let generatedTimestamp = timestamp(generatedAt)
@@ -324,6 +326,7 @@ enum FeedbackLogFormatter {
         lines.append("\(generatedTimestamp) [TLingo] app=\(appVersion) build=\(buildNumber)")
         lines.append("\(generatedTimestamp) [TLingo] system=\(ProcessInfo.processInfo.operatingSystemVersionString)")
         lines.append(contentsOf: unifiedLogLines)
+        lines.append(contentsOf: metricKitLines.map { "\(generatedTimestamp) \($0)" })
         lines.append("\(generatedTimestamp) [TLingo] record_count=\(records.count)")
 
         if records.isEmpty {

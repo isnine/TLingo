@@ -81,7 +81,8 @@ public final class NetworkRequestLogger: ObservableObject {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         reloadFromFile()
         let fileURL = directory.appendingPathComponent("tlingo-local.log")
-        try FeedbackLogFormatter.makeLog(records: records).write(to: fileURL, atomically: true, encoding: .utf8)
+        let log = FeedbackLogFormatter.makeLog(records: records, metricKitLines: MetricKitReporter.shared.logLines())
+        try log.write(to: fileURL, atomically: true, encoding: .utf8)
         return fileURL
     }
 

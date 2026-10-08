@@ -89,6 +89,17 @@ HTTP 成功不等于翻译质量正确；失败与不可用模型不纳入成功
 不是像素可见性或 Markdown 解析完成的精确证明；必须结合截图或录屏检查，
 不可将后台/屏幕外的 UI 更新当作用户已经看到完整结果。
 
+## 性能埋点
+
+Instruments 的 Points of Interest 轨道（subsystem `com.zanderwang.AITranslator`）记录：
+
+- `Translation Run`：每个模型结果从提交到 `resultApplied` 的区间；`Translation Stage` 事件标出
+  `TranslationTimingTrace` 各阶段首次到达的毫秒数。未完成即被释放的区间以 `incomplete` 结束。
+- `Realtime Translation`：每次实时翻译调用，附 provider。
+
+App 启动时订阅 MetricKit，最近 20 个 metric/diagnostic payload 保存在 App 缓存目录的 `MetricKit/`；
+反馈邮件附件和 macOS 导出日志附带最新 5 个，以 `[MetricKit]` 行输出。
+
 ## 文档
 
 - Markdown 相对链接必须解析到 tracked 文件。

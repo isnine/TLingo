@@ -1,5 +1,6 @@
 #if os(macOS) || os(iOS)
     import Foundation
+    import os
 
     public enum RealtimeTranslationProvider: String, CaseIterable, Codable, Identifiable, Sendable {
         case appleTranslator = "apple_translator"
@@ -104,6 +105,13 @@
 
     enum RealtimeTranslationService {
         static func translate(_ request: RealtimeTextTranslationRequest) async throws -> ModelExecutionResult {
+            let signposter = PerformanceSignposts.signposter
+            let interval = signposter.beginInterval(
+                "Realtime Translation",
+                id: signposter.makeSignpostID(),
+                "\(request.provider.rawValue, privacy: .public)"
+            )
+            defer { signposter.endInterval("Realtime Translation", interval) }
             switch request.provider {
             case .appleTranslator:
                 return try await AppleTranslationService.shared.translateSentencesWithInstalledLanguages(
