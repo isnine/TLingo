@@ -89,6 +89,23 @@ HTTP 成功不等于翻译质量正确；失败与不可用模型不纳入成功
 不是像素可见性或 Markdown 解析完成的精确证明；必须结合截图或录屏检查，
 不可将后台/屏幕外的 UI 更新当作用户已经看到完整结果。
 
+## 实时长会话 benchmark（仅 macOS arm64，显式启用）
+
+```bash
+TEST_RUNNER_RUN_REALTIME_LONG_SESSION_BENCHMARK=1 \
+TEST_RUNNER_REALTIME_AUDIO_FIXTURE_PATH=<16 kHz mono Int16 wav> \
+TEST_RUNNER_REALTIME_AUDIO_BENCHMARK_OUTPUT_DIR=<output-dir> \
+TEST_RUNNER_REALTIME_AUDIO_MODEL_IDS=nemotron-streaming-560ms,parakeet-eou-320ms \
+xcodebuild -project ios/AITranslator.xcodeproj -scheme TLingo -configuration Debug \
+  -destination 'platform=macOS,arch=arm64' \
+  -only-testing:ShareCoreTests/RealtimeLongSessionBenchmarkTests test \
+  -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO
+```
+
+`<model-id>.tsv` 按音频分钟记录处理耗时、phys_footprint 和转写规模；`per-update-cost.tsv` 用合成的累积 partial
+（不需要音频）逐段计时识别状态、snapshot、展示和翻译调度。长音频可用 `say -f <text> -o <aiff>` 加
+`afconvert -f WAVE -d LEI16@16000 -c 1` 生成。
+
 ## 性能埋点
 
 Instruments 的 Points of Interest 轨道（subsystem `com.zanderwang.AITranslator`）记录：

@@ -1,5 +1,6 @@
 #if os(macOS) || os(iOS)
     import Foundation
+    import Synchronization
 
     struct RealtimeTextTranslationRequest {
         let translationText: String
@@ -562,7 +563,25 @@
             return nil
         }
 
+        /// Bounded memo: every recognition update re-keys the whole transcript, and folding is locale-bridged and slow.
+        private static let normalizedSourceKeyCache = Mutex<[String: String]>([:])
+        private static let normalizedSourceKeyCacheLimit = 4096
+
         private static func normalizedSourceKey(_ source: String) -> String {
+            if let cached = normalizedSourceKeyCache.withLock({ $0[source] }) {
+                return cached
+            }
+            let key = computeNormalizedSourceKey(source)
+            normalizedSourceKeyCache.withLock { cache in
+                if cache.count >= normalizedSourceKeyCacheLimit {
+                    cache.removeAll(keepingCapacity: true)
+                }
+                cache[source] = key
+            }
+            return key
+        }
+
+        private static func computeNormalizedSourceKey(_ source: String) -> String {
             let folded = source.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
             let normalized = folded.unicodeScalars.map { scalar in
                 CharacterSet.alphanumerics.contains(scalar) ? Character(scalar) : " "
