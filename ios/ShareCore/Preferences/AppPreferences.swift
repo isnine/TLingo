@@ -87,6 +87,9 @@ public final class AppPreferences: ObservableObject {
         @Published public private(set) var realtimeShowCaptions: Bool
         @Published public private(set) var realtimeDualInputHistoryRecordingEnabled: Bool
     #endif
+    #if os(iOS)
+        @Published public private(set) var realtimePictureInPictureEnabled: Bool
+    #endif
 
     private let defaults: UserDefaults
     private var notificationObserver: NSObjectProtocol?
@@ -180,6 +183,9 @@ public final class AppPreferences: ObservableObject {
             realtimeDualInputHistoryRecordingEnabled = defaults.bool(
                 forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled
             )
+        #endif
+        #if os(iOS)
+            realtimePictureInPictureEnabled = defaults.bool(forKey: StorageKeys.realtimePictureInPictureEnabled)
         #endif
 
         notificationObserver = NotificationCenter.default.addObserver(
@@ -495,6 +501,15 @@ public final class AppPreferences: ObservableObject {
         }
     #endif
 
+    #if os(iOS)
+        public func setRealtimePictureInPictureEnabled(_ enabled: Bool) {
+            guard realtimePictureInPictureEnabled != enabled else { return }
+
+            realtimePictureInPictureEnabled = enabled
+            defaults.set(enabled, forKey: StorageKeys.realtimePictureInPictureEnabled)
+        }
+    #endif
+
     // MARK: - Enabled Models (flat model architecture)
 
     public func setEnabledModelIDs(_ ids: Set<String>) {
@@ -749,6 +764,14 @@ public final class AppPreferences: ObservableObject {
             if realtimeDualInputHistoryRecordingEnabled != storedRealtimeDualInputHistoryRecordingEnabled {
                 realtimeDualInputHistoryRecordingEnabled = storedRealtimeDualInputHistoryRecordingEnabled
             }
+            #if os(iOS)
+                let storedRealtimePictureInPictureEnabled = defaults.bool(
+                    forKey: StorageKeys.realtimePictureInPictureEnabled
+                )
+                if realtimePictureInPictureEnabled != storedRealtimePictureInPictureEnabled {
+                    realtimePictureInPictureEnabled = storedRealtimePictureInPictureEnabled
+                }
+            #endif
         #endif
 
         let storedEnabledModels = AppPreferences.readEnabledModelIDs(from: defaults)
@@ -1016,6 +1039,9 @@ private enum StorageKeys {
         static let realtimeRecognitionModelID = "realtime_recognition_model_id"
         static let realtimeShowCaptions = "realtime_show_captions"
         static let realtimeDualInputHistoryRecordingEnabled = "realtime_dual_input_history_recording_enabled"
+    #endif
+    #if os(iOS)
+        static let realtimePictureInPictureEnabled = "realtime_picture_in_picture_enabled"
     #endif
     static let satisfactionPromptLastResponseDate = "satisfaction_prompt_last_response_date"
     static let systemReviewSuccessStreak = "system_review_success_streak"

@@ -1,5 +1,6 @@
 #if os(iOS)
     import AVFoundation
+    import AVKit
     import Combine
     import ReplayKit
     import ShareCore
@@ -15,6 +16,7 @@
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject private var store: RealtimeSessionStore
         @ObservedObject private var controlModel: RealtimeControlModel
+        @StateObject private var pictureInPicture: RealtimePictureInPictureController
         private let onShowSidebarTap: (() -> Void)?
         private let onHistoryTap: (() -> Void)?
         /// Set when presented full screen from Home; adds a Close button.
@@ -42,6 +44,7 @@
         ) {
             _store = ObservedObject(wrappedValue: store)
             _controlModel = ObservedObject(wrappedValue: controlModel)
+            _pictureInPicture = StateObject(wrappedValue: RealtimePictureInPictureController(store: store))
             self.onShowSidebarTap = onShowSidebarTap
             self.onHistoryTap = onHistoryTap
             self.onDismiss = onDismiss
@@ -61,6 +64,12 @@
 
         var body: some View {
             captionPane
+                .background {
+                    if preferences.realtimePictureInPictureEnabled {
+                        RealtimePictureInPictureSourceView(controller: pictureInPicture)
+                            .accessibilityHidden(true)
+                    }
+                }
                 .translationTask(store.appleTranslationDownloadConfiguration) { session in
                     await store.prepareAppleTranslationLanguageDownload(using: session)
                 }
@@ -95,6 +104,10 @@
                 .onChange(of: scenePhase) { _, phase in
                     guard phase != .active else { return }
                     guard !isIPhoneAudioInput else { return }
+                    // PiP starts while the scene resigns active; decide only once the app is backgrounded.
+                    if preferences.realtimePictureInPictureEnabled {
+                        guard phase == .background, !store.continuesInBackground else { return }
+                    }
                     Task { await store.stop() }
                 }
                 .alert(
@@ -682,6 +695,14 @@
                             }
                         }
                     }
+
+                    if AVPictureInPictureController.isPictureInPictureSupported() {
+                        Section {
+                            Toggle("Picture in Picture", isOn: pictureInPictureBinding)
+                        } footer: {
+                            Text("Keep showing microphone captions in a floating window after leaving TLingo.")
+                        }
+                    }
                 }
                 .navigationTitle("Realtime Options")
                 .navigationBarTitleDisplayMode(.inline)
@@ -720,6 +741,13 @@
                         controlModel.enforceIPhoneAudioLocalRoute(store: store, preferences: preferences)
                     }
                 }
+            )
+        }
+
+        private var pictureInPictureBinding: Binding<Bool> {
+            Binding(
+                get: { preferences.realtimePictureInPictureEnabled },
+                set: { preferences.setRealtimePictureInPictureEnabled($0) }
             )
         }
 

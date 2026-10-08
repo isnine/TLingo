@@ -209,6 +209,8 @@
             private let broadcastStateStore: RealtimeBroadcastStateStore?
             private var broadcastStatePollingTask: Task<Void, Never>?
             private var foregroundOnlyObservers: [NSObjectProtocol] = []
+            /// Set while Picture in Picture shows the captions, so leaving the app keeps microphone capture running.
+            public var continuesInBackground = false
             private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
         #endif
 
@@ -1042,6 +1044,7 @@
                         queue: .main
                     ) { [weak self] _ in
                         Task { @MainActor in
+                            guard self?.continuesInBackground != true else { return }
                             await self?.stopForForegroundOnlyLifecycle()
                         }
                     },
