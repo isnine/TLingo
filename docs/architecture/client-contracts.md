@@ -57,6 +57,10 @@ headers = X-Timestamp, X-Signature
 App Store 会员（`appAccountToken`）、设备（`device`）。设备标识是首次使用时生成的随机 UUID，存于 Keychain
 （`ThisDeviceOnly`，不随 iCloud 同步），不来自硬件或广告标识符。Worker 仅将其用于 AI Gateway 日志归属。
 
+共享网络会话的请求使用 `User-Agent: TLingo/<版本> (<构建号>; <平台> <系统版本>; <设备型号>; <渠道>)`，
+例如 `TLingo/3.8.4 (504; iOS 26.1; iPhone17,3; AppStore)`；渠道为 `AppStore`、`TestFlight`、`Direct` 或 `Debug`。
+它只用于日志归属，不参与鉴权。
+
 会员请求附带 `X-AppStore-Transaction`：当前有效会员交易的 StoreKit 2 JWS（`jwsRepresentation`），
 由服务端校验；TestFlight 沙盒购买同样有效。`X-Premium: true` 仅为兼容旧服务端保留。客户端不再提供
 TestFlight 本地开通会员的入口，TestFlight 双击版本号只切换开发者模式；Debug 构建保留本地会员开关。

@@ -15,7 +15,12 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
 
     /// One shared session keeps connection reuse; a new session per request forces a fresh TLS handshake.
     private static let router = InnerTaskRouter()
-    private static let innerSession = URLSession(configuration: .default, delegate: router, delegateQueue: nil)
+    private static let innerSession: URLSession = {
+        // The forwarded request is sent by this session, so it needs the app User-Agent too.
+        let config = URLSessionConfiguration.default
+        config.httpAdditionalHeaders = ["User-Agent": ClientUserAgent.value]
+        return URLSession(configuration: config, delegate: router, delegateQueue: nil)
+    }()
 
     private var innerTask: URLSessionDataTask?
     private var responseBodyByteCount = 0

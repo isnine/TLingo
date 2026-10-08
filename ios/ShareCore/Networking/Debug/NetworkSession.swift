@@ -13,6 +13,7 @@ import Foundation
 public enum NetworkSession {
     public static let shared: URLSession = {
         let config = URLSessionConfiguration.default
+        config.httpAdditionalHeaders = ["User-Agent": ClientUserAgent.value]
         config.protocolClasses = [DebugNetworkProtocol.self] + (config.protocolClasses ?? [])
         return URLSession(configuration: config)
     }()

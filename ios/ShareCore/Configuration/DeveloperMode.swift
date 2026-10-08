@@ -82,7 +82,13 @@ public enum DeveloperMode {
 
     private static let testFlightDeveloperModeKey = "testflight_developer_mode"
 
-    private static var isLikelyTestFlight: Bool {
+    /// TestFlight probe usable off the main actor and from extensions. Reads
+    /// the container app's receipt, plus the `AppTransaction` result that
+    /// `StoreManager` persisted, which macOS TestFlight installs need.
+    static var isLikelyTestFlight: Bool {
+        if AppPreferences.sharedDefaults.bool(forKey: StoreManager.testFlightEnvironmentKey) {
+            return true
+        }
         var appURL = Bundle.main.bundleURL
         if appURL.pathExtension == "appex" {
             while appURL.pathExtension != "app", appURL.path != "/" {

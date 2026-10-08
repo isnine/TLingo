@@ -65,6 +65,9 @@ public final class StoreManager: ObservableObject {
     // write is atomic on our target architectures.
     private nonisolated(unsafe) static var isTestFlightEnvironmentCached: Bool = false
 
+    /// App Group copy of the `AppTransaction` TestFlight probe for extensions and later launches.
+    nonisolated static let testFlightEnvironmentKey = "storekit_testflight_environment"
+
     #if DEBUG
         /// Debug builds grant local premium unless the developer toggles it off.
         @Published public private(set) var isDebugPremiumDisabled: Bool = false
@@ -291,6 +294,7 @@ public final class StoreManager: ObservableObject {
             let verification = try await AppTransaction.shared
             let transaction = try checkVerified(verification)
             Self.isTestFlightEnvironmentCached = transaction.environment == .sandbox
+            AppPreferences.sharedDefaults.set(Self.isTestFlightEnvironmentCached, forKey: Self.testFlightEnvironmentKey)
             logger.info("AppTransaction environment: \(String(describing: transaction.environment), privacy: .public)")
         } catch {
             logger.error("AppTransaction probe failed: \(error, privacy: .public)")
