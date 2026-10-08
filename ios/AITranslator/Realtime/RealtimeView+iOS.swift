@@ -17,6 +17,7 @@
         @ObservedObject private var store: RealtimeSessionStore
         @ObservedObject private var controlModel: RealtimeControlModel
         @StateObject private var pictureInPicture: RealtimePictureInPictureController
+        @StateObject private var liveActivity: RealtimeLiveActivityController
         private let onShowSidebarTap: (() -> Void)?
         private let onHistoryTap: (() -> Void)?
         /// Set when presented full screen from Home; adds a Close button.
@@ -45,6 +46,7 @@
             _store = ObservedObject(wrappedValue: store)
             _controlModel = ObservedObject(wrappedValue: controlModel)
             _pictureInPicture = StateObject(wrappedValue: RealtimePictureInPictureController(store: store))
+            _liveActivity = StateObject(wrappedValue: RealtimeLiveActivityController(store: store))
             self.onShowSidebarTap = onShowSidebarTap
             self.onHistoryTap = onHistoryTap
             self.onDismiss = onDismiss

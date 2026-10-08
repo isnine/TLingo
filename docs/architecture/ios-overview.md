@@ -17,6 +17,7 @@ flowchart LR
     TLingo["TLingo iOS"] --> ShareCore
     Translation["TLingoTranslation"] --> ShareCore
     Broadcast["TLingoBroadcastUpload"] --> ShareCore
+    Widgets["TLingoWidgets"]
     ShareCore --> Network["Translation and LLM APIs"]
     ShareCore --> Storage["SwiftData, App Group, audio files"]
 ```
@@ -36,6 +37,7 @@ flowchart LR
 | `ios/ShareCore/UI/` | Shared Home, result, conversation and language components |
 | `ios/TranslationUI/` | System translation extension adapter |
 | `ios/TLingoBroadcastUpload/` | ReplayKit audio producer |
+| `ios/TLingoWidgets/` | Realtime Live Activity and the Start Realtime control; does not link ShareCore |
 | `ios/ShareCoreTests/` | Swift Testing and snapshot coverage |
 
 ## State Ownership
@@ -52,6 +54,7 @@ flowchart LR
 - Helper shows a non-activating bubble during selection capture and app handoff. Translation delivery waits up to five seconds for the receiving URL handler's reply off the main actor; capture failure/cancellation, permission loss, paused input, launch/delivery errors and login-item failures use the same notice bubble. A handler reply acknowledges receipt, not translation completion.
 - `LLMService` routes Worker models through the Worker and Apple Foundation Models through `FoundationModelService`: `apple-foundation-model` runs on-device, while `apple-private-cloud` uses Private Cloud Compute.
 - macOS App Store translation requires explicit data-sharing consent before executing an action, including external popup input. The notice names the cloud providers; versioned acceptance requires users who accepted the former Azure-only notice to consent again. Realtime translation currently uses Apple translation rather than the cloud LLM proxy.
+- On iOS, `RealtimeLiveActivityController` mirrors the running session into a Live Activity (latest caption pair, paused state, at most one update per second) and ends it when the session stops. `RealtimeActivityAttributes` and `StartRealtimeTranslationIntent` live in `ios/AITranslator/Widgets/` and are compiled into TLingoWidgets through explicit file references. The intent runs in the app and opens `tlingo://realtime`.
 - `RealtimeSessionStore` owns one Realtime session generation, shared producer lifecycle, macOS lane configuration and final History snapshot.
 - On macOS, `RealtimePipelineCoordinator` owns the shared recognition/translation execution graph. Recognition nodes are keyed by model ID, and lane runtimes own independent transcript and Apple translation state.
 - FluidAudio adapters normalize Parakeet EOU, English Nemotron and Nemotron 3.5 Multilingual output into stable and pending transcript snapshots for macOS lane fanout and iOS microphone recognition. iOS models download into the app cache when selected.

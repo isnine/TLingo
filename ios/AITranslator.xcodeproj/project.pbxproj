@@ -44,6 +44,9 @@
 		CED126432FB0733E00A567CD /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
 		CED126472FB0733E00A567CD /* ShareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		CED1267202FB0733E00A567CE /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = CED1267102FB0733E00A567CE /* Sparkle */; };
+		AF2200000000000000000001 /* TLingoWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AF2200000000000000000005 /* TLingoWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AF2200000000000000000002 /* AITranslator/Widgets/RealtimeActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF2200000000000000000020 /* AITranslator/Widgets/RealtimeActivityAttributes.swift */; };
+		AF2200000000000000000003 /* AITranslator/Widgets/StartRealtimeTranslationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF2200000000000000000021 /* AITranslator/Widgets/StartRealtimeTranslationIntent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +106,13 @@
 			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
 			remoteInfo = ShareCore;
 		};
+		AF220000000000000000000D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AF2200000000000000000009;
+			remoteInfo = TLingoWidgets;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -135,6 +145,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				CEAB00022FB5000000000001 /* TLingoBroadcastUpload.appex in Embed App Extensions */,
+				AF2200000000000000000001 /* TLingoWidgets.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -188,6 +199,9 @@
 		CEAB00132FB5000000000001 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
 		CED1264B2FB0733E00A567CD /* TLingo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TLingo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CED126502FB0733E00A567CE /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
+		AF2200000000000000000005 /* TLingoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TLingoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF2200000000000000000020 /* AITranslator/Widgets/RealtimeActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/Widgets/RealtimeActivityAttributes.swift; sourceTree = SOURCE_ROOT; };
+		AF2200000000000000000021 /* AITranslator/Widgets/StartRealtimeTranslationIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/Widgets/StartRealtimeTranslationIntent.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -232,6 +246,13 @@
 				Info.plist,
 			);
 			target = CED126382FB0733E00A567CD /* TLingo-Direct */;
+		};
+		AF2200000000000000000006 /* Exceptions for "TLingoWidgets" folder in "TLingoWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AF2200000000000000000009 /* TLingoWidgets */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -290,6 +311,14 @@
 				CED1264E2FB0733F00A567CE /* Exceptions for "Direct" folder in "TLingo-Direct" target */,
 			);
 			path = Direct;
+			sourceTree = "<group>";
+		};
+		AF2200000000000000000007 /* TLingoWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AF2200000000000000000006 /* Exceptions for "TLingoWidgets" folder in "TLingoWidgets" target */,
+			);
+			path = TLingoWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -367,6 +396,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF2200000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -408,6 +444,8 @@
 				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
 				CEAB00072FB5000000000001 /* TLingoBroadcastUpload */,
 				CE4EB11F2EA4F47400DDDFA5 /* ShareCore */,
+				AF2200000000000000000007 /* TLingoWidgets */,
+				AF2200000000000000000033 /* Widget Shared Sources */,
 				CE3703402F3E000000000002 /* ShareCoreTests */,
 				CE37034F2F3E000000000002 /* TLingoUITests */,
 				CE3703302F2E40000039FC39 /* Configuration */,
@@ -422,6 +460,7 @@
 				CE4EB0DD2EA33ADD00DDDFA5 /* TLingo.app */,
 				CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */,
 				CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */,
+				AF2200000000000000000005 /* TLingoWidgets.appex */,
 				CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */,
 				CE3703402F3E000000000001 /* ShareCoreTests.xctest */,
 				CE37034F2F3E000000000001 /* TLingoUITests.xctest */,
@@ -439,6 +478,15 @@
 				CE266B512FF4207300B169B9 /* SwiftStreamingMarkdown_SwiftStreamingMarkdown.bundle */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AF2200000000000000000033 /* Widget Shared Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AF2200000000000000000020 /* AITranslator/Widgets/RealtimeActivityAttributes.swift */,
+				AF2200000000000000000021 /* AITranslator/Widgets/StartRealtimeTranslationIntent.swift */,
+			);
+			name = "Widget Shared Sources";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -541,6 +589,7 @@
 				CE22638E2EB250B800BB7BEF /* PBXTargetDependency */,
 				CE4EB10E2EA33CAD00DDDFA5 /* PBXTargetDependency */,
 				CEAB000C2FB5000000000001 /* PBXTargetDependency */,
+				AF220000000000000000000C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
@@ -654,6 +703,28 @@
 			productReference = CED1264B2FB0733E00A567CD /* TLingo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AF2200000000000000000009 /* TLingoWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF2200000000000000000012 /* Build configuration list for PBXNativeTarget "TLingoWidgets" */;
+			buildPhases = (
+				AF220000000000000000000B /* Sources */,
+				AF2200000000000000000008 /* Frameworks */,
+				AF220000000000000000000A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AF2200000000000000000007 /* TLingoWidgets */,
+			);
+			name = TLingoWidgets;
+			packageProductDependencies = (
+			);
+			productName = TLingoWidgets;
+			productReference = AF2200000000000000000005 /* TLingoWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -681,6 +752,9 @@
 						CreatedOnToolsVersion = 26.0.1;
 					};
 					CEAB00092FB5000000000001 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					AF2200000000000000000009 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -711,6 +785,7 @@
 				CE4EB0DC2EA33ADD00DDDFA5 /* TLingo */,
 				CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */,
 				CEAB00092FB5000000000001 /* TLingoBroadcastUpload */,
+				AF2200000000000000000009 /* TLingoWidgets */,
 				CE4EB11D2EA4F47400DDDFA5 /* ShareCore */,
 				CE3703402F3E000000000007 /* ShareCoreTests */,
 				CE37034F2F3E000000000006 /* TLingoUITests */,
@@ -785,6 +860,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF220000000000000000000A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -853,6 +935,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF220000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF2200000000000000000002 /* AITranslator/Widgets/RealtimeActivityAttributes.swift in Sources */,
+				AF2200000000000000000003 /* AITranslator/Widgets/StartRealtimeTranslationIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -897,6 +988,12 @@
 			isa = PBXTargetDependency;
 			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
 			targetProxy = CED1263A2FB0733E00A567CD /* PBXContainerItemProxy */;
+		};
+		AF220000000000000000000C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = AF2200000000000000000009 /* TLingoWidgets */;
+			targetProxy = AF220000000000000000000D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1185,6 +1282,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "TLingo uses the camera to capture text you want to translate.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1249,6 +1347,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "TLingo uses the camera to capture text you want to translate.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "TLingo needs microphone access to record your voice for creating actions and realtime subtitles.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "TLingo needs speech recognition access to transcribe realtime subtitles.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1576,6 +1675,74 @@
 			};
 			name = Release;
 		};
+		AF2200000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF2200000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.8.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1656,6 +1823,15 @@
 			buildConfigurations = (
 				CED126492FB0733E00A567CD /* Debug */,
 				CED1264A2FB0733E00A567CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF2200000000000000000012 /* Build configuration list for PBXNativeTarget "TLingoWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF2200000000000000000010 /* Debug */,
+				AF2200000000000000000011 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
