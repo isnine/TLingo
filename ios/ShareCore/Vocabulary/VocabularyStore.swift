@@ -93,29 +93,6 @@ public final class VocabularyStore: ObservableObject {
         try commit()
     }
 
-    public func recordReview(_ entry: VocabularyEntry, remembered: Bool, at date: Date = Date()) throws {
-        entry.reviewCount += 1
-        entry.lastReviewedAt = date
-        entry.familiarity = remembered ? min(entry.familiarity + 1, VocabularyEntry.learnedFamiliarity) : 0
-        try commit()
-    }
-
-    /// Least familiar first, then longest unreviewed; learned entries only when nothing else is left.
-    public func reviewQueue(limit: Int = 20) -> [VocabularyEntry] {
-        Self.reviewOrder(entries, limit: limit)
-    }
-
-    static func reviewOrder(_ entries: [VocabularyEntry], limit: Int) -> [VocabularyEntry] {
-        let learning = entries.filter { !$0.isLearned }
-        let pool = learning.isEmpty ? entries : learning
-        return Array(pool.sorted { lhs, rhs in
-            if lhs.familiarity != rhs.familiarity {
-                return lhs.familiarity < rhs.familiarity
-            }
-            return (lhs.lastReviewedAt ?? .distantPast) < (rhs.lastReviewedAt ?? .distantPast)
-        }.prefix(limit))
-    }
-
     private func entry(for draft: VocabularyDraft) -> VocabularyEntry? {
         let key = draft.key
         return entries.first {

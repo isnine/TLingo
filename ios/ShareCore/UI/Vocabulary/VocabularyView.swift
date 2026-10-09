@@ -3,19 +3,19 @@
 //  ShareCore
 //
 
+import CoreTransferable
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// Saved terms with search, deletion and a flashcard review session. Hosts provide the navigation container.
+/// Saved terms with search, deletion and plain-text export. Hosts provide the navigation container.
 public struct VocabularyView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var store = VocabularyStore.shared
     @State private var searchText = ""
-    @State private var reviewSession: ReviewSession?
-
-    private struct ReviewSession: Identifiable {
-        let id = UUID()
-        let queue: [VocabularyEntry]
-    }
+    #if os(iOS)
+        @State private var isExporting = false
+        @State private var exportedFileURL: URL?
+    #endif
 
     public init() {}
 
@@ -37,21 +37,49 @@ public struct VocabularyView: View {
             .searchable(text: $searchText, prompt: Text("Search Vocabulary"))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Review", systemImage: "rectangle.on.rectangle.angled") {
-                        reviewSession = ReviewSession(queue: store.reviewQueue())
-                    }
-                    .disabled(store.entries.isEmpty)
-                    .accessibilityIdentifier("vocabulary_review_button")
+                    exportButton
+                        .disabled(store.entries.isEmpty)
+                        .accessibilityIdentifier("vocabulary_export_button")
                 }
             }
-            .sheet(item: $reviewSession) { session in
-                VocabularyReviewView(queue: session.queue) { reviewSession = nil }
-                #if os(macOS)
-                    .frame(minWidth: 480, minHeight: 520)
-                #endif
+        #if os(iOS)
+            .background {
+                ActivitySheetPresenter(fileURL: $exportedFileURL) { isExporting = false }
             }
+        #endif
             .onAppear { store.reload() }
     }
+
+    #if os(iOS)
+        /// The system share sheet takes seconds to appear, so the button spins until it is on screen.
+        @ViewBuilder
+        private var exportButton: some View {
+            if isExporting {
+                ProgressView()
+            } else {
+                Button("Export All Words", systemImage: "square.and.arrow.up") {
+                    isExporting = true
+                    let export = VocabularyExport(terms: store.entries.map(\.term))
+                    Task {
+                        do {
+                            exportedFileURL = try await Task.detached { try export.writeFile() }.value
+                        } catch {
+                            isExporting = false
+                        }
+                    }
+                }
+            }
+        }
+    #else
+        private var exportButton: some View {
+            ShareLink(
+                item: VocabularyExport(terms: store.entries.map(\.term)),
+                preview: SharePreview(Text("Vocabulary"))
+            ) {
+                Label("Export All Words", systemImage: "square.and.arrow.up")
+            }
+        }
+    #endif
 
     @ViewBuilder
     private var content: some View {
@@ -105,11 +133,6 @@ private struct VocabularyRow: View {
                     .lineLimit(2)
             }
             Spacer(minLength: 8)
-            if entry.isLearned {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundStyle(colors.accent)
-                    .accessibilityLabel("Learned")
-            }
         }
         .padding(.vertical, 2)
     }
@@ -129,9 +152,6 @@ private struct VocabularyEntryDetailView: View {
                     .textSelection(.enabled)
                 MarkdownContentView(text: entry.translation, preset: .compact)
                     .textSelection(.enabled)
-                Text(VocabularyText.reviewSummary(for: entry))
-                    .font(.footnote)
-                    .foregroundStyle(colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
@@ -150,116 +170,60 @@ private struct VocabularyEntryDetailView: View {
     }
 }
 
-/// One pass through a fixed queue: reveal the answer, then grade it.
-struct VocabularyReviewView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    @ObservedObject private var store = VocabularyStore.shared
-    let queue: [VocabularyEntry]
-    let onClose: () -> Void
+/// All saved terms as a `.txt` file, one term per line.
+struct VocabularyExport: Transferable, Sendable {
+    let terms: [String]
 
-    @State private var index = 0
-    @State private var isRevealed = false
-    @State private var rememberedCount = 0
-
-    var body: some View {
-        let colors = AppColors.palette(for: colorScheme)
-        NavigationStack {
-            VStack(spacing: 20) {
-                if index < queue.count {
-                    card(for: queue[index], colors: colors)
-                    controls
-                } else {
-                    ContentUnavailableView(
-                        "Review Complete",
-                        systemImage: "checkmark.circle",
-                        description: Text("Remembered \(rememberedCount) of \(queue.count).")
-                    )
-                }
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(colors.background.ignoresSafeArea())
-            .navigationTitle(index < queue.count ? Text("\(index + 1) of \(queue.count)") : Text("Review"))
-            #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-            #endif
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done", action: onClose)
-                    }
-                }
-        }
+    var text: String {
+        var seen = Set<String>()
+        return terms
+            .map { $0.split(whereSeparator: \.isNewline).joined(separator: " ") }
+            .filter { seen.insert($0).inserted }
+            .joined(separator: "\n")
     }
 
-    private func card(for entry: VocabularyEntry, colors: AppColorPalette) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(entry.term)
-                    .font(.title.weight(.semibold))
-                    .foregroundStyle(colors.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .multilineTextAlignment(.center)
-                if isRevealed {
-                    Divider()
-                    MarkdownContentView(text: entry.translation, preset: .compact)
-                }
-            }
-            .padding(20)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
-                .fill(colors.cardBackground)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { isRevealed = true }
+    func writeFile() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("Vocabulary.txt")
+        try (text + "\n").write(to: url, atomically: true, encoding: .utf8)
+        return url
     }
 
-    @ViewBuilder
-    private var controls: some View {
-        if isRevealed {
-            HStack(spacing: 12) {
-                Button {
-                    grade(remembered: false)
-                } label: {
-                    Label("Forgot", systemImage: "arrow.counterclockwise")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glass)
-                .accessibilityIdentifier("vocabulary_review_forgot")
-
-                Button {
-                    grade(remembered: true)
-                } label: {
-                    Label("Remembered", systemImage: "checkmark")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glassProminent)
-                .accessibilityIdentifier("vocabulary_review_remembered")
-            }
-            .controlSize(.large)
-        } else {
-            Button {
-                isRevealed = true
-            } label: {
-                Text("Show Answer")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.glassProminent)
-            .controlSize(.large)
-            .accessibilityIdentifier("vocabulary_review_reveal")
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .plainText) { export in
+            try SentTransferredFile(export.writeFile())
         }
-    }
-
-    private func grade(remembered: Bool) {
-        try? store.recordReview(queue[index], remembered: remembered)
-        if remembered {
-            rememberedCount += 1
-        }
-        isRevealed = false
-        index += 1
     }
 }
+
+#if os(iOS)
+    /// Presents the system share sheet for `fileURL` and reports when it is on screen, which `ShareLink` cannot.
+    private struct ActivitySheetPresenter: UIViewControllerRepresentable {
+        @Binding var fileURL: URL?
+        let onPresented: () -> Void
+
+        func makeUIViewController(context: Context) -> UIViewController {
+            UIViewController()
+        }
+
+        func updateUIViewController(_ controller: UIViewController, context: Context) {
+            guard let fileURL, controller.presentedViewController == nil else { return }
+            let activity = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+            activity.completionWithItemsHandler = { _, _, _, _ in
+                self.fileURL = nil
+                try? FileManager.default.removeItem(at: fileURL.deletingLastPathComponent())
+            }
+            if let popover = activity.popoverPresentationController {
+                popover.sourceView = controller.view
+                popover.sourceRect = CGRect(x: controller.view.bounds.maxX - 44, y: 0, width: 44, height: 1)
+                popover.permittedArrowDirections = .up
+            }
+            controller.present(activity, animated: true, completion: onPresented)
+        }
+    }
+#endif
 
 enum VocabularyText {
     /// First meaningful line of a Markdown translation, without markup or a line that only repeats the term.
@@ -277,13 +241,5 @@ enum VocabularyText {
                 !line.isEmpty && !line.allSatisfy { "-_#".contains($0) }
                     && line.compare(term, options: [.caseInsensitive, .widthInsensitive]) != .orderedSame
             } ?? ""
-    }
-
-    static func reviewSummary(for entry: VocabularyEntry) -> String {
-        guard let lastReviewedAt = entry.lastReviewedAt else {
-            return String(localized: "Not reviewed yet")
-        }
-        let date = lastReviewedAt.formatted(date: .abbreviated, time: .omitted)
-        return String(localized: "Reviewed \(entry.reviewCount) times · last \(date)")
     }
 }

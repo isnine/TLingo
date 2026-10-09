@@ -18,16 +18,6 @@ public final class VocabularyEntry {
     public var sourceLanguageCode: String?
     public var targetLanguageCode: String
     public var createdAt: Date
-    public var reviewCount: Int
-    /// 0 (new or forgotten) through `VocabularyEntry.learnedFamiliarity`.
-    public var familiarity: Int
-    public var lastReviewedAt: Date?
-
-    public static let learnedFamiliarity = 5
-
-    public var isLearned: Bool {
-        familiarity >= Self.learnedFamiliarity
-    }
 
     init(draft: VocabularyDraft, createdAt: Date = Date()) {
         id = UUID()
@@ -37,9 +27,6 @@ public final class VocabularyEntry {
         sourceLanguageCode = draft.sourceLanguageCode
         targetLanguageCode = draft.targetLanguageCode
         self.createdAt = createdAt
-        reviewCount = 0
-        familiarity = 0
-        lastReviewedAt = nil
     }
 }
 

@@ -32,7 +32,7 @@ flowchart LR
 | `ios/ShareCore/Networking/` | Translation, LLM, speech and voice requests |
 | `ios/ShareCore/Realtime/` | Audio input, recognition, translation, captions and session state |
 | `ios/ShareCore/History/` | SwiftData records, Realtime audio storage, export and post-processing |
-| `ios/ShareCore/Vocabulary/` | Saved terms and flashcard review state in a separate SwiftData store |
+| `ios/ShareCore/Vocabulary/` | Saved terms in a separate SwiftData store, exportable as plain text |
 | `ios/ShareCore/OAuth/` | Activation, PKCE, token persistence and website restore |
 | `ios/ShareCore/UI/` | Shared Home, result, conversation and language components |
 | `ios/TranslationUI/` | System translation extension adapter |
