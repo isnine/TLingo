@@ -31176,6 +31176,7 @@
       }
     },
     "Downloaded" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
