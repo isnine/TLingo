@@ -71,6 +71,18 @@ public struct NetworkDebugView: View {
                         Label("Local Log", systemImage: "doc.text")
                     }
 
+                    #if os(macOS)
+                        NavigationLink {
+                            ScreenRecordingDebugView()
+                        } label: {
+                            Label {
+                                Text(verbatim: "Screen Recording")
+                            } icon: {
+                                Image(systemName: "rectangle.dashed.badge.record")
+                            }
+                        }
+                    #endif
+
                     Toggle("Errors Only", isOn: $failuresOnly)
 
                     Button("Copy Latest 10 Reports", systemImage: "doc.on.doc") {
