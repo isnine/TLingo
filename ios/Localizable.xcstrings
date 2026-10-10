@@ -111,12 +111,6 @@
             "value" : "— ms"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "— ms"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -124,6 +118,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— ms"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "— ms"
@@ -1000,6 +1000,130 @@
         }
       }
     },
+    "%@ does not support %@. Choose another model or change the source language." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ لا يدعم %@. اختر نموذجًا آخر أو غيّر لغة المصدر."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ understøtter ikke %@. Vælg en anden model, eller skift kildesprog."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ unterstützt %@ nicht. Wählen Sie ein anderes Modell oder ändern Sie die Quellsprache."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ does not support %@. Choose another model or change the source language."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no admite %@. Elija otro modelo o cambie el idioma de origen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ne prend pas en charge %@. Choisissez un autre modèle ou changez la langue source."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tidak mendukung %@. Pilih model lain atau ubah bahasa sumber."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ non supporta %@. Scegli un altro modello o cambia la lingua sorgente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ は%@をサポートしていません。別のモデルを選ぶか、入力言語を変更してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@은(는) %@을(를) 지원하지 않습니다. 다른 모델을 선택하거나 소스 언어를 변경하세요."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tidak menyokong %@. Pilih model lain atau tukar bahasa sumber."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ støtter ikke %@. Velg en annen modell eller bytt kildespråk."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ondersteunt %@ niet. Kies een ander model of wijzig de brontaal."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nie obsługuje %@. Wybierz inny model lub zmień język źródłowy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não suporta %@. Escolha outro modelo ou altere o idioma de origem."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ stöder inte %@. Välj en annan modell eller byt källspråk."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@'yi desteklemiyor. Başka bir model seçin veya kaynak dili değiştirin."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 不支持 %@。请选择其他模型，或更改源语言。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 不支援 %@。請選擇其他模型，或更改來源語言。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 不支援 %@。請選擇其他模型，或更改來源語言。"
+          }
+        }
+      }
+    },
     "%@ does not support image input" : {
       "localizations" : {
         "ar" : {
@@ -1851,19 +1975,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@/mo，按年收费"
+            "value" : "每月 %@，按年计费"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@/mo，按年收費"
+            "value" : "每月 %@，按年計費"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@/mo，按年收費"
+            "value" : "每月 %@，按年收費"
           }
         }
       }
@@ -1975,19 +2099,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@/mo，按年收费 · 节省 %2$lld%%"
+            "value" : "%1$@/月，按年计费 · 立省 %2$lld%%"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@/mo，按年收費 · 節省 %2$lld%%"
+            "value" : "%1$@/月，按年計費 · 立省 %2$lld%%"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@/mo，按年收費 · 節省 %2$lld%%"
+            "value" : "%1$@/月，按年收費 · 立省 %2$lld%%"
           }
         }
       }
@@ -2223,19 +2347,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld天"
+            "value" : "提前 %lld 天"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld天"
+            "value" : "提前 %lld 天"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld日"
+            "value" : "提前 %lld 天"
           }
         }
       }
@@ -2965,12 +3089,6 @@
             "value" : "%lld ms"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld ms"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2978,6 +3096,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ms"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld ms"
@@ -3714,19 +3838,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1天"
+            "value" : "提前 1 天"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1天"
+            "value" : "提前 1 天"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1天"
+            "value" : "提前 1 天"
           }
         }
       }
@@ -3838,19 +3962,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. 选择一句话"
+            "value" : "1. 用鼠标选中任意一句话"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. 選取一句話"
+            "value" : "1. 用滑鼠選取任意一句話"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. 選取一個句子"
+            "value" : "1. 用滑鼠選取任意一句話"
           }
         }
       }
@@ -4087,19 +4211,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2. 移动到蓝点"
+            "value" : "2. 将鼠标移动到浮现的蓝色小圆点"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2. 移到藍色的點"
+            "value" : "2. 將滑鼠移動到浮現的藍色小圓點"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2. 移到藍色的點"
+            "value" : "2. 將滑鼠移動到浮現的藍色小圓點"
           }
         }
       }
@@ -4336,19 +4460,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 选择“Polish”"
+            "value" : "3. 点击“润色”"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 選擇「Polish」"
+            "value" : "3. 點擊「潤色」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 選擇「Polish」"
+            "value" : "3. 點擊「潤色」"
           }
         }
       }
@@ -4460,19 +4584,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 选择“Translate”"
+            "value" : "3. 点击“翻译”"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 選擇「Translate」"
+            "value" : "3. 點擊「翻譯」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "3. 選擇「Translate」"
+            "value" : "3. 點擊「翻譯」"
           }
         }
       }
@@ -5103,30 +5227,6 @@
     },
     "About 40 languages: English, Chinese, Japanese, Korean, French, Spanish, and more" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About 40 languages: English, Chinese, Japanese, Korean, French, Spanish, and more"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支持约 40 种语言，包括英语、中文、日语、韩语、法语、西班牙语等"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支援約 40 種語言，包括英語、中文、日語、韓語、法語、西班牙語等"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支援約 40 種語言，包括英語、中文、日語、韓語、法語、西班牙語等"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5143,6 +5243,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etwa 40 Sprachen: Englisch, Chinesisch, Japanisch, Koreanisch, Französisch, Spanisch und mehr"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 40 languages: English, Chinese, Japanese, Korean, French, Spanish, and more"
           }
         },
         "es" : {
@@ -5221,6 +5327,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yaklaşık 40 dil: İngilizce, Çince, Japonca, Korece, Fransızca, İspanyolca ve daha fazlası"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持约 40 种语言，包括英语、中文、日语、韩语、法语、西班牙语等"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援約 40 種語言，包括英語、中文、日語、韓語、法語、西班牙語等"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援約 40 種語言，包括英語、中文、日語、韓語、法語、西班牙語等"
           }
         }
       }
@@ -5456,19 +5580,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无障碍"
+            "value" : "辅助功能"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無障礙"
+            "value" : "輔助使用"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無障礙"
+            "value" : "輔助使用"
           }
         }
       }
@@ -6200,7 +6324,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "动作"
+            "value" : "操作"
           }
         },
         "zh-Hant" : {
@@ -6212,7 +6336,7 @@
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "動作"
+            "value" : "操作"
           }
         }
       }
@@ -6324,7 +6448,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "动作"
+            "value" : "操作"
           }
         },
         "zh-Hant" : {
@@ -6336,7 +6460,7 @@
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "動作"
+            "value" : "操作"
           }
         }
       }
@@ -7313,12 +7437,6 @@
             "value" : "Başlamadan önce Realtime Seçenekleri'ne geçerli bir Azure uç noktası ve API anahtarı ekleyin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在開始之前，請在 Realtime 選項中新增有效的 Azure 端點和 API 金鑰。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7326,6 +7444,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在開始之前，請在 Realtime 選項中新增有效的 Azure 端點和 API 金鑰。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "在開始之前，請在 Realtime 選項中新增有效的 Azure 端點和 API 金鑰。"
@@ -8183,12 +8307,6 @@
             "value" : "Gözden geçirilmiş metnin altına, örneğin dil bilgisi sorunları gibi notlar ekler"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在修訂後的文字下方新增註解，例如文法問題"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8196,6 +8314,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在修訂後的文字下方新增註解，例如文法問題"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "在修訂後的文字下方新增註解，例如文法問題"
@@ -8434,19 +8558,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用“屏幕与系统音频录制”后，macOS 可能需要退出并重新打开 TLingo。"
+            "value" : "开启“屏幕与系统音频录制”后，macOS 要求重启 TLingo 以使权限生效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用「螢幕與系統音訊錄製」後，macOS 可能需要您退出並重新開啟 TLingo。"
+            "value" : "開啟「螢幕與系統音訊錄製」後，macOS 要求重啟 TLingo 以使權限生效。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用「畫面及系統音訊錄製」後，macOS 可能需要退出並重新開啟 TLingo。"
+            "value" : "開啟「螢幕與系統音訊錄製」後，macOS 要求重啟 TLingo 以使權限生效。"
           }
         }
       }
@@ -9306,19 +9430,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已列出？使用 − 删除旧条目，然后再次将 TLingo 拖入。"
+            "value" : "若列表中已有 TLingo：先选中并点击“−”移除旧条目，再重新拖入并勾选。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已列出嗎？用 − 移除舊項目，然後再把 TLingo 拖入。"
+            "value" : "若列表中已有 TLingo：先選取並點擊「−」移除舊條目，再重新拖入並勾選。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已列出嗎？用 − 移除舊項目，然後再把 TLingo 拖入。"
+            "value" : "若列表中已有 TLingo：先選取並點擊「−」移除舊條目，再重新拖入並勾選。"
           }
         }
       }
@@ -12408,12 +12532,6 @@
             "value" : "Apple Translate, çevirmeden önce bu dil çiftini indirmelidir."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Translate 在翻譯之前需要下載此語言對。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12421,6 +12539,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Translate 在翻譯之前需要下載此語言對。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Translate 在翻譯之前需要下載此語言對。"
@@ -13032,19 +13156,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请求后续更改"
+            "value" : "进一步调整译文..."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要求跟進更改"
+            "value" : "進一步調整譯文..."
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請求跟進更改"
+            "value" : "進一步調整譯文..."
           }
         }
       }
@@ -14274,19 +14398,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "返回设置"
+            "value" : "返回设置步骤"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "返回設定"
+            "value" : "返回設定步驟"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "返回設定"
+            "value" : "返回設定步驟"
           }
         }
       }
@@ -15263,12 +15387,6 @@
             "value" : "İçerik yakalanamadı"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未擷取正文"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15276,6 +15394,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未擷取正文"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "未擷取正文"
@@ -15762,19 +15886,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "专为快速切换语言而设计"
+            "value" : "支持麦克风与系统内录音频"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為快速切換語言而構建"
+            "value" : "支援麥克風與系統內錄音訊"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為快速切換語言而設計"
+            "value" : "支援咪高峰與系統內錄音訊"
           }
         }
       }
@@ -16379,12 +16503,6 @@
             "value" : "Diller değiştirilemiyor"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法交換語言"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16392,6 +16510,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法交換語言"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法交換語言"
@@ -16631,19 +16755,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "随时取消。"
+            "value" : "可随时取消。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "隨時取消。"
+            "value" : "可隨時取消。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "隨時取消。"
+            "value" : "可隨時取消。"
           }
         }
       }
@@ -18014,6 +18138,130 @@
         }
       }
     },
+    "Chinese and English" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصينية والإنجليزية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kinesisk og engelsk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinesisch und Englisch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinese and English"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chino e inglés"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinois et anglais"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mandarin dan Inggris"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinese e inglese"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中国語と英語"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중국어 및 영어"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cina dan Inggeris"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kinesisk og engelsk"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinees en Engels"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiński i angielski"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinês e inglês"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kinesiska och engelska"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çince ve İngilizce"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文和英语"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文和英文"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文和英文"
+          }
+        }
+      }
+    },
     "Choose Automatically" : {
       "localizations" : {
         "ar" : {
@@ -18493,19 +18741,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择要尝试的模型"
+            "value" : "选择你想体验的 AI 模型"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇要嘗試的模型"
+            "value" : "選擇你想體驗的 AI 模型"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇要嘗試的模型"
+            "value" : "選擇你想體驗的 AI 模型"
           }
         }
       }
@@ -18617,19 +18865,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择一个或多个模型，以获得更自然的翻译或更清晰的写作。"
+            "value" : "支持多模型同时对比，助你找到最合心意的翻译与写作风格。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇一個或多個模型，以獲得更自然的翻譯或更清晰的寫作。"
+            "value" : "支援多模型同時對比，助你找到最合心意的翻譯與寫作風格。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇一個或多個模型，以獲得更自然的翻譯或更清晰的寫作。"
+            "value" : "支援多模型同時對比，助你找到最合心意的翻譯與寫作風格。"
           }
         }
       }
@@ -19607,12 +19855,6 @@
             "value" : "Gerçek zamanlı çeviriye başlamadan önce kaynak dili seçin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在開始實時翻譯之前請選擇來源語言。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19623,6 +19865,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在開始即時翻譯之前請選擇來源語言。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在開始實時翻譯之前請選擇來源語言。"
           }
         }
       }
@@ -19731,12 +19979,6 @@
             "value" : "Başlamak için kaynak dili seçin"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇來源語言以開始"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19744,6 +19986,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇來源語言以開始"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇來源語言以開始"
@@ -20107,19 +20355,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在设置中选择 TLingo"
+            "value" : "将 TLingo 设为系统默认翻译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在「設定」中選擇 TLingo"
+            "value" : "將 TLingo 設為系統預設翻譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在設定中選擇 TLingo"
+            "value" : "將 TLingo 設為系統預設翻譯"
           }
         }
       }
@@ -21226,19 +21474,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的设备上获得更清晰的写作"
+            "value" : "本地 AI 驱动，文字润色更流畅"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的裝置上產生更清晰的寫作"
+            "value" : "本地 AI 驅動，文字潤色更流暢"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的裝置上產生更清晰的寫作"
+            "value" : "本地 AI 驅動，文字潤色更流暢"
           }
         }
       }
@@ -23463,19 +23711,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比较多个模型的结果"
+            "value" : "多模型同屏对比"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比較多個模型的結果"
+            "value" : "多模型同屏對比"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比較多個模型的結果"
+            "value" : "多模型同屏對比"
           }
         }
       }
@@ -25195,19 +25443,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "继续（年付）"
+            "value" : "按年订阅"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "繼續年度方案"
+            "value" : "按年訂閱"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "繼續（年付）"
+            "value" : "按年訂閱"
           }
         }
       }
@@ -25567,19 +25815,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按月继续"
+            "value" : "按月订阅"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "繼續每月方案"
+            "value" : "按月訂閱"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按月繼續"
+            "value" : "按月訂閱"
           }
         }
       }
@@ -26060,12 +26308,6 @@
             "value" : "Hata ayıklama raporunu kopyala"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複製偵錯報告"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26073,6 +26315,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製偵錯報告"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製偵錯報告"
@@ -26184,12 +26432,6 @@
             "value" : "Son 10 raporu kopyala"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複製最近10份報告"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26197,6 +26439,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製最近10份報告"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製最近10份報告"
@@ -26308,12 +26556,6 @@
             "value" : "Günlüğü kopyala"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複製日誌"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26321,6 +26563,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製日誌"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製日誌"
@@ -27680,19 +27928,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自定义主题颜色"
+            "value" : "个性化主题色与外观定制"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自訂主題顏色"
+            "value" : "個性化主題色與外觀定制"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自訂主題顏色"
+            "value" : "個性化主題色與外觀定制"
           }
         }
       }
@@ -31403,12 +31651,6 @@
             "value" : "Model indiriliyor"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在下載模型"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -31416,6 +31658,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下載模型"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在下載模型"
@@ -33271,19 +33519,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用文本选择翻译"
+            "value" : "开启划选翻译与润色"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用文本選擇翻譯"
+            "value" : "開啟劃選翻譯與潤色"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用文本選擇翻譯"
+            "value" : "開啟劃選翻譯與潤色"
           }
         }
       }
@@ -34885,12 +35133,6 @@
             "value" : "Sadece hatalar"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "僅顯示錯誤"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -34901,6 +35143,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "僅顯示錯誤"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅顯示錯誤"
+          }
+        }
+      }
+    },
+    "Every email gets a reply · iamzanderwang@outlook.com" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحصل كل رسالة بريد إلكتروني على رد · iamzanderwang@outlook.com"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vi vil svare på hver af dine e-mails · iamzanderwang@outlook.com"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede E-Mail erhält eine Antwort · iamzanderwang@outlook.com"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every email gets a reply · iamzanderwang@outlook.com"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada correo electrónico recibe una respuesta · iamzanderwang@outlook.com"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque e-mail reçoit une réponse · iamzanderwang@outlook.com"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setiap email mendapatkan balasan · iamzanderwang@outlook.com"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni email riceve una risposta · iamzanderwang@outlook.com"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのメールに返信があります · iamzanderwang@outlook.com"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 이메일은 답장을 받습니다 · iamzanderwang@outlook.com"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kami akan membalas setiap e-mel anda · iamzanderwang@outlook.com"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver e-post får svar · iamzanderwang@outlook.com"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elke e-mail krijgt een reactie · iamzanderwang@outlook.com"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpowiemy na każdy Twój e-mail · iamzanderwang@outlook.com"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada e-mail recebe uma resposta · iamzanderwang@outlook.com"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varje e-post får svar · iamzanderwang@outlook.com"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her e-posta yanıt alır · iamzanderwang@outlook.com"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我们会回复你的每一封邮件 · iamzanderwang@outlook.com"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每封郵件都會收到回覆 · iamzanderwang@outlook.com"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每封電郵都會收到回覆 · iamzanderwang@outlook.com"
           }
         }
       }
@@ -35258,12 +35630,6 @@
             "value" : "Tüm kelimeleri dışa aktar"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "匯出所有字詞"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -35271,6 +35637,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出所有字詞"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出所有字詞"
@@ -35757,19 +36129,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "导出实时历史"
+            "value" : "导出实时翻译记录"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "匯出即時歷史"
+            "value" : "匯出即時翻譯記錄"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "匯出即時紀錄"
+            "value" : "匯出即時翻譯記錄"
           }
         }
       }
@@ -37371,19 +37743,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "通过实时字幕和翻译，跟踪对话、会议和视频。"
+            "value" : "不管是跨国会议、网课演讲还是生肉视频，实时双语字幕随声呈现。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "透過即時字幕和翻譯，追蹤對話、會議和影片。"
+            "value" : "不管是跨國會議、網課演講還是生肉影片，即時雙語字幕隨聲呈現。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "透過即時字幕和翻譯，跟蹤對話、會議和影片。"
+            "value" : "不管是跨國會議、網課演講還是生肉影片，即時雙語字幕隨聲呈現。"
           }
         }
       }
@@ -38486,12 +38858,6 @@
             "value" : "Serbest biçimli çıktı Markdown olarak render edilir"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自由格式輸出以 Markdown 呈現"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38499,6 +38865,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自由格式輸出以 Markdown 呈現"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "自由格式輸出以 Markdown 呈現"
@@ -40233,19 +40605,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "由 GPT 提供的翻译"
+            "value" : "主流旗舰大模型驱动"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "由 GPT 提供的翻譯"
+            "value" : "主流旗艦大模型驅動"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "由 GPT 提供的翻譯"
+            "value" : "主流旗艦大模型驅動"
           }
         }
       }
@@ -40606,19 +40978,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授予"
+            "value" : "已允许"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授予"
+            "value" : "已允許"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "獲准"
+            "value" : "已允許"
           }
         }
       }
@@ -41494,30 +41866,6 @@
     },
     "Hide latency" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide latency"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隐藏延迟"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隱藏延遲"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隱藏延遲"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -41534,6 +41882,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Latenz ausblenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide latency"
           }
         },
         "es" : {
@@ -41612,6 +41966,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gecikmeyi gizle"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏延迟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏延遲"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏延遲"
           }
         }
       }
@@ -42343,12 +42715,6 @@
             "value" : "Girdiğinizle sonuç arasındaki farkları vurgular"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "突顯您輸入與結果之間的差異"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -42356,6 +42722,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "突顯您輸入與結果之間的差異"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "突顯您輸入與結果之間的差異"
@@ -43713,19 +44085,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我已设置好"
+            "value" : "我已设置完成"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我已設定好"
+            "value" : "我已設定完成"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我已設定好"
+            "value" : "我已設定完成"
           }
         }
       }
@@ -44703,12 +45075,6 @@
             "value" : "Açıklamayı dahil et"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "包含說明"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -44716,6 +45082,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包含說明"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "包含說明"
@@ -44951,12 +45323,6 @@
             "value" : "Yakalanan istek ve yanıt metni dahil edilmiştir. Kimlik bilgileri sansürlenmiştir. Paylaşmadan önce metninizi gözden geçirin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "包含擷取到的請求與回應文字。認證資料已被遮蔽。分享前請檢查您的文字。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -44964,6 +45330,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包含擷取到的請求與回應文字。認證資料已被遮蔽。分享前請檢查您的文字。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "包含擷取到的請求與回應文字。認證資料已被遮蔽。分享前請檢查您的文字。"
@@ -46937,12 +47309,6 @@
             "value" : "TLingo'dan ayrıldıktan sonra bile mikrofon altyazılarını kayan bir pencerede göstermeye devam et."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "離開 TLingo 後仍在浮動視窗中顯示麥克風字幕"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -46950,6 +47316,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "離開 TLingo 後仍在浮動視窗中顯示麥克風字幕"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "離開 TLingo 後仍在浮動視窗中顯示麥克風字幕"
@@ -47189,19 +47561,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在免费试用期结束后继续使用这些模型"
+            "value" : "开启免费试用，畅享完整体验"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "免費試用期結束後仍可繼續使用這些模型"
+            "value" : "開啟免費試用，暢享完整體驗"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "免費試用期結束後仍可繼續使用這些模型"
+            "value" : "開啟免費試用，暢享完整體驗"
           }
         }
       }
@@ -48062,19 +48434,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最新型号一经发布即可获得"
+            "value" : "新模型第一时间同步上线体验"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最新模型在推出時提供"
+            "value" : "新模型第一時間同步上線體驗"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最新型號一推出即可獲得"
+            "value" : "新模型第一時間同步上線體驗"
           }
         }
       }
@@ -48559,19 +48931,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "终身是一次性购买。订阅在可用时可从 App Store 恢复。"
+            "value" : "终身版为一次性购买；订阅可随时通过 App Store 恢复。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終身是一次性購買。訂閱可在可用時從 App Store 還原。"
+            "value" : "終身版為一次性購買；訂閱可隨時透過 App Store 恢復。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "終身為一次性購買。訂閱可於可用時從 App Store 恢復。"
+            "value" : "終身版為一次性購買；訂閱可隨時透過 App Store 恢復。"
           }
         }
       }
@@ -49304,19 +49676,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "实时语音转文本"
+            "value" : "高精度实时语音转文字"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時語音轉文字"
+            "value" : "高精度即時語音轉文字"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時語音轉文字"
+            "value" : "高精度即時語音轉文字"
           }
         }
       }
@@ -50045,12 +50417,6 @@
             "value" : "Tanıma modeli yükleniyor..."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在載入識別模型..."
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50058,6 +50424,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在載入識別模型..."
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在載入識別模型..."
@@ -50543,12 +50915,6 @@
             "value" : "Yerel günlük"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本機紀錄"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50556,6 +50922,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機紀錄"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "本機紀錄"
@@ -51415,19 +51787,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mac 控件"
+            "value" : "Mac 快捷操作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mac 控制項"
+            "value" : "Mac 快捷操作"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mac 控制項"
+            "value" : "Mac 快捷操作"
           }
         }
       }
@@ -51915,19 +52287,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "让你的写作更清晰"
+            "value" : "让你的英文表达更地道"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "讓你的寫作更清晰"
+            "value" : "讓你的英文表達更地道"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "讓你的寫作更清晰"
+            "value" : "讓你的英文表達更地道"
           }
         }
       }
@@ -52409,12 +52781,6 @@
             "value" : "Markdown"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Markdown"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -52422,6 +52788,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Markdown"
@@ -53922,24 +54294,6 @@
     },
     "Microsoft Translate" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microsoft Translate"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microsoft Translate"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microsoft Translate"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -53953,6 +54307,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft Translate"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Microsoft Translate"
@@ -54031,6 +54391,18 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft Translate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft Translate"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Microsoft Translate"
@@ -54148,12 +54520,6 @@
             "value" : "Microsoft Translate ve Apple Translate yalnızca çeviri yapabilir. Bu işlemi kullanmak için bir yapay zeka modeli seçin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microsoft Translate 和 Apple Translate 只能翻譯。請選擇一個 AI 模型以使用此操作。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -54161,6 +54527,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft Translate 和 Apple Translate 只能翻譯。請選擇一個 AI 模型以使用此操作。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Microsoft Translate 和 Apple Translate 只能翻譯。請選擇一個 AI 模型以使用此操作。"
@@ -55143,19 +55515,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更自然的翻译和更清晰的写作"
+            "value" : "理解深层语境，翻译更地道，表达更专业"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更自然的翻譯和更清晰的寫作"
+            "value" : "理解深層語境，翻譯更地道，表達更專業"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更自然的翻譯和更清晰的寫作"
+            "value" : "理解深層語境，翻譯更地道，表達更專業"
           }
         }
       }
@@ -55267,19 +55639,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比逐字输出更有细微差别"
+            "value" : "告别机械生硬直译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比逐字輸出更有細微差別"
+            "value" : "告別機械生硬直譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "比逐字輸出更有細微差別"
+            "value" : "告別機械生硬直譯"
           }
         }
       }
@@ -55391,19 +55763,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MOSS Diarization 需要下载 %@。"
+            "value" : "MOSS 说话人分离功能需要下载 %@ 模型。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MOSS Diarization 需要下載 %@。"
+            "value" : "MOSS 說話者分離功能需要下載 %@ 模型。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MOSS Diarization 需要下載 %@。"
+            "value" : "MOSS 說話者分離功能需要下載 %@ 模型。"
           }
         }
       }
@@ -56379,19 +56751,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暂无动作"
+            "value" : "暂无操作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尚未有操作"
+            "value" : "暫無操作"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尚無操作"
+            "value" : "暫無操作"
           }
         }
       }
@@ -58363,12 +58735,6 @@
             "value" : "Yanıt yok"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無回應"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -58376,6 +58742,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無回應"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "無回應"
@@ -60105,19 +60477,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关闭"
+            "value" : "不提醒"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關閉"
+            "value" : "不提醒"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關閉"
+            "value" : "不提醒"
           }
         }
       }
@@ -61473,19 +61845,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "跨设备的统一翻译器"
+            "value" : "一份订阅，Mac 与 iPhone 全面通用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "跨裝置的單一翻譯器"
+            "value" : "一份訂閱，Mac 與 iPhone 全面通用"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "跨裝置共用的翻譯器"
+            "value" : "一份訂閱，Mac 與 iPhone 全面通用"
           }
         }
       }
@@ -62468,19 +62840,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开设置"
+            "value" : "前往系统设置"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開設定"
+            "value" : "前往系統設定"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開設置"
+            "value" : "前往系統設定"
           }
         }
       }
@@ -62592,19 +62964,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开 设置 > 应用 > 默认应用 > 翻译"
+            "value" : "前往「设置」>「App」>「默认 App」>「翻译」"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟 設定 > 應用程式 > 預設應用程式 > 翻譯"
+            "value" : "前往「設定」>「App」>「預設 App」>「翻譯」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟 設定 > 應用程式 > 預設應用程式 > 翻譯"
+            "value" : "前往「設定」>「App」>「預設 App」>「翻譯」"
           }
         }
       }
@@ -62964,19 +63336,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可通过按键组合在任何应用中打开 TLingo。"
+            "value" : "按下快捷键，随时在任意应用中呼出 TLingo"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可透過按鍵組合在任何應用程式中開啟 TLingo。"
+            "value" : "按下快速鍵，隨時在任意應用中呼出 TLingo"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可透過按鍵組合在任何應用程式中開啟 TLingo。"
+            "value" : "按下快速鍵，隨時在任意應用程式中呼出 TLingo"
           }
         }
       }
@@ -63334,12 +63706,6 @@
             "value" : "Orijinal"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原文"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -63347,6 +63713,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原文"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "原文"
@@ -64579,12 +64951,6 @@
             "value" : "Resim içinde resim"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "畫中畫"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -64592,6 +64958,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "畫中畫"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "畫中畫"
@@ -65827,19 +66199,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "润色你的写作"
+            "value" : "润色英文表达"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "潤飾你的寫作"
+            "value" : "潤色英文表達"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "潤飾你的寫作"
+            "value" : "潤色英文表達"
           }
         }
       }
@@ -66199,19 +66571,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级 · %@"
+            "value" : "Pro · %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · %@"
+            "value" : "Pro · %@"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · %@"
+            "value" : "Pro · %@"
           }
         }
       }
@@ -66323,19 +66695,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级 · %@ · 网站"
+            "value" : "Pro · %@ · 网站"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · %@ · 網站"
+            "value" : "Pro · %@ · 網站"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · %@ · 網站"
+            "value" : "Pro · %@ · 網站"
           }
         }
       }
@@ -66447,19 +66819,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级 · App Store"
+            "value" : "Pro · App Store"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · App Store"
+            "value" : "Pro · App Store"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級 · App Store"
+            "value" : "Pro · App Store"
           }
         }
       }
@@ -66571,19 +66943,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · App Store + 网站"
+            "value" : "Pro · App Store + 网站"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · App Store + 網站"
+            "value" : "Pro · App Store + 網站"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · App Store + 網站"
+            "value" : "Pro · App Store + 網站"
           }
         }
       }
@@ -66695,19 +67067,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · 网站"
+            "value" : "Pro · 网站"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · 網站"
+            "value" : "Pro · 網站"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premium · 網站"
+            "value" : "Pro · 網站"
           }
         }
       }
@@ -67192,19 +67564,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级功能现已解锁。"
+            "value" : "全套高级功能与顶级模型现已解锁。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級功能現已解鎖。"
+            "value" : "全套高級功能與頂級模型現已解鎖。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級功能現已解鎖。"
+            "value" : "全套高級功能與頂級模型現已解鎖。"
           }
         }
       }
@@ -67440,19 +67812,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级模型"
+            "value" : "全平台解锁全部顶级 AI 模型"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級模型"
+            "value" : "全平台解鎖全部頂級 AI 模型"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級模型"
+            "value" : "全平台解鎖全部頂級 AI 模型"
           }
         }
       }
@@ -67564,19 +67936,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级模型"
+            "value" : "选用顶级 AI 大模型"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級模型"
+            "value" : "選用頂級 AI 大模型"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高級模型"
+            "value" : "選用頂級 AI 大模型"
           }
         }
       }
@@ -68311,19 +68683,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按键..."
+            "value" : "请按下组合键..."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按鍵..."
+            "value" : "請按下組合鍵..."
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按鍵..."
+            "value" : "請按下組合鍵..."
           }
         }
       }
@@ -71044,19 +71416,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻译快捷方式"
+            "value" : "快速翻译快捷键"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻譯捷徑"
+            "value" : "快速翻譯快速鍵"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻譯捷徑"
+            "value" : "快速翻譯快捷鍵"
           }
         }
       }
@@ -73778,19 +74150,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "实时翻译"
+            "value" : "实时听译与字幕"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時翻譯"
+            "value" : "即時聽譯與字幕"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時翻譯"
+            "value" : "即時聽譯與字幕"
           }
         }
       }
@@ -75038,30 +75410,6 @@
     },
     "Recording saved to History" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording saved to History"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "录音已保存在历史记录里"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "錄音已儲存在歷史記錄裡"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "錄音已儲存在歷史記錄裡"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -75078,6 +75426,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aufnahme in Verlauf gespeichert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording saved to History"
           }
         },
         "es" : {
@@ -75156,6 +75510,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kayıt geçmişe kaydedildi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音已保存在历史记录里"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音已儲存在歷史記錄裡"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音已儲存在歷史記錄裡"
           }
         }
       }
@@ -75388,12 +75760,6 @@
             "value" : "Yenile"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新整理"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -75401,6 +75767,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新整理"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新整理"
@@ -75763,19 +76135,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新启动 TLingo"
+            "value" : "重启 TLingo 以应用权限"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 TLingo"
+            "value" : "重啟 TLingo 以套用權限"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 TLingo"
+            "value" : "重啟 TLingo 以套用權限"
           }
         }
       }
@@ -76262,19 +76634,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在试用结束前提醒我，以便我能及时取消。"
+            "value" : "在试用结束前提醒我，避免忘记取消，毫无后顾之忧。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在試用期結束前提醒我，讓我能及時取消。"
+            "value" : "在試用結束前提醒我，避免忘記取消，毫無後顧之憂。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在試用結束前提醒我，以便我能及時取消。"
+            "value" : "在試用結束前提醒我，避免忘記取消，毫無後顧之憂。"
           }
         }
       }
@@ -76882,19 +77254,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新播放入门教程"
+            "value" : "重新查看新手引导"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新播放入門教學"
+            "value" : "重新查看新手導覽"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新播放入門教學"
+            "value" : "重新查看新手教學"
           }
         }
       }
@@ -77751,12 +78123,6 @@
             "value" : "İstek kimliği"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "請求 ID"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -77764,6 +78130,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請求 ID"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "請求 ID"
@@ -78002,19 +78374,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要检测文本选择"
+            "value" : "用于感知划词操作并显示快捷翻译悬浮球"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要檢測文本選擇"
+            "value" : "用於感知劃詞操作並顯示快捷翻譯懸浮球"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要檢測文本選擇"
+            "value" : "用於感知劃詞操作並顯示快捷翻譯懸浮球"
           }
         }
       }
@@ -78250,19 +78622,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "至少需要一个修饰键。按Escape取消。"
+            "value" : "支持 ⌘、⌥、⌃、⇧ 等修饰键组合；按 Esc 可取消。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "至少需要一個修飾鍵。按Escape取消。"
+            "value" : "支援 ⌘、⌥、⌃、⇧ 等修飾鍵組合；按 Esc 可取消。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "至少需要一個修飾鍵。按Escape取消。"
+            "value" : "支援 ⌘、⌥、⌃、⇧ 等修飾鍵組合；按 Esc 可取消。"
           }
         }
       }
@@ -78874,19 +79246,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "屏幕底部附近的可调整大小浮动字幕"
+            "value" : "屏幕底部的可调大小悬浮字幕窗口"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "位於畫面底部附近的可調整大小浮動字幕"
+            "value" : "螢幕底部的可調大小懸浮字幕視窗"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可調整大小的浮動字幕，位於畫面底部附近"
+            "value" : "螢幕底部的可調大小懸浮字幕視窗"
           }
         }
       }
@@ -81482,12 +81854,6 @@
             "value" : "Gözden geçirilmiş"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已修訂"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -81495,6 +81861,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已修訂"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "已修訂"
@@ -81606,12 +81978,6 @@
             "value" : "Yeniden yaz"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重寫"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -81619,6 +81985,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重寫"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "重寫"
@@ -81730,12 +82102,6 @@
             "value" : "Açıklama ile yeniden yaz"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重寫並附說明"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -81743,6 +82109,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重寫並附說明"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "重寫並附說明"
@@ -83098,19 +83470,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "屏幕和系统音频录制在重启 TLingo 后才会生效。"
+            "value" : "macOS 安全机制要求：授予“屏幕与系统音频录制”权限后，需要重启 TLingo 才能完全生效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "螢幕及系統音訊錄製只有在重新啟動 TLingo 後才會生效。"
+            "value" : "macOS 安全機制要求：授予「螢幕與系統音訊錄製」權限後，需要重啟 TLingo 才能完全生效。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "螢幕及系統音訊錄製須在重新啟動 TLingo 後方會生效。"
+            "value" : "macOS 安全機制要求：授予「螢幕與系統音訊錄製」權限後，需要重啟 TLingo 才能完全生效。"
           }
         }
       }
@@ -83839,12 +84211,6 @@
             "value" : "Arama geçmişi"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜尋記錄"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -83852,6 +84218,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜尋記錄"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜尋記錄"
@@ -84214,19 +84586,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "看看高级模型如何纠正语法错误并解释修改原因。"
+            "value" : "顶级模型不仅能一键修复语病，还会贴心解释修改逻辑，助你写出地道表达。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "看看進階模型如何修正文法錯誤並解釋修改原因。"
+            "value" : "頂級模型不僅能一鍵修復語病，還會貼心解釋修改邏輯，助你寫出地道表達。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "看看進階模型如何修正語法錯誤並解釋修改原因。"
+            "value" : "頂級模型不僅能一鍵修復語病，還會貼心解釋修改邏輯，助你寫出地道表達。"
           }
         }
       }
@@ -85455,19 +85827,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请选择至少一个 AI 模型以继续。"
+            "value" : "请至少勾选一个 AI 模型以继续。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請至少選擇一個 AI 模型以繼續。"
+            "value" : "請至少勾選一個 AI 模型以繼續。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請至少選擇一個 AI 模型以繼續。"
+            "value" : "請至少勾選一個 AI 模型以繼續。"
           }
         }
       }
@@ -86449,19 +86821,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何地方选择文本，然后从文本菜单进行翻译。"
+            "value" : "在任意应用中选中文本，轻点系统菜单中的“翻译”，译文即刻呈现。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何地方選取文字，然後從文字選單翻譯。"
+            "value" : "在任意應用中選中文本，輕點系統選單中的「翻譯」，譯文即刻呈現。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何地方選取文字，然後從文字選單翻譯。"
+            "value" : "在任意應用程式中選取文字，輕點系統選單中的「翻譯」，譯文即時呈現。"
           }
         }
       }
@@ -86573,19 +86945,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何应用中选择文本以立即翻译。TLingo 需要无障碍权限来检测您的文本选择。"
+            "value" : "在任意应用中选中文本即可一键翻译与润色。TLingo 需要「辅助功能」权限来感知选中文本并显示悬浮球。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何應用中選擇文本以立即翻譯。TLingo 需要無障礙權限來檢測您的文本選擇。"
+            "value" : "在任意應用中選中文本即可一鍵翻譯與潤色。TLingo 需要「輔助使用」權限來感知選中文本並顯示懸浮球。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何應用程式中選擇文本以立即翻譯。TLingo 需要無障礙權限來檢測您的文本選擇。"
+            "value" : "在任意應用程式中選取文字即可一鍵翻譯與潤色。TLingo 需要「輔助使用」權限來感知選取文字並顯示懸浮球。"
           }
         }
       }
@@ -86821,19 +87193,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何应用中选择文本以翻译或润色。"
+            "value" : "在任意应用中划选文本，即刻触发快捷翻译与润色。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何應用程式中選取文字以翻譯或潤飾。"
+            "value" : "在任意應用中劃選文本，即刻觸發快捷翻譯與潤色。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任何應用程式中選取文字以翻譯或潤飾。"
+            "value" : "在任意應用程式中選取文字，即時觸發快捷翻譯與潤色。"
           }
         }
       }
@@ -86945,19 +87317,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选中下方文本，然后在文本菜单中轻点“语法检查”。"
+            "value" : "选中下方这段包含语病的内容，轻点菜单中的“语法检查”"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選取下方文字，然後在文字選單中點按「文法檢查」。"
+            "value" : "選取下方這段包含語病的內容，輕點選單中的「語法檢查」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選取下方文字，然後在文字選單中點按「語法檢查」。"
+            "value" : "選取下方這段包含語病的內容，輕點選單中的「語法檢查」"
           }
         }
       }
@@ -87194,19 +87566,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选中此句，然后在文本菜单中轻点“翻译”。"
+            "value" : "选中下方这句英文，在弹出菜单中点击“翻译”"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選取此句，然後在文字選單中點按「翻譯」。"
+            "value" : "選取下方這句英文，在彈出選單中點擊「翻譯」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選取此句，然後在文字選單中點按「翻譯」。"
+            "value" : "選取下方這句英文，在彈出選單中點擊「翻譯」"
           }
         }
       }
@@ -87318,19 +87690,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择 TLingo"
+            "value" : "勾选「TLingo」"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇 TLingo"
+            "value" : "勾選「TLingo」"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇 TLingo"
+            "value" : "勾選「TLingo」"
           }
         }
       }
@@ -87567,19 +87939,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择 TLingo 默认使用的引擎。您可以稍后在设置中更改此设置。"
+            "value" : "选择 TLingo 默认使用的引擎。您可以稍后在“设置”中随时更改。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇 TLingo 預設使用的引擎。您可以稍後在設定中更改此設置。"
+            "value" : "選擇 TLingo 預設使用的引擎。您可以稍後在「設定」中隨時變更。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇 TLingo 預設使用的引擎。您可以稍後在設定中更改此設置。"
+            "value" : "選擇 TLingo 預設使用的引擎。您可以稍後在「設定」中隨時變更。"
           }
         }
       }
@@ -87691,19 +88063,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选中文本翻译正常工作。"
+            "value" : "划选翻译功能已正常生效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已選取的文字翻譯運作正常。"
+            "value" : "劃選翻譯功能已正常生效。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "所選文字的翻譯功能正常。"
+            "value" : "劃選翻譯功能已正常生效。"
           }
         }
       }
@@ -88810,19 +89182,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在设置 → 快捷键中设置快捷键"
+            "value" : "在“设置 › Mac 快捷操作”中配置快捷键"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在設置 → 快捷鍵中設置快捷方式"
+            "value" : "在「設定 › Mac 快捷操作」中設定快速鍵"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在設定 → 快捷鍵中設定捷徑"
+            "value" : "在「設定 › Mac 快捷操作」中設定快捷鍵"
           }
         }
       }
@@ -89432,19 +89804,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设置 TLingo"
+            "value" : "2 步开启极速翻译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "設定 TLingo"
+            "value" : "2 步開啟極速翻譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "設定 TLingo"
+            "value" : "2 步開啟極速翻譯"
           }
         }
       }
@@ -89677,12 +90049,6 @@
             "value" : "Paylaşım günlüğü"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享記錄"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -89690,6 +90056,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享記錄"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "分享記錄"
@@ -92914,19 +93286,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暂时跳过"
+            "value" : "先跳过，稍后体验"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暫時跳過"
+            "value" : "先略過，稍後體驗"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暫時跳過"
+            "value" : "先略過，稍後體驗"
           }
         }
       }
@@ -96018,19 +96390,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开始%@的免费试用"
+            "value" : "免费开启 %@ 试用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始 %@ 免費試用"
+            "value" : "免費開啟 %@ 試用"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始%@的免費試用"
+            "value" : "免費開啟 %@ 試用"
           }
         }
       }
@@ -96142,19 +96514,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开始免费试用"
+            "value" : "开启免费试用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始免費試用"
+            "value" : "開啟免費試用"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始免費試用"
+            "value" : "開啟免費試用"
           }
         }
       }
@@ -96638,19 +97010,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开始翻译"
+            "value" : "直接开始使用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始翻譯"
+            "value" : "直接開始使用"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開始翻譯"
+            "value" : "直接開始使用"
           }
         }
       }
@@ -97258,19 +97630,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开启中…"
+            "value" : "正在开启…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟中…"
+            "value" : "正在開啟…"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "開啟中…"
+            "value" : "正在開啟…"
           }
         }
       }
@@ -99988,12 +100360,6 @@
             "value" : "Apple Translate ve cümle cümle görüntülemeyi destekler"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "支援 Apple Translate 與逐句檢視"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -100001,6 +100367,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援 Apple Translate 與逐句檢視"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "支援 Apple Translate 與逐句檢視"
@@ -101875,30 +102247,6 @@
     },
     "Tap to view" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap to view"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点击查看"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "點擊查看"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "點擊查看"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -101915,6 +102263,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zum Anzeigen tippen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to view"
           }
         },
         "es" : {
@@ -101993,6 +102347,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Görmek için dokun"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击查看"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點擊查看"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "點擊查看"
           }
         }
       }
@@ -103098,19 +103470,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文本选择翻译"
+            "value" : "划选翻译与润色"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文本選擇翻譯"
+            "value" : "劃選翻譯與潤色"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文本選擇翻譯"
+            "value" : "劃選翻譯與潤色"
           }
         }
       }
@@ -103470,19 +103842,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "感谢您的订阅！"
+            "value" : "感谢你的支持与订阅！"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "感謝您的訂閱！"
+            "value" : "感謝你的支持與訂閱！"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "感謝您的訂閱！"
+            "value" : "感謝你的支持與訂閱！"
           }
         }
       }
@@ -103963,12 +104335,6 @@
             "value" : "Ücretsiz deneme şu anda bu cihazda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此裝置目前無法使用免費試用。請稍後再試。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -103976,6 +104342,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此裝置目前無法使用免費試用。請稍後再試。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "此裝置目前無法使用免費試用。請稍後再試。"
@@ -104833,12 +105205,6 @@
             "value" : "Seçilen tanıma modeli yeni kaynak dilini desteklemiyor. Ayarlar'dan başka bir model seçin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "所選的辨識模型不支援新的來源語言。請在「設定」中選擇其他模型。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -104846,6 +105212,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所選的辨識模型不支援新的來源語言。請在「設定」中選擇其他模型。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選的辨識模型不支援新的來源語言。請在「設定」中選擇其他模型。"
@@ -105208,19 +105580,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "然后每年 %@。可随时取消。"
+            "value" : "试用结束后每年 %@，可随时取消。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "之後每年 %@。隨時可取消。"
+            "value" : "試用結束後每年 %@，可隨時取消。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "之後每年 %@。可隨時取消。"
+            "value" : "試用結束後每年 %@，可隨時取消。"
           }
         }
       }
@@ -105580,19 +105952,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此账户在 Stripe 上没有有效订阅。可能原因：\n\n• 您尚未订阅 — 点击“Subscribe on Web”。\n• 您用了另一个邮箱订阅 — 退出登录并尝试另一个账号。\n• 您刚刚付款，状态尚未同步 — 点击“Refresh subscription status”。\n\n仍然有问题？请点击下面的“Contact support”。"
+            "value" : "此账户在 Stripe 上没有有效订阅。可能原因：\n\n• 您尚未订阅 — 请点击“网页端订阅”。\n• 您使用了其他邮箱订阅 — 请退出登录并尝试另一账号。\n• 您刚刚完成付款，状态尚未同步 — 请点击“刷新订阅状态”。\n\n如仍有问题，请点击下方的“联系客服”。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此帳戶在 Stripe 上沒有有效訂閱。可能原因：\n\n• 您尚未訂閱 — 點按「Subscribe on Web」。\n• 您用不同的電子郵件訂閱 — 登出後嘗試另一個帳號。\n• 您剛剛付款，狀態尚未同步 — 點按「Refresh subscription status」。\n\n仍然卡住？請在下方點按「Contact support」。"
+            "value" : "此帳戶在 Stripe 上沒有有效訂閱。可能原因：\n\n• 您尚未訂閱 — 請點選「網頁端訂閱」。\n• 您使用了其他電郵訂閱 — 請登出並嘗試另一帳號。\n• 您剛剛完成付款，狀態尚未同步 — 請點選「重新整理訂閱狀態」。\n\n如仍有問題，請點選下方的「聯絡支援」。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此帳戶在 Stripe 上沒有有效訂閱。可能原因：\n\n• 您還未訂閱 — 點按「Subscribe on Web」。\n• 您以其他電郵訂閱 — 登出並嘗試另一個電郵。\n• 您剛剛付款，狀態尚未同步 — 點按「Refresh subscription status」。\n\n仍然未解決？請在下方點按「Contact support」。"
+            "value" : "此帳戶在 Stripe 上沒有有效訂閱。可能原因：\n\n• 您尚未訂閱 — 請點選「網頁端訂閱」。\n• 您使用了其他電郵訂閱 — 請登出並嘗試另一帳號。\n• 您剛剛完成付款，狀態尚未同步 — 請點選「重新整理訂閱狀態」。\n\n如仍有問題，請點選下方的「聯絡支援」。"
           }
         }
       }
@@ -105950,12 +106322,6 @@
             "value" : "Bu işlem bir yapay zeka modeli gerektirir"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此操作需要 AI 模型"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -105963,6 +106329,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作需要 AI 模型"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "此操作需要 AI 模型"
@@ -106074,12 +106446,6 @@
             "value" : "Bu işlem bir yapay zeka modeli gerektirir. Modeller'den birini seçin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此操作需要 AI 模型。請在「模型」中選擇一個。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -106087,6 +106453,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作需要 AI 模型。請在「模型」中選擇一個。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "此操作需要 AI 模型。請在「模型」中選擇一個。"
@@ -106325,19 +106697,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此电子邮件在网站上没有有效的购买。"
+            "value" : "此邮箱未查询到有效的官网购买记录。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此電子郵件在網站上沒有有效的購買。"
+            "value" : "此電郵未查詢到有效的官網購買記錄。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此電郵在網站上沒有有效的購買。"
+            "value" : "此電郵未查詢到有效的官網購買記錄。"
           }
         }
       }
@@ -106694,12 +107066,6 @@
             "value" : "Bu yerel dosya aynı zamanda e-posta geri bildirimi için de kullanılır."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此本機檔案亦用於電郵回饋。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -106707,6 +107073,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此本機檔案亦用於電郵回饋。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "此本機檔案亦用於電郵回饋。"
@@ -108438,19 +108810,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已准备就绪"
+            "value" : "划词翻译已就绪"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已準備就緒"
+            "value" : "劃詞翻譯已就緒"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已準備就緒"
+            "value" : "劃詞翻譯已就緒"
           }
         }
       }
@@ -108687,19 +109059,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已成功打开。"
+            "value" : "太棒了！TLingo 翻译窗口已就绪 🎉"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已成功開啟。"
+            "value" : "太棒了！TLingo 翻譯視窗已就緒 🎉"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TLingo 已成功打開。"
+            "value" : "太棒了！TLingo 翻譯視窗已就緒 🎉"
           }
         }
       }
@@ -109682,19 +110054,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文字稿为空"
+            "value" : "逐字稿为空"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文字稿為空"
+            "value" : "逐字稿為空"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文字稿為空"
+            "value" : "逐字稿為空"
           }
         }
       }
@@ -109819,6 +110191,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "轉錄失敗: %@"
+          }
+        }
+      }
+    },
+    "Transcription Only" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ فقط"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun transskription"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Transkription"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription Only"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo transcripción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription seule"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanya transkripsi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo trascrizione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字起こしのみ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받아쓰기만"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transkripsi sahaja"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun transkripsjon"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen transcriptie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tylko transkrypcja"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Somente transcrição"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endast transkription"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca transkripsiyon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅转写"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅轉寫"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅轉寫"
           }
         }
       }
@@ -110179,19 +110675,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻译几乎任何语言"
+            "value" : "覆盖全球海量语种，响应迅捷"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻譯幾乎任何語言"
+            "value" : "覆蓋全球海量語種，響應迅捷"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "快速翻譯幾乎任何語言"
+            "value" : "覆蓋全球海量語種，響應迅捷"
           }
         }
       }
@@ -110427,19 +110923,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用 AI 自然翻译"
+            "value" : "懂语境的 AI 深度翻译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用 AI 自然地翻譯"
+            "value" : "懂語境的 AI 深度翻譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用 AI 自然翻譯"
+            "value" : "懂語境的 AI 深度翻譯"
           }
         }
       }
@@ -110551,19 +111047,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无需切换应用即可翻译或润色文本"
+            "value" : "选中文本，直接翻译与润色"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需切換應用程式即可翻譯或潤飾文字"
+            "value" : "選取文本，直接翻譯與潤色"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需切換應用程式即可翻譯或潤飾文字"
+            "value" : "選取文字，直接翻譯與潤色"
           }
         }
       }
@@ -110675,19 +111171,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的 Mac 上私密翻译"
+            "value" : "完全在 Mac 本地运行，离线私密安全"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的 Mac 上私密翻譯"
+            "value" : "完全在 Mac 本地運行，離線私密安全"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在你的 Mac 上私密翻譯"
+            "value" : "完全在 Mac 本地運行，離線私密安全"
           }
         }
       }
@@ -111048,19 +111544,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无需复制粘贴即可翻译所选文本。试试用高级模型检查语法。"
+            "value" : "告别繁琐的复制粘贴。不仅是日常翻译，TLingo 还能用顶级 AI 模型为你润色文笔、纠正语法。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需複製貼上即可翻譯所選文字。試試用進階模型檢查文法。"
+            "value" : "告別繁瑣的複製貼上。不僅是日常翻譯，TLingo 還能用頂級 AI 模型為你潤色文筆、糾正語法。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需複製貼上即可翻譯所選文字。試試用進階模型檢查語法。"
+            "value" : "告別繁瑣的複製貼上。不僅是日常翻譯，TLingo 還能用頂級 AI 模型為你潤色文筆、糾正語法。"
           }
         }
       }
@@ -111296,19 +111792,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用快捷方式翻译文本"
+            "value" : "设置全局唤起快捷键"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用捷徑翻譯文字"
+            "value" : "設定全域喚起快速鍵"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用捷徑翻譯文字"
+            "value" : "設定全域喚起快速鍵"
           }
         }
       }
@@ -111668,19 +112164,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "立即翻译此句"
+            "value" : "动动手指，体验划选即翻"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "立即翻譯此句"
+            "value" : "動動手指，體驗劃選即翻"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "立即翻譯這句話"
+            "value" : "動動手指，體驗劃選即翻"
           }
         }
       }
@@ -112042,19 +112538,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在不离开当前应用的情况下翻译"
+            "value" : "无需离开当前 App，划选即可翻译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需離開您正在使用的應用程式即可翻譯"
+            "value" : "無需離開當前 App，劃選即可翻譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "毋須離開你正在使用的應用程式即可翻譯"
+            "value" : "無需離開當前 App，劃選即可翻譯"
           }
         }
       }
@@ -112166,19 +112662,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无需切换应用即可翻译"
+            "value" : "无需离开当前应用，划词即翻"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需切換應用程式即可翻譯"
+            "value" : "無需離開當前應用，劃詞即翻"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無需切換應用程式即可翻譯"
+            "value" : "無需離開當前應用程式，劃詞即翻"
           }
         }
       }
@@ -112290,19 +112786,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已翻译的字幕"
+            "value" : "同传级双语浮窗字幕"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已翻譯的字幕"
+            "value" : "同傳級雙語浮窗字幕"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已翻譯的字幕"
+            "value" : "同傳級雙語浮窗字幕"
           }
         }
       }
@@ -114405,19 +114901,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "试用 AI 撰写波兰语"
+            "value" : "体验 AI 写作润色"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試用 AI 撰寫波蘭語"
+            "value" : "體驗 AI 寫作潤色"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試用 AI 撰寫波蘭語"
+            "value" : "體驗 AI 寫作潤色"
           }
         }
       }
@@ -114654,19 +115150,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "试用 %@"
+            "value" : "免费试用 %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試用 %@"
+            "value" : "免費試用 %@"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試用 %@"
+            "value" : "免費試用 %@"
           }
         }
       }
@@ -114902,19 +115398,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尝试语法检查"
+            "value" : "体验 AI 语法纠错与润色"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "嘗試文法檢查"
+            "value" : "體驗 AI 語法糾錯與潤色"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "嘗試語法檢查"
+            "value" : "體驗 AI 語法糾錯與潤色"
           }
         }
       }
@@ -115651,19 +116147,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尝试翻译所选文本"
+            "value" : "试用划词翻译"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試試翻譯所選文字"
+            "value" : "試用劃詞翻譯"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試試翻譯所選文字"
+            "value" : "試用劃詞翻譯"
           }
         }
       }
@@ -116271,19 +116767,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "实时理解语音"
+            "value" : "跨国会议、网课与生肉视频实时双语字幕"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時理解語音"
+            "value" : "跨國會議、網課與生肉影片即時雙語字幕"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即時理解語音"
+            "value" : "跨國會議、網課與生肉影片即時雙語字幕"
           }
         }
       }
@@ -116891,19 +117387,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用一项订阅即可在 iPhone 和 Mac 上解锁高级翻译。"
+            "value" : "随时随地无缝衔接，桌面与移动端尽享极致翻译体验。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "透過一個訂閱在 iPhone 和 Mac 上解鎖進階翻譯。"
+            "value" : "隨時隨地無縫銜接，桌面與行動端盡享極致翻譯體驗。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用一個訂閱即可在 iPhone 與 Mac 上解鎖高級翻譯。"
+            "value" : "隨時隨地無縫銜接，桌面與流動端盡享極致翻譯體驗。"
           }
         }
       }
@@ -117260,12 +117756,6 @@
             "value" : "%@'e güncelle"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新至 %@"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -117273,6 +117763,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新至 %@"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新至 %@"
@@ -118382,19 +118878,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用于浮动字幕"
+            "value" : "用于悬浮字幕"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用於浮動字幕"
+            "value" : "用於懸浮字幕"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用於浮動字幕"
+            "value" : "用於懸浮字幕"
           }
         }
       }
@@ -118506,19 +119002,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用于具有自然 EOU 边界且更高精确度的英文字幕。"
+            "value" : "提供更高准确率与自然断句停顿的英文字幕。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用於具有自然 EOU 邊界且更高準確度的英文字幕。"
+            "value" : "提供更高準確率與自然斷句停頓的英文字幕。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用於具有自然 EOU 邊界且更高準確度的英文字幕。"
+            "value" : "提供更高準確率與自然斷句停頓的英文字幕。"
           }
         }
       }
@@ -118773,18 +119269,6 @@
     },
     "Use for low-latency Chinese and English streaming recognition." : {
       "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "适用于低延迟的中英文流式识别。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "適用於低延遲的中英文串流辨識。"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -118885,6 +119369,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Düşük gecikmeli Çince ve İngilizce akış tanıma için kullanın."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适用于低延迟的中英文流式识别。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適用於低延遲的中英文串流辨識。"
           }
         },
         "zh-HK" : {
@@ -119873,19 +120369,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用高级模型进行翻译，以保留语气、意图和上下文。"
+            "value" : "搭载顶尖大模型，精准拿捏语气、情感与弦外之音。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用可保留語氣、意圖和上下文的高級模型進行翻譯。"
+            "value" : "搭載頂尖大模型，精準拿捏語氣、情感與弦外之音。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用高級模型進行翻譯，以保留語氣、意圖和上下文。"
+            "value" : "搭載頂尖大模型，精準拿捏語氣、情感與弦外之音。"
           }
         }
       }
@@ -120744,19 +121240,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看所有方案"
+            "value" : "查看所有订阅方案"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看所有方案"
+            "value" : "查看所有訂閱方案"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看所有計劃"
+            "value" : "查看所有訂閱方案"
           }
         }
       }
@@ -120868,19 +121364,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看其他的订阅计划"
+            "value" : "查看其他订阅方案"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看其他的訂閱計劃"
+            "value" : "查看其他訂閱方案"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "查看其他的訂閱計劃"
+            "value" : "查看其他訂閱方案"
           }
         }
       }
@@ -121984,19 +122480,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "等你来试用..."
+            "value" : "等待你的划选操作 ✨"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "等您試用..."
+            "value" : "等待你的劃選操作 ✨"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "等你來試用..."
+            "value" : "等待你的劃選操作 ✨"
           }
         }
       }
@@ -122356,19 +122852,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在试用期结束前，我们会提醒您，以便您能及时取消。"
+            "value" : "我们会在试用结束前提醒你，避免忘记取消，让你毫无后顾之忧。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在試用期結束前，我們會提醒您，以便您能及時取消。"
+            "value" : "我們會在試用結束前提醒你，避免忘記取消，讓你毫無後顧之憂。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "試用期結束前我們會提醒你，讓你可以及時取消。"
+            "value" : "我們會在試用結束前提醒你，避免忘記取消，讓你毫無後顧之憂。"
           }
         }
       }
@@ -122480,19 +122976,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我们会在%@提醒你。"
+            "value" : "我们将在 %@ 发送提醒通知。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我們會在 %@ 提醒您。"
+            "value" : "我們將在 %@ 發送提醒通知。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我們會在%@提醒你。"
+            "value" : "我們將在 %@ 發送提醒通知。"
           }
         }
       }
@@ -123600,19 +124096,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您刚在不切换应用的情况下翻译了所选文本。"
+            "value" : "太棒了！无需切换应用，划词即翻译 🎉"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您剛在不切換應用程式的情況下翻譯了所選文字。"
+            "value" : "太棒了！無需切換應用，劃詞即翻譯 🎉"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你剛在不切換應用程式的情況下翻譯了所選文字。"
+            "value" : "太棒了！無需切換應用程式，劃詞即翻譯 🎉"
           }
         }
       }
@@ -123972,19 +124468,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你已准备好翻译"
+            "value" : "一切就绪，随时划选翻译！"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你已準備好翻譯"
+            "value" : "一切就緒，隨時劃選翻譯！"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你已準備好進行翻譯"
+            "value" : "一切就緒，隨時劃選翻譯！"
           }
         }
       }
@@ -124093,12 +124589,6 @@
             "value" : "Bu cihazda tüm ücretsiz deneme isteklerini kullandınız. Premium'a yükseltin, böylece premium modelleri kullanmaya devam edebilirsiniz."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你已在此裝置上使用了所有免費試用請求。升級到 Premium 以繼續使用高級模型。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -124110,24 +124600,17 @@
             "state" : "translated",
             "value" : "您已在此裝置上使用了所有免費試用請求。升級到 Premium 以繼續使用高級模型。"
           }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已在此裝置上使用了所有免費試用請求。升級到 Premium 以繼續使用高級模型。"
+          }
         }
       }
     },
     "Your data is encrypted in transit. Processing is subject to each provider's privacy policy." : {
-      "extractionState" : "stale",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your data is encrypted in transit. Processing is subject to each provider's privacy policy."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "数据在传输时加密。数据处理遵循各服务提供商的隐私政策。"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -124144,6 +124627,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ihre Daten werden während der Übertragung verschlüsselt. Die Verarbeitung unterliegt der Datenschutzrichtlinie des jeweiligen Anbieters."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your data is encrypted in transit. Processing is subject to each provider's privacy policy."
           }
         },
         "es" : {
@@ -124224,16 +124713,22 @@
             "value" : "Verileriniz aktarım sırasında şifrelenir. İşleme, her sağlayıcının gizlilik politikasına tabidir."
           }
         },
-        "zh-HK" : {
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的資料在傳輸過程中會被加密。處理受各供應商的私隱政策約束。"
+            "value" : "数据在传输时加密。数据处理遵循各服务提供商的隐私政策。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "您的資料在傳輸過程中會被加密。處理受各供應者的隱私權政策約束。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的資料在傳輸過程中會被加密。處理受各供應商的私隱政策約束。"
           }
         }
       }
@@ -124345,19 +124840,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免费试用将在 %lld 天后结束。点按以管理您的订阅。"
+            "value" : "你的免费试用将在 %lld 天后结束。轻点可随时管理或取消订阅。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的免費試用將在 %lld 天後結束。點按以管理你的訂閱。"
+            "value" : "你的免費試用將在 %lld 天後結束。輕點可隨時管理或取消訂閱。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用將在 %lld 天後結束。輕觸以管理您的訂閱。"
+            "value" : "你的免費試用將在 %lld 天後結束。輕點可隨時管理或取消訂閱。"
           }
         }
       }
@@ -124469,19 +124964,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免费试用将于明天结束。打开 TLingo 管理您的订阅。"
+            "value" : "你的免费试用将于明天结束。打开 TLingo 可随时管理或取消订阅。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用將於明天結束。打開 TLingo 以管理您的訂閱。"
+            "value" : "你的免費試用將於明天結束。打開 TLingo 可隨時管理或取消訂閱。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用將於明天結束。打開 TLingo 以管理您的訂閱。"
+            "value" : "你的免費試用將於明天結束。打開 TLingo 可隨時管理或取消訂閱。"
           }
         }
       }
@@ -124593,19 +125088,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免费试用将于明天结束。点按以管理您的订阅。"
+            "value" : "你的免费试用将于明天结束。轻点可随时管理或取消订阅。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的免費試用將於明天結束。點按以管理你的訂閱。"
+            "value" : "你的免費試用將於明天結束。輕點可隨時管理或取消訂閱。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用將於明天結束。輕觸以管理您的訂閱。"
+            "value" : "你的免費試用將於明天結束。輕點可隨時管理或取消訂閱。"
           }
         }
       }
@@ -124717,19 +125212,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免费试用：%@"
+            "value" : "免费试用期：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用：%@"
+            "value" : "免費試用期：%@"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的免費試用：%@"
+            "value" : "免費試用期：%@"
           }
         }
       }
@@ -124841,19 +125336,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您选择的模型需要 Premium。请选择一个免费模型或续订您的订阅。"
+            "value" : "所选模型需要 Pro 会员。请选择免费模型或续费订阅。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您所選的模型需要 Premium。請選擇免費模型或續訂您的訂閱。"
+            "value" : "所選模型需要 Pro 會員。請選擇免費模型或續訂訂閱。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您所選的模型需要 Premium。選擇免費模型或續訂您的訂閱。"
+            "value" : "所選模型需要 Pro 會員。請選擇免費模型或續訂訂閱。"
           }
         }
       }
@@ -124965,19 +125460,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的 TLingo 试用期即将结束"
+            "value" : "TLingo 免费试用即将结束"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的 TLingo 試用即將結束。"
+            "value" : "TLingo 免費試用即將結束"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您的 TLingo 試用期即將結束"
+            "value" : "TLingo 免費試用即將結束"
           }
         }
       }
@@ -125214,24 +125709,25 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有了 TLingo，你的写作现在更清晰。"
+            "value" : "润色完成！表达立刻变得自然得体 ✨"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有了 TLingo，您的寫作現在更清晰。"
+            "value" : "潤色完成！表達立刻變得自然得體 ✨"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有了 TLingo，你的寫作現在更清晰。"
+            "value" : "潤色完成！表達立刻變得自然得體 ✨"
           }
         }
       }
     },
     "我们会回复你的每一封邮件 · iamzanderwang@outlook.com" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125254,7 +125750,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我们会回复你的每一封邮件 · iamzanderwang@outlook.com"
+            "value" : "Every email gets a reply · iamzanderwang@outlook.com"
           }
         },
         "es" : {

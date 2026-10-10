@@ -333,7 +333,8 @@
                 Self.startConfigurationBlocker(
                     configurations: laneConfigurations,
                     hasImportedAudio: hasImportedAudio,
-                    isMemoryConstrained: isRealtimeMemoryConstrained
+                    isMemoryConstrained: isRealtimeMemoryConstrained,
+                    sourceLanguage: preferences.realtimeSourceLanguage
                 )
             }
 
@@ -341,6 +342,7 @@
                 configurations: [RealtimeLaneConfiguration],
                 hasImportedAudio: Bool,
                 isMemoryConstrained: Bool,
+                sourceLanguage: SourceLanguageOption = .auto,
                 physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory
             ) -> RealtimeStartBlocker? {
                 guard !configurations.isEmpty else {
@@ -372,6 +374,9 @@
                         }
                     } else if !RecognitionModelStore.isSelectable(model) {
                         return .unsupportedRecognitionModel(model.title)
+                    }
+                    guard model.supports(sourceLanguage: sourceLanguage) else {
+                        return .unsupportedSourceLanguage(model.title, sourceLanguage.primaryLabel)
                     }
                 }
                 do {

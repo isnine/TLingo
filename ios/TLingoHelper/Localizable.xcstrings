@@ -226,7 +226,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在任意应用中选中文字，然后点击圆点，用 TLingo 翻译。"
+            "value" : "在任意应用中选中文本，然后点击悬浮球，即可用 TLingo 翻译。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任意應用程式中選取文字，然後按一下懸浮球，即可用 TLingo 翻譯。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任意應用程式中選取文字，然後按一下懸浮球，即可用 TLingo 翻譯。"
           }
         }
       }
@@ -256,7 +268,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "只有点击圆点时才会把文字发送给 TLingo。翻译、历史记录和订阅都由 TLingo 处理。"
+            "value" : "只有点击悬浮球时才会将文本发送给 TLingo。翻译、历史记录和订阅都由 TLingo 处理。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有按一下懸浮球時才會將文字發送給 TLingo。翻譯、歷史記錄和訂閱都由 TLingo 處理。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有按一下懸浮球時才會將文字發送給 TLingo。翻譯、歷史記錄和訂閱都由 TLingo 處理。"
           }
         }
       }
@@ -266,7 +290,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选词翻译"
+            "value" : "划词翻译"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "劃詞翻譯"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "劃詞翻譯"
           }
         }
       }
@@ -276,7 +312,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选词翻译已暂停，请在 TLingoHelper 中打开。"
+            "value" : "划词翻译已暂停，请在 TLingoHelper 中打开。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "劃詞翻譯已暫停，請在 TLingoHelper 中開啟。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "劃詞翻譯已暫停，請在 TLingoHelper 中開啟。"
           }
         }
       }
@@ -291,9 +339,7 @@
         }
       }
     },
-    "TLingo" : {
-
-    },
+    "TLingo" : {},
     "TLingo quit before the text was sent. Try again." : {
       "localizations" : {
         "zh-Hans" : {
@@ -312,7 +358,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "翻译选中的文字"
+            "value" : "翻译所选文本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻譯所選文字"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻譯所選文字"
           }
         }
       }

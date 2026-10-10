@@ -21,6 +21,11 @@
                 isModelPickerPresented.toggle()
             } label: {
                 HStack(spacing: 4) {
+                    if !isLanguageSupported(configuration.recognitionModel) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(Color.orange)
+                    }
                     Text(configuration.recognitionModel.title)
                         .font(.headline)
                         .lineLimit(1)
@@ -33,6 +38,7 @@
             }
             .buttonStyle(.plain)
             .disabled(isBusy)
+            .help(selectedModelWarning ?? "")
             .popover(isPresented: $isModelPickerPresented, arrowEdge: .bottom) {
                 modelPicker
             }
@@ -62,48 +68,62 @@
         }
 
         private var modelPicker: some View {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(availableModels) { model in
-                    Button {
-                        selectModel(model)
-                    } label: {
-                        HStack(spacing: 12) {
-                            Text(model.title)
-                                .foregroundStyle(
-                                    model.supports(sourceLanguage: sourceLanguage)
-                                        ? colors.textPrimary
-                                        : colors.textSecondary
-                                )
-
-                            Spacer(minLength: 16)
-
-                            modelStatusView(model)
-                                .frame(width: 52, height: 18, alignment: .trailing)
-                        }
-                        .padding(.horizontal, 12)
-                        .frame(height: 34)
-                        .contentShape(Rectangle())
+            VStack(alignment: .leading, spacing: 2) {
+                if let selectedModelWarning {
+                    Label {
+                        Text(selectedModelWarning)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(Color.orange)
                     }
-                    .buttonStyle(.plain)
-                    .background(
-                        model.id == configuration.recognitionModel.id
-                            ? colors.accent.opacity(0.12)
-                            : Color.clear
-                    )
-                    .disabled(!model.supports(sourceLanguage: sourceLanguage))
+                    .font(.callout)
+                    .foregroundStyle(colors.textPrimary)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .padding(.bottom, 4)
                 }
 
+                modelSection("On This Device", models: usableModels.filter(isModelCached))
+                modelSection("Available to Download", models: usableModels.filter { !isModelCached($0) })
+                modelSection("Unavailable", models: availableModels.filter { !isUsable($0) })
+
                 if let modelDownloadError {
-                    Divider()
                     Text(modelDownloadError)
                         .font(.caption)
                         .foregroundStyle(colors.error)
-                        .padding(12)
+                        .padding(.horizontal, 8)
+                        .padding(.top, 6)
                 }
             }
-            .frame(width: 280)
+            .padding(8)
+            .frame(width: 320)
             .task {
                 await refreshCachedModels()
+            }
+        }
+
+        @ViewBuilder
+        private func modelSection(_ title: LocalizedStringKey, models: [RecognitionModelDescriptor]) -> some View {
+            if !models.isEmpty {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(colors.textSecondary)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 8)
+                    .padding(.bottom, 2)
+                ForEach(models) { model in
+                    RealtimeLaneModelRow(
+                        model: model,
+                        detail: detailText(for: model),
+                        isSelected: model.id == configuration.recognitionModel.id,
+                        isUsable: isUsable(model),
+                        colors: colors,
+                        action: { selectModel(model) },
+                        status: { modelStatusView(model) }
+                    )
+                }
             }
         }
 
@@ -114,6 +134,44 @@
                 return RecognitionModelStore.availableModels
             }
             return RecognitionModelStore.availableModels + [.mossTranscribeDiarize]
+        }
+
+        private var usableModels: [RecognitionModelDescriptor] {
+            availableModels.filter(isUsable)
+        }
+
+        private var selectedModelWarning: String? {
+            let model = configuration.recognitionModel
+            guard !isLanguageSupported(model) else { return nil }
+            return RecognitionModelDescriptor.unsupportedSourceLanguageMessage(
+                modelTitle: model.title,
+                languageName: sourceLanguage.primaryLabel
+            )
+        }
+
+        private func isLanguageSupported(_ model: RecognitionModelDescriptor) -> Bool {
+            model.supports(sourceLanguage: sourceLanguage)
+        }
+
+        private func isRuntimeAvailable(_ model: RecognitionModelDescriptor) -> Bool {
+            model.runtime == .mossOffline
+                ? RecognitionModelStore.isRuntimeSupported(model)
+                : RecognitionModelStore.isSelectable(model)
+        }
+
+        private func isUsable(_ model: RecognitionModelDescriptor) -> Bool {
+            isLanguageSupported(model) && isRuntimeAvailable(model)
+        }
+
+        /// Usable rows show capabilities; unusable rows show why they cannot be picked.
+        private func detailText(for model: RecognitionModelDescriptor) -> String {
+            if !isRuntimeAvailable(model) {
+                return String(localized: "Unavailable on this device")
+            }
+            if !isLanguageSupported(model) || isModelCached(model) {
+                return model.languageSummary
+            }
+            return model.limitsText
         }
 
         @ViewBuilder
@@ -128,14 +186,10 @@
                         .font(.caption2)
                         .monospacedDigit()
                 }
-            } else if isModelCached(model) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(colors.success)
-                    .help("Downloaded")
-            } else {
+            } else if isUsable(model), !isModelCached(model) {
                 Image(systemName: "arrow.down.circle")
-                    .foregroundStyle(colors.textSecondary)
-                    .help("Not Downloaded")
+                    .foregroundStyle(colors.accent)
+                    .help("Download")
             }
         }
 
@@ -158,6 +212,7 @@
         }
 
         private func selectModel(_ model: RecognitionModelDescriptor) {
+            guard isUsable(model) else { return }
             modelDownloadError = nil
             if isModelCached(model) {
                 desiredModelIDAfterDownload = nil
@@ -277,6 +332,56 @@
                     RecognitionModelDescriptor.mossTranscribeDiarize.id
                 )
             #endif
+        }
+    }
+
+    private struct RealtimeLaneModelRow<Status: View>: View {
+        let model: RecognitionModelDescriptor
+        let detail: String
+        let isSelected: Bool
+        let isUsable: Bool
+        let colors: AppColors.Palette
+        let action: () -> Void
+        @ViewBuilder let status: () -> Status
+
+        @State private var isHovered = false
+
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark")
+                        .font(.caption.bold())
+                        .foregroundStyle(colors.accent)
+                        .opacity(isSelected ? 1 : 0)
+                        .frame(width: 14)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(model.title)
+                            .foregroundStyle(isUsable ? colors.textPrimary : colors.textSecondary)
+                            .lineLimit(1)
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(colors.textSecondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    status()
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    isUsable && isHovered ? colors.accent.opacity(0.12) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 6)
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!isUsable)
+            .onHover { isHovered = $0 }
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
         }
     }
 #endif

@@ -262,7 +262,7 @@ struct SettingsView: View {
                 settingsLabel(
                     "Feedback",
                     systemImage: "envelope",
-                    subtitle: Text("我们会回复你的每一封邮件 · iamzanderwang@outlook.com")
+                    subtitle: Text("Every email gets a reply · iamzanderwang@outlook.com")
                 )
             }
 

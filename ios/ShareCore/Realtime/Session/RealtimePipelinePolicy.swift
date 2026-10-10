@@ -85,6 +85,7 @@
         case maximumLaneCount
         case duplicateLane
         case unsupportedRecognitionModel(String)
+        case unsupportedSourceLanguage(String, String)
         case importedAudioRequired(String)
         case missingAzureConfiguration
         case starting
@@ -132,6 +133,11 @@
                 )
             case let .unsupportedRecognitionModel(modelName):
                 return String(localized: "\(modelName) is unavailable on this Mac. Choose another recognition model.")
+            case let .unsupportedSourceLanguage(modelName, languageName):
+                return RecognitionModelDescriptor.unsupportedSourceLanguageMessage(
+                    modelTitle: modelName,
+                    languageName: languageName
+                )
             case let .importedAudioRequired(modelName):
                 return String(localized: "\(modelName) requires imported audio. Import an audio file or choose another model.")
             case .missingAzureConfiguration:

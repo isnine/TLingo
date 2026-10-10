@@ -93,12 +93,9 @@ struct ModelsView: View {
                     Image(systemName: "lock.shield.fill")
                         .font(.system(size: 14))
                         .foregroundColor(colors.textSecondary.opacity(0.6))
-                    Text(
-                        "Your translation text is sent to Microsoft Azure OpenAI Service for processing. "
-                            + "Data is encrypted in transit and not stored after processing."
-                    )
-                    .font(.system(size: 12))
-                    .foregroundColor(colors.textSecondary.opacity(0.8))
+                    Text("Your data is encrypted in transit. Processing is subject to each provider's privacy policy.")
+                        .font(.system(size: 12))
+                        .foregroundColor(colors.textSecondary.opacity(0.8))
                 }
 
                 Link(destination: Self.privacyPolicyURL) {

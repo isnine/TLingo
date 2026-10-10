@@ -98,6 +98,9 @@
                     localized: "About 40 languages: English, Chinese, Japanese, Korean, French, Spanish, and more"
                 )
             }
+            if id == Self.confuciusR2T2.id {
+                return String(localized: "Chinese and English")
+            }
             if supportedLanguageIDs.isEmpty {
                 return String(localized: "System languages")
             }
@@ -132,6 +135,10 @@
 
         public var limitsText: String {
             "\(languageSummary) · \(sizeDisplayName)"
+        }
+
+        public static func unsupportedSourceLanguageMessage(modelTitle: String, languageName: String) -> String {
+            String(localized: "\(modelTitle) does not support \(languageName). Choose another model or change the source language.")
         }
 
         public func supports(sourceLanguage: SourceLanguageOption) -> Bool {

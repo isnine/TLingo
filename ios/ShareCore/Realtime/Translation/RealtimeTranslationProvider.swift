@@ -20,7 +20,7 @@
             case .appleTranslationRealtime:
                 return String(localized: "Apple Translation Realtime")
             case .transcriptionOnly:
-                return String(localized: "None")
+                return String(localized: "Transcription Only")
             }
         }
 
@@ -82,7 +82,7 @@
             case .transcriptionOnly:
                 return ModelConfig(
                     id: rawValue,
-                    displayName: "None",
+                    displayName: "Transcription Only",
                     isDefault: true,
                     isPremium: false
                 )

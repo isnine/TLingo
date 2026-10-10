@@ -104,10 +104,17 @@
                 isSwapDisabled: isBusy,
                 languageDependencies: PromptLanguageDependencies(
                     usesSourceLanguage: true,
-                    usesTargetLanguage: true
+                    usesTargetLanguage: anyLaneTranslates
                 ),
                 onSelectionChanged: onLanguageChanged
             )
+        }
+
+        private var anyLaneTranslates: Bool {
+            guard !store.laneConfigurations.isEmpty else {
+                return preferences.realtimeTranslationProvider.performsTranslation
+            }
+            return store.laneConfigurations.contains { $0.translationProvider.performsTranslation }
         }
 
         private var unsupportedSourceLanguageOptions: Set<SourceLanguageOption> {
