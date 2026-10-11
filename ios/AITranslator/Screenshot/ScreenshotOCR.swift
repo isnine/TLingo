@@ -135,6 +135,10 @@
             onFinish(window.convertToScreen(currentRect))
         }
 
+        override func rightMouseDown(with _: NSEvent) {
+            onFinish(nil)
+        }
+
         override func keyDown(with event: NSEvent) {
             if event.keyCode == 53 { onFinish(nil) }
         }

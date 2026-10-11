@@ -51,11 +51,10 @@
             popoverGlassContainer {
                 popoverLayout
                     .frame(width: preferences.menuBarPopoverWidth, height: preferences.menuBarPopoverHeight)
-                    .tlingoGlassSurface(
-                        cornerRadius: 18,
-                        tint: colors.cardBackground.opacity(colorScheme == .dark ? 0.12 : 0.20),
-                        fallbackTint: colors.background.opacity(colorScheme == .dark ? 0.78 : 0.62),
-                        fallbackStroke: colors.divider
+                    // An opaque grey ground keeps the white composer and result card distinct whatever is behind the popover.
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(colors.background)
                     )
             }
             .animation(.easeInOut(duration: 0.25), value: activeConversationSession != nil)
@@ -97,23 +96,23 @@
         }
 
         private var popoverLayout: some View {
-            HStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    ZStack {
-                        if let session = activeConversationSession {
-                            inlineConversationView(session: session)
-                                .transition(.move(edge: .trailing))
-                        } else {
-                            translateContent
-                                .transition(.move(edge: .leading))
-                        }
+            VStack(spacing: 0) {
+                ZStack {
+                    if let session = activeConversationSession {
+                        inlineConversationView(session: session)
+                            .transition(.move(edge: .trailing))
+                    } else {
+                        translateContent
+                            .transition(.move(edge: .leading))
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    MenuBarPopoverResizeGrabber()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
+                MenuBarPopoverResizeGrabber()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The width handle floats over the trailing edge so it takes no layout space.
+            .overlay(alignment: .trailing) {
                 MenuBarPopoverWidthResizeGrabber()
             }
         }
@@ -133,17 +132,17 @@
             ZStack {
                 VStack(alignment: .leading, spacing: 12) {
                     headerSection
-
-                    Divider()
-                        .background(colors.divider)
-
                     inputSection
                     actionChips
 
                     if !viewModel.modelRuns.isEmpty {
-                        Divider()
-                            .background(colors.divider)
                         resultSection
+                            .background(surfaceBackground(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            // Keep the scroller clear of the card's rounded corners.
+                            .contentMargins(.vertical, 8, for: .scrollIndicators)
+                            // A legacy scroller beside the trailing resize edge reads as a second handle.
+                            .scrollIndicators(.never)
                     }
 
                     Spacer(minLength: 0)
@@ -225,60 +224,70 @@
 
         private var headerSection: some View {
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Quick Translate")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(colors.textPrimary)
+                HStack(spacing: 8) {
+                    // A 10pt globe font selects the switcher's compact metrics; it draws its own capsule.
+                    LanguageSwitcherView(
+                        globeFont: .system(size: 10),
+                        textFont: .system(size: 12, weight: .medium),
+                        chevronFont: .system(size: 8),
+                        foregroundColor: colors.textPrimary.opacity(0.75),
+                        languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
+                        resolvedTarget: viewModel.resolvedTargetLanguage,
+                        onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
+                        detectedSource: viewModel.detectedSourceLanguage,
+                        onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
+                    )
 
                     Spacer()
 
                     Button {
                         openInMainApp()
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "macwindow.on.rectangle")
-                                .font(.system(size: 12))
-                            Text("Open Main App")
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                        .foregroundColor(colors.textSecondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .tlingoGlassCapsule(
-                            tint: colors.accent.opacity(0.10),
-                            interactive: true,
-                            fallbackTint: colors.cardBackground.opacity(0.72),
-                            fallbackStroke: colors.divider
-                        )
+                        Image(systemName: "macwindow.on.rectangle")
+                            .font(.system(size: 14))
+                            .foregroundColor(colors.textSecondary)
+                            .frame(width: 30, height: 30)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .help("Open current translation in the main app window")
+                    .accessibilityLabel("Open Main App")
+                    .keyboardShortcut("o", modifiers: .command)
 
                     Menu {
-                        ForEach(MenuBarAction.availableCases, id: \.self) { action in
-                            if action.startsSection {
-                                Divider()
-                            }
-
-                            Button(role: action == .quit ? .destructive : nil) {
-                                MenuBarManager.shared.perform(action)
-                            } label: {
-                                Label(action.title, systemImage: action.systemImage)
+                        ForEach(Array(MenuBarAction.sections(excluding: [.quickTranslate]).enumerated()), id: \.offset) { _, section in
+                            if let title = section.title {
+                                Section(title) { menuButtons(for: section.actions) }
+                            } else {
+                                Section { menuButtons(for: section.actions) }
                             }
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.system(size: 18))
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundColor(colors.textSecondary)
                             .frame(width: 30, height: 30)
-                            .tlingoGlassCircle(.control, interactive: true)
+                            .contentShape(Rectangle())
                     }
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
+                    .fixedSize()
+                    .accessibilityLabel("More")
                 }
 
                 if !isHotkeyConfigured && showHotkeyHint {
                     hotkeyHintView
+                }
+            }
+        }
+
+        @ViewBuilder
+        private func menuButtons(for actions: [MenuBarAction]) -> some View {
+            ForEach(actions, id: \.self) { action in
+                Button(role: action == .quit ? .destructive : nil) {
+                    MenuBarManager.shared.perform(action)
+                } label: {
+                    Label(action.title, systemImage: action.isChecked ? "checkmark" : action.systemImage)
                 }
             }
         }
@@ -324,55 +333,45 @@
         // MARK: - Input Section
 
         private var inputSection: some View {
-            VStack(spacing: 8) {
+            let canTranslate = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return VStack(spacing: 6) {
                 SelectableTextEditor(
                     text: $viewModel.inputText,
                     textColor: colors.textPrimary,
                     onUserEdit: { viewModel.markUserEditedInput() },
                     onSwapLanguages: { viewModel.swapInputLanguages() }
                 )
-                .font(.system(size: 13))
-                .frame(height: 60)
-                .padding(8)
-                .background(inputSectionBackground)
+                .font(.system(size: 14))
+                .frame(height: 56)
 
                 HStack(spacing: 8) {
-                    LanguageSwitcherView(
-                        globeFont: .system(size: 10),
-                        textFont: .system(size: 11, weight: .medium),
-                        chevronFont: .system(size: 7),
-                        foregroundColor: colors.textSecondary.opacity(0.7),
-                        languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
-                        resolvedTarget: viewModel.resolvedTargetLanguage,
-                        onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
-                        detectedSource: viewModel.detectedSourceLanguage,
-                        onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
-                    )
+                    inputSpeakButton
 
                     Spacer()
 
-                    inputSpeakButton
+                    Text(verbatim: "⌘↩")
+                        .font(.system(size: 12))
+                        .foregroundColor(colors.textSecondary)
 
-                    let canTranslate = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     Button {
                         executeTranslation()
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.right.circle.fill")
-                                .font(.system(size: 12))
-                            Text("Send")
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                        .foregroundColor(canTranslate ? .white : colors.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .tlingoGlassCapsule(canTranslate ? .prominent : .control, interactive: canTranslate)
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(canTranslate ? .white : colors.textSecondary)
+                            .frame(width: 28, height: 28)
+                            .tlingoGlassCircle(canTranslate ? .prominent : .control, interactive: canTranslate)
                     }
                     .buttonStyle(.plain)
                     .disabled(!canTranslate)
                     .keyboardShortcut(.return, modifiers: .command)
+                    .help("Send")
+                    .accessibilityLabel("Send")
                 }
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(inputSectionBackground)
         }
 
         @ViewBuilder
@@ -385,16 +384,11 @@
                     viewModel.speakInputText()
                 }
             } label: {
-                Image(systemName: viewModel.isSpeakingInputText ? "stop.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(viewModel.isSpeakingInputText ? colors.error : colors.accent)
+                Image(systemName: viewModel.isSpeakingInputText ? "stop.fill" : "speaker.wave.2")
+                    .font(.system(size: 13))
+                    .foregroundColor(viewModel.isSpeakingInputText ? colors.error : colors.textSecondary)
                     .frame(width: 28, height: 28)
-                    .tlingoGlassCircle(
-                        tint: (viewModel.isSpeakingInputText ? colors.error : colors.accent).opacity(0.10),
-                        interactive: hasText || viewModel.isSpeakingInputText,
-                        fallbackTint: colors.cardBackground.opacity(0.54),
-                        fallbackStroke: colors.divider
-                    )
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!hasText && !viewModel.isSpeakingInputText)
@@ -439,23 +433,26 @@
         // MARK: - Liquid Glass Backgrounds
 
         private func chipTextColor(isSelected: Bool) -> Color {
-            return isSelected ? .white : colors.textPrimary
+            isSelected ? .white : colors.chipSecondaryText
         }
 
-        @ViewBuilder
         private var inputSectionBackground: some View {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(colors.inputBackground.opacity(colorScheme == .dark ? 0.78 : 0.90))
+            surfaceBackground(cornerRadius: 18)
+        }
+
+        private func surfaceBackground(cornerRadius: CGFloat) -> some View {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(colors.inputBackground.opacity(colorScheme == .dark ? 0.78 : 1))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .stroke(colors.divider, lineWidth: 1)
                 )
         }
 
-        @ViewBuilder
+        /// Solid fills: neighbouring glass capsules inside the popover's glass container merge and blur their labels.
         private func chipBackground(isSelected: Bool) -> some View {
-            Color.clear
-                .tlingoGlassCapsule(isSelected ? .prominent : .control, interactive: true)
+            Capsule()
+                .fill(isSelected ? colors.chipPrimaryBackground : colors.chipSecondaryBackground)
         }
     }
 

@@ -35,16 +35,9 @@
                 Capsule()
                     .fill(colors.textSecondary.opacity(isActive ? 0.42 : 0.22))
                     .frame(width: isActive ? 44 : 36, height: isActive ? 6 : 4)
-                    .tlingoGlassCapsule(.chrome, interactive: true)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 14)
-            .background(colors.cardBackground.opacity(isActive ? 0.10 : 0.04))
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(colors.divider.opacity(isActive ? 0.8 : 0.45))
-                    .frame(height: 1)
-            }
             .contentShape(Rectangle())
             .animation(.easeOut(duration: 0.14), value: isActive)
             .onHover { hovering in
@@ -116,16 +109,10 @@
                 Capsule()
                     .fill(colors.textSecondary.opacity(isActive ? 0.42 : 0.22))
                     .frame(width: isActive ? 6 : 4, height: isActive ? 44 : 36)
-                    .tlingoGlassCapsule(.chrome, interactive: true)
+                    .opacity(isActive ? 1 : 0)
             }
             .frame(maxHeight: .infinity)
-            .frame(width: 14)
-            .background(colors.cardBackground.opacity(isActive ? 0.10 : 0.04))
-            .overlay(alignment: .leading) {
-                Rectangle()
-                    .fill(colors.divider.opacity(isActive ? 0.8 : 0.45))
-                    .frame(width: 1)
-            }
+            .frame(width: 10)
             .contentShape(Rectangle())
             .animation(.easeOut(duration: 0.14), value: isActive)
             .onHover { hovering in

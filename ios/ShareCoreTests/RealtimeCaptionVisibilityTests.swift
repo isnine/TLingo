@@ -5,12 +5,6 @@
 
     @Suite("Realtime caption visibility")
     struct RealtimeCaptionVisibilityTests {
-        @Test("Context menu title reflects current caption visibility")
-        func contextMenuTitleReflectsCurrentVisibility() {
-            #expect(RealtimeCaptionVisibility.menuTitle(isVisible: true) == "Hide Live Captions")
-            #expect(RealtimeCaptionVisibility.menuTitle(isVisible: false) == "Show Live Captions")
-        }
-
         @Test("Context menu toggle flips caption visibility")
         func contextMenuToggleFlipsVisibility() {
             #expect(RealtimeCaptionVisibility.toggledValue(isVisible: true) == false)

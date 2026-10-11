@@ -7,17 +7,20 @@
 
 #if os(macOS)
     import AppKit
+    import Carbon
     import Combine
     import ShareCore
     import SwiftUI
 
     @MainActor
     enum MenuBarAction: Int, CaseIterable {
+        case quickTranslate
         case openMainWindow
-        case toggleRealtimeCaptions
-        case screenshotTranslate
         case selectionTranslate
+        case screenshotTranslate
+        case screenshotOCR
         case clipboardTranslate
+        case toggleRealtimeCaptions
         case quit
 
         static var availableCases: [Self] {
@@ -33,31 +36,72 @@
             case .openMainWindow:
                 NSLocalizedString("Open Main Window", comment: "Status bar context menu item to open the main app window")
             case .toggleRealtimeCaptions:
-                RealtimeCaptionVisibility.menuTitle(isVisible: RealtimeFloatingCaptionWindowController.isOpen)
-            case .screenshotTranslate:
-                HotKeyType.screenshotTranslate.displayName
-            case .selectionTranslate:
-                HotKeyType.selectionTranslate.displayName
-            case .clipboardTranslate:
-                HotKeyType.clipboardTranslate.displayName
+                NSLocalizedString("Live Captions", comment: "Status bar context menu toggle for the floating live captions window")
             case .quit:
                 NSLocalizedString("Quit TLingo", comment: "Status bar context menu item to quit the app")
+            default:
+                hotKeyType?.displayName ?? ""
             }
         }
 
         var systemImage: String {
             switch self {
             case .openMainWindow: "macwindow"
-            case .toggleRealtimeCaptions: "text.bubble"
-            case .screenshotTranslate: HotKeyType.screenshotTranslate.iconName
-            case .selectionTranslate: HotKeyType.selectionTranslate.iconName
-            case .clipboardTranslate: HotKeyType.clipboardTranslate.iconName
+            case .toggleRealtimeCaptions: "captions.bubble"
             case .quit: "power"
+            default: hotKeyType?.iconName ?? ""
             }
         }
 
+        /// The global hotkey that triggers the same action, shown as the menu item's shortcut.
+        var hotKeyType: HotKeyType? {
+            switch self {
+            case .quickTranslate: .quickTranslate
+            case .openMainWindow: .mainApp
+            case .selectionTranslate: .selectionTranslate
+            case .screenshotTranslate: .screenshotTranslate
+            case .screenshotOCR: .screenshotOCR
+            case .clipboardTranslate: .clipboardTranslate
+            case .toggleRealtimeCaptions, .quit: nil
+            }
+        }
+
+        var isChecked: Bool {
+            self == .toggleRealtimeCaptions && RealtimeFloatingCaptionWindowController.isOpen
+        }
+
+        /// Section title shown above this item, when it opens a titled section.
+        var sectionTitle: String? {
+            if self == Self.availableCases.first(where: { $0.isCaptureAction }) {
+                return NSLocalizedString("Translate", comment: "Status bar context menu section of translation actions")
+            }
+            if self == .toggleRealtimeCaptions {
+                return NSLocalizedString("Realtime", comment: "Status bar context menu section of realtime actions")
+            }
+            return nil
+        }
+
         var startsSection: Bool {
-            self == .screenshotTranslate || self == .quit
+            sectionTitle != nil || self == .quit
+        }
+
+        /// Actions grouped the way the context menu separates them.
+        static func sections(excluding excluded: Set<Self> = []) -> [(title: String?, actions: [Self])] {
+            var sections: [(title: String?, actions: [Self])] = []
+            for action in availableCases where !excluded.contains(action) {
+                if action.startsSection || sections.isEmpty {
+                    sections.append((action.sectionTitle, []))
+                }
+                sections[sections.count - 1].actions.append(action)
+            }
+            return sections
+        }
+
+        private var isCaptureAction: Bool {
+            switch self {
+            case .selectionTranslate, .screenshotTranslate, .screenshotOCR, .clipboardTranslate: true
+            default: false
+            }
         }
     }
 
@@ -216,10 +260,16 @@
                 if action.startsSection {
                     menu.addItem(.separator())
                 }
+                if let sectionTitle = action.sectionTitle {
+                    menu.addItem(.sectionHeader(title: sectionTitle))
+                }
 
                 let item = NSMenuItem(title: action.title, action: #selector(menuItemSelected(_:)), keyEquivalent: "")
                 item.target = self
                 item.tag = action.rawValue
+                item.image = NSImage(systemSymbolName: action.systemImage, accessibilityDescription: nil)
+                item.state = action.isChecked ? .on : .off
+                applyKeyEquivalent(for: action, to: item)
                 menu.addItem(item)
             }
 
@@ -231,6 +281,27 @@
             }
         }
 
+        /// Shows the user's global hotkey beside the item; keys without a single-character equivalent stay unlabeled.
+        private func applyKeyEquivalent(for action: MenuBarAction, to item: NSMenuItem) {
+            if action == .quit {
+                item.keyEquivalent = "q"
+                item.keyEquivalentModifierMask = .command
+                return
+            }
+            guard let type = action.hotKeyType else { return }
+            let configuration = HotKeyManager.shared.configuration(for: type)
+            let key = configuration.keyDisplayString
+            guard !configuration.isEmpty, key.count == 1 else { return }
+
+            var modifiers: NSEvent.ModifierFlags = []
+            if configuration.modifiers & UInt32(controlKey) != 0 { modifiers.insert(.control) }
+            if configuration.modifiers & UInt32(optionKey) != 0 { modifiers.insert(.option) }
+            if configuration.modifiers & UInt32(shiftKey) != 0 { modifiers.insert(.shift) }
+            if configuration.modifiers & UInt32(cmdKey) != 0 { modifiers.insert(.command) }
+            item.keyEquivalent = key.lowercased()
+            item.keyEquivalentModifierMask = modifiers
+        }
+
         @objc private func menuItemSelected(_ sender: NSMenuItem) {
             guard let action = MenuBarAction(rawValue: sender.tag) else { return }
             perform(action)
@@ -240,6 +311,8 @@
             closePopover()
 
             switch action {
+            case .quickTranslate:
+                showPopover()
             case .openMainWindow:
                 AppDelegate.shared?.openMainWindow()
             case .toggleRealtimeCaptions:
@@ -253,6 +326,8 @@
                 #if DIRECT_DISTRIBUTION
                     AppDelegate.shared?.translateCurrentSelection()
                 #endif
+            case .screenshotOCR:
+                AppDelegate.shared?.copyScreenshotText()
             case .clipboardTranslate:
                 AppDelegate.shared?.translateClipboard()
             case .quit:
