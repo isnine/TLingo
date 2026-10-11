@@ -1,5 +1,6 @@
 #if os(macOS) || os(iOS)
     import Foundation
+    import Speech
 
     public enum RecognitionModelRuntime: String, Equatable, Sendable {
         case appleSpeech
@@ -146,8 +147,14 @@
         }
 
         public func supports(languageID: String) -> Bool {
-            guard !supportedLanguageIDs.isEmpty else { return true }
-            let supported = Set(supportedLanguageIDs.map(Self.normalizedLanguageID))
+            let supported: Set<String> = if !supportedLanguageIDs.isEmpty {
+                Set(supportedLanguageIDs.map(Self.normalizedLanguageID))
+            } else if runtime == .appleSpeech {
+                Self.commonLanguageIDs.union(Self.appleSpeechLanguageIDs)
+            } else {
+                // Unlisted models were validated against the common list before the full catalog existed.
+                Self.commonLanguageIDs
+            }
             let normalized = Self.normalizedLanguageID(languageID)
             guard !supported.contains(normalized) else { return true }
             guard let base = normalized.split(separator: "-").first.map(String.init) else {
@@ -155,6 +162,13 @@
             }
             return supported.contains(base)
         }
+
+        /// Languages `SFSpeechRecognizer` adds beyond the common list; Apple Speech falls back to it.
+        private static let appleSpeechLanguageIDs: Set<String> = Set(
+            SFSpeechRecognizer.supportedLocales().compactMap { $0.language.languageCode?.identifier }
+        )
+
+        private static let commonLanguageIDs = Set(LanguageCatalog.commonCodes.map(normalizedLanguageID))
 
         private static func normalizedLanguageID(_ languageID: String) -> String {
             languageID.replacingOccurrences(of: "_", with: "-").lowercased()

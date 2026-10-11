@@ -15,7 +15,7 @@
 |---|---|
 | **目标语言** | 用户选择具体语言时**永不自动重定向**。选择"自动选择"（`TargetLanguageOption.appLanguage`）时，按候选列表（App 语言 → 系统首选语言 → 英语）取第一个与原文不同的语言，实际只会用到前两个。`targetLanguageOverride` 仅用于"语言切换菜单单次覆盖"，消费一次后清空 |
 | **源语言** | 若用户固定选择（非 `.auto`）→ 用用户选择；若 `.auto` → 用 `NLLanguageRecognizer` 检测，**排除 target 同语言**以避开混合语言误判 |
-| **可选语言** | `LanguageCatalog.allCodes`：系统 `Locale.availableIdentifiers` 能命名的全部语言（`zh` 拆成 `zh-Hans`/`zh-Hant`，另含 `en-GB`、`en-US`、`pt-BR`）。文本翻译选择器提供全集；实时字幕菜单和结果区"改选"菜单只用 `LanguageCatalog.commonCodes`。引擎不支持所选语言时，对应结果标为"不支持" |
+| **可选语言** | `LanguageCatalog.allCodes`：系统 `Locale.availableIdentifiers` 能命名的全部语言（`zh` 拆成 `zh-Hans`/`zh-Hant`，另含 `en-GB`、`en-US`、`pt-BR`）。文本翻译和实时字幕的所有语言入口都使用共享的 `LanguagePickerView`（iOS/macOS），`LanguageCatalog.commonCodes` 固定在"常用语言"分组，其余在"所有语言"。引擎不支持所选语言时，对应结果标为"不支持"；实时识别模型不支持的源语言在选择器中禁用（Apple Speech 以常用语言加 `SFSpeechRecognizer.supportedLocales()` 为准） |
 | **目标 == 源** | 在 Apple Translate 路径**前置短路**，直接返回本地化错误"Source and target are both <Language>. Pick a different target language."。Microsoft / LLM 不做此校验（可正常调用） |
 
 ## 共享检测层：`SourceLanguageDetector`
