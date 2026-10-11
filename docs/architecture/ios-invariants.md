@@ -17,7 +17,9 @@ review_triggers:
 - Main requests, provider tasks, per-card retry, diff generation and History writes use the same generation.
 - A previous generation cannot update cards, History or satisfaction state after a new request starts.
 - Completion waits for every selected provider to reach a terminal state.
+- Non-cancellation request setup failures, including trial device registration, produce a per-model failure result rather than leaving a running card.
 - Model selection resolves only models supported by the requested capability.
+- Context Chat selects a chat-capable model, never a direct translation engine. Continuing a result retains its original request languages, including after a window handoff.
 - Apple Foundation Model selection requires `SystemLanguageModel.default.availability == .available`; a later availability change keeps the preference but returns an inline provider error.
 - On-device Foundation Model requests never use the Worker and do not count toward the free cloud-model limit.
 - Private Cloud Compute selection requires `PrivateCloudComputeLanguageModel.availability == .available`; the App Store app and translation extension carry the managed PCC entitlement, PCC never uses the Worker, and the selection remains enabled when quota or service errors occur.
@@ -33,6 +35,14 @@ review_triggers:
 - `zh-Hans` and `zh-Hant` are distinct translation languages.
 - The target language is never silently replaced because source detection matched its base language.
 - Persistent language identity uses stable identifiers, not localized display text.
+- Keyboard language swaps use the same source/target resolution as requests and previews. Minimal detected identifiers retain their script/region meaning when mapped to app language options.
+
+## App Input Delivery
+
+- Services, text deep links and Quick Translate handoffs persist the newest pending request in `HomeInputRouter` until the destination Home is mounted.
+- A request activates its destination before it is consumed, and is delivered to one receiver only. Popup results-only and extension views do not consume main-app input.
+- macOS Quick Translate presents the same required cloud consent as Home; Direct retains its existing consent bypass.
+- The Main App hotkey preserves the hide toggle and uses the main-window creation path when no window exists.
 
 ## Realtime
 
@@ -49,6 +59,8 @@ review_triggers:
 - The primary lane is the compatibility projection for floating captions, menu bar controls and legacy single-track fields.
 - Callback handling validates the token against the active session before changing state.
 - Stop order is: reject new input, stop and drain producers, finalize recognition, drain translation, finish recordings, persist, publish terminal state.
+- iPhone Audio stop commands and producer snapshots have separate session-scoped ownership. A stale producer cannot clear a newer stop command or replace the active session; published terminal snapshots cannot be overwritten by later callbacks.
+- Both ReplayKit stop routes drain before terminal publication. The synchronous system callback waits for a bounded drain; an unfinished drain remains stopping, and extension disappearance is reported as failure rather than fabricated success.
 - `stopped` and `failed` are terminal for a session token.
 - Clear-display and start-new-session are different commands.
 - Recognition and translation buffers have explicit memory and duration bounds.
@@ -65,6 +77,7 @@ review_triggers:
 
 - A checkpoint is acknowledged only after persistence succeeds.
 - Fetch failure is not equivalent to an empty result.
+- History fetch and deletion errors propagate to callers. Failed fetches retain loaded records; failed deletions retain UI rows and roll back pending database changes before any audio cleanup.
 - SwiftData records and audio files form one transaction boundary.
 - Destructive audio cleanup requires a successfully loaded complete reference set.
 - Concurrent writers use revision or field-level merge; a stale whole-session snapshot cannot overwrite newer autosave data.
@@ -72,6 +85,7 @@ review_triggers:
 - Multi-lane realtime History stores one shared audio session with stable track and segment IDs. Legacy `segments` and model fields project the primary track.
 - A session without stored tracks projects its legacy `segments` as one track whose ID is the session request ID, so repeated autosaves merge into that track.
 - Single-lane History segment offsets come from recognizer audio time (Apple Speech word time ranges, or segment offsets), measured on the same buffers as the recording. Text-arrival time is only a fallback when the recognizer reports no timing.
+- macOS recognition nodes translate token timings into the shared audio timeline; lanes exclude pre-activation timings and preserve stable IDs when recognition segments split into multiple History sentences.
 - macOS History audio reconstruction adds a source-scoped track; it cannot replace the original realtime track or a track from another audio source.
 - Reconstructed segments retain their audio offset, duration and anonymous speaker ID so playback, export and Chat context use the same timeline.
 - MOSS diarization is available for macOS Apple Silicon History reconstruction and imported-audio lanes. It is never available for live microphone or Mac Audio capture, and its weights remain an on-demand cache.
@@ -80,6 +94,8 @@ review_triggers:
 ## Configuration And Voice
 
 - Active configuration selection survives app and extension process startup.
+- macOS shortcut persistence preserves key code zero (the A key) with modifiers; only zero key code and zero modifiers together represent an empty shortcut.
 - User actions are identified by stable IDs; display-name collision cannot silently delete data.
+- Vocabulary mutations resolve normalized term/target identity from a fresh context under a shared app/extension file lock. Bookmark toggles resolve persisted state within that same transaction; no schema migration is required.
 - Configuration save success means disk commit succeeded.
 - Speech and voice tasks return to an idle or terminal state on success, failure and cancellation.
