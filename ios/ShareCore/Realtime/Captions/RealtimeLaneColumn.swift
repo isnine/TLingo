@@ -27,7 +27,6 @@
                 Divider()
                 RealtimeLaneTranscript(
                     store: store,
-                    configurationID: configuration.id,
                     snapshot: snapshot,
                     colors: colors,
                     phaseTitle: phaseTitle

@@ -1,82 +1,59 @@
 #if os(macOS)
+    import AppKit
     import SwiftUI
 
     struct RealtimeLaneTranscript: View {
         @ObservedObject var store: RealtimeSessionStore
-        let configurationID: UUID
         let snapshot: RealtimeLaneSnapshot?
         let colors: AppColors.Palette
         let phaseTitle: String
 
-        @State private var scrollTask: Task<Void, Never>?
-
         var body: some View {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
-                        if let error = snapshot?.errorMessage, !error.isEmpty {
-                            Label(error, systemImage: "exclamationmark.triangle.fill")
-                                .font(.body)
-                                .foregroundStyle(colors.error)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+            VStack(alignment: .leading, spacing: 0) {
+                if let error = snapshot?.errorMessage, !error.isEmpty {
+                    Label(error, systemImage: "exclamationmark.triangle.fill")
+                        .font(.body)
+                        .foregroundStyle(colors.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.horizontal, .top], 18)
+                }
 
-                        if captionLines.isEmpty {
-                            ContentUnavailableView {
-                                Label(phaseTitle, systemImage: "waveform")
-                            } description: {
-                                Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 220)
-                            // Fill the viewport (minus the stack padding) so the bottom scroll anchor keeps it centered.
-                            .containerRelativeFrame(.vertical) { height, _ in max(height - 36, 220) }
-                        } else {
-                            ForEach(captionLines) { line in
-                                // Matches the iOS caption hierarchy, scaled down for side-by-side lanes.
-                                Text(line.text)
-                                    .font(
-                                        line.kind == .source
-                                            ? .system(size: 15, weight: .medium, design: .rounded)
-                                            : .system(size: 20, weight: .semibold, design: .rounded)
-                                    )
-                                    .foregroundStyle(
-                                        line.isPending
-                                            ? colors.accent
-                                            : (line.kind == .source ? colors.textSecondary : colors.textPrimary)
-                                    )
-                                    .lineSpacing(line.kind == .source ? 3 : 5)
-                                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                                    .textSelection(.enabled)
-                                    .id(line.id)
-                            }
-                            Color.clear
-                                .frame(height: 1)
-                                .id(bottomID)
+                ZStack {
+                    RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
+
+                    if captionLines.isEmpty {
+                        ContentUnavailableView {
+                            Label(phaseTitle, systemImage: "waveform")
+                        } description: {
+                            Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
                         }
-                    }
-                    .padding(18)
-                }
-                .defaultScrollAnchor(.bottom)
-                .onChange(of: captionLines) {
-                    scrollTask?.cancel()
-                    scrollTask = Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(60))
-                        guard !Task.isCancelled else { return }
-                        proxy.scrollTo(bottomID, anchor: .bottom)
+                        .frame(maxWidth: .infinity, minHeight: 220)
                     }
                 }
-                .onDisappear {
-                    scrollTask?.cancel()
-                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        }
+
+        /// Matches the iOS caption hierarchy, scaled down for side-by-side lanes.
+        private var captionStyle: RealtimeCaptionScrollView.Style {
+            RealtimeCaptionScrollView.Style(
+                sourceFont: RealtimeCaptionScrollView.Style.roundedFont(size: 15, weight: .medium),
+                translationFont: RealtimeCaptionScrollView.Style.roundedFont(size: 20, weight: .semibold),
+                sourceColor: NSColor(colors.textSecondary),
+                translationColor: NSColor(colors.textPrimary),
+                pendingColor: NSColor(colors.accent),
+                sourceLineSpacing: 3,
+                translationLineSpacing: 5,
+                lineGap: 16,
+                horizontalPadding: 18,
+                verticalPadding: 18,
+                alignsShortContentToBottom: true,
+                isSelectable: true
+            )
         }
 
         private var captionLines: [RealtimeCaptionLine] {
             snapshot?.captionLines ?? []
-        }
-
-        private var bottomID: String {
-            "realtime-lane-bottom-\(configurationID.uuidString)"
         }
     }
 #endif

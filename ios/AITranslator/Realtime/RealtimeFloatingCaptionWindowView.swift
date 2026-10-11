@@ -6,13 +6,10 @@
     struct RealtimeFloatingCaptionWindowView: View {
         private static let contentHorizontalMargin: CGFloat = 20
         private static let contentVerticalMargin: CGFloat = 14
-        private static let scrollIndicatorTrailingMargin: CGFloat = 8
 
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject var store: RealtimeSessionStore
         @State private var isHoveringCaptionWindow = false
-        @State private var scrollContentHeight: CGFloat = 0
-        @State private var scrollViewportHeight: CGFloat = 0
         @State private var captionClearAnchor = RealtimeCaptionDisplayClearAnchor.empty
         @State private var targetScreenHasBuiltInNotch = false
 
@@ -133,90 +130,37 @@
         }
 
         private var captionContent: some View {
-            let lines = captionLines
+            ZStack(alignment: .topLeading) {
+                RealtimeCaptionScrollView(lines: captionLines, style: Self.captionStyle)
 
-            return ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        if shouldShowCaptionPlaceholder {
-                            captionLine(
-                                RealtimeCaptionLine(
-                                    id: "placeholder",
-                                    kind: .source,
-                                    text: RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning)
-                                )
-                            )
-                            .opacity(0.72)
-                        } else {
-                            ForEach(lines) { line in
-                                captionLine(line)
-                                    .id(line.id)
-                            }
-                            Color.clear
-                                .frame(height: 1)
-                                .id("caption-bottom")
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(HeightReader(key: RealtimeCaptionScrollContentHeightKey.self))
-                }
-                .background(HeightReader(key: RealtimeCaptionScrollViewportHeightKey.self))
-                .contentMargins(.horizontal, Self.contentHorizontalMargin, for: .scrollContent)
-                .contentMargins(.vertical, Self.contentVerticalMargin, for: .scrollContent)
-                .contentMargins(.trailing, Self.scrollIndicatorTrailingMargin, for: .scrollIndicators)
-                .scrollIndicators(.visible)
-                .onPreferenceChange(RealtimeCaptionScrollContentHeightKey.self) { height in
-                    scrollContentHeight = height
-                }
-                .onPreferenceChange(RealtimeCaptionScrollViewportHeightKey.self) { height in
-                    scrollViewportHeight = height
-                }
-                .onChange(of: lines) {
-                    scrollToBottomIfNeeded(proxy)
-                }
-                .onChange(of: scrollContentHeight) {
-                    scrollToBottomIfNeeded(proxy)
+                if shouldShowCaptionPlaceholder {
+                    Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .opacity(0.72)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Self.contentHorizontalMargin)
+                        .padding(.vertical, Self.contentVerticalMargin)
+                        .allowsHitTesting(false)
                 }
             }
         }
 
-        private var isCaptionContentScrollable: Bool {
-            scrollContentHeight + Self.contentVerticalMargin * 2 > scrollViewportHeight
-        }
-
-        private func scrollToBottomIfNeeded(_ proxy: ScrollViewProxy) {
-            guard !captionLines.isEmpty, isCaptionContentScrollable else { return }
-
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                proxy.scrollTo("caption-bottom", anchor: .bottom)
-            }
-        }
-
-        private func captionLine(_ line: RealtimeCaptionLine) -> some View {
-            Text(line.text)
-                .font(captionFont(for: line.kind))
-                .foregroundStyle(captionForegroundStyle(for: line))
-                .opacity(line.kind == .source && !line.isPending ? 0.82 : 1)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-
-        private func captionForegroundStyle(for _: RealtimeCaptionLine) -> Color {
-            .white
-        }
-
-        private func captionFont(for kind: RealtimeCaptionLine.Kind) -> Font {
-            switch kind {
-            case .source:
-                return .system(size: 19, weight: .semibold)
-            case .translation:
-                return .system(size: 25, weight: .bold)
-            }
-        }
+        /// Captions are not selectable so dragging anywhere still moves the floating window.
+        private static let captionStyle = RealtimeCaptionScrollView.Style(
+            sourceFont: .systemFont(ofSize: 19, weight: .semibold),
+            translationFont: .systemFont(ofSize: 25, weight: .bold),
+            sourceColor: NSColor.white.withAlphaComponent(0.82),
+            translationColor: .white,
+            pendingColor: .white,
+            sourceLineSpacing: 0,
+            translationLineSpacing: 0,
+            lineGap: 8,
+            horizontalPadding: contentHorizontalMargin,
+            verticalPadding: contentVerticalMargin,
+            alignsShortContentToBottom: false,
+            isSelectable: false
+        )
 
         private var captionControls: some View {
             HStack(spacing: 8) {
@@ -389,32 +333,6 @@
             let lines = resolvedCaptionLines
             guard !lines.isEmpty else { return }
             captionClearAnchor = RealtimeCaptionDisplayClearAnchor(lines: lines)
-        }
-    }
-
-    private struct HeightReader<Key: PreferenceKey>: View where Key.Value == CGFloat {
-        let key: Key.Type
-
-        var body: some View {
-            GeometryReader { proxy in
-                Color.clear.preference(key: key, value: proxy.size.height)
-            }
-        }
-    }
-
-    private struct RealtimeCaptionScrollContentHeightKey: PreferenceKey {
-        static let defaultValue: CGFloat = 0
-
-        static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-            value = nextValue()
-        }
-    }
-
-    private struct RealtimeCaptionScrollViewportHeightKey: PreferenceKey {
-        static let defaultValue: CGFloat = 0
-
-        static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-            value = nextValue()
         }
     }
 
