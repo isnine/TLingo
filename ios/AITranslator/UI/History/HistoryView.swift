@@ -5,6 +5,7 @@
 //  Created by Zander Wang on 2026/03/13.
 //
 
+import NaturalLanguage
 import ShareCore
 import SwiftData
 import SwiftUI
@@ -124,9 +125,13 @@ struct HistoryView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     if !records.isEmpty {
-                        Button("Clear All History", systemImage: "trash") {
-                            showDeleteAllConfirmation = true
+                        Menu("More", systemImage: "ellipsis") {
+                            Button("Clear All History", systemImage: "trash", role: .destructive) {
+                                showDeleteAllConfirmation = true
+                            }
                         }
+                        .tint(.primary)
+                        .accessibilityIdentifier("history_more_menu")
                     }
                 }
             }
@@ -304,7 +309,7 @@ struct HistoryView: View {
                 Button {
                     onConversationSelected(record)
                 } label: {
-                    TextHistoryRow(record: record, results: decoded.results)
+                    TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
                 }
                 .buttonStyle(.plain)
             } else {
@@ -317,14 +322,14 @@ struct HistoryView: View {
                     )
                     .id(record.id)
                 } label: {
-                    TextHistoryRow(record: record, results: decoded.results)
+                    TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
                 }
             }
         } else {
             NavigationLink {
                 HistoryRecordDetailView(record: record)
             } label: {
-                TextHistoryRow(record: record, results: decoded.results)
+                TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
             }
         }
     }
@@ -399,6 +404,7 @@ private final class DecodedHistoryRecordCache {
     struct Entry {
         let session: RealtimeHistorySession?
         let results: [ModelResult]
+        let languagePair: String?
     }
 
     private var entries: [PersistentIdentifier: Entry] = [:]
@@ -407,7 +413,12 @@ private final class DecodedHistoryRecordCache {
         if let entry = entries[record.persistentModelID] {
             return entry
         }
-        let entry = Entry(session: record.realtimeSession, results: record.modelResults)
+        let session = record.realtimeSession
+        let entry = Entry(
+            session: session,
+            results: record.modelResults,
+            languagePair: session == nil ? Self.languagePair(for: record) : nil
+        )
         entries[record.persistentModelID] = entry
         return entry
     }
@@ -415,13 +426,30 @@ private final class DecodedHistoryRecordCache {
     func removeAll() {
         entries.removeAll()
     }
+
+    /// Records keep only the target's English name, so the source is detected from the text.
+    private static func languagePair(for record: TranslationRecord) -> String? {
+        guard let target = TargetLanguageOption.allCases.first(where: {
+            $0 != .appLanguage && $0.englishName == record.targetLanguage
+        }) else { return nil }
+        let targetCode = shortCode(target.rawValue)
+        guard let source = NLLanguageRecognizer.dominantLanguage(for: record.sourceText) else {
+            return targetCode
+        }
+        let sourceCode = shortCode(source.rawValue)
+        return sourceCode == targetCode ? targetCode : "\(sourceCode) → \(targetCode)"
+    }
+
+    private static func shortCode(_ identifier: String) -> String {
+        String(identifier.prefix { $0 != "-" && $0 != "_" }).uppercased()
+    }
 }
 
 private struct HistoryDaySection: Identifiable {
     let id: Date
     var records: [TranslationRecord]
 
-    private static let titleFormatter: DateFormatter = {
+    private static let relativeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
@@ -430,7 +458,18 @@ private struct HistoryDaySection: Identifiable {
     }()
 
     var title: String {
-        Self.titleFormatter.string(from: id)
+        let calendar = Calendar.current
+        let now = Date()
+        if calendar.isDateInToday(id) || calendar.isDateInYesterday(id) {
+            return Self.relativeFormatter.string(from: id)
+        }
+        if let days = calendar.dateComponents([.day], from: id, to: calendar.startOfDay(for: now)).day, days < 7 {
+            return id.formatted(.dateTime.weekday(.wide))
+        }
+        if calendar.isDate(id, equalTo: now, toGranularity: .year) {
+            return id.formatted(.dateTime.month(.abbreviated).day().weekday(.abbreviated))
+        }
+        return id.formatted(date: .abbreviated, time: .omitted)
     }
 
     static func group(_ records: [TranslationRecord]) -> [HistoryDaySection] {
@@ -450,6 +489,7 @@ private struct HistoryDaySection: Identifiable {
 private struct TextHistoryRow: View {
     let record: TranslationRecord
     let results: [ModelResult]
+    let languagePair: String?
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -458,49 +498,43 @@ private struct TextHistoryRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HistoryMarkdownText(
-                text: record.sourceText,
-                font: .subheadline,
-                foregroundColor: colors.textSecondary,
-                lineLimit: 2
-            )
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                HistoryMarkdownText(
+                    text: record.sourceText,
+                    font: .subheadline,
+                    foregroundColor: colors.textSecondary,
+                    lineLimit: 1
+                )
+                Spacer(minLength: 0)
+                Text(record.timestamp, format: .dateTime.hour().minute())
+                    .font(.footnote)
+                    .monospacedDigit()
+                    .foregroundStyle(colors.textSecondary)
+            }
             if let result = results.first?.resultText, !result.isEmpty {
                 HistoryMarkdownText(
                     text: result,
-                    font: .body,
+                    font: .callout,
                     foregroundColor: colors.textPrimary,
-                    lineLimit: 3
+                    lineLimit: 2
                 )
             }
-            HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .imageScale(.small)
-                Text(metadata)
-                    .lineLimit(1)
-                Spacer(minLength: 8)
-                Text(record.timestamp, format: .dateTime.hour().minute())
-                    .monospacedDigit()
-            }
-            .font(.footnote)
-            .foregroundStyle(colors.textSecondary)
-            .padding(.top, 2)
+            Text(metadata)
+                .font(.caption)
+                .foregroundStyle(colors.textSecondary)
+                .lineLimit(1)
+                .padding(.top, 2)
         }
         .allowsHitTesting(false)
-        .padding(.vertical, 4)
-    }
-
-    private var systemImage: String {
-        if record.isConversation {
-            return "bubble.left.and.bubble.right"
-        }
-        return record.actionName.isEmpty
-            ? "text.bubble"
-            : TranslationRecord.systemImage(forActionNamed: record.actionName)
+        .padding(.vertical, 2)
     }
 
     private var metadata: String {
         var parts: [String] = []
+        if let languagePair {
+            parts.append(languagePair)
+        }
         if !record.actionName.isEmpty {
             parts.append(AppConfigurationStore.displayName(forActionName: record.actionName))
         } else if record.isConversation {
