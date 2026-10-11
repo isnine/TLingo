@@ -472,10 +472,12 @@ public final class OAuthCoordinator: ObservableObject {
             )
             guard isCurrent(operation: operation, generation: generation) else { return false }
             applyTokens(refreshed)
+            lastError = nil
             logRefreshSucceeded(refreshed)
             return true
         } catch {
             guard isCurrent(operation: operation, generation: generation) else { return false }
+            lastError = error.localizedDescription
             logger.warning("refresh failed: \(error.localizedDescription, privacy: .public)")
             return false
         }

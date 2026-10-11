@@ -6,6 +6,31 @@ import Testing
 @Suite("OAuthCoordinator lifecycle")
 @MainActor
 struct OAuthCoordinatorTests {
+    @Test func manualRefreshReportsCurrentFailureAndClearsItOnSuccess() async {
+        let harness = OAuthCoordinatorHarness()
+        let coordinator = harness.makeCoordinator()
+        let offline = Task { await coordinator.refreshIfNeeded(force: true) }
+        await harness.waitForRequest(0)
+        harness.fail(0)
+        #expect(await offline.value == false)
+        #expect(coordinator.lastError == URLError(.notConnectedToInternet).localizedDescription)
+
+        let invalidGrant = Task { await coordinator.refreshIfNeeded(force: true) }
+        await harness.waitForRequest(1)
+        let failure = OAuthError.server(code: "invalid_grant", message: "Refresh token expired")
+        harness.fail(1, with: failure)
+        #expect(await invalidGrant.value == false)
+        #expect(coordinator.lastError == failure.localizedDescription)
+        #expect(harness.savedTokens?.refreshToken == "old-account")
+        #expect(harness.entitlementTokens?.refreshToken == "old-account")
+
+        let success = Task { await coordinator.refreshIfNeeded(force: true) }
+        await harness.waitForRequest(2)
+        harness.succeed(2, with: .fixture("refreshed"))
+        #expect(await success.value)
+        #expect(coordinator.lastError == nil)
+    }
+
     @Test func signOutRejectsLateRefreshSuccess() async {
         let harness = OAuthCoordinatorHarness()
         let coordinator = harness.makeCoordinator()
@@ -221,10 +246,10 @@ private final class OAuthCoordinatorHarness {
         continuation?.resume(returning: tokens)
     }
 
-    func fail(_ index: Int) {
+    func fail(_ index: Int, with error: Error = URLError(.notConnectedToInternet)) {
         let continuation = continuations[index]
         continuations[index] = nil
-        continuation?.resume(throwing: URLError(.notConnectedToInternet))
+        continuation?.resume(throwing: error)
     }
 }
 
