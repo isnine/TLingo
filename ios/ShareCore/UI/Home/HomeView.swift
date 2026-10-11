@@ -1944,7 +1944,8 @@ public struct HomeView: View {
                 }
             }
 
-            if !runs.isEmpty {
+            // The word lookup hint above the results already offers Result Options.
+            if !runs.isEmpty, !viewModel.isWordLookupFallback {
                 resultOptionsFooter(showsResultOrder: runs.count > 1)
             }
 
@@ -2126,7 +2127,8 @@ public struct HomeView: View {
     }
 
     private static let collapsedPreviewFontSize: CGFloat = 14
-    private static let collapsedPreviewLabelWidth: CGFloat = 92
+    private static let collapsedPreviewLabelFontSize: CGFloat = 12
+    private static let collapsedPreviewLabelWidthRange: ClosedRange<CGFloat> = 72 ... 150
     private static let collapsedPreviewColumnSpacing: CGFloat = 12
     private static let collapsedResultsRowSpacing: CGFloat = 10
     private static let collapsedResultsVerticalPadding: CGFloat = 14
@@ -2135,7 +2137,9 @@ public struct HomeView: View {
         _ runs: [HomeViewModel.ModelRunViewState],
         lineLimits: [String: Int]
     ) -> some View {
-        Button {
+        let labelWidth = collapsedPreviewLabelWidth(for: runs)
+        let finishedCount = runs.filter(isFinishedRun).count
+        return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isComparingResults = true
             }
@@ -2143,6 +2147,12 @@ public struct HomeView: View {
             VStack(alignment: .leading, spacing: Self.collapsedResultsRowSpacing) {
                 HStack(spacing: 4) {
                     Text("\(runs.count) more models")
+                    if finishedCount < runs.count {
+                        ProgressView()
+                            .controlSize(.mini)
+                        Text(verbatim: "\(finishedCount)/\(runs.count)")
+                            .font(.system(size: 12).monospacedDigit())
+                    }
                     Spacer()
                     Text("Compare")
                     Image(systemName: "chevron.down")
@@ -2154,16 +2164,22 @@ public struct HomeView: View {
                 ForEach(runs) { run in
                     HStack(alignment: .firstTextBaseline, spacing: Self.collapsedPreviewColumnSpacing) {
                         Text(run.modelDisplayName)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: Self.collapsedPreviewLabelFontSize, weight: .medium))
                             .foregroundColor(colors.textSecondary)
                             .lineLimit(1)
-                            .frame(width: Self.collapsedPreviewLabelWidth, alignment: .leading)
-                        Text(resultPreview(for: run))
-                            .font(.system(size: Self.collapsedPreviewFontSize))
-                            .foregroundColor(colors.textPrimary.opacity(0.8))
-                            .lineLimit(lineLimits[run.id] ?? 1)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(width: labelWidth, alignment: .leading)
+                        Group {
+                            if isAwaitingFirstOutput(run) {
+                                AnimatedEllipsis()
+                            } else {
+                                Text(resultPreview(for: run))
+                            }
+                        }
+                        .font(.system(size: Self.collapsedPreviewFontSize))
+                        .foregroundColor(colors.textPrimary.opacity(0.8))
+                        .lineLimit(lineLimits[run.id] ?? 1)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
@@ -2253,6 +2269,34 @@ public struct HomeView: View {
         return AttributedString(text.replacingOccurrences(of: "\n", with: " "))
     }
 
+    private func isAwaitingFirstOutput(_ run: HomeViewModel.ModelRunViewState) -> Bool {
+        switch run.status {
+        case .idle, .running: true
+        case let .streaming(text, _): text.isEmpty
+        case let .streamingSentencePairs(pairs, _): pairs.isEmpty
+        case .success, .failure: false
+        }
+    }
+
+    private func isFinishedRun(_ run: HomeViewModel.ModelRunViewState) -> Bool {
+        switch run.status {
+        case .success, .failure: true
+        case .idle, .running, .streaming, .streamingSentencePairs: false
+        }
+    }
+
+    /// Sizes the model-name column to the widest name so names like "Microsoft Translator" are not truncated.
+    private func collapsedPreviewLabelWidth(for runs: [HomeViewModel.ModelRunViewState]) -> CGFloat {
+        #if os(macOS)
+            let font = NSFont.systemFont(ofSize: Self.collapsedPreviewLabelFontSize, weight: .medium)
+        #else
+            let font = UIFont.systemFont(ofSize: Self.collapsedPreviewLabelFontSize, weight: .medium)
+        #endif
+        let widest = runs.map { ($0.modelDisplayName as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+        let range = Self.collapsedPreviewLabelWidthRange
+        return min(max(range.lowerBound, widest.rounded(.up)), range.upperBound)
+    }
+
     /// On Mac, collapsed previews grow to fill the visible area below the primary result,
     /// so comparing models rarely needs scrolling. iPhone keeps one line per preview.
     private func collapsedPreviewLineLimits(
@@ -2262,7 +2306,7 @@ public struct HomeView: View {
         #if os(macOS)
             let font = NSFont.systemFont(ofSize: Self.collapsedPreviewFontSize)
             let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
-            let textWidth = collapsedResultsSize.width - Self.collapsedPreviewLabelWidth
+            let textWidth = collapsedResultsSize.width - collapsedPreviewLabelWidth(for: runs)
                 - Self.collapsedPreviewColumnSpacing
             guard textWidth > 0, lineHeight > 0, flatResultsPanelHeight > 0, collapsedResultsSize.height > 0 else {
                 return [:]
@@ -2554,7 +2598,7 @@ public struct HomeView: View {
                 Text(run.modelDisplayName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(colors.textSecondary)
-                Text("Generating...")
+                AnimatedEllipsis()
                     .font(.system(size: 13))
                     .foregroundColor(colors.textSecondary)
                 Spacer()
@@ -2570,7 +2614,7 @@ public struct HomeView: View {
                 Text(run.modelDisplayName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(colors.textSecondary)
-                Text("Translating...")
+                AnimatedEllipsis()
                     .font(.system(size: 13))
                     .foregroundColor(colors.textSecondary)
                 Spacer()

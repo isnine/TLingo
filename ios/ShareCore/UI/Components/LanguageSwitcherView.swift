@@ -469,7 +469,9 @@ public struct LanguageSwitcherView: View {
             targetChip(showResolved ? resolved.primaryLabel : targetDisplayName, style: style)
         }
         #if os(macOS)
-        .menuStyle(.borderlessButton)
+        // `.borderlessButton` hands the label to AppKit, which drops the custom font and adds its own indicator.
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
         #endif
         .buttonStyle(.plain)
         .disabled(isTargetSelectionDisabled)

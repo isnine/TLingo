@@ -336,10 +336,10 @@ struct ResultBottomInfoBar: View {
             processingBar
 
         case let .streaming(_, start):
-            streamingBar(statusText: "Generating...", start: start)
+            streamingBar(start: start)
 
         case let .streamingSentencePairs(_, start):
-            streamingBar(statusText: "Translating...", start: start)
+            streamingBar(start: start)
 
         case let .success(result):
             successBar(
@@ -364,14 +364,14 @@ struct ResultBottomInfoBar: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(colors.textSecondary)
             }
-            Text("Processing...")
+            AnimatedEllipsis()
                 .font(.system(size: 12))
                 .foregroundColor(colors.textSecondary)
             Spacer()
         }
     }
 
-    private func streamingBar(statusText: LocalizedStringKey, start: Date) -> some View {
+    private func streamingBar(start: Date) -> some View {
         HStack(spacing: 8) {
             ProgressView()
                 .progressViewStyle(.circular)
@@ -382,9 +382,9 @@ struct ResultBottomInfoBar: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(colors.textSecondary)
             }
-            Text(statusText)
+            AnimatedEllipsis()
                 .font(.system(size: 12))
-                .foregroundColor(colors.textSecondary)
+            .foregroundColor(colors.textSecondary)
             Spacer()
             LiveTimer(start: start)
         }
