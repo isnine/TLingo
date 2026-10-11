@@ -7,94 +7,68 @@
 
 import Foundation
 
-public enum TargetLanguageOption: String, CaseIterable, Identifiable, Codable {
-    case appLanguage = "app-language"
-    case english = "en"
-    case englishUnitedKingdom = "en-GB"
-    case englishUnitedStates = "en-US"
-    case arabic = "ar"
-    case bengali = "bn"
-    case simplifiedChinese = "zh-Hans"
-    case traditionalChinese = "zh-Hant"
-    case czech = "cs"
-    case danish = "da"
-    case dutch = "nl"
-    case finnish = "fi"
-    case french = "fr"
-    case german = "de"
-    case greek = "el"
-    case hebrew = "he"
-    case hindi = "hi"
-    case hungarian = "hu"
-    case indonesian = "id"
-    case italian = "it"
-    case japanese = "ja"
-    case korean = "ko"
-    case malay = "ms"
-    case norwegianBokmal = "nb"
-    case polish = "pl"
-    case portugueseBrazil = "pt-BR"
-    case romanian = "ro"
-    case russian = "ru"
-    case spanish = "es"
-    case swedish = "sv"
-    case tamil = "ta"
-    case telugu = "te"
-    case thai = "th"
-    case turkish = "tr"
-    case ukrainian = "uk"
-    case urdu = "ur"
-    case vietnamese = "vi"
+public struct TargetLanguageOption: RawRepresentable, Hashable, CaseIterable, Identifiable, Codable, Sendable {
+    public let rawValue: String
+
+    public init?(rawValue: String) {
+        guard rawValue == "app-language" || LanguageCatalog.allCodeSet.contains(rawValue) else { return nil }
+        self.rawValue = rawValue
+    }
+
+    private init(uncheckedRawValue: String) {
+        rawValue = uncheckedRawValue
+    }
+
+    public static let appLanguage = Self(uncheckedRawValue: "app-language")
+    public static let english = Self(uncheckedRawValue: "en")
+    public static let englishUnitedKingdom = Self(uncheckedRawValue: "en-GB")
+    public static let englishUnitedStates = Self(uncheckedRawValue: "en-US")
+    public static let arabic = Self(uncheckedRawValue: "ar")
+    public static let bengali = Self(uncheckedRawValue: "bn")
+    public static let simplifiedChinese = Self(uncheckedRawValue: "zh-Hans")
+    public static let traditionalChinese = Self(uncheckedRawValue: "zh-Hant")
+    public static let czech = Self(uncheckedRawValue: "cs")
+    public static let danish = Self(uncheckedRawValue: "da")
+    public static let dutch = Self(uncheckedRawValue: "nl")
+    public static let finnish = Self(uncheckedRawValue: "fi")
+    public static let french = Self(uncheckedRawValue: "fr")
+    public static let german = Self(uncheckedRawValue: "de")
+    public static let greek = Self(uncheckedRawValue: "el")
+    public static let hebrew = Self(uncheckedRawValue: "he")
+    public static let hindi = Self(uncheckedRawValue: "hi")
+    public static let hungarian = Self(uncheckedRawValue: "hu")
+    public static let indonesian = Self(uncheckedRawValue: "id")
+    public static let italian = Self(uncheckedRawValue: "it")
+    public static let japanese = Self(uncheckedRawValue: "ja")
+    public static let korean = Self(uncheckedRawValue: "ko")
+    public static let malay = Self(uncheckedRawValue: "ms")
+    public static let norwegianBokmal = Self(uncheckedRawValue: "nb")
+    public static let polish = Self(uncheckedRawValue: "pl")
+    public static let portugueseBrazil = Self(uncheckedRawValue: "pt-BR")
+    public static let romanian = Self(uncheckedRawValue: "ro")
+    public static let russian = Self(uncheckedRawValue: "ru")
+    public static let spanish = Self(uncheckedRawValue: "es")
+    public static let swedish = Self(uncheckedRawValue: "sv")
+    public static let tamil = Self(uncheckedRawValue: "ta")
+    public static let telugu = Self(uncheckedRawValue: "te")
+    public static let thai = Self(uncheckedRawValue: "th")
+    public static let turkish = Self(uncheckedRawValue: "tr")
+    public static let ukrainian = Self(uncheckedRawValue: "uk")
+    public static let urdu = Self(uncheckedRawValue: "ur")
+    public static let vietnamese = Self(uncheckedRawValue: "vi")
+
+    public static let allCases: [TargetLanguageOption] =
+        [.appLanguage] + LanguageCatalog.allCodes.map(TargetLanguageOption.init(uncheckedRawValue:))
 
     public static let storageKey = "settings.targetLanguageCode"
 
     public var id: String { rawValue }
 
     public static var selectionOptions: [TargetLanguageOption] {
-        [
-            .appLanguage,
-            .english,
-            .englishUnitedKingdom,
-            .englishUnitedStates,
-            .arabic,
-            .bengali,
-            .simplifiedChinese,
-            .traditionalChinese,
-            .czech,
-            .danish,
-            .dutch,
-            .finnish,
-            .french,
-            .german,
-            .greek,
-            .hebrew,
-            .hindi,
-            .hungarian,
-            .indonesian,
-            .italian,
-            .japanese,
-            .korean,
-            .malay,
-            .norwegianBokmal,
-            .polish,
-            .portugueseBrazil,
-            .romanian,
-            .russian,
-            .spanish,
-            .swedish,
-            .tamil,
-            .telugu,
-            .thai,
-            .turkish,
-            .ukrainian,
-            .urdu,
-            .vietnamese,
-        ]
+        allCases
     }
 
-    public static var realtimeSelectionOptions: [TargetLanguageOption] {
-        selectionOptions.filter { $0 != .appLanguage }
-    }
+    public static let realtimeSelectionOptions: [TargetLanguageOption] = allCases.filter { $0 != .appLanguage }
 
     public static func realtimeOption(englishName: String) -> TargetLanguageOption? {
         realtimeSelectionOptions.first { $0.englishName == englishName }

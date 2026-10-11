@@ -109,7 +109,7 @@ public final class HomeViewModel: ObservableObject {
             case streaming(text: String, start: Date)
             case streamingSentencePairs(pairs: [SentencePair], start: Date)
             case success(SuccessResult)
-            case failure(message: String, duration: TimeInterval, responseBody: String? = nil)
+            case failure(message: String, duration: TimeInterval, responseBody: String? = nil, isUnsupported: Bool = false)
 
             public var duration: TimeInterval? {
                 switch self {
@@ -117,9 +117,14 @@ public final class HomeViewModel: ObservableObject {
                     return nil
                 case let .success(result):
                     return result.duration
-                case let .failure(_, duration, _):
+                case let .failure(_, duration, _, _):
                     return duration
                 }
+            }
+
+            /// The provider cannot handle the selected languages, so retrying would not help.
+            public var isUnsupported: Bool {
+                if case let .failure(_, _, _, isUnsupported) = self { isUnsupported } else { false }
             }
 
             public var latencyBreakdown: LatencyBreakdown? {
@@ -1945,7 +1950,7 @@ public final class HomeViewModel: ObservableObject {
                                             modelID: ModelConfig.appleTranslateID,
                                             duration: 0,
                                             response: .failure(
-                                                LocalProviderError.translationFailed(
+                                                LocalProviderError.unsupportedLanguage(
                                                     AppleTranslationErrorFormatter.withLanguagePair(
                                                         String(
                                                             localized: "Apple Translate does not support the selected language pair."
@@ -2150,13 +2155,14 @@ public final class HomeViewModel: ObservableObject {
                     modelID: model.id
                 ) {
                     apply(result: shortCircuit, context: context, runToken: serviceRunToken, allowDiff: false)
-                } else {
-                    let sourceCode: String? = resolved.sourceCode
+                } else if let targetCode = MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue) {
+                    // An unsupported source is left to Microsoft's own detection.
+                    let sourceCode: String? = resolved.sourceCode.flatMap(MicrosoftTranslateService.translatorCode(for:))
                     let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
                     Task { [weak self] in
                         guard let self else { return }
                         let result = await MicrosoftTranslateService.shared.translate(
-                            text: text, sourceCode: sourceCode, targetCode: resolvedTarget.rawValue,
+                            text: text, sourceCode: sourceCode, targetCode: targetCode,
                             timingTrace: timingTrace
                         )
                         guard self.isRunStillValid(
@@ -2176,6 +2182,21 @@ public final class HomeViewModel: ObservableObject {
                             runToken: serviceRunToken
                         )
                     }
+                } else {
+                    let result = ModelExecutionResult(
+                        modelID: model.id,
+                        duration: 0,
+                        response: .failure(
+                            LocalProviderError.unsupportedLanguage(
+                                AppleTranslationErrorFormatter.withLanguagePair(
+                                    String(localized: "Microsoft Translate does not support the selected language."),
+                                    sourceCode: resolved.sourceCode,
+                                    target: resolvedTarget
+                                )
+                            )
+                        )
+                    )
+                    apply(result: result, context: context, runToken: serviceRunToken, allowDiff: false)
                 }
             } else {
                 let result = ModelExecutionResult(
@@ -2507,10 +2528,12 @@ public final class HomeViewModel: ObservableObject {
             } else {
                 responseBody = nil
             }
+            let isUnsupported = if case .unsupportedLanguage = error as? LocalProviderError { true } else { false }
             modelRuns[index].status = .failure(
                 message: error.localizedDescription,
                 duration: result.duration,
-                responseBody: responseBody
+                responseBody: responseBody,
+                isUnsupported: isUnsupported
             )
             modelRuns[index].timingTrace?.mark(.resultApplied)
             let failedRun = modelRuns.remove(at: index)

@@ -21,7 +21,7 @@ public struct LanguageDetectionResult: Sendable {
 /// Detects the source text language and resolves the target language
 /// to avoid translating into the same language as the source.
 public enum SourceLanguageDetector {
-    // Languages matching TargetLanguageOption/SourceLanguageOption.
+    // Every language NLLanguageRecognizer exposes as a constant; all map to a language option.
     private static let supportedNLLanguages: [NLLanguage] = [
         .english, .arabic, NLLanguage(rawValue: "bn"), .simplifiedChinese, .traditionalChinese,
         NLLanguage(rawValue: "cs"), NLLanguage(rawValue: "da"), .dutch, NLLanguage(rawValue: "fi"),
@@ -31,6 +31,9 @@ public enum SourceLanguageDetector {
         NLLanguage(rawValue: "ro"), .russian, .spanish, NLLanguage(rawValue: "sv"),
         NLLanguage(rawValue: "ta"), NLLanguage(rawValue: "te"), .thai, .turkish,
         .ukrainian, NLLanguage(rawValue: "ur"), .vietnamese,
+        .amharic, .armenian, .bulgarian, .burmese, .catalan, .cherokee, .croatian, .georgian,
+        .gujarati, .icelandic, .kannada, .kazakh, .khmer, .lao, .malayalam, .marathi, .mongolian,
+        .oriya, .persian, .punjabi, .sinhalese, .slovak, .tibetan,
     ]
 
     // Prior probability hints — common languages get a slight boost

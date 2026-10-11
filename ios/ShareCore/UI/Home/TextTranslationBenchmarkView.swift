@@ -116,7 +116,7 @@
             case let .success(value):
                 record.status = "success"
                 record.output = value.copyText
-            case let .failure(message, _, _):
+            case let .failure(message, _, _, _):
                 record.status = "failure"
                 record.error = message
             default:

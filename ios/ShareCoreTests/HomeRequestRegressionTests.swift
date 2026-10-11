@@ -104,7 +104,7 @@ struct HomeRequestRegressionTests {
     @Test("Minimal detected identifiers retain source descriptors", arguments: [
         ("zh", SourceLanguageOption.simplifiedChinese),
         ("zh-TW", .traditionalChinese),
-        ("pt", .portugueseBrazil),
+        ("pt", SourceLanguageOption(rawValue: "pt")!),
     ])
     func minimalSourceDescriptors(code: String, source: SourceLanguageOption) {
         let pair = HomeViewModel.ResolvedLanguagePair(target: .japanese, sourceCode: code)

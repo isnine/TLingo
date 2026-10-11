@@ -216,9 +216,11 @@ public final class AppleTranslationService: @unchecked Sendable {
         let availability = LanguageAvailability()
         let english = Locale.Language(identifier: "en")
         var installed: Set<TargetLanguageOption> = []
+        let supported = await availability.supportedLanguages
 
         for option in TargetLanguageOption.allCases where option != .appLanguage {
             let target = option.localeLanguage
+            guard supported.contains(where: { $0.isEquivalent(to: target) }) else { continue }
             // Check en → target
             let forwardStatus = await availability.status(from: english, to: target)
             if forwardStatus == .installed {
@@ -702,6 +704,8 @@ public enum LocalProviderError: LocalizedError {
     case translationFailed(String)
     case unsupportedAction
     case unsupportedLanguagePair
+    /// The provider cannot translate the selected languages; shown as "Not Supported" rather than a failure.
+    case unsupportedLanguage(String)
     case languagePackNotInstalled(languagePair: String)
     case sameSourceAndTarget(language: String, languagePair: String?)
     case operationTimedOut(seconds: Int)
@@ -711,6 +715,8 @@ public enum LocalProviderError: LocalizedError {
         case let .notAvailable(reason):
             return reason
         case let .translationFailed(reason):
+            return reason
+        case let .unsupportedLanguage(reason):
             return reason
         case .unsupportedAction:
             return NSLocalizedString("This action is not supported by the selected provider", comment: "Unsupported action error")

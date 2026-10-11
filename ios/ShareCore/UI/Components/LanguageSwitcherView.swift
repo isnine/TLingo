@@ -161,10 +161,7 @@ public struct LanguageSwitcherView: View {
     private var sourceRows: [LanguageRow] {
         sourceOptions.map {
             LanguageRow(
-                id: $0.rawValue,
-                primaryLabel: $0.primaryLabel,
-                secondaryLabel: $0.secondaryLabel,
-                isDisabled: disabledSourceOptions.contains($0),
+                source: $0,
                 disabledReason: disabledSourceOptions.contains($0) ?
                     String(localized: "Not supported by selected recognition model") :
                     nil
@@ -253,8 +250,12 @@ public struct LanguageSwitcherView: View {
             .onChange(of: targetCode) {
                 if let option = TargetLanguageOption(rawValue: targetCode), targetOptions.contains(option) {
                     let didChange = option != selectedTargetLanguage
+                    // Picking over an auto-corrected target overrides this request instead of only saving it.
+                    let override = resolvedOverrideTarget != nil && option != .appLanguage ? onOverrideTarget : nil
                     setTargetLanguage(option, reason: "LanguageSwitcher target picker")
-                    if didChange {
+                    if let override {
+                        override(option)
+                    } else if didChange {
                         onSelectionChanged?()
                     }
                 }
@@ -421,7 +422,7 @@ public struct LanguageSwitcherView: View {
         .opacity(isSourceSelectionDisabled ? 0.55 : 1)
     }
 
-    // MARK: - Target control (plain button or auto-corrected menu)
+    // MARK: - Target control
 
     @ViewBuilder
     private var targetSection: some View {
@@ -430,11 +431,7 @@ public struct LanguageSwitcherView: View {
 
     @ViewBuilder
     private func targetSection(style: LanguageControlStyle) -> some View {
-        if let resolved = resolvedTarget, let onOverride = onOverrideTarget {
-            targetResolvedMenu(resolved: resolved, onOverride: onOverride, style: style)
-        } else {
-            targetButton(style: style)
-        }
+        targetButton(style: style)
     }
 
     private var targetButton: some View {
@@ -446,36 +443,17 @@ public struct LanguageSwitcherView: View {
             targetCode = selectedTargetLanguage.rawValue
             isTargetPickerPresented = true
         } label: {
-            targetChip(targetDisplayName, style: style)
+            targetChip(resolvedOverrideTarget?.primaryLabel ?? targetDisplayName, style: style)
         }
         .buttonStyle(.plain)
         .disabled(isTargetSelectionDisabled)
         .opacity(isTargetSelectionDisabled ? 0.55 : 1)
     }
 
-    private func targetResolvedMenu(
-        resolved: TargetLanguageOption,
-        onOverride: @escaping (TargetLanguageOption) -> Void,
-        style: LanguageControlStyle = .standalone
-    ) -> some View {
-        let showResolved = resolved != selectedTargetLanguage
-        return Menu {
-            ForEach(selectableTargetOptions.filter { $0 != .appLanguage && $0 != resolved }) { option in
-                Button(option.primaryLabel) {
-                    selectResolvedTarget(option, onOverride: onOverride)
-                }
-            }
-        } label: {
-            targetChip(showResolved ? resolved.primaryLabel : targetDisplayName, style: style)
-        }
-        #if os(macOS)
-        // `.borderlessButton` hands the label to AppKit, which drops the custom font and adds its own indicator.
-        .menuStyle(.button)
-        .menuIndicator(.hidden)
-        #endif
-        .buttonStyle(.plain)
-        .disabled(isTargetSelectionDisabled)
-        .opacity(isTargetSelectionDisabled ? 0.55 : 1)
+    /// The auto-corrected target shown in place of the preference, when the caller can override it.
+    private var resolvedOverrideTarget: TargetLanguageOption? {
+        guard let resolvedTarget, onOverrideTarget != nil, resolvedTarget != selectedTargetLanguage else { return nil }
+        return resolvedTarget
     }
 
     private func targetChip(_ text: String, style: LanguageControlStyle = .standalone) -> some View {
@@ -537,14 +515,6 @@ public struct LanguageSwitcherView: View {
             // Hug content width (clamped to [min, max]) instead of greedily
             // expanding to maxWidth when the parent offers extra space.
             .fixedSize(horizontal: true, vertical: false)
-    }
-
-    private func selectResolvedTarget(
-        _ option: TargetLanguageOption,
-        onOverride: @escaping (TargetLanguageOption) -> Void
-    ) {
-        setTargetLanguage(option, reason: "LanguageSwitcher resolved target picker")
-        onOverride(option)
     }
 
     private var selectedTargetLanguage: TargetLanguageOption {

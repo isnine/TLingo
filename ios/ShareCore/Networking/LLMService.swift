@@ -233,6 +233,11 @@ public final class LLMService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
+        // Custom action IDs are user-defined, so only built-in IDs are reported.
+        request.setValue(
+            BuiltInActionCatalog.isBuiltInAction(action) ? action.id : "custom",
+            forHTTPHeaderField: "X-TLingo-Action"
+        )
 
         let path = "/\(model.id)/chat/completions"
         CloudAuthHelper.applyAuth(to: &request, path: path)

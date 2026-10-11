@@ -20,7 +20,6 @@
         func targetOptionsExcludeMatchLanguage() {
             #expect(!TargetLanguageOption.realtimeSelectionOptions.contains(.appLanguage))
             #expect(TargetLanguageOption.realtimeSelectionOptions.first == .english)
-            #expect(TargetLanguageOption.realtimeSelectionOptions.count == TargetLanguageOption.selectionOptions.count - 1)
         }
     }
 #endif

@@ -26,6 +26,8 @@
         @State private var settingsPath: [RealtimeSettingsRoute] = []
         @State private var settingsDetent: PresentationDetent = .medium
         @State private var showsSwapUnsupportedAlert = false
+        @State private var isSourceLanguagePickerPresented = false
+        @State private var isTargetLanguagePickerPresented = false
         @State private var controlDockHeight: CGFloat = 0
 
         private enum RealtimeSettingsRoute: Hashable {
@@ -68,7 +70,8 @@
         var body: some View {
             captionPane
                 .background {
-                    if preferences.realtimePictureInPictureEnabled {
+                    // PiP can only start from an attached layer, so keep it out of the window until recording starts.
+                    if preferences.realtimePictureInPictureEnabled, store.isRunning, store.inputSource == .microphone {
                         RealtimePictureInPictureSourceView(controller: pictureInPicture)
                             .accessibilityHidden(true)
                     }
@@ -402,49 +405,33 @@
         }
 
         private var sourceLanguageMenu: some View {
-            Menu {
-                Picker("Source Language", selection: realtimeSourceLanguageBinding) {
-                    ForEach(SourceLanguageOption.realtimeSelectionOptions) { option in
-                        Text(option.primaryLabel)
-                            .tag(option)
-                            .disabled(unsupportedRealtimeSourceLanguageOptions.contains(option))
-                    }
-                }
-                .pickerStyle(.inline)
+            Button {
+                isSourceLanguagePickerPresented = true
             } label: {
                 languageMenuLabel(
                     sourceLanguageDisplayName,
                     isMissing: preferences.realtimeSourceLanguage == .auto
                 )
             }
+            .buttonStyle(.plain)
             .disabled(store.isRunning)
             .accessibilityLabel("Source Language")
             .accessibilityValue(sourceLanguageDisplayName)
             .accessibilityIdentifier("realtime_source_language_menu")
+            .sheet(isPresented: $isSourceLanguagePickerPresented) {
+                LanguagePickerView(
+                    selectedCode: realtimeSourceLanguageCodeBinding,
+                    isPresented: $isSourceLanguagePickerPresented,
+                    rows: realtimeSourceLanguageRows,
+                    title: String(localized: "Select Source Language")
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
 
         private var targetLanguageMenu: some View {
-            Menu {
-                Picker("Target Language", selection: realtimeTargetSelectionBinding) {
-                    Label(
-                        RealtimeTranslationProvider.transcriptionOnly.title,
-                        systemImage: RealtimeTranslationProvider.transcriptionOnly.systemImage
-                    )
-                    .tag(RealtimeTargetSelection.transcriptionOnly)
-                    .disabled(store.isRunning)
-
-                    Section {
-                        ForEach(TargetLanguageOption.realtimeSelectionOptions) { option in
-                            Text(option.primaryLabel)
-                                .tag(RealtimeTargetSelection.language(option))
-                                .disabled(LanguageDirectionSwap.isSameLanguage(
-                                    source: preferences.realtimeSourceLanguage,
-                                    target: option
-                                ))
-                        }
-                    }
-                }
-                .pickerStyle(.inline)
+            Button {
+                isTargetLanguagePickerPresented = true
             } label: {
                 languageMenuLabel(
                     targetLanguageDisplayName,
@@ -452,10 +439,83 @@
                         preferences.realtimeTargetLanguage == .appLanguage
                 )
             }
+            .buttonStyle(.plain)
             .disabled(targetLanguageSelectionDisabled)
             .accessibilityLabel("Target Language")
             .accessibilityValue(targetLanguageDisplayName)
             .accessibilityIdentifier("realtime_target_language_menu")
+            .sheet(isPresented: $isTargetLanguagePickerPresented) {
+                LanguagePickerView(
+                    selectedCode: realtimeTargetCodeBinding,
+                    isPresented: $isTargetLanguagePickerPresented,
+                    rows: realtimeTargetLanguageRows,
+                    title: String(localized: "Select Target Language")
+                )
+                .presentationDetents([.medium, .large])
+            }
+        }
+
+        private static let transcriptionOnlyRowID = "transcription-only"
+
+        private var realtimeSourceLanguageRows: [LanguageRow] {
+            let unsupported = unsupportedRealtimeSourceLanguageOptions
+            return SourceLanguageOption.realtimeSelectionOptions.map {
+                LanguageRow(
+                    source: $0,
+                    disabledReason: unsupported.contains($0) ?
+                        String(localized: "Not supported by selected recognition model") :
+                        nil
+                )
+            }
+        }
+
+        private var realtimeTargetLanguageRows: [LanguageRow] {
+            let transcriptionOnly = RealtimeTranslationProvider.transcriptionOnly
+            let transcriptionRow = LanguageRow(
+                id: Self.transcriptionOnlyRowID,
+                primaryLabel: transcriptionOnly.title,
+                secondaryLabel: String(localized: "Show captions without translation"),
+                isDisabled: store.isRunning
+            )
+            return [transcriptionRow] + TargetLanguageOption.realtimeSelectionOptions.map {
+                LanguageRow(
+                    target: $0,
+                    isDisabled: LanguageDirectionSwap.isSameLanguage(
+                        source: preferences.realtimeSourceLanguage,
+                        target: $0
+                    )
+                )
+            }
+        }
+
+        private var realtimeSourceLanguageCodeBinding: Binding<String> {
+            Binding(
+                get: { preferences.realtimeSourceLanguage.rawValue },
+                set: { code in
+                    guard let option = SourceLanguageOption(rawValue: code),
+                          option != preferences.realtimeSourceLanguage
+                    else { return }
+                    realtimeSourceLanguageBinding.wrappedValue = option
+                }
+            )
+        }
+
+        private var realtimeTargetCodeBinding: Binding<String> {
+            Binding(
+                get: {
+                    switch realtimeTargetSelectionBinding.wrappedValue {
+                    case .transcriptionOnly: Self.transcriptionOnlyRowID
+                    case let .language(option): option.rawValue
+                    }
+                },
+                set: { code in
+                    if code == Self.transcriptionOnlyRowID {
+                        realtimeTargetSelectionBinding.wrappedValue = .transcriptionOnly
+                    } else if let option = TargetLanguageOption(rawValue: code) {
+                        realtimeTargetSelectionBinding.wrappedValue = .language(option)
+                    }
+                }
+            )
         }
 
         private func languageMenuLabel(_ title: String, isMissing: Bool) -> some View {
@@ -701,6 +761,12 @@
                     if AVPictureInPictureController.isPictureInPictureSupported() {
                         Section {
                             Toggle("Picture in Picture", isOn: pictureInPictureBinding)
+                            if preferences.realtimePictureInPictureEnabled {
+                                Picker("Window Size", selection: pictureInPictureSizeBinding) {
+                                    Text("Standard").tag(RealtimePictureInPictureSize.standard)
+                                    Text("Compact").tag(RealtimePictureInPictureSize.compact)
+                                }
+                            }
                         } footer: {
                             Text("Keep showing microphone captions in a floating window after leaving TLingo.")
                         }
@@ -750,6 +816,13 @@
             Binding(
                 get: { preferences.realtimePictureInPictureEnabled },
                 set: { preferences.setRealtimePictureInPictureEnabled($0) }
+            )
+        }
+
+        private var pictureInPictureSizeBinding: Binding<RealtimePictureInPictureSize> {
+            Binding(
+                get: { preferences.realtimePictureInPictureSize },
+                set: { preferences.setRealtimePictureInPictureSize($0) }
             )
         }
 

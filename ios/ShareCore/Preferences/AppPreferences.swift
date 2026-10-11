@@ -89,6 +89,7 @@ public final class AppPreferences: ObservableObject {
     #endif
     #if os(iOS)
         @Published public private(set) var realtimePictureInPictureEnabled: Bool
+        @Published public private(set) var realtimePictureInPictureSize: RealtimePictureInPictureSize
     #endif
 
     private let defaults: UserDefaults
@@ -186,6 +187,8 @@ public final class AppPreferences: ObservableObject {
         #endif
         #if os(iOS)
             realtimePictureInPictureEnabled = defaults.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
+            realtimePictureInPictureSize = defaults.string(forKey: StorageKeys.realtimePictureInPictureSize)
+                .flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
         #endif
 
         notificationObserver = NotificationCenter.default.addObserver(
@@ -508,6 +511,13 @@ public final class AppPreferences: ObservableObject {
             realtimePictureInPictureEnabled = enabled
             defaults.set(enabled, forKey: StorageKeys.realtimePictureInPictureEnabled)
         }
+
+        public func setRealtimePictureInPictureSize(_ size: RealtimePictureInPictureSize) {
+            guard realtimePictureInPictureSize != size else { return }
+
+            realtimePictureInPictureSize = size
+            defaults.set(size.rawValue, forKey: StorageKeys.realtimePictureInPictureSize)
+        }
     #endif
 
     // MARK: - Enabled Models (flat model architecture)
@@ -770,6 +780,12 @@ public final class AppPreferences: ObservableObject {
                 ) as? Bool ?? true
                 if realtimePictureInPictureEnabled != storedRealtimePictureInPictureEnabled {
                     realtimePictureInPictureEnabled = storedRealtimePictureInPictureEnabled
+                }
+                let storedRealtimePictureInPictureSize = defaults.string(
+                    forKey: StorageKeys.realtimePictureInPictureSize
+                ).flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
+                if realtimePictureInPictureSize != storedRealtimePictureInPictureSize {
+                    realtimePictureInPictureSize = storedRealtimePictureInPictureSize
                 }
             #endif
         #endif
@@ -1042,8 +1058,19 @@ private enum StorageKeys {
     #endif
     #if os(iOS)
         static let realtimePictureInPictureEnabled = "realtime_picture_in_picture_enabled"
+        static let realtimePictureInPictureSize = "realtime_picture_in_picture_size"
     #endif
     static let satisfactionPromptLastResponseDate = "satisfaction_prompt_last_response_date"
     static let systemReviewSuccessStreak = "system_review_success_streak"
     static let systemReviewLastRequestDate = "system_review_last_request_date"
 }
+
+#if os(iOS)
+    public enum RealtimePictureInPictureSize: String, CaseIterable, Identifiable, Sendable {
+        case standard
+        /// A short strip showing only the latest captions.
+        case compact
+
+        public var id: String { rawValue }
+    }
+#endif

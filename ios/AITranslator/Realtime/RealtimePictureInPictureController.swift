@@ -17,6 +17,8 @@
     final class RealtimePictureInPictureController: NSObject, ObservableObject {
         /// Lines beyond what fits are clipped at the top, matching the bottom-pinned in-app list.
         private static let captionLineLimit = 12
+        /// The compact strip keeps only the latest caption pair, like a subtitle bar.
+        private static let compactCaptionLineLimit = 1
         private static let renderScale: CGFloat = 3
         /// Caps the canvas on iPad so captions stay legible in the small PiP window.
         private static let maxRenderWidth: CGFloat = 430
@@ -44,7 +46,11 @@
             pictureInPictureController = controller
 
             store.$captionLines
-                .combineLatest(store.$isPaused, store.$isRunning, preferences.$accentTheme)
+                .combineLatest(
+                    store.$isPaused,
+                    store.$isRunning,
+                    preferences.$accentTheme.combineLatest(preferences.$realtimePictureInPictureSize)
+                )
                 .receive(on: RunLoop.main)
                 .sink { [weak self] lines, isPaused, isRunning, _ in
                     self?.render(lines: lines, isPaused: isPaused, isRunning: isRunning)
@@ -91,10 +97,13 @@
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
             let style = RealtimeCaptionTextView.Style(palette: palette)
-            let visibleLines = Array(lines.suffix(Self.captionLineLimit))
+            let isCompact = preferences.realtimePictureInPictureSize == .compact
+            let visibleLines = Array(lines.suffix(isCompact ? Self.compactCaptionLineLimit : Self.captionLineLimit))
             let width = min(displayView.window?.bounds.width ?? 393, Self.maxRenderWidth)
+            // PiP sizes its window from the frame's aspect ratio.
+            let height = isCompact ? width / 4 : width / 2
             let frame = Frame(
-                size: CGSize(width: width, height: (width / 2).rounded()),
+                size: CGSize(width: width, height: height.rounded()),
                 background: UIColor(palette.background),
                 captions: RealtimeCaptionTextView.attributedText(for: visibleLines, style: style),
                 placeholder: visibleLines.isEmpty

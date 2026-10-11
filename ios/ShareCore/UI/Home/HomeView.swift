@@ -48,6 +48,7 @@ public struct HomeView: View {
     @State private var recentTextRecords: [HomeRecentRecord] = []
     @State private var isInputExpanded: Bool
     @State private var showingProviderInfo: String?
+    @State private var isFallbackTargetPickerPresented = false
     @State private var activeConversationSession: ConversationSession?
     @State private var isConversationInspectorPresented = false
     @State private var showSatisfactionToast = false
@@ -1858,12 +1859,8 @@ public struct HomeView: View {
 
                 Spacer(minLength: 8)
 
-                Menu {
-                    ForEach(TargetLanguageOption.selectionOptions.filter { $0 != .appLanguage && $0 != target }) { option in
-                        Button(option.primaryLabel) {
-                            viewModel.overrideTargetLanguage(option)
-                        }
-                    }
+                Button {
+                    isFallbackTargetPickerPresented = true
                 } label: {
                     HStack(spacing: 3) {
                         Text("Change")
@@ -1872,7 +1869,22 @@ public struct HomeView: View {
                     }
                     .foregroundColor(colors.accent)
                 }
+                .buttonStyle(.plain)
                 .accessibilityIdentifier("home_match_fallback_change")
+                .sheet(isPresented: $isFallbackTargetPickerPresented) {
+                    LanguagePickerView(
+                        selectedCode: Binding(
+                            get: { target.rawValue },
+                            set: { code in
+                                guard let option = TargetLanguageOption(rawValue: code), option != target else { return }
+                                viewModel.overrideTargetLanguage(option)
+                            }
+                        ),
+                        isPresented: $isFallbackTargetPickerPresented,
+                        availableOptions: TargetLanguageOption.selectionOptions.filter { $0 != .appLanguage }
+                    )
+                    .presentationDetents([.medium, .large])
+                }
             }
             .font(.system(size: 13))
             .foregroundColor(colors.textSecondary)
@@ -2023,9 +2035,9 @@ public struct HomeView: View {
                 ProgressView()
                     .controlSize(.mini)
             case .failure:
-                Image(systemName: "exclamationmark.triangle.fill")
+                Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
                     .font(.system(size: 12))
-                    .foregroundColor(colors.error)
+                    .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
             case .success:
                 EmptyView()
             }
@@ -2050,7 +2062,7 @@ public struct HomeView: View {
                         runID: run.id,
                         showsChat: !usesPhoneComposerChrome && (!showsOnlyResults || onResultConversation != nil)
                     )
-                case .failure:
+                case .failure where !run.status.isUnsupported:
                     retryButton(runID: run.id)
                 default:
                     EmptyView()
@@ -2264,7 +2276,7 @@ public struct HomeView: View {
         case let .success(result):
             return MarkdownPreviewText.attributed(from: result.copyText)
         case .failure:
-            text = String(localized: "Request Failed")
+            text = run.status.isUnsupported ? String(localized: "Not Supported") : String(localized: "Request Failed")
         }
         return AttributedString(text.replacingOccurrences(of: "\n", with: " "))
     }
@@ -2653,8 +2665,8 @@ public struct HomeView: View {
         case .failure:
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(colors.error)
+                    Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
+                        .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
                         .font(.system(size: 14))
 
                     if let duration = run.durationText {
@@ -2673,7 +2685,9 @@ public struct HomeView: View {
                 Spacer()
 
                 // Retry button (retry only this run)
-                retryButton(runID: runID)
+                if !run.status.isUnsupported {
+                    retryButton(runID: runID)
+                }
             }
         }
     }
@@ -3006,11 +3020,11 @@ public struct HomeView: View {
                 }
             }
 
-        case let .failure(message, _, _):
+        case let .failure(message, _, _, isUnsupported):
             VStack(alignment: .leading, spacing: 10) {
-                Text("Request Failed")
+                Text(isUnsupported ? String(localized: "Not Supported") : String(localized: "Request Failed"))
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(colors.error)
+                    .foregroundColor(isUnsupported ? colors.textSecondary : colors.error)
                 Text(message)
                     .font(.system(size: 14))
                     .foregroundColor(colors.textSecondary)

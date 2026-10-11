@@ -48,6 +48,7 @@ headers = X-Timestamp, X-Signature
 ## 文本流式计时
 
 聊天请求发送随机 UUID `X-Request-ID`，仅用于关联诊断，不包含输入、身份或设备标识，也不改变 HMAC。
+聊天请求还发送 `X-TLingo-Action`：内置动作为其 ID，自定义动作固定为 `custom`，仅用于服务端延迟分析，不改变 HMAC。
 支持新埋点的 Worker 回显该 header，并返回
 `Server-Timing: preupstream;dur=<ms>, upstream;dur=<ms>`；旧服务端只返回 `upstream` 仍兼容。
 `X-Upstream-TTFB` 表示上游响应 header 等待时间，不代表首个内容 token。

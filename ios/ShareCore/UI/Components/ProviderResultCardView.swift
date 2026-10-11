@@ -180,18 +180,18 @@ struct ResultContentView: View {
                     .accessibilityIdentifier("result_network_debug")
             }
 
-        case let .failure(message, _, responseBody):
-            failureContent(message: message, responseBody: responseBody)
+        case let .failure(message, _, responseBody, isUnsupported):
+            failureContent(message: message, responseBody: responseBody, isUnsupported: isUnsupported)
         }
     }
 
     @ViewBuilder
-    private func failureContent(message: String, responseBody: String?) -> some View {
+    private func failureContent(message: String, responseBody: String?, isUnsupported: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Text("Request Failed")
+                Text(isUnsupported ? String(localized: "Not Supported") : String(localized: "Request Failed"))
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(colors.error)
+                    .foregroundColor(isUnsupported ? colors.textSecondary : colors.error)
 
                 if let onInspectRequest {
                     debugRequestDetailsButton(onInspectRequest: onInspectRequest)
@@ -432,8 +432,8 @@ struct ResultBottomInfoBar: View {
 
     private var failureBar: some View {
         HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(colors.error)
+            Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
+                .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
                 .font(.system(size: 13))
 
             if let duration = run.durationText {
@@ -450,20 +450,22 @@ struct ResultBottomInfoBar: View {
 
             Spacer()
 
-            Button {
-                onRetry()
-            } label: {
-                Group {
-                    if offersLanguageDownload {
-                        Label("Download", systemImage: "arrow.down.circle")
-                    } else {
-                        Label("Retry", systemImage: "arrow.clockwise")
+            if !run.status.isUnsupported {
+                Button {
+                    onRetry()
+                } label: {
+                    Group {
+                        if offersLanguageDownload {
+                            Label("Download", systemImage: "arrow.down.circle")
+                        } else {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                        }
                     }
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(colors.accent)
                 }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(colors.accent)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
     }
 }

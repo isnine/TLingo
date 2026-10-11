@@ -15,6 +15,7 @@
 |---|---|
 | **目标语言** | 用户选择具体语言时**永不自动重定向**。选择"自动选择"（`TargetLanguageOption.appLanguage`）时，按候选列表（App 语言 → 系统首选语言 → 英语）取第一个与原文不同的语言，实际只会用到前两个。`targetLanguageOverride` 仅用于"语言切换菜单单次覆盖"，消费一次后清空 |
 | **源语言** | 若用户固定选择（非 `.auto`）→ 用用户选择；若 `.auto` → 用 `NLLanguageRecognizer` 检测，**排除 target 同语言**以避开混合语言误判 |
+| **可选语言** | `LanguageCatalog.allCodes`：系统 `Locale.availableIdentifiers` 能命名的全部语言（`zh` 拆成 `zh-Hans`/`zh-Hant`，另含 `en-GB`、`en-US`、`pt-BR`）。文本翻译选择器提供全集；实时字幕菜单和结果区"改选"菜单只用 `LanguageCatalog.commonCodes`。引擎不支持所选语言时，对应结果标为"不支持" |
 | **目标 == 源** | 在 Apple Translate 路径**前置短路**，直接返回本地化错误"Source and target are both <Language>. Pick a different target language."。Microsoft / LLM 不做此校验（可正常调用） |
 
 ## 共享检测层：`SourceLanguageDetector`
@@ -92,15 +93,16 @@ isMatchFallback = resolvesMatch && sourceCode != nil && target != matchCandidate
 | **服务内部回退** | `AppleTranslationService.translateWithInstalledLanguages` 在 source 为 nil 时再跑一次 detect，最后兜底走 `fallbackSourceLanguage()` |
 | **目标语言传参** | `resolvedTarget.localeLanguage`（用户选择，永不重定向） |
 | **`source == target` 短路** | `sameSourceAndTargetResult(sourceCode:target:)` 在调用 API 前判定，命中则立即生成 `LocalProviderError.sameSourceAndTarget(language:)` 失败结果，不调系统 API。文案本地化："Source and target are both English. Pick a different target language." |
-| **路径选择** | 1. 短路命中 → 立即失败<br>2. 调 `languageAvailabilityStatus(source:target:)`：<br>　- `.installed` 或（source nil 且 `.supported`）→ `TranslationSession(installedSource:target:)` 直接翻译（不调用 `prepareTranslation()`）；若抛 `TranslationError.notInstalled` 但状态仍为 `.installed`，重试一次，仍失败按通用错误展示<br>　- `.unsupported` → 立即失败（不等待桥）<br>　- 其他（`.supported`）→ 走 SwiftUI `.translationTask` 桥（macOS `AppleTranslationWindow`，主窗口、菜单栏弹窗、划词弹窗的 ViewModel 都会注册；桥串行处理请求）触发下载 UI；超时 → 失败 |
+| **路径选择** | 1. 短路命中 → 立即失败<br>2. 调 `languageAvailabilityStatus(source:target:)`：<br>　- `.installed` 或（source nil 且 `.supported`）→ `TranslationSession(installedSource:target:)` 直接翻译（不调用 `prepareTranslation()`）；若抛 `TranslationError.notInstalled` 但状态仍为 `.installed`，重试一次，仍失败按通用错误展示<br>　- `.unsupported` → 立即生成 `LocalProviderError.unsupportedLanguage`，结果卡片显示"不支持"（不等待桥）<br>　- 其他（`.supported`）→ 走 SwiftUI `.translationTask` 桥（macOS `AppleTranslationWindow`，主窗口、菜单栏弹窗、划词弹窗的 ViewModel 都会注册；桥串行处理请求）触发下载 UI；超时 → 失败 |
 | **失败日志** | 所有失败分支都用 `logger.error`：service 层 prepareTranslation/translate/translations 的 do-catch、HomeViewModel installed-pack catch、watchdog timeout、bridge 不支持的语言对、`languageAvailabilityStatus` 返回 unsupported 等 |
 
 ### 2. Microsoft Translate
 
 | 项 | 行为 |
 |---|---|
-| **源语言传参** | `resolved.sourceCode`；为 nil 时由服务端自动检测 |
-| **目标语言传参** | `resolvedTarget.rawValue` |
+| **源语言传参** | `MicrosoftTranslateService.translatorCode(for: resolved.sourceCode)`；为 nil 或 Microsoft 不支持时由服务端自动检测 |
+| **目标语言传参** | `MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue)`，把 App 语言代码映射为 Microsoft 代码（如 `sr` → `sr-Cyrl`、`ku` → `kmr`） |
+| **不支持的目标语言** | 目标不在 Microsoft 支持列表时不发请求，直接生成 `LocalProviderError.unsupportedLanguage`，结果卡片显示"不支持"且不提供重试 |
 | **`source == target` 短路** | 与 Apple Translate 共用 `sameSourceAndTargetResult`，命中则不发请求 |
 | **网络层** | 经 Cloud Worker 的 `translate/microsoft` 端点 |
 
