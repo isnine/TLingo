@@ -202,6 +202,9 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             AppColors.palette(for: colorScheme)
         }
 
+        private let sidebarCardInset: CGFloat = 8
+        private let sidebarCardShape = ConcentricRectangle(corners: .concentric(minimum: 12), isUniform: true)
+
         var body: some View {
             var seenTextSources = Set<String>()
             // Repeated runs of the same text show once; the newest record stays selectable.
@@ -249,13 +252,20 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 }
                 .listStyle(.sidebar)
                 .scrollContentBackground(.hidden)
-                // White sidebar on the grey app ground, matching the design canvas.
-                .background(colors.cardBackground.ignoresSafeArea())
                 .navigationSplitViewColumnWidth(min: 160, ideal: 200)
                 .navigationTitle("TLingo")
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     PremiumSidebarFooter()
                         .frame(height: 72)
+                        .clipShape(sidebarCardShape)
+                        .padding([.horizontal, .bottom], sidebarCardInset)
+                }
+                // White sidebar card inset on the grey app ground, concentric with the window corners.
+                .background {
+                    sidebarCardShape
+                        .fill(colors.cardBackground)
+                        .padding(sidebarCardInset)
+                        .ignoresSafeArea()
                 }
             } detail: {
                 contentView(for: selection ?? .tab(.home))

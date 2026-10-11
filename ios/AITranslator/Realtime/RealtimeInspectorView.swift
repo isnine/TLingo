@@ -56,7 +56,7 @@
             .animation(.easeInOut(duration: 0.16), value: isAdvancedSettingsExpanded)
             .animation(.easeInOut(duration: 0.16), value: isFloatingCaptionVisible)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(colors.cardBackground.opacity(colorScheme == .dark ? 0.24 : 0.60).ignoresSafeArea())
+            .background(colors.background.ignoresSafeArea())
         }
 
         private var floatingCaptionBinding: Binding<Bool> {
