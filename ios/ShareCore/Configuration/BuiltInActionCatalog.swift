@@ -188,6 +188,18 @@ enum BuiltInActionCatalog {
         return displayName(forActionName: action.name)
     }
 
+    static func symbolName(for action: ActionConfig) -> String {
+        switch action.id {
+        case translateActionID: "translate"
+        case sentenceTranslateActionID: "text.alignleft"
+        case "simplify": "textformat.size.smaller"
+        case "grammar-check": "text.badge.checkmark"
+        case "polish": "sparkles"
+        case "sentence-analysis": "text.magnifyingglass"
+        default: "text.bubble"
+        }
+    }
+
     /// History records store the action's English name, so built-ins are localized by name.
     static func displayName(forActionName name: String) -> String {
         guard actions.contains(where: { $0.name == name }) else { return name }

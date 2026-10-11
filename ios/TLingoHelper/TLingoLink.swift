@@ -72,12 +72,30 @@ enum TLingoLink {
         let url = try TextPopupRequest.url(for: .translate(request)).absoluteString
         let pid = application.processIdentifier
         // Waiting for TLingo's handler must not block the helper's UI or permission polling.
-        try await Task.detached {
+        _ = try await Task.detached {
             try deliver(url, to: pid, waitsForReply: true)
         }.value
     }
 
-    private nonisolated static func deliver(_ url: String, to pid: pid_t, waitsForReply: Bool) throws {
+    /// Asks a running TLingo for its actions; never launches it. Returns nil when TLingo cannot answer.
+    static func fetchActions() async -> [TextPopupRequest.ActionSummary]? {
+        guard case let .running(application) = status(),
+              let url = try? TextPopupRequest.url(for: .listActions).absoluteString
+        else { return nil }
+        let pid = application.processIdentifier
+        let payload = try? await Task.detached {
+            try deliver(url, to: pid, waitsForReply: true, timeout: 1)
+        }.value
+        return payload.flatMap { try? TextPopupRequest.decodeActions($0) }
+    }
+
+    @discardableResult
+    private nonisolated static func deliver(
+        _ url: String,
+        to pid: pid_t,
+        waitsForReply: Bool,
+        timeout: TimeInterval? = nil
+    ) throws -> String? {
         let event = NSAppleEventDescriptor(
             eventClass: AEEventClass(kInternetEventClass),
             eventID: AEEventID(kAEGetURL),
@@ -90,10 +108,11 @@ enum TLingoLink {
         let options: NSAppleEventDescriptor.SendOptions = waitsForReply
             ? [.waitForReply, .neverInteract, .dontRecord]
             : [.noReply, .neverInteract, .dontRecord]
-        let reply = try event.sendEvent(options: options, timeout: waitsForReply ? 5 : 1)
+        let reply = try event.sendEvent(options: options, timeout: timeout ?? (waitsForReply ? 5 : 1))
         if let error = reply.paramDescriptor(forKeyword: AEKeyword(keyErrorNumber))?.int32Value, error != noErr {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(error))
         }
+        return reply.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue
     }
 
     /// Brings up TLingo's main window, launching it if needed.

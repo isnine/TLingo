@@ -39,6 +39,7 @@
             text: String,
             near point: CGPoint? = nil,
             requestID: UUID? = nil,
+            actionID: String? = nil,
             actionName: String? = nil,
             trialModels: [ModelConfig] = [],
             onReplace: ((String) async -> Bool)? = nil
@@ -148,6 +149,9 @@
                 viewModel.applyDeepLink(text: text, actionName: actionName, configName: nil)
             } else {
                 viewModel.inputText = text
+                if let action = viewModel.actions.first(where: { $0.id == actionID }) {
+                    viewModel.selectAction(action)
+                }
                 viewModel.performSelectedAction(
                     refreshEntitlement: false,
                     allowModelFallback: true

@@ -108,6 +108,11 @@ public struct ActionConfig: Identifiable, Hashable, Codable, Sendable {
         BuiltInActionCatalog.displayName(for: self)
     }
 
+    /// SF Symbol for compact action pickers; custom actions share a generic symbol.
+    public var symbolName: String {
+        BuiltInActionCatalog.symbolName(for: self)
+    }
+
     /// Splits the action into model messages. A prompt containing `{text}` is sent inline as a
     /// single user message; otherwise the prompt is the system message and the input is the user message.
     /// Built-in prompts reference `<source>` tags, so their input is wrapped accordingly.

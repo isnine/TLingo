@@ -9,9 +9,10 @@
     final class PopupURLEventRouter {
         private var previousHandler: AEEventHandlerUPP?
         private var previousRefCon: UnsafeMutableRawPointer?
-        private let onPopupURL: (URL) -> Void
+        /// Returns an optional string the router places in the Apple Event reply.
+        private let onPopupURL: (URL) -> String?
 
-        init(onPopupURL: @escaping (URL) -> Void) {
+        init(onPopupURL: @escaping (URL) -> String?) {
             self.onPopupURL = onPopupURL
         }
 
@@ -41,7 +42,12 @@
                 if let rawURL = descriptor.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
                    let url = URL(string: rawURL), TextPopupRequest.isPopupURL(url)
                 {
-                    onPopupURL(url)
+                    if let payload = onPopupURL(url), let reply {
+                        let descriptor = NSAppleEventDescriptor(string: payload)
+                        if let desc = descriptor.aeDesc {
+                            AEPutParamDesc(reply, AEKeyword(keyDirectObject), desc)
+                        }
+                    }
                     return OSErr(noErr)
                 }
             }

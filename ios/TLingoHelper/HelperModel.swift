@@ -41,9 +41,11 @@ final class HelperModel: ObservableObject {
     private var sendTask: Task<Void, Never>?
     private var openPopup: (id: UUID, application: NSRunningApplication)?
     private var escapeMonitor: Any?
+    private var actionsTask: Task<Void, Never>?
 
     private enum Keys {
         static let enabled = "selectionEnabled"
+        static let actions = "popupActions"
     }
 
     var state: State {
@@ -53,8 +55,12 @@ final class HelperModel: ObservableObject {
 
     init() {
         selectionMonitor.ignoredApplications = [TLingoLink.bundleIdentifier, Bundle.main.bundleIdentifier ?? ""]
+        // Cached so the toolbar can appear before TLingo is running.
+        triggerIconController.actions = UserDefaults.standard.string(forKey: Keys.actions)
+            .flatMap { try? TextPopupRequest.decodeActions($0) } ?? []
         selectionMonitor.onTextSelected = { [weak self] point in
             self?.triggerIconController.show(near: point)
+            self?.refreshActions()
         }
         selectionMonitor.onMouseDown = { [weak self] _ in
             self?.notice.dismiss()
@@ -80,8 +86,8 @@ final class HelperModel: ObservableObject {
                 unavailableMessage ?? String(localized: "Selection capture was cancelled. Select the text again and retry.")
             )
         }
-        triggerIconController.onTranslateRequested = { [weak self] selection in
-            self?.translate(selection.text)
+        triggerIconController.onTranslateRequested = { [weak self] selection, actionID in
+            self?.translate(selection.text, actionID: actionID)
         }
 
         // AX trust has no change notification, and revocation must stop monitoring promptly.
@@ -134,6 +140,20 @@ final class HelperModel: ObservableObject {
         }
     }
 
+    /// Keeps the cached list in step with TLingo's configuration; a TLingo that cannot answer leaves it unchanged.
+    private func refreshActions() {
+        guard actionsTask == nil else { return }
+        actionsTask = Task {
+            defer { actionsTask = nil }
+            guard let actions = await TLingoLink.fetchActions(),
+                  actions != triggerIconController.actions,
+                  let payload = try? TextPopupRequest.encodeActions(actions)
+            else { return }
+            triggerIconController.actions = actions
+            UserDefaults.standard.set(payload, forKey: Keys.actions)
+        }
+    }
+
     private func refreshAccessibility() {
         let granted = AXIsProcessTrusted()
         guard granted != isAccessibilityGranted else { return }
@@ -174,9 +194,9 @@ final class HelperModel: ObservableObject {
         }
     }
 
-    private func translate(_ text: String) {
+    private func translate(_ text: String, actionID: String?) {
         let point = NSEvent.mouseLocation
-        let request = TextPopupRequest.Translation(text: text, screenX: point.x, screenY: point.y)
+        let request = TextPopupRequest.Translation(text: text, screenX: point.x, screenY: point.y, actionID: actionID)
         let previous = sendTask
         notice.show(String(localized: "Opening TLingo and sending selected text…"), near: point, isProgress: true)
         let feedbackID = notice.presentationID

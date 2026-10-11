@@ -463,13 +463,13 @@ struct AITranslatorApp: App {
             }
         }
 
-        private func receiveTextPopupURL(_ url: URL) {
+        private func receiveTextPopupURL(_ url: URL) -> String? {
             let command: TextPopupRequest.Command
             do {
                 command = try TextPopupRequest.parse(url)
             } catch {
                 logger.error("Rejected text popup request: \(error.localizedDescription, privacy: .public)")
-                return
+                return nil
             }
             switch command {
             case let .translate(request) where isReadyForTextPopups:
@@ -480,7 +480,15 @@ struct AITranslatorApp: App {
             case let .dismiss(id):
                 if pendingTextPopup?.id == id {
                     pendingTextPopup = nil
+            case .listActions:
+                let actions = AppConfigurationStore.shared.actions.map {
+                    TextPopupRequest.ActionSummary(
+                        id: $0.id, name: $0.displayName, symbol: $0.symbolName
+                    )
                 }
+                return try? TextPopupRequest.encodeActions(actions)
+                }
+            return nil
                 selectionTranslationCoordinator.dismissPopup(requestID: id)
             }
         }
@@ -500,7 +508,8 @@ struct AITranslatorApp: App {
             selectionTranslationCoordinator.translate(
                 text: request.text,
                 near: CGPoint(x: request.screenX, y: request.screenY),
-                requestID: request.id
+                requestID: request.id,
+                actionID: request.actionID
             )
         }
 

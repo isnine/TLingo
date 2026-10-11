@@ -47,6 +47,71 @@
         }
     }
 
+    // MARK: - TriggerActionToolbar
+
+    private struct TriggerActionToolbar: View {
+        static let visibleActionCount = 3
+
+        let actions: [TextPopupRequest.ActionSummary]
+        let onSelect: (String) -> Void
+        let onHover: (Bool) -> Void
+
+        var body: some View {
+            HStack(spacing: 2) {
+                ForEach(actions.prefix(Self.visibleActionCount), id: \.id) { action in
+                    Button {
+                        onSelect(action.id)
+                    } label: {
+                        Image(systemName: action.symbol)
+                            .frame(width: 30, height: 28)
+                            .contentShape(.rect)
+                    }
+                    .help(action.name)
+                    .accessibilityLabel(action.name)
+                }
+                if actions.count > Self.visibleActionCount {
+                    Menu {
+                        ForEach(actions.dropFirst(Self.visibleActionCount), id: \.id) { action in
+                            Button {
+                                onSelect(action.id)
+                            } label: {
+                                Label(action.name, systemImage: action.symbol)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .frame(width: 30, height: 28)
+                            .contentShape(.rect)
+                    }
+                    .menuStyle(.button)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help(Text("More Actions"))
+                    .accessibilityLabel(Text("More Actions"))
+                }
+            }
+            .buttonStyle(.plain)
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            #if TLINGO_HELPER
+                .glassEffect(.regular, in: .capsule)
+            #else
+                .tlingoGlassCapsule(.chrome)
+            #endif
+            .padding(2)
+            .onHover(perform: onHover)
+        }
+    }
+
+    /// The toolbar's panel is never key, so its buttons must act on the first click.
+    private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+        override func acceptsFirstMouse(for _: NSEvent?) -> Bool {
+            true
+        }
+    }
+
     @MainActor
     final class TriggerTrackingView: NSView {
         var onMouseEntered: (() -> Void)?
@@ -120,7 +185,10 @@
     @MainActor
     final class TriggerIconController {
         var onTriggerHovered: (() -> Void)?
-        var onTranslateRequested: ((SelectionTextGrabber.Selection) -> Void)?
+        /// Clicking the dot shows these as a toolbar; when empty it translates with the selected action.
+        var actions: [TextPopupRequest.ActionSummary] = []
+        /// The action ID is nil when the request should use TLingo's selected action.
+        var onTranslateRequested: ((SelectionTextGrabber.Selection, String?) -> Void)?
         var onDismissed: (() -> Void)?
         var onCaptureFailed: (() -> Void)?
         var onCaptureStarted: (() -> Void)?
@@ -142,14 +210,24 @@
             let trackingView = TriggerTrackingView(frame: NSRect(x: 0, y: 0, width: size, height: size))
 
             trackingView.onMouseEntered = { [weak self] in
-                self?.cancelAutoDismissTimer()
-                self?.onTriggerHovered?()
+                guard let self else { return }
+                cancelAutoDismissTimer()
+                onTriggerHovered?()
+                // Hovering the dot is enough to reveal the actions; a click is not required.
+                if !actions.isEmpty {
+                    showActionToolbar()
+                }
             }
             trackingView.onMouseExited = { [weak self] in
                 self?.startAutoDismissTimer()
             }
             trackingView.onMouseDown = { [weak self] in
-                self?.triggerTranslation()
+                guard let self else { return }
+                if actions.isEmpty {
+                    triggerTranslation(actionID: nil)
+                } else {
+                    showActionToolbar()
+                }
             }
 
             panel.contentView = trackingView
@@ -252,7 +330,39 @@
             cancelAutoDismissTimer()
         }
 
-        private func triggerTranslation() {
+        private func showActionToolbar() {
+            guard let panel else { return }
+            cancelAllTimers()
+            trackingView = nil
+
+            let hostingView = FirstMouseHostingView(rootView: TriggerActionToolbar(
+                actions: actions,
+                onSelect: { [weak self] actionID in
+                    self?.triggerTranslation(actionID: actionID)
+                },
+                onHover: { [weak self] isHovering in
+                    if isHovering {
+                        self?.cancelAutoDismissTimer()
+                    } else {
+                        self?.startAutoDismissTimer()
+                    }
+                }
+            ))
+            let size = hostingView.fittingSize
+            hostingView.frame = NSRect(origin: .zero, size: size)
+            panel.contentView = hostingView
+
+            // Keep the dot's top-left corner so the toolbar grows from where the user clicked.
+            var frame = NSRect(x: panel.frame.minX, y: panel.frame.maxY - size.height, width: size.width, height: size.height)
+            if let screen = panel.screen ?? NSScreen.main {
+                let visibleFrame = screen.visibleFrame
+                frame.origin.x = min(max(frame.minX, visibleFrame.minX), visibleFrame.maxX - frame.width)
+                frame.origin.y = min(max(frame.minY, visibleFrame.minY), visibleFrame.maxY - frame.height)
+            }
+            panel.setFrame(frame, display: true)
+        }
+
+        private func triggerTranslation(actionID: String?) {
             guard let point = anchorPoint, let panel else {
                 onCaptureFailed?()
                 return
@@ -274,7 +384,7 @@
                     self?.onCaptureFailed?()
                     return
                 }
-                self?.onTranslateRequested?(selection)
+                self?.onTranslateRequested?(selection, actionID)
             }
         }
     }

@@ -1,22 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Allow TLingoHelper in System Settings › General › Login Items." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请在“系统设置 › 通用 › 登录项”中允许 TLingoHelper。"
-          }
-        }
-      }
-    },
     "Accessibility" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "辅助功能"
+          }
+        }
+      }
+    },
+    "Allow TLingoHelper in System Settings › General › Login Items." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在“系统设置 › 通用 › 登录项”中允许 TLingoHelper。"
           }
         }
       }
@@ -100,6 +100,9 @@
           }
         }
       }
+    },
+    "More Actions" : {
+
     },
     "Needs Accessibility Access" : {
       "localizations" : {
@@ -339,7 +342,9 @@
         }
       }
     },
-    "TLingo" : {},
+    "TLingo" : {
+
+    },
     "TLingo quit before the text was sent. Try again." : {
       "localizations" : {
         "zh-Hans" : {

@@ -63,4 +63,15 @@ struct TextPopupRequestTests {
         let invalidDismissal = try #require(URL(string: dismissURL.absoluteString + "&text=Hello"))
         #expect(throws: TextPopupRequest.RequestError.self) { try TextPopupRequest.parse(invalidDismissal) }
     }
+
+    @Test func carriesOptionalActionAndListsActions() throws {
+        let request = TextPopupRequest.Translation(text: "Hello", screenX: 1, screenY: 2, actionID: "polish")
+        #expect(try TextPopupRequest.parse(TextPopupRequest.url(for: .translate(request))) == .translate(request))
+        let listURL = try TextPopupRequest.url(for: .listActions)
+        #expect(try TextPopupRequest.parse(listURL) == .listActions)
+        let invalidList = try #require(URL(string: listURL.absoluteString + "&text=Hello"))
+        #expect(throws: TextPopupRequest.RequestError.self) { try TextPopupRequest.parse(invalidList) }
+        let actions = [TextPopupRequest.ActionSummary(id: "translate", name: "翻译", symbol: "translate")]
+        #expect(try TextPopupRequest.decodeActions(TextPopupRequest.encodeActions(actions)) == actions)
+    }
 }

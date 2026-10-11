@@ -45,7 +45,7 @@
                     }
                 }
 
-                triggerIconController.onTranslateRequested = { [weak self] selection in
+                triggerIconController.onTranslateRequested = { [weak self] selection, _ in
                     guard let self else { return }
                     self.popupController.showAtCursor(
                         selection: selection,
@@ -121,8 +121,8 @@
             }
         #endif
 
-        func translate(text: String, near point: CGPoint? = nil, requestID: UUID? = nil) {
-            popupController.showAtCursor(text: text, near: point, requestID: requestID)
+        func translate(text: String, near point: CGPoint? = nil, requestID: UUID? = nil, actionID: String? = nil) {
+            popupController.showAtCursor(text: text, near: point, requestID: requestID, actionID: actionID)
         }
 
         func dismissPopup(requestID: UUID) {
