@@ -2386,8 +2386,41 @@
             #endif
             if captionLines != displayLines {
                 logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
+                logCaptionLayoutChange(event: event, from: captionLines, to: displayLines)
             }
             assignIfChanged(&captionLines, displayLines)
+        }
+
+        /// Logs caption changes likely to shift layout height: line identity churn or a large
+        /// per-line text delta. Small in-place growth of a line is skipped to keep the log readable.
+        func logCaptionLayoutChange(
+            event: String,
+            from oldLines: [RealtimeCaptionLine],
+            to newLines: [RealtimeCaptionLine]
+        ) {
+            let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            let newIDs = Set(newLines.map(\.id))
+            let added = newLines.filter { oldByID[$0.id] == nil }.map(\.id)
+            let removed = oldLines.filter { !newIDs.contains($0.id) }.map(\.id)
+            let resized = newLines.compactMap { line -> String? in
+                guard let old = oldByID[line.id] else { return nil }
+                let delta = line.text.count - old.text.count
+                return abs(delta) >= 12 ? "\(line.id):\(old.text.count)->\(line.text.count)" : nil
+            }
+            guard !added.isEmpty || !removed.isEmpty || !resized.isEmpty else { return }
+
+            let oldChars = oldLines.reduce(0) { $0 + $1.text.count }
+            let newChars = newLines.reduce(0) { $0 + $1.text.count }
+            let layout = newLines.map { "\($0.id)\($0.isPending ? "*" : ""):\($0.text.count)" }
+            RealtimeLog.log(
+                "layout",
+                """
+                event=\(event) lines=\(oldLines.count)->\(newLines.count) chars=\(oldChars)->\(newChars) \
+                added=\(added) removed=\(removed) resized=\(resized) \
+                tail=\(layout.suffix(6)) pendingSrc=\(RealtimeLog.text(pendingSourceText, limit: 24)) \
+                pendingTr=\(RealtimeLog.text(pendingTranslatedText, limit: 24))
+                """
+            )
         }
 
         /// Flags caption states that look like misalignment or missing text. Deduplicated by

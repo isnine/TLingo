@@ -44,17 +44,16 @@
         var color: Color
 
         var body: some View {
-            Group {
-                if isActive, level.isFaint {
-                    Label("Speech is faint. Move closer to the microphone.", systemImage: "mic.badge.xmark")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(color)
-                        .multilineTextAlignment(.center)
-                        .padding(.bottom, 10)
-                        .transition(.opacity)
-                }
-            }
-            .animation(.snappy, value: isActive && level.isFaint)
+            let isVisible = isActive && level.isFaint
+            // Always reserve the space: toggling the row resized the dock and shifted the captions above it.
+            Label("Speech is faint. Move closer to the microphone.", systemImage: "mic.badge.xmark")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(color)
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 10)
+                .opacity(isVisible ? 1 : 0)
+                .accessibilityHidden(!isVisible)
+                .animation(.snappy, value: isVisible)
         }
     }
 #endif

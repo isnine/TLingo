@@ -185,7 +185,7 @@ public final class AppPreferences: ObservableObject {
             )
         #endif
         #if os(iOS)
-            realtimePictureInPictureEnabled = defaults.bool(forKey: StorageKeys.realtimePictureInPictureEnabled)
+            realtimePictureInPictureEnabled = defaults.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
         #endif
 
         notificationObserver = NotificationCenter.default.addObserver(
@@ -765,9 +765,9 @@ public final class AppPreferences: ObservableObject {
                 realtimeDualInputHistoryRecordingEnabled = storedRealtimeDualInputHistoryRecordingEnabled
             }
             #if os(iOS)
-                let storedRealtimePictureInPictureEnabled = defaults.bool(
+                let storedRealtimePictureInPictureEnabled = defaults.object(
                     forKey: StorageKeys.realtimePictureInPictureEnabled
-                )
+                ) as? Bool ?? true
                 if realtimePictureInPictureEnabled != storedRealtimePictureInPictureEnabled {
                     realtimePictureInPictureEnabled = storedRealtimePictureInPictureEnabled
                 }

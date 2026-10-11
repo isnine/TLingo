@@ -26,6 +26,7 @@
         @State private var settingsPath: [RealtimeSettingsRoute] = []
         @State private var settingsDetent: PresentationDetent = .medium
         @State private var showsSwapUnsupportedAlert = false
+        @State private var controlDockHeight: CGFloat = 0
 
         private enum RealtimeSettingsRoute: Hashable {
             case recognitionModels
@@ -77,6 +78,7 @@
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     controlDock
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { controlDockHeight = $0 }
                 }
                 .background(colors.background.ignoresSafeArea())
                 .overlay(alignment: .topLeading) {
@@ -600,91 +602,55 @@
 
         private var captionPane: some View {
             let lines = captionLines
-            let lineIDs = lines.map(\.id)
 
-            return ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 18) {
-                        ForEach(lines) { line in
-                            captionLine(line)
-                                .id(line.id)
-                        }
-                        Color.clear
-                            .frame(height: 1)
-                            .id("realtime-transcript-bottom")
-                    }
-                    .padding(.horizontal, 22)
-                    .padding(.top, 12)
-                    .padding(.bottom, 16)
-                }
-                .overlay {
-                    if lines.isEmpty {
-                        if store.isRunning {
-                            ContentUnavailableView {
-                                VStack(spacing: 16) {
-                                    RealtimeInputLevelIndicator(
-                                        level: store.inputLevel,
-                                        isActive: !store.isPaused,
-                                        tint: colors.accent
-                                    )
-                                    Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: true))
-                                }
+            // Extends under the navigation bar and control dock; their heights become content insets
+            // so captions scroll beneath both while the latest line stays above the dock.
+            return ZStack {
+                RealtimeCaptionTextView(
+                    lines: lines,
+                    style: captionStyle,
+                    bottomAccessoryHeight: controlDockHeight
+                )
+                .ignoresSafeArea(.container, edges: .vertical)
+
+                if lines.isEmpty {
+                    if store.isRunning {
+                        ContentUnavailableView {
+                            VStack(spacing: 16) {
+                                RealtimeInputLevelIndicator(
+                                    level: store.inputLevel,
+                                    isActive: !store.isPaused,
+                                    tint: colors.accent
+                                )
+                                Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: true))
                             }
-                        } else {
-                            ContentUnavailableView {
-                                Label("Start Realtime Translation", systemImage: "captions.bubble")
-                            } description: {
-                                Text("Speech you hear turns into bilingual captions here.")
-                            } actions: {
-                                if RealtimeAudioInputSource.allCases.count > 1 {
-                                    Picker("Input", selection: inputSourceBinding) {
-                                        ForEach(RealtimeAudioInputSource.allCases) { source in
-                                            Label(source.title, systemImage: source.systemImage)
-                                                .tag(source)
-                                        }
+                        }
+                    } else {
+                        ContentUnavailableView {
+                            Label("Start Realtime Translation", systemImage: "captions.bubble")
+                        } description: {
+                            Text("Speech you hear turns into bilingual captions here.")
+                        } actions: {
+                            if RealtimeAudioInputSource.allCases.count > 1 {
+                                Picker("Input", selection: inputSourceBinding) {
+                                    ForEach(RealtimeAudioInputSource.allCases) { source in
+                                        Label(source.title, systemImage: source.systemImage)
+                                            .tag(source)
                                     }
-                                    .pickerStyle(.segmented)
-                                    .fixedSize()
                                 }
+                                .pickerStyle(.segmented)
+                                .fixedSize()
                             }
                         }
                     }
-                }
-                .defaultScrollAnchor(.bottom)
-                .scrollEdgeEffectStyle(.soft, for: .vertical)
-                .onChange(of: lineIDs) {
-                    guard !lineIDs.isEmpty else { return }
-                    proxy.scrollTo("realtime-transcript-bottom", anchor: .bottom)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(colors.background)
         }
 
-        private func captionLine(_ line: RealtimeCaptionLine) -> some View {
-            Text(line.text)
-                .font(captionFont(for: line.kind))
-                .foregroundStyle(captionForegroundStyle(for: line))
-                .lineSpacing(line.kind == .source ? 3 : 6)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                .textSelection(.enabled)
-        }
-
-        private func captionForegroundStyle(for line: RealtimeCaptionLine) -> Color {
-            if line.isPending {
-                return colors.accent
-            }
-            return line.kind == .source ? colors.textSecondary : colors.textPrimary
-        }
-
-        private func captionFont(for kind: RealtimeCaptionLine.Kind) -> Font {
-            switch kind {
-            case .source:
-                return .system(size: 17, weight: .medium, design: .rounded)
-            case .translation:
-                return .system(size: 24, weight: .semibold, design: .rounded)
-            }
+        private var captionStyle: RealtimeCaptionTextView.Style {
+            RealtimeCaptionTextView.Style(palette: colors)
         }
 
         private var settingsSheet: some View {

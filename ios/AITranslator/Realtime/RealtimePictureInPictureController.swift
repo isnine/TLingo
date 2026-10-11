@@ -12,10 +12,14 @@
 
     /// Mirrors realtime microphone captions into a Picture in Picture window when the app moves to the background.
     /// PiP only shows video, so each caption change is drawn into a frame and enqueued on a sample buffer layer.
+    /// Frames reuse the in-app caption text and palette, so both surfaces show the same captions.
     @MainActor
     final class RealtimePictureInPictureController: NSObject, ObservableObject {
-        private static let renderSize = CGSize(width: 1280, height: 640)
-        private static let captionLineLimit = 4
+        /// Lines beyond what fits are clipped at the top, matching the bottom-pinned in-app list.
+        private static let captionLineLimit = 12
+        private static let renderScale: CGFloat = 3
+        /// Caps the canvas on iPad so captions stay legible in the small PiP window.
+        private static let maxRenderWidth: CGFloat = 430
 
         let displayView = SampleBufferDisplayView()
         private let store: RealtimeSessionStore
@@ -40,12 +44,17 @@
             pictureInPictureController = controller
 
             store.$captionLines
-                .combineLatest(store.$isPaused, store.$statusText)
+                .combineLatest(store.$isPaused, store.$isRunning, preferences.$accentTheme)
                 .receive(on: RunLoop.main)
-                .sink { [weak self] lines, isPaused, statusText in
-                    self?.render(lines: lines, isPaused: isPaused, statusText: statusText)
+                .sink { [weak self] lines, isPaused, isRunning, _ in
+                    self?.render(lines: lines, isPaused: isPaused, isRunning: isRunning)
                 }
                 .store(in: &cancellables)
+
+            displayView.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (_: SampleBufferDisplayView, _) in
+                guard let self else { return }
+                render(lines: self.store.captionLines, isPaused: self.store.isPaused, isRunning: self.store.isRunning)
+            }
 
             // Only a live, unpaused microphone session moves into PiP; a paused session stops in the background.
             store.$isRunning
@@ -75,19 +84,24 @@
             pictureInPictureController.stopPictureInPicture()
         }
 
-        private func render(lines: [RealtimeCaptionLine], isPaused: Bool, statusText: String) {
+        private func render(lines: [RealtimeCaptionLine], isPaused: Bool, isRunning: Bool) {
             isPlaybackPaused.store(isPaused, ordering: .relaxed)
             pictureInPictureController?.invalidatePlaybackState()
 
-            var visibleLines = lines.suffix(Self.captionLineLimit)
-            // Start at a source line so each translation stays under its own source.
-            if visibleLines.contains(where: { $0.kind == .source }) {
-                while visibleLines.first?.kind == .translation {
-                    visibleLines.removeFirst()
-                }
-            }
-            let text = Self.captionText(lines: Array(visibleLines), placeholder: statusText)
-            guard let sampleBuffer = Self.makeSampleBuffer(text: text, size: Self.renderSize) else { return }
+            let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
+            let palette = AppColors.palette(for: colorScheme)
+            let style = RealtimeCaptionTextView.Style(palette: palette)
+            let visibleLines = Array(lines.suffix(Self.captionLineLimit))
+            let width = min(displayView.window?.bounds.width ?? 393, Self.maxRenderWidth)
+            let frame = Frame(
+                size: CGSize(width: width, height: (width / 2).rounded()),
+                background: UIColor(palette.background),
+                captions: RealtimeCaptionTextView.attributedText(for: visibleLines, style: style),
+                placeholder: visibleLines.isEmpty
+                    ? Self.placeholderText(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: isRunning), style: style)
+                    : nil
+            )
+            guard let sampleBuffer = Self.makeSampleBuffer(frame: frame) else { return }
             let renderer = displayView.sampleBufferDisplayLayer.sampleBufferRenderer
             if renderer.status == .failed {
                 renderer.flush()
@@ -95,38 +109,27 @@
             renderer.enqueue(sampleBuffer)
         }
 
-        private static func captionText(lines: [RealtimeCaptionLine], placeholder: String) -> NSAttributedString {
-            let paragraph = NSMutableParagraphStyle()
-            paragraph.lineBreakMode = .byWordWrapping
-            paragraph.paragraphSpacing = 14
-
-            guard !lines.isEmpty else {
-                return NSAttributedString(string: placeholder, attributes: [
-                    .font: UIFont.systemFont(ofSize: 44, weight: .medium),
-                    .foregroundColor: UIColor.white.withAlphaComponent(0.6),
-                    .paragraphStyle: paragraph,
-                ])
-            }
-
-            let text = NSMutableAttributedString()
-            for (index, line) in lines.enumerated() {
-                let isSource = line.kind == .source
-                let color: UIColor = line.isPending
-                    ? .systemTeal
-                    : isSource ? UIColor.white.withAlphaComponent(0.65) : .white
-                text.append(NSAttributedString(
-                    string: index == lines.count - 1 ? line.text : line.text + "\n",
-                    attributes: [
-                        .font: UIFont.systemFont(ofSize: isSource ? 40 : 52, weight: isSource ? .medium : .semibold),
-                        .foregroundColor: color,
-                        .paragraphStyle: paragraph,
-                    ]
-                ))
-            }
-            return text
+        private struct Frame {
+            /// Canvas size in points; drawn at `renderScale`.
+            var size: CGSize
+            var background: UIColor
+            var captions: NSAttributedString
+            var placeholder: NSAttributedString?
         }
 
-        private static func makeSampleBuffer(text: NSAttributedString, size: CGSize) -> CMSampleBuffer? {
+        private static func placeholderText(_ text: String, style: RealtimeCaptionTextView.Style) -> NSAttributedString {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.alignment = .center
+            return NSAttributedString(string: text, attributes: [
+                .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
+                .foregroundColor: style.sourceColor,
+                .paragraphStyle: paragraph,
+            ])
+        }
+
+        private static func makeSampleBuffer(frame: Frame) -> CMSampleBuffer? {
+            let pixelWidth = Int(frame.size.width * renderScale)
+            let pixelHeight = Int(frame.size.height * renderScale)
             let attributes = [
                 kCVPixelBufferCGImageCompatibilityKey: true,
                 kCVPixelBufferCGBitmapContextCompatibilityKey: true,
@@ -135,8 +138,8 @@
             var pixelBuffer: CVPixelBuffer?
             guard CVPixelBufferCreate(
                 kCFAllocatorDefault,
-                Int(size.width),
-                Int(size.height),
+                pixelWidth,
+                pixelHeight,
                 kCVPixelFormatType_32BGRA,
                 attributes,
                 &pixelBuffer
@@ -148,8 +151,8 @@
             defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, []) }
             guard let context = CGContext(
                 data: CVPixelBufferGetBaseAddress(pixelBuffer),
-                width: Int(size.width),
-                height: Int(size.height),
+                width: pixelWidth,
+                height: pixelHeight,
                 bitsPerComponent: 8,
                 bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
                 space: CGColorSpaceCreateDeviceRGB(),
@@ -158,26 +161,47 @@
                 return nil
             }
 
-            // UIKit text drawing expects a top-left origin.
-            context.translateBy(x: 0, y: size.height)
-            context.scaleBy(x: 1, y: -1)
+            // UIKit text drawing expects a top-left origin in points.
+            context.translateBy(x: 0, y: CGFloat(pixelHeight))
+            context.scaleBy(x: renderScale, y: -renderScale)
             UIGraphicsPushContext(context)
-            UIColor.black.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
+            let bounds = CGRect(origin: .zero, size: frame.size)
+            frame.background.setFill()
+            context.fill(bounds)
 
-            // Anchor the newest caption to the bottom; older lines clip off the top.
-            let textRect = CGRect(origin: .zero, size: size).insetBy(dx: 48, dy: 36)
-            let textHeight = text.boundingRect(
-                with: CGSize(width: textRect.width, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            ).height.rounded(.up)
-            context.clip(to: textRect)
-            text.draw(
-                with: CGRect(x: textRect.minX, y: textRect.maxY - textHeight, width: textRect.width, height: textHeight),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            )
+            let drawOptions: NSStringDrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
+            if let placeholder = frame.placeholder {
+                let textBounds = bounds.insetBy(dx: RealtimeCaptionTextView.horizontalPadding, dy: 0)
+                let height = placeholder.boundingRect(
+                    with: CGSize(width: textBounds.width, height: .greatestFiniteMagnitude),
+                    options: drawOptions,
+                    context: nil
+                ).height.rounded(.up)
+                placeholder.draw(
+                    with: CGRect(x: textBounds.minX, y: textBounds.midY - height / 2, width: textBounds.width, height: height),
+                    options: drawOptions,
+                    context: nil
+                )
+            } else {
+                // Same insets as the in-app list; the newest caption sits at the bottom and older lines clip off the top.
+                let textRect = bounds.inset(by: UIEdgeInsets(
+                    top: RealtimeCaptionTextView.topPadding,
+                    left: RealtimeCaptionTextView.horizontalPadding,
+                    bottom: RealtimeCaptionTextView.bottomPadding,
+                    right: RealtimeCaptionTextView.horizontalPadding
+                ))
+                let textHeight = frame.captions.boundingRect(
+                    with: CGSize(width: textRect.width, height: .greatestFiniteMagnitude),
+                    options: drawOptions,
+                    context: nil
+                ).height.rounded(.up)
+                context.clip(to: textRect)
+                frame.captions.draw(
+                    with: CGRect(x: textRect.minX, y: textRect.maxY - textHeight, width: textRect.width, height: textHeight),
+                    options: drawOptions,
+                    context: nil
+                )
+            }
             UIGraphicsPopContext()
 
             var formatDescription: CMVideoFormatDescription?
