@@ -20,50 +20,43 @@
         }
 
         var body: some View {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Realtime Options")
-                    .font(.title2)
-                    .bold()
-                    .foregroundStyle(colors.textPrimary)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                Form {
-                    Section {
-                        Toggle(isOn: floatingCaptionBinding) {
-                            Label("Live Captions", systemImage: "captions.bubble")
-                        }
-                        .toggleStyle(.switch)
+            Form {
+                Section {
+                    Toggle("Live Captions", isOn: floatingCaptionBinding)
                         .help("Show live captions on screen")
-                    }
 
-                    Section {
-                        Toggle(isOn: $isAdvancedSettingsExpanded) {
-                            HStack {
-                                Label("Advanced Settings", systemImage: "slider.horizontal.3")
-                                    .foregroundStyle(colors.textPrimary)
-
-                                Spacer()
-
-                                Image(systemName: isAdvancedSettingsExpanded ? "chevron.up" : "chevron.down")
-                                    .foregroundStyle(.secondary)
+                    if isFloatingCaptionVisible {
+                        LabeledContent("Window Style") {
+                            Picker("Window Style", selection: captionWindowModeBinding) {
+                                ForEach(RealtimeCaptionWindowMode.allCases) { mode in
+                                    Text(mode.title).tag(mode)
+                                }
                             }
-                            .contentShape(Rectangle())
+                            .labelsHidden()
+                            .fixedSize()
                         }
-                        .toggleStyle(.button)
-                        .buttonStyle(.plain)
+                        .help(preferences.realtimeCaptionWindowMode.settingsDescription)
 
-                        if isAdvancedSettingsExpanded {
-                            advancedSettings
-                        }
+                        Toggle("Hide from Screen Sharing", isOn: captionPrivacyBinding)
+                            .help("Best-effort hiding for screen sharing and recording")
+                    }
+                } header: {
+                    Text("Realtime Options")
+                }
+
+                Section {
+                    DisclosureGroup("Advanced Settings", isExpanded: $isAdvancedSettingsExpanded) {
+                        Toggle("Record Mac Audio and Microphone", isOn: recordingBinding)
+                            .disabled(isBusy)
+                            .help("Save both Mac Audio and Microphone recordings with realtime history")
                     }
                 }
-                .formStyle(.grouped)
-                .scrollContentBackground(.hidden)
             }
+            .formStyle(CardFormStyle(colors: colors, maxWidth: .infinity, horizontalPadding: 12))
             .animation(.easeInOut(duration: 0.16), value: isAdvancedSettingsExpanded)
+            .animation(.easeInOut(duration: 0.16), value: isFloatingCaptionVisible)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(colors.cardBackground.opacity(colorScheme == .dark ? 0.24 : 0.60))
+            .background(colors.cardBackground.opacity(colorScheme == .dark ? 0.24 : 0.60).ignoresSafeArea())
         }
 
         private var floatingCaptionBinding: Binding<Bool> {
@@ -71,32 +64,6 @@
                 get: { isFloatingCaptionVisible },
                 set: { onFloatingCaptionVisibilityChanged($0) }
             )
-        }
-
-        @ViewBuilder
-        private var advancedSettings: some View {
-            Toggle(isOn: recordingBinding) {
-                Label("Record Mac Audio and Microphone", systemImage: "waveform.and.mic")
-            }
-            .toggleStyle(.switch)
-            .disabled(isBusy)
-            .help("Save both Mac Audio and Microphone recordings with realtime history")
-
-            if isFloatingCaptionVisible {
-                Picker("Window Style", selection: captionWindowModeBinding) {
-                    ForEach(RealtimeCaptionWindowMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(preferences.realtimeCaptionWindowMode.settingsDescription)
-
-                Toggle(isOn: captionPrivacyBinding) {
-                    Label("Hide from Screen Sharing", systemImage: "eye.slash")
-                }
-                .toggleStyle(.switch)
-                .help("Best-effort hiding for screen sharing and recording")
-            }
         }
     }
 #endif

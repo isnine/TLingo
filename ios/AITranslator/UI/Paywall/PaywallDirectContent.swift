@@ -181,7 +181,7 @@ struct PaywallDirectContent: View {
                 .tlingoGlassCapsule(.control, interactive: !isRefreshing)
             }
             .buttonStyle(.plain)
-            .disabled(isRefreshing)
+            .disabled(isRefreshing || oauthCoordinator.inFlight)
 
             // Signed in but Stripe says no entitlement → offer a direct path
             // to support so the user doesn't dead-end on "Refresh / Sign out".
@@ -237,6 +237,7 @@ struct PaywallDirectContent: View {
     // MARK: - Helpers
 
     private func runForceRefresh() async {
+        guard !oauthCoordinator.inFlight, oauthCoordinator.tokens != nil else { return }
         isRefreshing = true
         defer { isRefreshing = false }
 
@@ -245,7 +246,7 @@ struct PaywallDirectContent: View {
             refreshAlert = RefreshAlert(
                 title: String(localized: "Couldn't refresh"),
                 message: OAuthCoordinator.shared.lastError
-                    ?? String(localized: "Network error. Please try again.")
+                    ?? String(localized: "Couldn't refresh")
             )
             return
         }

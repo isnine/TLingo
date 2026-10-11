@@ -100,8 +100,12 @@
         }
 
         private func iconName(for model: ModelConfig) -> String {
-            if model.id == ModelConfig.appleTranslateID || model.id == ModelConfig.foundationModelID {
-                return "apple.logo"
+            // Third-party UI may not show the Apple logo.
+            if model.id == ModelConfig.appleTranslateID {
+                return "translate"
+            }
+            if model.id == ModelConfig.foundationModelID {
+                return "iphone"
             }
             if model.id == ModelConfig.microsoftTranslateID {
                 return "globe"

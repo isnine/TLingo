@@ -25,11 +25,14 @@ struct SettingsView: View {
     }
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var preferences: AppPreferences
     @ObservedObject private var configStore: AppConfigurationStore
     @ObservedObject private var storeManager = StoreManager.shared
     @ObservedObject private var entitlement = Entitlement.shared
     private let onShowSidebarTap: (() -> Void)?
+    private let showsDoneButton: Bool
     @State private var isVoicePickerPresented = false
     @State private var showPaywall = false
 
@@ -60,11 +63,13 @@ struct SettingsView: View {
     init(
         preferences: AppPreferences = .shared,
         configStore: AppConfigurationStore = .shared,
-        onShowSidebarTap: (() -> Void)? = nil
+        onShowSidebarTap: (() -> Void)? = nil,
+        showsDoneButton: Bool = false
     ) {
         _preferences = ObservedObject(wrappedValue: preferences)
         _configStore = ObservedObject(wrappedValue: configStore)
         self.onShowSidebarTap = onShowSidebarTap
+        self.showsDoneButton = showsDoneButton
     }
 
     var body: some View {
@@ -82,11 +87,12 @@ struct SettingsView: View {
                 }
                 helpSection
             }
-            .formStyle(.grouped)
             #if os(macOS)
-                // The macOS grouped form defaults to 13pt rows and 10pt subtitles, which read too small here.
+                .formStyle(CardFormStyle(colors: colors))
                 .font(.system(size: 15))
-                .controlSize(.large)
+                .background(colors.background)
+            #else
+                .formStyle(.grouped)
             #endif
             .navigationTitle("Settings")
             .navigationDestination(for: Route.self) { route in
@@ -106,6 +112,12 @@ struct SettingsView: View {
                             }
                             .accessibilityLabel("Show Sidebar")
                             .accessibilityIdentifier("ipad_show_sidebar_button")
+                        }
+                    }
+                    if showsDoneButton {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { dismiss() }
+                                .accessibilityIdentifier("settings_done_button")
                         }
                     }
                 }
@@ -201,12 +213,12 @@ struct SettingsView: View {
 
     private var translationSection: some View {
         Section("Translation") {
-            NavigationLink(value: Route.models) {
-                settingsLabel("Models", systemImage: "cpu", subtitle: Text("Choose translation models"))
+            navigationRow(value: .models) {
+                settingsLabel("Models", systemImage: "cpu")
             }
             .accessibilityIdentifier("settings_models_row")
 
-            NavigationLink(value: Route.actions) {
+            navigationRow(value: .actions) {
                 settingsLabel("Manage Actions", systemImage: "slider.horizontal.3")
             }
             .accessibilityIdentifier("settings_actions_row")
@@ -266,6 +278,21 @@ struct SettingsView: View {
                 )
             }
 
+            #if os(iOS)
+                actionRow {
+                    openURL(Self.writeReviewURL)
+                } label: {
+                    settingsLabel("Rate TLingo", systemImage: "star")
+                }
+                .accessibilityIdentifier("settings_rate_row")
+
+                actionRow {
+                    openURL(Self.privacyPolicyURL)
+                } label: {
+                    settingsLabel("Privacy Policy", systemImage: "hand.raised")
+                }
+            #endif
+
             #if os(macOS)
                 actionRow {
                     showOnboarding = true
@@ -283,6 +310,9 @@ struct SettingsView: View {
             versionLabel
         }
     }
+
+    private static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6754217103?action=write-review")!
+    private static let privacyPolicyURL = URL(string: "https://tlingo.zanderwang.com/privacy/")!
 
     private var versionLabel: some View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
@@ -322,44 +352,71 @@ struct SettingsView: View {
     private func settingsLabel(
         _ title: LocalizedStringKey,
         systemImage: String,
-        subtitle: Text? = nil
+        subtitle: Text? = nil,
+        iconStyle: AnyShapeStyle? = nil
     ) -> some View {
-        settingsLabel(Text(title), systemImage: systemImage, subtitle: subtitle)
+        settingsLabel(Text(title), systemImage: systemImage, subtitle: subtitle, iconStyle: iconStyle)
     }
 
     private func settingsLabel(
         _ title: Text,
         systemImage: String,
-        subtitle: Text? = nil
+        subtitle: Text? = nil,
+        iconStyle: AnyShapeStyle? = nil
     ) -> some View {
-        Label {
-            VStack(alignment: .leading, spacing: 2) {
-                title
-                    .foregroundStyle(colors.textPrimary)
-                if let subtitle {
-                    subtitle
-                        .font(Self.subtitleFont)
-                        .foregroundStyle(colors.textSecondary)
-                }
+        let text = VStack(alignment: .leading, spacing: 2) {
+            title
+                .foregroundStyle(colors.textPrimary)
+            if let subtitle {
+                subtitle
+                    .font(Self.subtitleFont)
+                    .foregroundStyle(colors.textSecondary)
             }
-            #if os(macOS)
-            .padding(.vertical, 3)
-            #endif
-        } icon: {
-            Image(systemName: systemImage)
-                .foregroundStyle(colors.accent)
-            #if os(macOS)
-                .font(.system(size: 17))
-                .frame(width: 24)
-            #endif
         }
+        #if os(macOS)
+            // Mac grouped forms read as plain label/control rows, like System Settings panes.
+            return text.padding(.vertical, 3)
+        #else
+            return Label {
+                text
+            } icon: {
+                // Accent is reserved for selection and primary actions.
+                Image(systemName: systemImage)
+                    .foregroundStyle(iconStyle ?? AnyShapeStyle(colors.textSecondary))
+            }
+        #endif
     }
+
+    // Matches the paywall crown so premium reads consistently across the app.
+    private static let premiumIconStyle = AnyShapeStyle(
+        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
+    )
 
     #if os(macOS)
         private static let subtitleFont = Font.system(size: 13)
     #else
         private static let subtitleFont = Font.footnote
     #endif
+
+    @ViewBuilder
+    private func navigationRow(value: Route, @ViewBuilder label: () -> some View) -> some View {
+        #if os(macOS)
+            // Outside a List, a NavigationLink draws as a bordered button with no disclosure chevron.
+            NavigationLink(value: value) {
+                HStack {
+                    label()
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        #else
+            NavigationLink(value: value, label: label)
+        #endif
+    }
 
     /// A tappable row that opens a sheet or performs an action, styled like a navigation row.
     private func actionRow(
@@ -414,7 +471,27 @@ private extension SettingsView {
         return String(localized: "Upgrade")
     }
 
+    @ViewBuilder
     var subscriptionRow: some View {
+        #if os(iOS)
+            if entitlement.isPro {
+                actionRow(value: subscriptionActionTitle, action: handleSubscriptionTap) {
+                    settingsLabel(
+                        "Subscription",
+                        systemImage: "crown.fill",
+                        subtitle: Text(entitlement.state.settingsSubtitle),
+                        iconStyle: Self.premiumIconStyle
+                    )
+                }
+            } else {
+                subscriptionLabeledRow
+            }
+        #else
+            subscriptionLabeledRow
+        #endif
+    }
+
+    private var subscriptionLabeledRow: some View {
         LabeledContent {
             if entitlement.isPro {
                 Button(subscriptionActionTitle, action: handleSubscriptionTap)
@@ -426,8 +503,9 @@ private extension SettingsView {
         } label: {
             settingsLabel(
                 "Subscription",
-                systemImage: "crown",
-                subtitle: Text(entitlement.state.settingsSubtitle)
+                systemImage: "crown.fill",
+                subtitle: Text(entitlement.state.settingsSubtitle),
+                iconStyle: Self.premiumIconStyle
             )
         }
     }
@@ -460,7 +538,7 @@ private extension SettingsView {
                 )
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: Self.swatchSpacing) {
                 ForEach(AccentTheme.allCases) { theme in
                     Button {
                         if entitlement.isPro {
@@ -471,26 +549,51 @@ private extension SettingsView {
                             showPaywall = true
                         }
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(theme.color)
-                                .frame(width: 28, height: 28)
-
-                            if preferences.accentTheme == theme {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(colors.onAccent)
-                            }
-                        }
-                        .opacity(entitlement.isPro || theme == .default ? 1 : 0.4)
+                        themeSwatch(theme)
+                            .opacity(entitlement.isPro || theme == .default ? 1 : 0.4)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(theme.displayName)
+                    .accessibilityAddTraits(preferences.accentTheme == theme ? .isSelected : [])
                 }
             }
         }
         .padding(.vertical, 4)
     }
+
+    @ViewBuilder
+    private func themeSwatch(_ theme: AccentTheme) -> some View {
+        #if os(iOS)
+            Circle()
+                .fill(theme.color)
+                .frame(width: 22, height: 22)
+                .padding(4)
+                .overlay {
+                    if preferences.accentTheme == theme {
+                        Circle()
+                            .strokeBorder(theme.color, lineWidth: 2)
+                    }
+                }
+        #else
+            ZStack {
+                Circle()
+                    .fill(theme.color)
+                    .frame(width: 28, height: 28)
+
+                if preferences.accentTheme == theme {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(colors.onAccent)
+                }
+            }
+        #endif
+    }
+
+    #if os(iOS)
+        private static let swatchSpacing: CGFloat = 6
+    #else
+        private static let swatchSpacing: CGFloat = 10
+    #endif
 
     private func composeFeedbackEmail() {
         let draft = FeedbackMail.makeDraft(isPremium: entitlement.isPro)
@@ -611,19 +714,25 @@ private extension SettingsView {
 
         var realtimeCaptionsSection: some View {
             Section {
-                Picker(selection: Binding(
-                    get: { preferences.realtimeCaptionWindowMode },
-                    set: { mode in
-                        preferences.setRealtimeCaptionWindowMode(mode)
-                        refreshRealtimeCaptionWindowIfVisible()
+                LabeledContent {
+                    Picker(selection: Binding(
+                        get: { preferences.realtimeCaptionWindowMode },
+                        set: { mode in
+                            preferences.setRealtimeCaptionWindowMode(mode)
+                            refreshRealtimeCaptionWindowIfVisible()
+                        }
+                    )) {
+                        ForEach(RealtimeCaptionWindowMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    } label: {
+                        EmptyView()
                     }
-                )) {
-                    ForEach(RealtimeCaptionWindowMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
+                    .labelsHidden()
+                    .fixedSize()
                 } label: {
                     settingsLabel(
-                        "Realtime Captions",
+                        "Window Style",
                         systemImage: "captions.bubble",
                         subtitle: Text(preferences.realtimeCaptionWindowMode.settingsDescription)
                     )
@@ -638,6 +747,8 @@ private extension SettingsView {
                 )) {
                     settingsLabel("Hide captions from screen sharing", systemImage: "eye.slash")
                 }
+            } header: {
+                Text("Realtime Captions")
             }
         }
 
