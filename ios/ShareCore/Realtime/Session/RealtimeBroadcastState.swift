@@ -118,8 +118,57 @@
         }
     }
 
+    public final class RealtimeBroadcastCompletion: @unchecked Sendable {
+        private let store: RealtimeBroadcastStateStore
+        public let sessionID: String
+        private let lock = NSLock()
+        private let drained = DispatchGroup()
+        private var task: Task<Void, Never>?
+
+        public init(store: RealtimeBroadcastStateStore, sessionID: String) {
+            self.store = store
+            self.sessionID = sessionID
+        }
+
+        @discardableResult
+        public func finish(
+            errorMessage: String? = nil,
+            drain: @escaping @Sendable () async -> Void
+        ) -> Task<Void, Never> {
+            lock.lock()
+            defer { lock.unlock() }
+            if let task {
+                return task
+            }
+            store.beginStopping(sessionID: sessionID)
+            drained.enter()
+            let task = Task.detached(priority: .userInitiated) { [self] in
+                await drain()
+                store.update(sessionID: sessionID, synchronize: true) { state in
+                    state.markBroadcastFinished()
+                    if let errorMessage {
+                        state.errorMessage = errorMessage
+                    }
+                    if state.errorMessage != nil {
+                        state.phase = .failed
+                    }
+                }
+                drained.leave()
+            }
+            self.task = task
+            return task
+        }
+
+        public func waitForDrain(timeout: TimeInterval) -> Bool {
+            drained.wait(timeout: .now() + timeout) == .success
+        }
+    }
+
     public final class RealtimeBroadcastStateStore: @unchecked Sendable {
+        // Only reset owns the active session. Producers write session-scoped snapshots,
+        // so even a write already in flight cannot replace a newer host session.
         private static let stateKey = "realtime.broadcast.state"
+        private static let sessionPrefix = "realtime.broadcast.session."
 
         private let defaults: UserDefaults
         private let encoder = JSONEncoder()
@@ -144,7 +193,26 @@
         }
 
         private func loadLocked() -> RealtimeBroadcastState? {
-            guard let data = defaults.data(forKey: Self.stateKey) else { return nil }
+            guard let initial = decodeState(forKey: Self.stateKey) else { return nil }
+            let prefix = Self.sessionPrefix + initial.sessionID + "."
+            var state = decodeState(forKey: prefix + "terminal")
+                ?? decodeState(forKey: prefix + "snapshot")
+                ?? initial
+            if state.phase == .stopped || state.phase == .failed {
+                state.stopRequested = false
+                return state
+            }
+            if let command = defaults.string(forKey: prefix + "stop") {
+                state.stopRequested = command != defaults.string(forKey: prefix + "stopAcknowledged")
+            }
+            if state.stopRequested || defaults.bool(forKey: prefix + "draining") {
+                state.phase = .stopping
+            }
+            return state
+        }
+
+        private func decodeState(forKey key: String) -> RealtimeBroadcastState? {
+            guard let data = defaults.data(forKey: key) else { return nil }
             return try? decoder.decode(RealtimeBroadcastState.self, from: data)
         }
 
@@ -155,35 +223,80 @@
         }
 
         private func saveLocked(_ state: RealtimeBroadcastState, synchronize: Bool) {
+            if let initial = decodeState(forKey: Self.stateKey) {
+                guard initial.sessionID == state.sessionID else { return }
+            }
+            let prefix = Self.sessionPrefix + state.sessionID + "."
+            guard defaults.data(forKey: prefix + "terminal") == nil else { return }
             guard let data = try? encoder.encode(state) else { return }
-            defaults.set(data, forKey: Self.stateKey)
+            if defaults.data(forKey: Self.stateKey) == nil {
+                defaults.set(data, forKey: Self.stateKey)
+            }
+            let isTerminal = state.phase == .stopped || state.phase == .failed
+            defaults.set(data, forKey: prefix + (isTerminal ? "terminal" : "snapshot"))
             if synchronize {
                 defaults.synchronize()
             }
         }
 
         public func reset(sessionID: String = UUID().uuidString, phase: RealtimeBroadcastState.Phase = .idle) {
-            save(RealtimeBroadcastState(sessionID: sessionID, phase: phase), synchronize: true)
+            lock.lock()
+            defer { lock.unlock() }
+            let initial = RealtimeBroadcastState(sessionID: sessionID, phase: phase)
+            guard let data = try? encoder.encode(initial) else { return }
+            defaults.set(data, forKey: Self.stateKey)
+            let activePrefix = Self.sessionPrefix + sessionID + "."
+            for key in defaults.dictionaryRepresentation().keys
+                where key.hasPrefix(Self.sessionPrefix) && !key.hasPrefix(activePrefix)
+            {
+                defaults.removeObject(forKey: key)
+            }
+            defaults.synchronize()
         }
 
-        public func update(synchronize: Bool = false, _ update: (inout RealtimeBroadcastState) -> Void) {
+        public func update(
+            sessionID: String? = nil,
+            synchronize: Bool = false,
+            _ update: (inout RealtimeBroadcastState) -> Void
+        ) {
             lock.lock()
             defer { lock.unlock() }
             var state = loadLocked() ?? RealtimeBroadcastState()
+            guard sessionID == nil || state.sessionID == sessionID else { return }
             update(&state)
             state.lastUpdatedAt = Date()
             saveLocked(state, synchronize: synchronize)
         }
 
         public func requestStop() {
-            update(synchronize: true) { state in
-                state.phase = .stopping
-                state.stopRequested = true
-            }
+            lock.lock()
+            defer { lock.unlock() }
+            guard let state = loadLocked(), state.phase != .stopped, state.phase != .failed else { return }
+            defaults.set(UUID().uuidString, forKey: Self.sessionPrefix + state.sessionID + ".stop")
+            defaults.synchronize()
         }
 
         public func clearStopRequested() {
-            update(synchronize: true) { $0.stopRequested = false }
+            lock.lock()
+            defer { lock.unlock() }
+            guard var state = loadLocked() else { return }
+            let prefix = Self.sessionPrefix + state.sessionID + "."
+            if let command = defaults.string(forKey: prefix + "stop") {
+                // Acknowledge this command, never delete a concurrently issued replacement.
+                defaults.set(command, forKey: prefix + "stopAcknowledged")
+            }
+            state.stopRequested = false
+            saveLocked(state, synchronize: true)
+        }
+
+        fileprivate func beginStopping(sessionID: String) {
+            lock.lock()
+            defer { lock.unlock() }
+            guard let state = loadLocked(), state.sessionID == sessionID,
+                  state.phase != .stopped, state.phase != .failed
+            else { return }
+            defaults.set(true, forKey: Self.sessionPrefix + sessionID + ".draining")
+            defaults.synchronize()
         }
     }
 #endif

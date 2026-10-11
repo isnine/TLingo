@@ -27,7 +27,7 @@
         public var systemImage: String {
             switch self {
             case .appleTranslator:
-                return "apple.logo"
+                return "translate"
             case .appleTranslationRealtime:
                 return "captions.bubble.fill"
             case .transcriptionOnly:

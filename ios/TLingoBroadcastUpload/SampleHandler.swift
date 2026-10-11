@@ -7,9 +7,11 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private let stateStore = RealtimeBroadcastStateStore() ?? RealtimeBroadcastStateStore(defaults: .standard)
     private let heartbeatQueue = DispatchQueue(label: "com.zanderwang.AITranslator.BroadcastUpload.heartbeat")
     private let finishLock = NSLock()
+    private let heartbeatLock = NSLock()
     private var heartbeatTimer: DispatchSourceTimer?
     private let pipelineLock = NSLock()
     private var _pipeline: RealtimeLocalSpeechTranslationPipeline?
+    private var completion: RealtimeBroadcastCompletion?
 
     /// Read on ReplayKit's sample queue and cleared from heartbeat and failure callbacks.
     private var pipeline: RealtimeLocalSpeechTranslationPipeline? {
@@ -21,19 +23,21 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     override func broadcastStarted(withSetupInfo _: [String: NSObject]?) {
         resetFinishState()
-        // A fresh broadcastStarted is the authoritative "session is live" signal. Always start from a
-        // clean state and clear any stale stopRequested left over from a previous session. Finishing the
-        // broadcast here — before the session is fully established — makes iOS discard our error and show
-        // RPRecordingError "Attempting to start an invalid broadcast session". A genuine stop request is
-        // instead handled by finishIfStopRequested() from the heartbeat/sample callbacks, which fire only
-        // after the session is valid, so finishBroadcastWithError surfaces our own message.
-        let sessionID = stateStore.load()?.sessionID ?? UUID().uuidString
+        let previous = stateStore.load()
+        let sessionID: String
+        if let previous, previous.phase != .stopped, previous.phase != .failed {
+            sessionID = previous.sessionID
+        } else {
+            sessionID = UUID().uuidString
+            stateStore.reset(sessionID: sessionID, phase: .waiting)
+        }
+        completion = RealtimeBroadcastCompletion(store: stateStore, sessionID: sessionID)
         let pipeline = RealtimeLocalSpeechTranslationPipeline(stateStore: stateStore, sessionID: sessionID)
         pipeline.onFailure = { [weak self] error in
             self?.finishBroadcast(error)
         }
         self.pipeline = pipeline
-        stateStore.update(synchronize: true) { state in
+        stateStore.update(sessionID: sessionID, synchronize: true) { state in
             state.sessionID = sessionID
             state.phase = .waiting
             state.sourceText = ""
@@ -63,46 +67,24 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     override func broadcastPaused() {
-        if let pipeline {
-            pipeline.setPaused(true)
-        } else {
-            stateStore.update { state in
-                state.phase = .paused
-            }
-        }
+        pipeline?.setPaused(true)
     }
 
     override func broadcastResumed() {
-        if let pipeline {
-            pipeline.setPaused(false)
-        } else {
-            stateStore.update { state in
-                state.phase = .broadcasting
-            }
-        }
+        pipeline?.setPaused(false)
     }
 
     override func broadcastFinished() {
-        // The system can end the broadcast (Control Center / status bar) without routing through
-        // finishBroadcast. Write a clean terminal state so a leftover stopRequested/phase can't make
-        // the next broadcastStarted self-terminate with an "invalid session" error.
-        guard markBroadcastFinishing() else {
+        guard let finish = beginFinishing() else { return }
+        // ReplayKit gives us a synchronous callback, not an unlimited background lifetime.
+        // Keep it alive for a bounded drain; on timeout leave .stopping, never a false success.
+        if finish.completion.waitForDrain(timeout: 5) {
             stopHeartbeat()
-            writeTerminalBroadcastState()
-            if let pipeline {
-                Task {
-                    await pipeline.stop()
-                }
+        } else {
+            Task { [weak self] in
+                await finish.task.value
+                self?.stopHeartbeat()
             }
-            pipeline = nil
-            return
-        }
-        stopHeartbeat()
-        writeTerminalBroadcastState()
-        let pipeline = pipeline
-        self.pipeline = nil
-        Task {
-            await pipeline?.stop()
         }
     }
 
@@ -115,25 +97,34 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     private func startHeartbeat() {
-        stopHeartbeat()
         let timer = DispatchSource.makeTimerSource(queue: heartbeatQueue)
         timer.schedule(deadline: .now() + 1, repeating: 1)
         timer.setEventHandler { [weak self] in
             self?.handleHeartbeat()
         }
-        heartbeatTimer = timer
-        timer.resume()
+        heartbeatLock.withLock {
+            heartbeatTimer?.cancel()
+            heartbeatTimer = timer
+            timer.resume()
+        }
     }
 
     private func stopHeartbeat() {
-        heartbeatTimer?.cancel()
-        heartbeatTimer = nil
+        heartbeatLock.withLock {
+            heartbeatTimer?.cancel()
+            heartbeatTimer = nil
+        }
     }
 
     private func handleHeartbeat() {
+        guard let sessionID = completion?.sessionID else { return }
+        if finishLock.withLock({ didFinishBroadcast }) {
+            stateStore.update(sessionID: sessionID) { _ in }
+            return
+        }
         guard !finishIfStopRequested() else { return }
 
-        stateStore.update { state in
+        stateStore.update(sessionID: sessionID) { state in
             if state.phase == .idle || state.phase == .waiting {
                 state.phase = .broadcasting
             }
@@ -143,27 +134,23 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     @discardableResult
     private func finishIfStopRequested() -> Bool {
-        guard stateStore.load()?.stopRequested == true else { return false }
+        guard let state = stateStore.load(),
+              state.sessionID == completion?.sessionID, state.stopRequested
+        else { return false }
         finishBroadcast(RealtimeBroadcastError.stoppedByHost)
         return true
     }
 
     private func finishBroadcast(_ error: Error) {
-        guard markBroadcastFinishing() else { return }
-
         let stoppedByHost = RealtimeBroadcastError.isStoppedByHost(error)
         let message = RealtimeBroadcastError.message(for: error)
-        stopHeartbeat()
-        let pipeline = pipeline
-        self.pipeline = nil
+        guard let finish = beginFinishing(errorMessage: stoppedByHost ? nil : message),
+              finish.isFirst
+        else { return }
         let replayKitError = RealtimeBroadcastError.replayKitError(from: error)
         Task { [weak self] in
-            await pipeline?.stop()
-            self?.stateStore.update(synchronize: true) { state in
-                state.phase = stoppedByHost ? .stopped : .failed
-                state.errorMessage = stoppedByHost ? nil : message
-                state.stopRequested = false
-            }
+            await finish.task.value
+            self?.stopHeartbeat()
             DispatchQueue.main.async { [weak self] in
                 self?.finishBroadcastWithError(replayKitError)
             }
@@ -176,18 +163,20 @@ final class SampleHandler: RPBroadcastSampleHandler {
         finishLock.unlock()
     }
 
-    private func writeTerminalBroadcastState() {
-        stateStore.update(synchronize: true) { state in
-            state.markBroadcastFinished()
-        }
-    }
-
-    private func markBroadcastFinishing() -> Bool {
+    private func beginFinishing(
+        errorMessage: String? = nil
+    ) -> (completion: RealtimeBroadcastCompletion, task: Task<Void, Never>, isFirst: Bool)? {
         finishLock.lock()
         defer { finishLock.unlock() }
-        guard !didFinishBroadcast else { return false }
+        guard let completion else { return nil }
+        let isFirst = !didFinishBroadcast
         didFinishBroadcast = true
-        return true
+        let pipeline = pipeline
+        self.pipeline = nil
+        let task = completion.finish(errorMessage: errorMessage) {
+            await pipeline?.stop()
+        }
+        return (completion, task, isFirst)
     }
 }
 

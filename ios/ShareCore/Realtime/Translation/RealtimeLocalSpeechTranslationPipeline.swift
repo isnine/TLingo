@@ -27,6 +27,8 @@
         private var nextPartialTranslationAllowedAt: Date?
         private var isStarted = false
         private var isPaused = false
+        private var isStopping = false
+        private var stopTask: Task<Void, Never>?
 
         public init(
             stateStore: RealtimeBroadcastStateStore = RealtimeBroadcastStateStore() ??
@@ -48,6 +50,7 @@
 
         public func start(sourceLanguage: SourceLanguageOption, targetLanguage: TargetLanguageOption) async throws {
             Self.log("start requested source=\(sourceLanguage.rawValue) target=\(targetLanguage.rawValue)")
+            guard stateLock.withLock({ !isStopping }) else { return }
             if stateLock.withLock({ isStarted }) {
                 await stop()
             }
@@ -58,10 +61,13 @@
                 throw RealtimeIPhoneAudioPreflightFailure.missingTargetLanguage
             }
             let recognitionSessionID = UUID()
-            stateLock.withLock {
+            let canStart = stateLock.withLock {
+                guard !isStopping else { return false }
                 activeRecognitionSessionID = recognitionSessionID
                 isStarted = false
+                return true
             }
+            guard canStart else { return }
 
             self.sourceLanguage = sourceLanguage
             self.targetLanguage = targetLanguage
@@ -95,7 +101,7 @@
                     sessionID: recognitionSessionID
                 )
                 let startState = stateLock.withLock {
-                    guard recognitionSessionID == activeRecognitionSessionID else {
+                    guard recognitionSessionID == activeRecognitionSessionID, !isStopping else {
                         return (shouldStart: false, isPaused: false)
                     }
                     isStarted = true
@@ -122,7 +128,7 @@
         }
 
         public func append(_ sampleBuffer: CMSampleBuffer) {
-            guard stateLock.withLock({ isStarted && !isPaused }) else { return }
+            guard stateLock.withLock({ isStarted && !isPaused && !isStopping }) else { return }
 
             let nextCount = incrementAudioSampleCount(level: realtimeAudioLevel(from: sampleBuffer))
             if nextCount == 1 {
@@ -157,13 +163,30 @@
 
         public func stop() async {
             Self.log("stop requested")
-            stateLock.withLock {
+            let task = stateLock.withLock {
+                if let stopTask {
+                    return stopTask
+                }
+                isStopping = true
                 isPaused = true
+                let task = Task { [self] in
+                    await drain()
+                }
+                stopTask = task
+                return task
             }
+            await task.value
+        }
+
+        private func drain() async {
             transcriber.setPaused(true)
             await transcriber.stop()
 
             let finalRequests = stateLock.withLock { () -> [RealtimeTextTranslationRequest] in
+                defer {
+                    isStarted = false
+                    activeRecognitionSessionID = UUID()
+                }
                 guard isStarted, let sourceLanguage, let targetLanguage else { return [] }
                 state.sourceText = transcriptAccumulator.commitPartial()
                 translationState.updateSources(from: transcriptAccumulator)
@@ -183,14 +206,9 @@
             await finalTask?.value
 
             updateState { state in
-                state.phase = state.errorMessage == nil ? .stopped : .failed
-                state.stopRequested = false
+                // The lifecycle owner publishes the terminal snapshot after this drain returns.
+                state.phase = .stopping
                 syncRealtimeHistorySession(into: &state, force: true)
-            }
-            stateLock.withLock {
-                isStarted = false
-                isPaused = false
-                activeRecognitionSessionID = UUID()
             }
         }
 
@@ -545,9 +563,8 @@
         private func fail(_ error: Error) {
             Self.log("fail error=\(Self.describe(error))")
             updateState { state in
-                state.phase = .failed
+                state.phase = .stopping
                 state.errorMessage = Self.describe(error)
-                state.stopRequested = false
             }
             onFailure?(error)
         }
@@ -561,9 +578,9 @@
             }
             state.lastUpdatedAt = Date()
             let snapshot = state
+            stateStore.save(snapshot)
             stateLock.unlock()
 
-            stateStore.save(snapshot)
             onStateChange?(snapshot)
             return count
         }
@@ -573,18 +590,18 @@
             update(&state)
             state.lastUpdatedAt = Date()
             let snapshot = state
+            stateStore.save(snapshot)
             stateLock.unlock()
 
-            stateStore.save(snapshot)
             onStateChange?(snapshot)
         }
 
         private func saveCurrentState() {
             stateLock.lock()
             let snapshot = state
+            stateStore.save(snapshot)
             stateLock.unlock()
 
-            stateStore.save(snapshot)
             onStateChange?(snapshot)
         }
 

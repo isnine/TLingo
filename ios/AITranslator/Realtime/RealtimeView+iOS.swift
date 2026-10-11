@@ -99,6 +99,7 @@
                     settingsDetent = .large
                     isSettingsPresented = true
                 }
+                .onAppear(perform: repairSameLanguageDirection)
                 .task(id: recognitionModelPrewarmKey) {
                     guard scenePhase == .active else { return }
                     await store.prewarmRecognitionModel()
@@ -152,6 +153,7 @@
             if let onDismiss {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close", systemImage: "chevron.down", action: onDismiss)
+                        .tint(.primary)
                         .accessibilityIdentifier("realtime_close_button")
                 }
             }
@@ -164,6 +166,7 @@
             if let onHistoryTap {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Realtime History", systemImage: "clock.arrow.circlepath", action: onHistoryTap)
+                        .tint(.primary)
                         .accessibilityIdentifier("realtime_history_button")
                 }
             }
@@ -172,6 +175,7 @@
                     settingsDetent = .medium
                     isSettingsPresented = true
                 }
+                .tint(.primary)
                 .accessibilityIdentifier("realtime_options_button")
             }
         }
@@ -431,6 +435,10 @@
                         ForEach(TargetLanguageOption.realtimeSelectionOptions) { option in
                             Text(option.primaryLabel)
                                 .tag(RealtimeTargetSelection.language(option))
+                                .disabled(LanguageDirectionSwap.isSameLanguage(
+                                    source: preferences.realtimeSourceLanguage,
+                                    target: option
+                                ))
                         }
                     }
                 }
@@ -470,7 +478,7 @@
             } label: {
                 Image(systemName: "arrow.left.arrow.right")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(canSwapLanguages ? colors.accent : colors.textSecondary)
+                    .foregroundStyle(canSwapLanguages ? colors.textPrimary : colors.textSecondary)
                     .frame(width: 40, height: 40)
                     .background(colors.textPrimary.opacity(0.06), in: Circle())
                     .contentShape(Circle())
@@ -550,6 +558,20 @@
             store.languageSelectionDidChange()
         }
 
+        /// Older settings could pair a language with itself (English → English (US)); pick a real target.
+        private func repairSameLanguageDirection() {
+            let source = preferences.realtimeSourceLanguage
+            guard !store.isRunning,
+                  LanguageDirectionSwap.isSameLanguage(source: source, target: preferences.realtimeTargetLanguage)
+            else { return }
+            let replacement = TargetLanguageOption.matchCandidates.first {
+                TargetLanguageOption.realtimeSelectionOptions.contains($0)
+                    && !LanguageDirectionSwap.isSameLanguage(source: source, target: $0)
+            } ?? .appLanguage
+            preferences.setRealtimeTargetLanguage(replacement)
+            store.languageSelectionDidChange()
+        }
+
         private func selectTranscriptionOnly() {
             preferences.setRealtimeTranslationProvider(.transcriptionOnly)
             store.languageSelectionDidChange()
@@ -609,10 +631,22 @@
                                 }
                             }
                         } else {
-                            ContentUnavailableView(
-                                RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: false),
-                                systemImage: "captions.bubble"
-                            )
+                            ContentUnavailableView {
+                                Label("Start Realtime Translation", systemImage: "captions.bubble")
+                            } description: {
+                                Text("Speech you hear turns into bilingual captions here.")
+                            } actions: {
+                                if RealtimeAudioInputSource.allCases.count > 1 {
+                                    Picker("Input", selection: inputSourceBinding) {
+                                        ForEach(RealtimeAudioInputSource.allCases) { source in
+                                            Label(source.title, systemImage: source.systemImage)
+                                                .tag(source)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .fixedSize()
+                                }
+                            }
                         }
                     }
                 }
@@ -682,7 +716,7 @@
                     Section("Translation") {
                         Picker("Translator", selection: translationProviderBinding) {
                             ForEach(store.inputSource.supportedTranslationProviders) { provider in
-                                Label(provider.title, systemImage: provider.systemImage)
+                                Text(provider.title)
                                     .tag(provider)
                             }
                         }
@@ -692,7 +726,7 @@
                     Section("Captions") {
                         Picker("Display", selection: captionDisplayModeBinding) {
                             ForEach(RealtimeCaptionDisplayMode.allCases) { mode in
-                                Label(captionDisplayModeTitle(for: mode), systemImage: mode.systemImageName)
+                                Text(captionDisplayModeTitle(for: mode))
                                     .tag(mode)
                             }
                         }
@@ -767,6 +801,16 @@
             Binding(
                 get: { preferences.realtimeSourceLanguage },
                 set: { option in
+                    // Choosing the target as the source swaps the pair rather than translating into itself.
+                    if LanguageDirectionSwap.isSameLanguage(source: option, target: preferences.realtimeTargetLanguage),
+                       preferences.realtimeSourceLanguage != .auto
+                    {
+                        let swapped = LanguageDirectionSwap.swapped(
+                            source: preferences.realtimeSourceLanguage,
+                            target: preferences.realtimeTargetLanguage
+                        )
+                        preferences.setRealtimeTargetLanguage(swapped.target)
+                    }
                     preferences.setRealtimeSourceLanguage(option)
                     store.languageSelectionDidChange()
                 }

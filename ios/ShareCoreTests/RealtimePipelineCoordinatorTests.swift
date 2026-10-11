@@ -806,6 +806,61 @@ import Testing
             #expect(segments.allSatisfy { $0.speakerID == "S01" })
             #expect(segments.first?.offset == 1)
             #expect(abs(segments.reduce(0) { $0 + $1.duration } - 4) < 0.001)
+            #expect(runtime.trackSnapshot().segments.map(\.id) == segments.map(\.id))
+            runtime.refreshPresentation()
+            #expect(runtime.trackSnapshot().segments.map(\.id) == segments.map(\.id))
+        }
+
+        @MainActor
+        @Test(
+            "Apple Speech timings use the shared timeline for late nodes and lanes",
+            arguments: [RealtimeTranslationProvider.appleTranslator, .transcriptionOnly], [false, true]
+        )
+        func appleSpeechHistoryUsesTokenTimings(
+            provider: RealtimeTranslationProvider, lateStart: Bool
+        ) async throws {
+            let node = RealtimeRecognitionNode(model: .appleSpeech)
+            node.onResult = { _, _ in }
+            node.setTimelineBaseOffset(lateStart ? 6 : 0)
+            let baseline = RealtimeRecognitionSnapshot(stableText: "New sentence.")
+            let runtime = RealtimeLaneRuntime(
+                configuration: RealtimeLaneConfiguration(
+                    recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
+                    translationProvider: provider
+                ),
+                sourceLanguage: .english,
+                targetLanguage: .english,
+                startedOffset: lateStart ? 9 : 0,
+                recognitionBaseline: lateStart ? baseline : nil,
+                displayMode: { .bilingual },
+                elapsed: { 20 }
+            )
+            node.realtimeLiveSpeechTranscriber(
+                RealtimeLiveSpeechTranscriber(),
+                sessionID: UUID(),
+                didRecognize: RealtimeRecognitionResult(snapshot: RealtimeRecognitionSnapshot(
+                    stableText: lateStart ? "New sentence. New sentence." : "New sentence.",
+                    tokenTimings: (lateStart ? [
+                        RealtimeRecognitionTokenTiming(
+                            token: "New sentence.", startTime: 1, endTime: 2, confidence: 1
+                        ),
+                    ] : []) + [
+                        RealtimeRecognitionTokenTiming(
+                            token: "New sentence.", startTime: 4, endTime: 7, confidence: 1
+                        ),
+                    ],
+                    audioOffset: 8,
+                    isTerminal: true
+                ))
+            )
+            let adjusted = try #require(node.currentRecognitionSnapshot)
+            #expect(adjusted.tokenTimings.last?.startTime == (lateStart ? 10 : 4))
+            #expect(adjusted.tokenTimings.last?.endTime == (lateStart ? 13 : 7))
+            runtime.receiveRecognition(RealtimeRecognitionResult(snapshot: adjusted))
+            await runtime.stop()
+            let segment = try #require(runtime.trackSnapshot().segments.first)
+            #expect(segment.sourceText == "New sentence.")
+            #expect(segment.offset == (lateStart ? 10 : 4))
         }
 
         @Test("Migrates persisted legacy recognition models")

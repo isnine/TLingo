@@ -11,6 +11,196 @@
 
     @Suite("RealtimeBroadcastState")
     struct RealtimeBroadcastStateTests {
+        @Test("A late startup and duplicate stop cannot restart a drained pipeline")
+        func stoppedPipelineRejectsLateStartup() async throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let store = RealtimeBroadcastStateStore(defaults: defaults)
+            let sessionID = UUID().uuidString
+            store.reset(sessionID: sessionID, phase: .waiting)
+            let pipeline = RealtimeLocalSpeechTranslationPipeline(stateStore: store, sessionID: sessionID)
+            let completion = RealtimeBroadcastCompletion(store: store, sessionID: sessionID)
+            await completion.finish { await pipeline.stop() }.value
+            let terminal = try #require(store.load())
+            #expect(terminal.phase == .stopped)
+            // Invalid languages ensure this test cannot start real recognition even if the guard regresses.
+            try await pipeline.start(sourceLanguage: .auto, targetLanguage: .appLanguage)
+            await pipeline.stop()
+            #expect(store.load() == terminal)
+        }
+
+        @Test("An abandoned broadcast drain is a failure, not a successful stop")
+        func staleDrainIsActiveFailure() {
+            let state = RealtimeBroadcastState(phase: .stopping)
+            #expect(RealtimeSessionStore.isStaleActiveIPhoneAudioBroadcast(state))
+        }
+
+        @Test(
+            "Broadcast completion publishes terminal state only after the production drain",
+            arguments: [nil, "Recognition failed"] as [String?]
+        )
+        func completionWaitsForDrain(errorMessage: String?) async throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let store = RealtimeBroadcastStateStore(defaults: defaults)
+            store.reset(sessionID: "first", phase: .recognizing)
+            let completion = RealtimeBroadcastCompletion(store: store, sessionID: "first")
+            let task = completion.finish(errorMessage: errorMessage) {
+                #expect(store.load()?.phase == .stopping)
+                store.update { state in
+                    state.phase = .translating
+                    state.sourceText = "Final sentence."
+                    state.translatedText = "Final translation."
+                    state.realtimeHistorySession = RealtimeHistorySession(
+                        requestID: UUID(),
+                        startedAt: Date(),
+                        endedAt: Date(),
+                        duration: 1,
+                        inputSource: "iPhone Audio",
+                        sourceLanguage: "English",
+                        targetLanguage: "Spanish",
+                        modelID: "test",
+                        modelDisplayName: "Test",
+                        segments: [RealtimeHistorySegment(
+                            offset: 0,
+                            sourceText: "Final sentence.",
+                            translatedText: "Final translation."
+                        )]
+                    )
+                }
+                #expect(store.load()?.phase == .stopping)
+            }
+            await task.value
+            let terminal = try #require(store.load())
+            #expect(terminal.phase == (errorMessage == nil ? .stopped : .failed))
+            #expect(terminal.errorMessage == errorMessage)
+            #expect(terminal.realtimeHistorySession?.segments.last?.sourceText == "Final sentence.")
+            await completion.finish {
+                Issue.record("A duplicate callback must not drain twice")
+            }.value
+            #expect(store.load() == terminal)
+        }
+
+        @Test("A bounded completion wait does not declare success or touch a newer session")
+        func completionTimeoutAndSessionFence() async throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let store = RealtimeBroadcastStateStore(defaults: defaults)
+            store.reset(sessionID: "old", phase: .recognizing)
+            let staleSnapshot = try #require(store.load())
+            let completion = RealtimeBroadcastCompletion(store: store, sessionID: "old")
+            let (stream, continuation) = AsyncStream<Void>.makeStream()
+            let task = completion.finish {
+                for await _ in stream {
+                    break
+                }
+                store.save(staleSnapshot)
+            }
+            #expect(completion.waitForDrain(timeout: 0) == false)
+            #expect(store.load()?.phase == .stopping)
+            store.reset(sessionID: "new", phase: .broadcasting)
+            store.requestStop()
+            continuation.yield()
+            continuation.finish()
+            await task.value
+            #expect(completion.waitForDrain(timeout: 0))
+            #expect(store.load()?.sessionID == "new")
+            #expect(store.load()?.phase == .stopping)
+            #expect(store.load()?.stopRequested == true)
+        }
+
+        @Test("Producer snapshots cannot overwrite the host stop command")
+        func producerCannotOverwriteStop() throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let host = RealtimeBroadcastStateStore(defaults: defaults)
+            let producer = try RealtimeBroadcastStateStore(defaults: #require(UserDefaults(suiteName: suiteName)))
+            host.reset(sessionID: "first", phase: .broadcasting)
+            var staleSnapshot = try #require(producer.load())
+            host.requestStop()
+            staleSnapshot.audioSampleCount = 10
+            producer.save(staleSnapshot)
+            #expect(host.load()?.stopRequested == true)
+            #expect(host.load()?.phase == .stopping)
+            #expect(host.load()?.audioSampleCount == 10)
+        }
+
+        @Test("A stop arriving between a producer read and write is not lost", arguments: [false, true])
+        func stopDuringProducerWrite(replaceSession: Bool) throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let producerDefaults = try #require(InterleavingBroadcastDefaults(suiteName: suiteName))
+            let host = RealtimeBroadcastStateStore(defaults: defaults)
+            let producer = RealtimeBroadcastStateStore(defaults: producerDefaults)
+            host.reset(sessionID: "first", phase: .broadcasting)
+            let snapshot = try #require(producer.load())
+            producerDefaults.beforeDataWrite = {
+                if replaceSession {
+                    host.reset(sessionID: "new", phase: .broadcasting)
+                }
+                host.requestStop()
+            }
+            producer.save(snapshot)
+            #expect(producerDefaults.beforeDataWrite == nil)
+            #expect(host.load()?.sessionID == (replaceSession ? "new" : "first"))
+            #expect(host.load()?.stopRequested == true)
+            #expect(host.load()?.phase == .stopping)
+        }
+
+        @Test("Acknowledging one stop never clears a newer stop")
+        func acknowledgementPreservesNewerStop() throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let producerDefaults = try #require(InterleavingBroadcastDefaults(suiteName: suiteName))
+            let host = RealtimeBroadcastStateStore(defaults: defaults)
+            let producer = RealtimeBroadcastStateStore(defaults: producerDefaults)
+            host.reset(sessionID: "first", phase: .broadcasting)
+            host.requestStop()
+            producerDefaults.beforeAcknowledgement = { host.requestStop() }
+            producer.clearStopRequested()
+            #expect(producerDefaults.beforeAcknowledgement == nil)
+            #expect(host.load()?.stopRequested == true)
+            producer.clearStopRequested()
+            #expect(host.load()?.stopRequested == false)
+        }
+
+        @Test("Old producers cannot replace a new session or clear its stop command")
+        func oldProducerCannotReplaceNewSession() throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let store = RealtimeBroadcastStateStore(defaults: defaults)
+            store.reset(sessionID: "old", phase: .broadcasting)
+            var oldSnapshot = try #require(store.load())
+            store.reset(sessionID: "new", phase: .broadcasting)
+            store.requestStop()
+            oldSnapshot.markBroadcastFinished()
+            store.save(oldSnapshot)
+            #expect(store.load()?.sessionID == "new")
+            #expect(store.load()?.stopRequested == true)
+        }
+
+        @Test("Late producer callbacks cannot resurrect a terminal session")
+        func terminalCannotBeResurrected() throws {
+            let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let store = RealtimeBroadcastStateStore(defaults: defaults)
+            store.reset(sessionID: "first", phase: .broadcasting)
+            let staleSnapshot = try #require(store.load())
+            var terminal = staleSnapshot
+            terminal.markBroadcastFinished()
+            store.save(terminal)
+            store.save(staleSnapshot)
+            #expect(store.load()?.phase == .stopped)
+        }
+
         @Test("Round trips through defaults storage")
         func roundTripsThroughDefaultsStorage() throws {
             let suiteName = "RealtimeBroadcastStateTests.\(UUID().uuidString)"
@@ -138,7 +328,7 @@
             #expect(updated.phase == .paused)
         }
 
-        @Test("Broadcast finish writes terminal state synchronously")
+        @Test("Marks a drained broadcast terminal")
         func broadcastFinishWritesTerminalState() {
             var state = RealtimeBroadcastState(
                 phase: .recognizing,
@@ -164,6 +354,23 @@
             #expect(state.phase == .failed)
             #expect(state.errorMessage == "Failure")
             #expect(!state.stopRequested)
+        }
+    }
+
+    private final class InterleavingBroadcastDefaults: UserDefaults, @unchecked Sendable {
+        var beforeDataWrite: (() -> Void)?
+        var beforeAcknowledgement: (() -> Void)?
+
+        override func set(_ value: Any?, forKey defaultName: String) {
+            if value is Data, let callback = beforeDataWrite {
+                beforeDataWrite = nil
+                callback()
+            }
+            if defaultName.hasSuffix(".stopAcknowledged"), let callback = beforeAcknowledgement {
+                beforeAcknowledgement = nil
+                callback()
+            }
+            super.set(value, forKey: defaultName)
         }
     }
 #endif

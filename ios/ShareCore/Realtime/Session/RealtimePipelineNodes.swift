@@ -320,6 +320,14 @@
             }
             let adjustedResult: RealtimeRecognitionResult
             if let snapshot = result.snapshot {
+                let adjustedTimings = snapshot.tokenTimings.map {
+                    RealtimeRecognitionTokenTiming(
+                        token: $0.token,
+                        startTime: timeline.baseOffset + $0.startTime,
+                        endTime: timeline.baseOffset + $0.endTime,
+                        confidence: $0.confidence
+                    )
+                }
                 let adjustedSegments = snapshot.stableSegments.map { segment in
                     RealtimeRecognitionSegment(
                         id: segment.id,
@@ -345,14 +353,14 @@
                         ? RealtimeRecognitionSnapshot(
                             stableText: snapshot.stableText,
                             volatileText: snapshot.volatileText,
-                            tokenTimings: snapshot.tokenTimings,
+                            tokenTimings: adjustedTimings,
                             audioOffset: timeline.audioOffset,
                             isTerminal: snapshot.isTerminal
                         )
                         : RealtimeRecognitionSnapshot(
                             stableSegments: adjustedSegments,
                             pendingSegment: adjustedPending,
-                            tokenTimings: snapshot.tokenTimings,
+                            tokenTimings: adjustedTimings,
                             audioOffset: timeline.audioOffset,
                             isTerminal: snapshot.isTerminal
                         ),

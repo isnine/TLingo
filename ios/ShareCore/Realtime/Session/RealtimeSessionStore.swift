@@ -767,7 +767,8 @@
                         return
                     }
                     // Capture the phase before requestStop() overwrites it with .stopping.
-                    let priorPhase = broadcastStateStore.load()?.phase
+                    let priorState = broadcastStateStore.load()
+                    let priorPhase = priorState?.phase
                     broadcastStateStore.requestStop()
                     isPaused = false
                     audioLevel = nil
@@ -778,10 +779,7 @@
                         finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
                     } else {
                         statusText = String(localized: "Stopping iPhone Audio")
-                        await waitForIPhoneAudioBroadcastStop()
-                        if isRunning {
-                            finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
-                        }
+                        await waitForIPhoneAudioBroadcastStop(sessionID: priorState?.sessionID)
                     }
                     return
                 }
@@ -1139,10 +1137,10 @@
                 broadcastStatePollingTask = nil
             }
 
-            private func waitForIPhoneAudioBroadcastStop() async {
+            private func waitForIPhoneAudioBroadcastStop(sessionID: String?) async {
                 let deadline = ContinuousClock.now.advanced(by: .seconds(10))
                 while isRunning, inputSource == .iphoneAudio, ContinuousClock.now < deadline {
-                    if let state = broadcastStateStore?.load() {
+                    if let state = broadcastStateStore?.load(), state.sessionID == sessionID {
                         switch state.phase {
                         case .stopped, .failed:
                             applyBroadcastState(state)
@@ -1207,10 +1205,8 @@
                 refreshCaptionLines(event: "broadcastState")
                 logBroadcastStateIfNeeded(state)
 
-                if state.isStale() {
-                    if state.stopRequested || state.phase == .stopping {
-                        finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
-                    } else if Self.isStaleActiveIPhoneAudioBroadcast(state) {
+                if state.isStale(), state.phase != .stopped, state.phase != .failed {
+                    if Self.isStaleActiveIPhoneAudioBroadcast(state) {
                         let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
                         finishIPhoneAudioBroadcastSession(status: String(localized: "Error"))
                         handleErrorMessage(alert.message)
@@ -2186,9 +2182,9 @@
                 }
 
                 switch state.phase {
-                case .broadcasting, .recognizing, .translating, .paused, .failed:
+                case .broadcasting, .recognizing, .translating, .paused, .stopping, .failed:
                     return true
-                case .idle, .waiting, .stopping, .stopped:
+                case .idle, .waiting, .stopped:
                     return false
                 }
             }

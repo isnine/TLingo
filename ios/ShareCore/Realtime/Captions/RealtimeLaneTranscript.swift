@@ -28,6 +28,8 @@
                                 Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
                             }
                             .frame(maxWidth: .infinity, minHeight: 220)
+                            // Fill the viewport (minus the stack padding) so the bottom scroll anchor keeps it centered.
+                            .containerRelativeFrame(.vertical) { height, _ in max(height - 36, 220) }
                         } else {
                             ForEach(captionLines) { line in
                                 // Matches the iOS caption hierarchy, scaled down for side-by-side lanes.

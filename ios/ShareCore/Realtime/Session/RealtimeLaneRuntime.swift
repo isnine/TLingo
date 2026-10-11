@@ -28,6 +28,7 @@
         private var historyBuilder = RealtimeHistorySessionBuilder()
         private var sourceOnlyHistory: [RealtimeHistoryTrackSegment] = []
         private var recognitionSegments: [RealtimeRecognitionSegment] = []
+        private var recognitionTimings: [RealtimeRecognitionTokenTiming] = []
         private var pendingRecognitionSegment: RealtimeRecognitionSegment?
         private var pairedHistoryIDsByRecognitionPart: [String: UUID] = [:]
         private var finalTranslationTask: Task<Void, Never>?
@@ -73,7 +74,8 @@
             )
             historyBuilder.start(
                 at: Date(timeIntervalSinceReferenceDate: 0),
-                requestID: configuration.id
+                requestID: configuration.id,
+                recognitionTimelineBase: startedOffset
             )
         }
 
@@ -96,8 +98,17 @@
             if let recognitionSnapshot = result.snapshot {
                 recognitionSegments = recognitionSnapshot.stableSegments
                 pendingRecognitionSegment = recognitionSnapshot.pendingSegment
+                recognitionTimings = recognitionSnapshot.tokenTimings.filter {
+                    $0.startTime >= snapshot.startedOffset
+                }
+                historyBuilder.noteRecognition(timings: recognitionTimings)
             }
             snapshot.sourceText = transcriptAccumulator.append(result, afterLongSilence: false)
+            historyBuilder.noteSource(
+                committedCount: RealtimeTranscriptSegmenter.segments(from: transcriptAccumulator.committedText).count,
+                hasText: !snapshot.sourceText.isEmpty,
+                at: Date(timeIntervalSinceReferenceDate: currentEventOffset - snapshot.startedOffset)
+            )
             snapshot.phase = .recognizing
             updateRecognitionLatency(capturedAudioOffset: capturedAudioOffset)
 
@@ -515,6 +526,21 @@
                 relation: .sourceOnly,
                 into: &sourceOnlyHistory
             )
+            // Only rematch the recognizer's current timing window; older repeated phrases
+            // must keep their previously recorded positions.
+            guard let coveredStart = recognitionTimings.first?.startTime,
+                  let firstMatchableIndex = sourceOnlyHistory.firstIndex(where: { $0.offset >= coveredStart })
+            else { return }
+            let offsets = RealtimeHistorySessionBuilder.spokenOffsets(
+                for: sourceOnlyHistory.dropFirst(firstMatchableIndex).map(\.sourceText),
+                timings: recognitionTimings,
+                timelineBase: 0
+            )
+            for (index, offset) in offsets.enumerated() {
+                if let offset {
+                    sourceOnlyHistory[firstMatchableIndex + index].offset = offset
+                }
+            }
         }
 
         private func historySegments(from text: String) -> [String] {
@@ -542,6 +568,9 @@
                     let id = index == 0
                         ? segment.id
                         : pairedHistoryIDsByRecognitionPart[key, default: UUID()]
+                    if index > 0 {
+                        pairedHistoryIDsByRecognitionPart[key] = id
+                    }
                     return RecognitionMetadata(
                         id: id,
                         text: text,
