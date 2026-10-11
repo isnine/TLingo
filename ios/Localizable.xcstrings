@@ -49324,6 +49324,7 @@
       }
     },
     "Live Captions" : {
+      "comment" : "Status bar context menu toggle for the floating live captions window",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70818,6 +70819,7 @@
     },
     "Processing..." : {
       "comment" : "Menu bar popover processing state",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72312,6 +72314,7 @@
       }
     },
     "Realtime" : {
+      "comment" : "Status bar context menu section of realtime actions",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -110822,7 +110825,7 @@
       }
     },
     "Translate" : {
-      "comment" : "Output type name",
+      "comment" : "Output type name\nStatus bar context menu section of translation actions",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
