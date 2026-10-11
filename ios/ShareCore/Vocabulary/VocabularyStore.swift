@@ -4,6 +4,7 @@
 //
 
 import Combine
+import Darwin
 import Foundation
 import os
 import SwiftData
@@ -26,11 +27,14 @@ public final class VocabularyStore: ObservableObject {
     @Published public private(set) var entries: [VocabularyEntry] = []
     @Published public private(set) var loadError: String?
 
-    private let context: ModelContext?
+    private let container: ModelContainer?
+    private let storeURL: URL?
+    private var context: ModelContext?
 
     init(storeURL: URL?) {
+        self.storeURL = storeURL
         guard let storeURL else {
-            context = nil
+            container = nil
             loadError = VocabularyStoreError.unavailable.localizedDescription
             return
         }
@@ -41,22 +45,23 @@ public final class VocabularyStore: ObservableObject {
             )
             let schema = Schema([VocabularyEntry.self])
             let configuration = ModelConfiguration("Vocabulary", schema: schema, url: storeURL, cloudKitDatabase: .none)
-            context = try ModelContext(ModelContainer(for: schema, configurations: [configuration]))
+            container = try Self.withExclusiveAccess(to: storeURL) {
+                try ModelContainer(for: schema, configurations: [configuration])
+            }
             reload()
         } catch {
             logger.error("Vocabulary store init failed: \(error.localizedDescription, privacy: .public)")
-            context = nil
+            container = nil
             loadError = error.localizedDescription
         }
     }
 
     /// Re-reads the store; the translation extension may have written to it.
     public func reload() {
-        guard let context else { return }
         do {
-            entries = try context.fetch(FetchDescriptor<VocabularyEntry>(
-                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-            ))
+            try withFreshContext { context in
+                entries = try fetchEntries(context)
+            }
             loadError = nil
         } catch {
             logger.error("Vocabulary fetch failed: \(error.localizedDescription, privacy: .public)")
@@ -70,46 +75,113 @@ public final class VocabularyStore: ObservableObject {
 
     /// Saves the draft, replacing the translation of an existing entry for the same term and target language.
     public func save(_ draft: VocabularyDraft) throws {
-        guard let context else { throw VocabularyStoreError.unavailable }
-        if let existing = entry(for: draft) {
-            existing.translation = draft.translation
-            existing.sourceLanguageCode = draft.sourceLanguageCode
-        } else {
-            context.insert(VocabularyEntry(draft: draft))
+        try update { context, persisted in
+            let matches = matching(draft, in: persisted)
+            if let existing = matches.first {
+                existing.translation = draft.translation
+                existing.sourceLanguageCode = draft.sourceLanguageCode
+                for duplicate in matches.dropFirst() {
+                    context.delete(duplicate)
+                }
+            } else {
+                context.insert(VocabularyEntry(draft: draft))
+            }
         }
-        try commit()
     }
 
     public func remove(_ draft: VocabularyDraft) throws {
-        guard let existing = entry(for: draft) else { return }
-        try delete([existing])
+        try update { context, persisted in
+            for entry in matching(draft, in: persisted) {
+                context.delete(entry)
+            }
+        }
+    }
+
+    /// Resolves bookmark state inside the same cross-process transaction as the mutation.
+    public func toggle(_ draft: VocabularyDraft) throws {
+        try update { context, persisted in
+            let matches = matching(draft, in: persisted)
+            if matches.isEmpty {
+                context.insert(VocabularyEntry(draft: draft))
+            } else {
+                for entry in matches {
+                    context.delete(entry)
+                }
+            }
+        }
     }
 
     public func delete(_ entriesToDelete: [VocabularyEntry]) throws {
-        guard let context else { throw VocabularyStoreError.unavailable }
-        for entry in entriesToDelete {
-            context.delete(entry)
+        let keys = Set(entriesToDelete.map {
+            VocabularyDraft.key(normalizedTerm: $0.normalizedTerm, targetLanguageCode: $0.targetLanguageCode)
+        })
+        try update { context, persisted in
+            for entry in persisted where keys.contains(
+                VocabularyDraft.key(normalizedTerm: entry.normalizedTerm, targetLanguageCode: entry.targetLanguageCode)
+            ) {
+                context.delete(entry)
+            }
         }
-        try commit()
     }
 
     private func entry(for draft: VocabularyDraft) -> VocabularyEntry? {
-        let key = draft.key
-        return entries.first {
-            VocabularyDraft.key(normalizedTerm: $0.normalizedTerm, targetLanguageCode: $0.targetLanguageCode) == key
+        matching(draft, in: entries).first
+    }
+
+    private func matching(_ draft: VocabularyDraft, in entries: [VocabularyEntry]) -> [VocabularyEntry] {
+        entries.filter {
+            VocabularyDraft.key(normalizedTerm: $0.normalizedTerm, targetLanguageCode: $0.targetLanguageCode) == draft.key
         }
     }
 
-    private func commit() throws {
-        guard let context else { throw VocabularyStoreError.unavailable }
+    private func fetchEntries(_ context: ModelContext) throws -> [VocabularyEntry] {
+        try context.fetch(FetchDescriptor<VocabularyEntry>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        ))
+    }
+
+    private func update(_ mutation: (ModelContext, [VocabularyEntry]) -> Void) throws {
         do {
-            try context.save()
+            try withFreshContext { context in
+                let persisted = try fetchEntries(context)
+                mutation(context, persisted)
+                do {
+                    try context.save()
+                } catch {
+                    context.rollback()
+                    throw error
+                }
+                entries = try fetchEntries(context)
+            }
+            loadError = nil
         } catch {
-            context.rollback()
-            reload()
+            logger.error("Vocabulary update failed: \(error.localizedDescription, privacy: .public)")
+            loadError = error.localizedDescription
             throw error
         }
-        reload()
+    }
+
+    private func withFreshContext(_ operation: (ModelContext) throws -> Void) throws {
+        guard let container, let storeURL else { throw VocabularyStoreError.unavailable }
+        try Self.withExclusiveAccess(to: storeURL) {
+            // A fetch on a long-lived context can return cached objects after another process writes.
+            let freshContext = ModelContext(container)
+            freshContext.autosaveEnabled = false
+            try operation(freshContext)
+            context = freshContext
+        }
+    }
+
+    nonisolated static func withExclusiveAccess<T>(to storeURL: URL, _ operation: () throws -> T) throws -> T {
+        // App and extension must serialize the entire read/modify/save, not just SQLite's save.
+        let descriptor = open(storeURL.appendingPathExtension("lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        defer { close(descriptor) }
+        while flock(descriptor, LOCK_EX) != 0 {
+            guard errno == EINTR else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        }
+        defer { flock(descriptor, LOCK_UN) }
+        return try operation()
     }
 
     private static func defaultStoreURL() -> URL? {

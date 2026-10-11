@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 /// Saved terms with search, deletion and plain-text export. Hosts provide the navigation container.
 public struct VocabularyView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var store = VocabularyStore.shared
     @State private var searchText = ""
     #if os(iOS)
@@ -33,6 +34,11 @@ public struct VocabularyView: View {
 
     public var body: some View {
         content
+        #if os(macOS)
+            // Match the window ground used by the other sidebar destinations.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(colors.background)
+        #endif
             .navigationTitle("Vocabulary")
             .searchable(text: $searchText, prompt: Text("Search Vocabulary"))
             .toolbar {
@@ -48,6 +54,11 @@ public struct VocabularyView: View {
             }
         #endif
             .onAppear { store.reload() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    store.reload()
+                }
+            }
     }
 
     #if os(iOS)
@@ -111,6 +122,9 @@ public struct VocabularyView: View {
                     try? store.delete(entries)
                 }
             }
+            #if os(macOS)
+            .scrollContentBackground(.hidden)
+            #endif
         }
     }
 }
