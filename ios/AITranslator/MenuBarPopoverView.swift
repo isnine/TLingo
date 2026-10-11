@@ -136,11 +136,9 @@
                     actionChips
 
                     if !viewModel.modelRuns.isEmpty {
+                        // Each result draws its own card on the popover ground.
                         resultSection
-                            .background(surfaceBackground(cornerRadius: 12))
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            // Keep the scroller clear of the card's rounded corners.
-                            .contentMargins(.vertical, 8, for: .scrollIndicators)
+                            .padding(.horizontal, -12)
                             // A legacy scroller beside the trailing resize edge reads as a second handle.
                             .scrollIndicators(.never)
                     }

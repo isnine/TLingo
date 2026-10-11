@@ -1929,21 +1929,16 @@ public struct HomeView: View {
         let runs = viewModel.displayedModelRuns
         let showsComparison = isComparingResults && runs.count > 1
 
-        return VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
             if let primaryRun = runs.first {
-                flatResultRow(for: primaryRun, isPrimary: true)
+                flatResultRow(for: primaryRun)
                 if runs.count > 1 {
                     let remainingRuns = Array(runs.dropFirst())
-                    Divider()
-                    VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
                         if showsComparison {
                             comparisonHeader(remainingModelCount: remainingRuns.count)
-                                .padding(.top, Self.collapsedResultsVerticalPadding)
-                            ForEach(Array(remainingRuns.enumerated()), id: \.element.id) { index, run in
-                                if index > 0 {
-                                    Divider()
-                                }
-                                flatResultRow(for: run, isPrimary: false)
+                            ForEach(remainingRuns) { run in
+                                flatResultRow(for: run)
                             }
                         } else {
                             collapsedResults(
@@ -1963,7 +1958,7 @@ public struct HomeView: View {
 
             if shouldShowInlineSatisfactionPrompt {
                 satisfactionPromptResultCell
-                    .padding(.top, 16)
+                    .padding(.top, 6)
             }
         }
         .onHeightChange { height in
@@ -1974,7 +1969,7 @@ public struct HomeView: View {
     }
 
     @ViewBuilder
-    private func flatResultRow(for run: HomeViewModel.ModelRunViewState, isPrimary: Bool) -> some View {
+    private func flatResultRow(for run: HomeViewModel.ModelRunViewState) -> some View {
         let runID = run.id
         let isLoading = isRunLoading(run)
         let row = VStack(alignment: .leading, spacing: 8) {
@@ -1990,8 +1985,9 @@ public struct HomeView: View {
                     }
                 }
         }
-        .padding(.vertical, isPrimary ? 8 : 14)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .flatResultCard(colors: colors)
         .onChange(of: isLoading) { _, loading in
             guard !loading, heldResultHeights[runID] != nil else { return }
             withAnimation(.smooth(duration: 0.35)) {
@@ -2144,6 +2140,7 @@ public struct HomeView: View {
     private static let collapsedPreviewColumnSpacing: CGFloat = 12
     private static let collapsedResultsRowSpacing: CGFloat = 10
     private static let collapsedResultsVerticalPadding: CGFloat = 14
+    private static let flatResultCardSpacing: CGFloat = 10
 
     private func collapsedResults(
         _ runs: [HomeViewModel.ModelRunViewState],
@@ -2203,6 +2200,8 @@ public struct HomeView: View {
                 else { return }
                 collapsedResultsSize = size
             }
+            // Outside the measurement so preview line limits see only the text columns.
+            .flatResultCard(colors: colors)
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home_compare_results_button")
@@ -2254,7 +2253,8 @@ public struct HomeView: View {
             .foregroundColor(colors.accent)
             .accessibilityLabel("Collapse")
         }
-        .padding(.bottom, 4)
+        .padding(.top, 4)
+        .padding(.horizontal, 4)
     }
 
     /// Model output is Markdown, so previews render its inline styling instead of raw markers.
@@ -3358,5 +3358,20 @@ private struct HomeRecentRecord: Identifiable {
                 let plain = (try? AttributedString(markdown: String(line))).map { String($0.characters) }
                 return (plain ?? String(line)).trimmingCharacters(in: .whitespacesAndNewlines)
             }
+    }
+}
+
+private extension View {
+    /// Each flat result sits on its own card so results separate by spacing instead of dividers.
+    func flatResultCard(colors: AppColorPalette) -> some View {
+        padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
+                    .fill(colors.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
+                            .stroke(colors.divider, lineWidth: 1)
+                    )
+            )
     }
 }

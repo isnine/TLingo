@@ -65,11 +65,11 @@ public enum TextDiffBuilder {
 
         // Build merged segments in forward order
         var segments: [Segment] = []
-        for (token, kind) in tokenKinds {
+        for (text, kind) in refineChangeRunsByCharacter(tokenKinds) {
             if let lastIdx = segments.indices.last, segments[lastIdx].kind == kind {
-                segments[lastIdx].text.append(contentsOf: token)
+                segments[lastIdx].text.append(text)
             } else {
-                segments.append(.init(kind: kind, text: String(token)))
+                segments.append(.init(kind: kind, text: text))
             }
         }
 
@@ -195,6 +195,133 @@ public enum TextDiffBuilder {
         }
     }
 
+    /// Word-level diff replaces whole words ("colore" -> "color"). Within each region that has both
+    /// removals and additions, re-diff by character so only the differing letters are marked.
+    private static func refineChangeRunsByCharacter(
+        _ tokenKinds: [(token: Substring, kind: Segment.Kind)]
+    ) -> [(text: String, kind: Segment.Kind)] {
+        var result: [(text: String, kind: Segment.Kind)] = []
+        var index = 0
+        while index < tokenKinds.count {
+            guard tokenKinds[index].kind != .equal else {
+                result.append((String(tokenKinds[index].token), .equal))
+                index += 1
+                continue
+            }
+            var removed = ""
+            var added = ""
+            while index < tokenKinds.count, tokenKinds[index].kind != .equal {
+                if tokenKinds[index].kind == .removed {
+                    removed.append(contentsOf: tokenKinds[index].token)
+                } else {
+                    added.append(contentsOf: tokenKinds[index].token)
+                }
+                index += 1
+            }
+            result.append(contentsOf: diffByCharacter(removed: removed, added: added))
+        }
+        return result
+    }
+
+    private static let maxCharacterRefinementLength = 2000
+    /// Shared fragments shorter than this stay inside the change, otherwise unrelated words
+    /// would be split by coincidental letter matches ("the" vs "then" is fine, "cat" vs "dog" is not).
+    private static let minInteriorEqualLength = 3
+    private static let minEdgeEqualLength = 2
+
+    private static func diffByCharacter(removed: String, added: String) -> [(text: String, kind: Segment.Kind)] {
+        guard !removed.isEmpty, !added.isEmpty,
+              removed.count <= maxCharacterRefinementLength, added.count <= maxCharacterRefinementLength
+        else {
+            return [(removed, .removed), (added, .added)].filter { !$0.text.isEmpty }
+        }
+
+        let removedChars = Array(removed)
+        let addedChars = Array(added)
+        var removedOffsets = IndexSet()
+        var insertedOffsets = IndexSet()
+        for change in addedChars.difference(from: removedChars) {
+            switch change {
+            case let .remove(offset, _, _): removedOffsets.insert(offset)
+            case let .insert(offset, _, _): insertedOffsets.insert(offset)
+            }
+        }
+
+        // Split into alternating runs: shared fragments and (removed, added) change pairs
+        enum Run {
+            case equal(String)
+            case change(removed: String, added: String)
+        }
+        var runs: [Run] = []
+        var pendingRemoved = ""
+        var pendingAdded = ""
+        var pendingEqual = ""
+        func flushChange() {
+            if !pendingRemoved.isEmpty || !pendingAdded.isEmpty {
+                runs.append(.change(removed: pendingRemoved, added: pendingAdded))
+                pendingRemoved = ""
+                pendingAdded = ""
+            }
+        }
+        func flushEqual() {
+            if !pendingEqual.isEmpty {
+                runs.append(.equal(pendingEqual))
+                pendingEqual = ""
+            }
+        }
+
+        var removedIndex = 0
+        var addedIndex = 0
+        while removedIndex < removedChars.count || addedIndex < addedChars.count {
+            if removedIndex < removedChars.count, removedOffsets.contains(removedIndex) {
+                flushEqual()
+                pendingRemoved.append(removedChars[removedIndex])
+                removedIndex += 1
+            } else if addedIndex < addedChars.count, insertedOffsets.contains(addedIndex) {
+                flushEqual()
+                pendingAdded.append(addedChars[addedIndex])
+                addedIndex += 1
+            } else {
+                flushChange()
+                pendingEqual.append(removedChars[removedIndex])
+                removedIndex += 1
+                addedIndex += 1
+            }
+        }
+        flushChange()
+        flushEqual()
+
+        // Fold short shared fragments back into the surrounding change
+        var output: [(text: String, kind: Segment.Kind)] = []
+        var changeRemoved = ""
+        var changeAdded = ""
+        func flushOutputChange() {
+            if !changeRemoved.isEmpty { output.append((changeRemoved, .removed)) }
+            if !changeAdded.isEmpty { output.append((changeAdded, .added)) }
+            changeRemoved = ""
+            changeAdded = ""
+        }
+        for (position, run) in runs.enumerated() {
+            switch run {
+            case let .equal(text):
+                let isEdge = position == 0 || position == runs.count - 1
+                let minLength = isEdge ? minEdgeEqualLength : minInteriorEqualLength
+                if text.count >= minLength {
+                    flushOutputChange()
+                    output.append((text, .equal))
+                } else {
+                    changeRemoved.append(text)
+                    changeAdded.append(text)
+                }
+            case let .change(removed, added):
+                changeRemoved.append(removed)
+                changeAdded.append(added)
+            }
+        }
+        flushOutputChange()
+        return output
+    }
+
     private static func isCJK(_ character: Character) -> Bool {
         guard let scalar = character.unicodeScalars.first else { return false }
         if scalar.properties.isIdeographic {
@@ -224,24 +351,16 @@ private extension TextDiffBuilder {
         let baseForeground: Color
 
         static func forScheme(_ colorScheme: ColorScheme, palette: AppColorPalette) -> ColorTheme {
-            switch colorScheme {
-            case .dark:
-                return ColorTheme(
-                    additionBackground: palette.accent.opacity(0.24),
-                    additionForeground: palette.textPrimary,
-                    removalBackground: palette.textSecondary.opacity(0.22),
-                    removalForeground: palette.textSecondary,
-                    baseForeground: palette.textPrimary
-                )
-            default:
-                return ColorTheme(
-                    additionBackground: palette.accent.opacity(0.12),
-                    additionForeground: palette.textPrimary,
-                    removalBackground: palette.textSecondary.opacity(0.12),
-                    removalForeground: palette.textSecondary,
-                    baseForeground: palette.textPrimary
-                )
-            }
+            // Red/green keeps additions and removals distinct under any accent theme;
+            // the removal strikethrough covers red-green color blindness.
+            let isDark = colorScheme == .dark
+            return ColorTheme(
+                additionBackground: palette.success.opacity(isDark ? 0.26 : 0.16),
+                additionForeground: palette.textPrimary,
+                removalBackground: palette.error.opacity(isDark ? 0.26 : 0.14),
+                removalForeground: palette.error,
+                baseForeground: palette.textPrimary
+            )
         }
     }
 }

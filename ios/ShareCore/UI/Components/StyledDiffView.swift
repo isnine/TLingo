@@ -61,16 +61,9 @@ struct StyledDiffView: View {
                     .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                     .contentDirectionAware(plainText)
             }
-            .padding(10)
+            .padding(.leading, 10)
+            .padding(.vertical, 2)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(colors.chipSecondaryBackground.opacity(colorScheme == .dark ? 0.38 : 0.58))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(colors.divider, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
