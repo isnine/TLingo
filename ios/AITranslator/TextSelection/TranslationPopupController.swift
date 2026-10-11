@@ -49,6 +49,12 @@
 
             let viewModel = HomeViewModel(onboardingTrialModels: trialModels)
             currentViewModel = viewModel
+            // Lets Apple Translate download language packs through the hidden translation window.
+            NotificationCenter.default.post(
+                name: .appleTranslationViewModelRegister,
+                object: nil,
+                userInfo: ["viewModel": viewModel]
+            )
 
             let initialSize = AppPreferences.shared.selectionPopupSize
             let newPanel = TranslationPopupPanel(contentRect: NSRect(origin: .zero, size: initialSize))

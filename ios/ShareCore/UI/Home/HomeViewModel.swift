@@ -1939,6 +1939,29 @@ public final class HomeViewModel: ObservableObject {
                                             runToken: appleRunToken,
                                             allowDiff: false
                                         )
+                                    } else if status == .unsupported {
+                                        // No download can fix this; .translationTask would only wait out the watchdog.
+                                        let result = ModelExecutionResult(
+                                            modelID: ModelConfig.appleTranslateID,
+                                            duration: 0,
+                                            response: .failure(
+                                                LocalProviderError.translationFailed(
+                                                    AppleTranslationErrorFormatter.withLanguagePair(
+                                                        String(
+                                                            localized: "Apple Translate does not support the selected language pair."
+                                                        ),
+                                                        source: sourceLocale,
+                                                        target: resolvedTarget
+                                                    )
+                                                )
+                                            )
+                                        )
+                                        self.apply(
+                                            result: result,
+                                            context: context,
+                                            runToken: appleRunToken,
+                                            allowDiff: false
+                                        )
                                     } else {
                                         // Language pack not installed; need .translationTask() to trigger download UI.
                                         self.pendingAppleTranslateText = text

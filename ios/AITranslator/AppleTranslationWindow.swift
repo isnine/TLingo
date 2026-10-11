@@ -30,6 +30,12 @@
         /// Weak reference to the view model that owns the current Apple Translate request.
         weak var activeViewModel: HomeViewModel?
 
+        /// Requests run one at a time: replacing `pendingConfig` while a session is in use would
+        /// invalidate it (the framework traps when a stale session is used) and misroute its result.
+        private var isRequestInFlight = false
+        private var requestWaiters: [CheckedContinuation<Void, Never>] = []
+        private var currentRequestToken: UUID?
+
         private init() {}
 
         /// Called by HomeViewModel (via its appleTranslationRequestHandler closure) to trigger
@@ -40,12 +46,11 @@
             target: TargetLanguageOption,
             for viewModel: HomeViewModel
         ) {
-            activeViewModel = viewModel
             let targetLocale = target.localeLanguage
             logger.debug("requestTranslation source=\(source?.languageCode?.identifier ?? "nil (auto)", privacy: .public), target=\(targetLocale.languageCode?.identifier ?? "unknown", privacy: .public), viewModel=\(String(describing: ObjectIdentifier(viewModel)), privacy: .public)")
 
             // Capture a strong reference so the correct viewModel is used even if
-            // activeViewModel is overwritten by another registration before the Task runs.
+            // another registration happens before the Task runs.
             Task { @MainActor [viewModel] in
                 do {
                     let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
@@ -58,16 +63,36 @@
                     if status == .supported {
                         AppleTranslationWindowManager.shared.showForLanguageDownload()
                     } else if status != .installed {
+                        // The view model already reports unsupported pairs; no session will arrive.
                         logger
                             .error(
-                                "Apple Translate bridge: unsupported language pair source=\(source?.minimalIdentifier ?? "nil", privacy: .public), target=\(targetLocale.minimalIdentifier, privacy: .public), status=\(String(describing: status), privacy: .public). .translationTask will fail with no result."
+                                "Apple Translate bridge: unsupported language pair source=\(source?.minimalIdentifier ?? "nil", privacy: .public), target=\(targetLocale.minimalIdentifier, privacy: .public), status=\(String(describing: status), privacy: .public)"
                             )
+                        return
                     }
                 } catch {
                     logger
                         .error(
                             "Apple Translate bridge: language availability failed: \(String(describing: error), privacy: .public)"
                         )
+                }
+
+                await self.acquireRequestSlot()
+                // The request may have been cancelled or timed out while queued behind another one.
+                guard viewModel.pendingAppleTranslateText != nil else {
+                    self.releaseRequestSlot()
+                    return
+                }
+
+                let token = UUID()
+                self.currentRequestToken = token
+                // Safety net in case `.translationTask` never delivers a session.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(AppleTranslationService.operationTimeoutSeconds + 5))
+                    if self.currentRequestToken == token {
+                        self.currentRequestToken = nil
+                        self.releaseRequestSlot()
+                    }
                 }
 
                 if self.pendingConfig != nil {
@@ -84,9 +109,30 @@
         /// Called by the hidden window view when a TranslationSession becomes available.
         @available(macOS 14.4, *)
         func sessionReady(_ session: TranslationSession) async {
+            let token = currentRequestToken
             let vmId = activeViewModel.map { "\(ObjectIdentifier($0))" } ?? "nil"
             logger.debug("sessionReady, activeViewModel=\(vmId, privacy: .public)")
             await activeViewModel?.executeAppleTranslation(session: session)
+            if let token, currentRequestToken == token {
+                currentRequestToken = nil
+                releaseRequestSlot()
+            }
+        }
+
+        private func acquireRequestSlot() async {
+            if isRequestInFlight {
+                await withCheckedContinuation { requestWaiters.append($0) }
+            } else {
+                isRequestInFlight = true
+            }
+        }
+
+        private func releaseRequestSlot() {
+            if requestWaiters.isEmpty {
+                isRequestInFlight = false
+            } else {
+                requestWaiters.removeFirst().resume()
+            }
         }
     }
 

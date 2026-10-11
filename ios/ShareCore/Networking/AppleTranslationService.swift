@@ -240,18 +240,21 @@ public final class AppleTranslationService: @unchecked Sendable {
 
     /// Translate using a directly-initialized session from installed language packs.
     /// Does NOT require `.translationTask()` — safe to call from extension contexts.
-    /// Throws `LocalProviderError.unsupportedLanguagePair` if the language pack is not installed.
+    /// Throws `TranslationError.notInstalled` if the language pack is not installed.
     @available(iOS 17.4, macOS 14.4, *)
     public func translateWithInstalledLanguages(
         text: String,
         source: Locale.Language?,
         target: Locale.Language
     ) async throws -> ModelExecutionResult {
-        let resolvedSource = source
-            ?? SourceLanguageDetector.detectLocaleLanguage(of: text)
-            ?? SourceLanguageDetector.fallbackSourceLanguage()
-        let session = TranslationSession(installedSource: resolvedSource, target: target)
-        return try await translate(text: text, using: session)
+        let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        return try await runWithInstalledSession(
+            source: resolvedSource,
+            target: target,
+            strategy: .automatic,
+            makeSession: { TranslationSession(installedSource: resolvedSource, target: target) },
+            operation: { try await self.translate(text: text, using: $0, requestsDownload: false) }
+        )
     }
 
     /// Translate sentence pairs using a directly-initialized session from installed language packs.
@@ -261,11 +264,14 @@ public final class AppleTranslationService: @unchecked Sendable {
         source: Locale.Language?,
         target: Locale.Language
     ) async throws -> ModelExecutionResult {
-        let resolvedSource = source
-            ?? SourceLanguageDetector.detectLocaleLanguage(of: text)
-            ?? SourceLanguageDetector.fallbackSourceLanguage()
-        let session = TranslationSession(installedSource: resolvedSource, target: target)
-        return try await translateSentences(text: text, using: session)
+        let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        return try await runWithInstalledSession(
+            source: resolvedSource,
+            target: target,
+            strategy: .automatic,
+            makeSession: { TranslationSession(installedSource: resolvedSource, target: target) },
+            operation: { try await self.translateSentences(text: text, using: $0, requestsDownload: false) }
+        )
     }
 
     @available(iOS 17.4, macOS 14.4, *)
@@ -277,15 +283,52 @@ public final class AppleTranslationService: @unchecked Sendable {
         guard #available(iOS 26.4, macOS 26.4, *) else {
             return try await translateSentencesWithInstalledLanguages(text: text, source: source, target: target)
         }
-        let resolvedSource = source
+        let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        return try await runWithInstalledSession(
+            source: resolvedSource,
+            target: target,
+            strategy: .lowLatency,
+            makeSession: {
+                TranslationSession(installedSource: resolvedSource, target: target, preferredStrategy: .lowLatency)
+            },
+            operation: { try await self.translateSentences(text: text, using: $0, requestsDownload: false) }
+        )
+    }
+
+    private static func resolveInstalledSource(text: String, source: Locale.Language?) -> Locale.Language {
+        source
             ?? SourceLanguageDetector.detectLocaleLanguage(of: text)
             ?? SourceLanguageDetector.fallbackSourceLanguage()
-        let session = TranslationSession(
-            installedSource: resolvedSource,
-            target: target,
-            preferredStrategy: .lowLatency
-        )
-        return try await translateSentences(text: text, using: session)
+    }
+
+    /// `TranslationSession(installedSource:)` can report `notInstalled` transiently even when
+    /// `LanguageAvailability` says the pair is installed. Re-check the status and retry once with a
+    /// fresh session; a pair that is genuinely missing still surfaces the original error.
+    @available(iOS 17.4, macOS 14.4, *)
+    private func runWithInstalledSession(
+        source: Locale.Language,
+        target: Locale.Language,
+        strategy: AppleTranslationAvailabilityStrategy,
+        makeSession: () -> TranslationSession,
+        operation: (TranslationSession) async throws -> ModelExecutionResult
+    ) async throws -> ModelExecutionResult {
+        do {
+            return try await operation(makeSession())
+        } catch where AppleTranslationErrorFormatter.isNotInstalledError(error) {
+            let status = try? await languageAvailabilityStatus(source: source, target: target, strategy: strategy)
+            guard status == .installed else { throw error }
+            logger.error(
+                """
+                installed session reported notInstalled but pair is installed                 (\(source.minimalIdentifier, privacy: .public) → \(target.minimalIdentifier, privacy: .public)), retrying once
+                """
+            )
+            try await Task.sleep(for: .milliseconds(400))
+            do {
+                return try await operation(makeSession())
+            } catch where AppleTranslationErrorFormatter.isNotInstalledError(error) {
+                throw LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describeGeneric(error))
+            }
+        }
     }
 
     // MARK: - Translation
@@ -294,36 +337,41 @@ public final class AppleTranslationService: @unchecked Sendable {
     @available(iOS 17.4, macOS 14.4, *)
     public func translate(
         text: String,
-        using session: TranslationSession
+        using session: TranslationSession,
+        requestsDownload: Bool = true
     ) async throws -> ModelExecutionResult {
         try await Self.withOperationTimeout(operationName: "translate") {
-            try await self.translateWithoutTimeout(text: text, using: session)
+            try await self.translateWithoutTimeout(text: text, using: session, requestsDownload: requestsDownload)
         }
     }
 
     @available(iOS 17.4, macOS 14.4, *)
     private func translateWithoutTimeout(
         text: String,
-        using session: TranslationSession
+        using session: TranslationSession,
+        requestsDownload: Bool
     ) async throws -> ModelExecutionResult {
         let start = Date()
         logger.debug("translate called, text length: \(text.count, privacy: .public)")
 
-        do {
-            // prepareTranslation() triggers the system download UI if the language pack
-            // is not yet installed (.supported status). No-op if already installed (.installed).
-            try await session.prepareTranslation()
-        } catch {
-            logger.error("translate: prepareTranslation failed: \(String(describing: error), privacy: .public)")
+        if requestsDownload {
+            do {
+                // prepareTranslation() triggers the system download UI if the language pack
+                // is not yet installed (.supported status). No-op if already installed (.installed).
+                // Sessions from `installedSource:` cannot request downloads, so they skip this.
+                try await session.prepareTranslation()
+            } catch {
+                logger.error("translate: prepareTranslation failed: \(String(describing: error), privacy: .public)")
+                #if os(macOS)
+                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
+                #endif
+                throw error
+            }
+            // Notify the host app that language download is done and the auxiliary window can be hidden.
             #if os(macOS)
                 NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
             #endif
-            throw error
         }
-        // Notify the host app that language download is done and the auxiliary window can be hidden.
-        #if os(macOS)
-            NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-        #endif
 
         let response: TranslationSession.Response
         do {
@@ -346,33 +394,41 @@ public final class AppleTranslationService: @unchecked Sendable {
     @available(iOS 17.4, macOS 14.4, *)
     public func translateSentences(
         text: String,
-        using session: TranslationSession
+        using session: TranslationSession,
+        requestsDownload: Bool = true
     ) async throws -> ModelExecutionResult {
         try await Self.withOperationTimeout(operationName: "translateSentences") {
-            try await self.translateSentencesWithoutTimeout(text: text, using: session)
+            try await self.translateSentencesWithoutTimeout(
+                text: text,
+                using: session,
+                requestsDownload: requestsDownload
+            )
         }
     }
 
     @available(iOS 17.4, macOS 14.4, *)
     private func translateSentencesWithoutTimeout(
         text: String,
-        using session: TranslationSession
+        using session: TranslationSession,
+        requestsDownload: Bool
     ) async throws -> ModelExecutionResult {
         let start = Date()
 
-        do {
-            // prepareTranslation() triggers the system download UI if needed.
-            try await session.prepareTranslation()
-        } catch {
-            logger.error("translateSentences: prepareTranslation failed: \(String(describing: error), privacy: .public)")
+        if requestsDownload {
+            do {
+                // prepareTranslation() triggers the system download UI if needed.
+                try await session.prepareTranslation()
+            } catch {
+                logger.error("translateSentences: prepareTranslation failed: \(String(describing: error), privacy: .public)")
+                #if os(macOS)
+                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
+                #endif
+                throw error
+            }
             #if os(macOS)
                 NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
             #endif
-            throw error
         }
-        #if os(macOS)
-            NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-        #endif
 
         let sentences = splitIntoSentences(text)
         logger.debug("translateSentences: \(sentences.count, privacy: .public) sentences")
@@ -508,16 +564,20 @@ public enum AppleTranslationErrorFormatter {
     /// NSError domain + code so users can see *why* Apple Translation failed,
     /// rather than the generic localized "Translation could not be completed".
     public static func describe(_ error: Error) -> String {
-        let ns = error as NSError
-
         // Detect "language pack must be downloaded on device" failures from the
         // system Translation framework and surface a friendlier instruction.
-        if isLanguagePackMissing(ns) {
+        if isLanguagePackMissing(error) {
             return NSLocalizedString(
                 "Please try translating in the main window and wait for the system prompt to download the target language.",
                 comment: "Shown when Apple Translate cannot translate because the language pack is not installed on device"
             )
         }
+        return describeGeneric(error)
+    }
+
+    /// Like `describe`, but never maps the error to the "download the language pack" guidance.
+    public static func describeGeneric(_ error: Error) -> String {
+        let ns = error as NSError
 
         var parts: [String] = []
 
@@ -595,12 +655,22 @@ public enum AppleTranslationErrorFormatter {
         return locale.localizedString(forIdentifier: sourceCode) ?? sourceCode
     }
 
-    /// Heuristic: the Translation framework surfaces "language must be downloaded
-    /// on the device" via TranslationErrorDomain (or via NSCocoaErrorDomain wrappers)
-    /// with messages mentioning download / device. Match on substrings across the
-    /// localized description chain so we catch all locales the system might emit.
+    /// True when the Translation framework reports `TranslationError.notInstalled`.
+    public static func isNotInstalledError(_ error: Error) -> Bool {
+        if #available(iOS 17.4, macOS 14.4, *) {
+            return TranslationError.notInstalled ~= error
+        }
+        return false
+    }
+
+    /// Whether the failure means the language pack has to be downloaded. Prefers the structured
+    /// `TranslationError.notInstalled`; the text match is only a fallback for wrapped errors, and
+    /// stays narrow so unrelated errors that merely mention a "device" are not misreported.
     public static func isLanguagePackMissing(_ error: Error) -> Bool {
-        isLanguagePackMissing(error as NSError)
+        if isNotInstalledError(error) { return true }
+        // Already diagnosed as a non-download failure (e.g. a transient `notInstalled` retry).
+        if case LocalProviderError.translationFailed = error { return false }
+        return isLanguagePackMissing(error as NSError)
     }
 
     private static func isLanguagePackMissing(_ error: NSError) -> Bool {
@@ -613,16 +683,12 @@ public enum AppleTranslationErrorFormatter {
         }
 
         let needles = [
-            "download",
             "must be downloaded",
             "not installed",
             "notinstalled",
-            "下载",
             "未安装",
-            "設備",
-            "设备",
-            "デバイス",
-            "ダウンロード",
+            "尚未下载",
+            "需要下载",
         ]
         let haystack = messages.joined(separator: " ").lowercased()
         return needles.contains { haystack.contains($0.lowercased()) }

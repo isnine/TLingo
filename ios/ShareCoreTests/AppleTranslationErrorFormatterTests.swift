@@ -5,6 +5,7 @@
 
 import Foundation
 import Testing
+import Translation
 
 @testable import ShareCore
 
@@ -61,5 +62,28 @@ struct AppleTranslationErrorFormatterTests {
         )
 
         #expect(AppleTranslationErrorFormatter.isLanguagePackMissing(error))
+    }
+
+    @Test("Structured notInstalled errors are recognized as missing language packs")
+    func structuredNotInstalledIsRecognized() {
+        #expect(AppleTranslationErrorFormatter.isLanguagePackMissing(TranslationError.notInstalled))
+    }
+
+    @Test("Unrelated errors that mention a device or download are not treated as missing packs")
+    func unrelatedErrorsAreNotMissingPacks() {
+        let error = NSError(
+            domain: "TranslationErrorDomain",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: "Unable to reach the device to download results"]
+        )
+
+        #expect(!AppleTranslationErrorFormatter.isLanguagePackMissing(error))
+    }
+
+    @Test("A diagnosed transient failure is not reported as a missing pack")
+    func diagnosedFailureIsNotMissingPack() {
+        let error = LocalProviderError.translationFailed("Language pack not installed [Translation.TranslationError 1]")
+
+        #expect(!AppleTranslationErrorFormatter.isLanguagePackMissing(error))
     }
 }

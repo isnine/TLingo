@@ -41,10 +41,10 @@
 
         init(onClose: @escaping () -> Void) {
             self.onClose = onClose
-            // supportsAppleTranslate: false — menu bar popover cannot use .translationTask()
-            // reliably (NSPopover lacks a proper NSWindowScene). Falls back to
-            // TranslationSession(installedSource:target:) for pre-installed language packs.
-            _viewModel = StateObject(wrappedValue: HomeViewModel(supportsAppleTranslate: false))
+            // The popover itself cannot host .translationTask() (NSPopover lacks a proper
+            // NSWindowScene), so downloads go through the hidden translation window registered
+            // in `onAppear`; installed language packs translate directly.
+            _viewModel = StateObject(wrappedValue: HomeViewModel())
         }
 
         var body: some View {
@@ -61,6 +61,11 @@
             .animation(.easeInOut(duration: 0.25), value: activeConversationSession != nil)
             .onAppear {
                 AppPreferences.shared.refreshFromDefaults()
+                NotificationCenter.default.post(
+                    name: .appleTranslationViewModelRegister,
+                    object: nil,
+                    userInfo: ["viewModel": viewModel]
+                )
             }
             .onReceive(NotificationCenter.default.publisher(for: .menuBarPopoverDidShow)) { _ in
                 viewModel.refreshConfiguration()
