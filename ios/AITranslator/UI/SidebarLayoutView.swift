@@ -66,7 +66,7 @@ private struct HistorySidebarLabel: View {
                 Text(session?.displayTitle(fallback: record.sourceText) ?? record.sourceText)
                     .lineLimit(1)
                 if let session {
-                    Text("\(session.clockDurationLabel) · \(session.startedAt.formatted(date: .abbreviated, time: .shortened))")
+                    Text("\(session.startedAt.formatted(.dateTime.month(.abbreviated).day())) · \(session.clockDurationLabel)")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -111,7 +111,6 @@ func conversationSession(for record: TranslationRecord) -> ConversationSession {
 
 private struct SidebarHistorySection<SelectionValue: Hashable>: View {
     let title: LocalizedStringKey
-    let systemImage: String
     let records: [TranslationRecord]
     let visibleCount: Int
     let tag: (UUID) -> SelectionValue
@@ -132,10 +131,7 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                     .buttonStyle(.plain)
                 }
             } header: {
-                HStack {
-                    Image(systemName: systemImage)
-                    Text(title)
-                }
+                Text(title)
             }
         }
     }
@@ -207,7 +203,11 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         }
 
         var body: some View {
-            let textHistoryRecords = historyRecords.filter { !$0.isRealtimeRecord && !$0.isConversation }
+            var seenTextSources = Set<String>()
+            // Repeated runs of the same text show once; the newest record stays selectable.
+            let textHistoryRecords = historyRecords.filter {
+                !$0.isRealtimeRecord && !$0.isConversation && seenTextSources.insert($0.sourceText).inserted
+            }
             let chatHistoryRecords = historyRecords.filter { !$0.isRealtimeRecord && $0.isConversation }
             let realtimeHistoryRecords = historyRecords.filter { $0.isRealtimeRecord }
             let historySectionOrder = sidebarHistorySectionOrder(
@@ -229,18 +229,18 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                         switch kind {
                         case .text:
                             SidebarHistorySection(
-                                title: "Text Translation", systemImage: "globe", records: textHistoryRecords,
+                                title: "Text Translation", records: textHistoryRecords,
                                 visibleCount: visibleTextHistoryCount, tag: SidebarSelection.historyRecord
                             ) { visibleTextHistoryCount += sidebarHistoryPageSize }
                         case .chat:
                             SidebarHistorySection(
-                                title: "Chat", systemImage: "bubble.left.and.bubble.right.fill",
+                                title: "Chat",
                                 records: chatHistoryRecords,
                                 visibleCount: visibleChatHistoryCount, tag: SidebarSelection.historyRecord
                             ) { visibleChatHistoryCount += sidebarHistoryPageSize }
                         case .realtime:
                             SidebarHistorySection(
-                                title: "Realtime Translation", systemImage: "waveform",
+                                title: "Realtime Translation",
                                 records: realtimeHistoryRecords,
                                 visibleCount: visibleRealtimeHistoryCount, tag: SidebarSelection.historyRecord
                             ) { visibleRealtimeHistoryCount += sidebarHistoryPageSize }
@@ -249,7 +249,8 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 }
                 .listStyle(.sidebar)
                 .scrollContentBackground(.hidden)
-                .background(colors.background)
+                // White sidebar on the grey app ground, matching the design canvas.
+                .background(colors.cardBackground.ignoresSafeArea())
                 .navigationSplitViewColumnWidth(min: 160, ideal: 200)
                 .navigationTitle("TLingo")
                 .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -265,8 +266,8 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                         }
                     }
             }
-            .toolbarBackground(colors.background, for: .windowToolbar)
-            .toolbarBackground(.visible, for: .windowToolbar)
+            // Let each column's own ground run under the titlebar instead of one grey band.
+            .toolbarBackground(.hidden, for: .windowToolbar)
             .onAppear {
                 refreshHistory()
             }
@@ -281,6 +282,11 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { _ in
                 showActions = false
                 selection = .tab(.realtime)
+            }
+            .homeInputDestination {
+                showActions = false
+                showFeaturePaywall = false
+                selection = .tab(.home)
             }
             .sheet(isPresented: $showFeaturePaywall) {
                 PaywallView(context: .featureLocked)
@@ -431,7 +437,11 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         }
 
         var body: some View {
-            let textHistoryRecords = historyRecords.filter { !$0.isRealtimeRecord && !$0.isConversation }
+            var seenTextSources = Set<String>()
+            // Repeated runs of the same text show once; the newest record stays selectable.
+            let textHistoryRecords = historyRecords.filter {
+                !$0.isRealtimeRecord && !$0.isConversation && seenTextSources.insert($0.sourceText).inserted
+            }
             let chatHistoryRecords = historyRecords.filter { !$0.isRealtimeRecord && $0.isConversation }
             let realtimeHistoryRecords = historyRecords.filter { $0.isRealtimeRecord }
             let historySectionOrder = sidebarHistorySectionOrder(
@@ -453,18 +463,18 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                         switch kind {
                         case .text:
                             SidebarHistorySection(
-                                title: "Text Translation", systemImage: "globe", records: textHistoryRecords,
+                                title: "Text Translation", records: textHistoryRecords,
                                 visibleCount: visibleTextHistoryCount, tag: Selection.historyRecord
                             ) { visibleTextHistoryCount += sidebarHistoryPageSize }
                         case .chat:
                             SidebarHistorySection(
-                                title: "Chat", systemImage: "bubble.left.and.bubble.right.fill",
+                                title: "Chat",
                                 records: chatHistoryRecords,
                                 visibleCount: visibleChatHistoryCount, tag: Selection.historyRecord
                             ) { visibleChatHistoryCount += sidebarHistoryPageSize }
                         case .realtime:
                             SidebarHistorySection(
-                                title: "Realtime Translation", systemImage: "waveform",
+                                title: "Realtime Translation",
                                 records: realtimeHistoryRecords,
                                 visibleCount: visibleRealtimeHistoryCount, tag: Selection.historyRecord
                             ) { visibleRealtimeHistoryCount += sidebarHistoryPageSize }
@@ -507,6 +517,11 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 showActions = false
                 selection = .tab(.realtime)
                 realtimeControlModel.handleRealtimeDeepLink(notification)
+            }
+            .homeInputDestination {
+                showActions = false
+                showFeaturePaywall = false
+                selection = .tab(.home)
             }
             .sheet(isPresented: $showActions) {
                 ActionsView(configurationStore: configStore, embedsInNavigationStack: true)
@@ -632,7 +647,8 @@ private struct PremiumSidebarFooter: View {
 
     private var fadeGradient: LinearGradient {
         #if canImport(AppKit)
-            let base = Color(NSColor.windowBackgroundColor)
+            // Match the sidebar card fill so the fade blends into it.
+            let base = AppColors.palette(for: colorScheme).cardBackground
         #else
             let base = Color(.systemBackground)
         #endif

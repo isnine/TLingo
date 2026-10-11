@@ -71,6 +71,13 @@
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $viewModel.showDataConsentRequest) {
+                DataConsentView {
+                    preferences.setHasAcceptedDataSharing(true)
+                    viewModel.performSelectedAction()
+                }
+                .interactiveDismissDisabled()
+            }
         }
 
         @ViewBuilder
@@ -205,16 +212,8 @@
         private func openInMainApp() {
             let snapshot = viewModel.captureStateSnapshot()
             onClose()
+            HomeInputRouter.shared.submit(.handoff(snapshot))
             AppDelegate.shared?.openMainWindow()
-            // Post after a tick so the main HomeView has mounted (cold launch case)
-            // and its `.onReceive(.homeStateHandoff)` subscription is active.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                NotificationCenter.default.post(
-                    name: .homeStateHandoff,
-                    object: nil,
-                    userInfo: ["snapshot": snapshot]
-                )
-            }
         }
 
         // MARK: - Header Section

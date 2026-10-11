@@ -50,6 +50,7 @@ public final class LLMService {
 
     private let urlSession: URLSession
     private let foundationModelService: FoundationModelService
+    private let trialDeviceID: @MainActor @Sendable (URLSession) async throws -> String
 
     private struct RequestTuning {
         let reasoningEffort: String?
@@ -72,12 +73,25 @@ public final class LLMService {
         return RequestTuning(reasoningEffort: "minimal")
     }
 
-    public init(
+    public convenience init(
         urlSession: URLSession = NetworkSession.shared,
         foundationModelService: FoundationModelService = .shared
     ) {
+        self.init(
+            urlSession: urlSession,
+            foundationModelService: foundationModelService,
+            trialDeviceID: { try await OnboardingTrialService.deviceID(using: $0) }
+        )
+    }
+
+    init(
+        urlSession: URLSession,
+        foundationModelService: FoundationModelService = .shared,
+        trialDeviceID: @escaping @MainActor @Sendable (URLSession) async throws -> String
+    ) {
         self.urlSession = urlSession
         self.foundationModelService = foundationModelService
+        self.trialDeviceID = trialDeviceID
     }
 
     private static let suggestionsRegex: NSRegularExpression = {
@@ -155,6 +169,7 @@ public final class LLMService {
                         return Task.isCancelled ? nil : result
                     }
 
+                    let start = Date()
                     do {
                         return try await self.sendModelRequest(
                             text: text,
@@ -172,7 +187,11 @@ public final class LLMService {
                     } catch is CancellationError {
                         return nil
                     } catch {
-                        return nil
+                        return ModelExecutionResult(
+                            modelID: model.id,
+                            duration: Date().timeIntervalSince(start),
+                            response: .failure(error)
+                        )
                     }
                 }
             }
@@ -220,7 +239,7 @@ public final class LLMService {
         if onboardingTrial {
             // The Worker spends this device's trial quota instead of checking
             // premium. Skip premium proof so the trial path is unambiguous in logs.
-            let deviceID = try await OnboardingTrialService.deviceID(using: urlSession)
+            let deviceID = try await trialDeviceID(urlSession)
             request.setValue(deviceID, forHTTPHeaderField: "X-Onboarding-Device")
         } else if await hasPremiumEntitlement(
             refresh: refreshEntitlement,

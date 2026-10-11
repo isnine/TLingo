@@ -169,6 +169,8 @@ public final class HomeViewModel: ObservableObject {
         public var presentation: Presentation = .standard
         /// Finished status per presentation, so switching back never re-requests.
         var cachedStatuses: [Presentation: Status] = [:]
+        /// Travels with copied results when another window adopts a snapshot.
+        var requestLanguages: ResolvedLanguagePair?
         public var showDiff: Bool = true
         /// When this run first showed output; fixes its slot in first-result order.
         public var firstOutputAt: Date?
@@ -391,6 +393,7 @@ public final class HomeViewModel: ObservableObject {
     private let configurationStore: AppConfigurationStore
     private let llmService: LLMService
     private let preferences: AppPreferences
+    private let premiumAccess: @MainActor () -> Bool
     private var cancellables = Set<AnyCancellable>()
     private var currentRequestTask: Task<Void, Never>?
     private var activeRequestContext: RequestContext?
@@ -454,7 +457,7 @@ public final class HomeViewModel: ObservableObject {
         ProcessInfo.processInfo.arguments.contains("-SNAPSHOT_CONVERSATION")
     }
 
-    public init(
+    public convenience init(
         configurationStore: AppConfigurationStore? = nil,
         llmService: LLMService = .shared,
         preferences: AppPreferences = .shared,
@@ -462,10 +465,32 @@ public final class HomeViewModel: ObservableObject {
         supportsAppleTranslate: Bool = true,
         onboardingTrialModels: [ModelConfig] = []
     ) {
+        self.init(
+            configurationStore: configurationStore,
+            llmService: llmService,
+            preferences: preferences,
+            ttsService: ttsService,
+            supportsAppleTranslate: supportsAppleTranslate,
+            onboardingTrialModels: onboardingTrialModels,
+            initialModels: nil
+        )
+    }
+
+    init(
+        configurationStore: AppConfigurationStore? = nil,
+        llmService: LLMService = .shared,
+        preferences: AppPreferences = .shared,
+        ttsService: TTSPreviewService = .shared,
+        supportsAppleTranslate: Bool = true,
+        onboardingTrialModels: [ModelConfig] = [],
+        initialModels: [ModelConfig]?,
+        premiumAccess: @escaping @MainActor () -> Bool = { Entitlement.shared.isPro }
+    ) {
         let store = configurationStore ?? .shared
         self.configurationStore = store
         self.llmService = llmService
         self.preferences = preferences
+        self.premiumAccess = premiumAccess
         self.ttsService = ttsService
         self.supportsAppleTranslate = supportsAppleTranslate
         self.onboardingTrialModels = onboardingTrialModels
@@ -478,7 +503,12 @@ public final class HomeViewModel: ObservableObject {
             populateSnapshotData()
         } else {
             refreshActions()
-            loadModels()
+            if let initialModels {
+                models = initialModels
+                isLoadingModels = false
+            } else {
+                loadModels()
+            }
 
             store.$actions
                 .receive(on: RunLoop.main)
@@ -816,9 +846,9 @@ public final class HomeViewModel: ObservableObject {
         guard selectedAction != nil else {
             return false
         }
-        // Always allow sending — if models aren't loaded yet we queue via
-        // pendingAutoAction; if no models match we show an error to the user.
-        return true
+        // Models need not be loaded yet (pendingAutoAction queues the request);
+        // only an empty input is unsendable.
+        return !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachedImages.isEmpty
     }
 
     /// Direct translation services only translate, so prompt-based actions need an AI model.
@@ -840,7 +870,7 @@ public final class HomeViewModel: ObservableObject {
         }
 
         let enabledIDs = preferences.enabledModelIDs
-        let isPremium = cachedIsPremium ?? Entitlement.shared.isPro
+        let isPremium = cachedIsPremium ?? premiumAccess()
 
         logger
             .debug(
@@ -1054,7 +1084,7 @@ public final class HomeViewModel: ObservableObject {
         currentRequestInputText = text
         currentRequestImages = attachedImages
 
-        let cachedIsPremium = Entitlement.shared.isPro
+        let cachedIsPremium = premiumAccess()
         let modelsToUse = getEnabledModels(
             cachedIsPremium: cachedIsPremium,
             allowModelFallback: allowModelFallback
@@ -1114,7 +1144,8 @@ public final class HomeViewModel: ObservableObject {
         modelRuns = modelsToUse.map {
             ModelRunViewState(
                 model: $0, timingTrace: TranslationTimingTrace(startedAt: submittedAt),
-                status: .running(start: Date())
+                status: .running(start: Date()),
+                requestLanguages: context.languages
             )
         }
 
@@ -1334,15 +1365,16 @@ public final class HomeViewModel: ObservableObject {
         let source = preferences.sourceLanguage
         let target = preferences.targetLanguage
         let matchCandidates = TargetLanguageOption.matchCandidates
-        var concreteSource: SourceLanguageOption? = source == .auto ? detectedSourceLanguage : source
-        if source == .auto,
-           !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            _ = detectSourceCodeConstrained(for: inputText, candidateCodes: matchCandidates.map(\.rawValue))
-            concreteSource = detectedSourceLanguage
-        }
+        let resolution = inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : Self.resolveLanguages(
+            text: inputText,
+            sourcePreference: source,
+            preferredTarget: target,
+            override: nil,
+            matchCandidates: matchCandidates
+        )
+        let concreteSource = source == .auto ? resolution?.displaySource ?? detectedSourceLanguage : source
         let concreteTarget: TargetLanguageOption? = if target == .appLanguage {
-            resolvedTargetLanguage ?? Self.resolveTargetLanguage(
+            resolution?.target ?? resolvedTargetLanguage ?? Self.resolveTargetLanguage(
                 preferred: target,
                 override: nil,
                 sourceCode: concreteSource?.rawValue,
@@ -1504,7 +1536,7 @@ public final class HomeViewModel: ObservableObject {
     /// reconstructing the original prompt messages so the conversation
     /// starts with full context.
     public func createConversation(from run: ModelRunViewState) -> ConversationSession? {
-        guard let action = selectedAction else { return nil }
+        guard let action = activeRequestContext?.action ?? selectedAction else { return nil }
 
         // Extract the assistant's response text from the success state
         let assistantText: String
@@ -1518,19 +1550,24 @@ public final class HomeViewModel: ObservableObject {
         // Reconstruct the original messages using the same logic as LLMService
         var chatMessages: [ChatMessage] = []
 
-        let text = currentRequestInputText
-        let requestAction = activeRequestContext?.action ?? action
-        // Target language is always the user preference (never auto-redirected).
-        let resolvedTarget = resolvedTargetLanguage ?? preferences.targetLanguage
-        let promptMessages = requestAction.promptMessages(
+        let text = activeRequestContext?.text ?? currentRequestInputText
+        let languages = run.requestLanguages ?? activeRequestContext?.languages ?? ResolvedLanguagePair(
+            target: resolvedTargetLanguage ?? preferences.targetLanguage,
+            sourceCode: detectedSourceLanguage?.rawValue
+        )
+        let promptMessages = action.promptMessages(
             text: text,
-            targetLanguage: resolvedTarget.promptDescriptor,
-            sourceLanguage: detectedSourceLanguage?.promptDescriptor ?? ""
+            targetLanguage: languages.targetLanguageDescriptor,
+            sourceLanguage: languages.sourceLanguageDescriptor
         )
         if let system = promptMessages.system {
             chatMessages.append(ChatMessage(role: "system", content: system))
         }
-        chatMessages.append(ChatMessage(role: "user", content: promptMessages.user, images: currentRequestImages))
+        chatMessages.append(ChatMessage(
+            role: "user",
+            content: promptMessages.user,
+            images: activeRequestContext?.images ?? currentRequestImages
+        ))
 
         // Add the assistant's response
         chatMessages.append(ChatMessage(role: "assistant", content: assistantText))
@@ -1554,9 +1591,19 @@ public final class HomeViewModel: ObservableObject {
     /// Creates a conversation session with the selected text as context,
     /// without any prior translation results. Used by the extension's Chat button.
     public func createContextConversation(contextText: String) -> ConversationSession? {
-        let availableModels = getEnabledModels()
-        guard let model = availableModels.first,
-              let action = selectedAction else { return nil }
+        guard let action = selectedAction else { return nil }
+        guard let model = getEnabledModels().first(where: { !$0.isDirectTranslation }) else {
+            modelRuns = [
+                ModelRunViewState(
+                    model: ModelConfig(id: "error", displayName: "Error"),
+                    status: .failure(
+                        message: String(localized: "This action needs an AI model. Select one in Models."),
+                        duration: 0
+                    )
+                ),
+            ]
+            return nil
+        }
 
         let trimmed = contextText.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -1593,10 +1640,13 @@ public final class HomeViewModel: ObservableObject {
         /// Human-readable source descriptor for LLM prompts, e.g. "日本語 (Japanese)".
         /// Empty when source is unknown (auto-detect failed).
         var sourceLanguageDescriptor: String {
-            guard let code = sourceCode else { return "" }
-            let option = SourceLanguageOption(rawValue: code)
-                ?? SourceLanguageOption(rawValue: String(code.prefix(2)))
-            return option?.promptDescriptor ?? ""
+            sourceCode.flatMap(HomeViewModel.sourceLanguageOption(for:))?.promptDescriptor ?? ""
+        }
+    }
+
+    nonisolated static func sourceLanguageOption(for code: String) -> SourceLanguageOption? {
+        SourceLanguageOption(rawValue: code) ?? SourceLanguageOption.allCases.first {
+            $0 != .auto && SourceLanguageDetector.languagesAreSame($0.rawValue, code)
         }
     }
 
@@ -1691,11 +1741,7 @@ public final class HomeViewModel: ObservableObject {
             sourcePreference
         } else {
             // Detection returns minimal codes ("zh" for zh-Hans), so match by language equivalence.
-            sourceCode.flatMap { code in
-                SourceLanguageOption(rawValue: code) ?? SourceLanguageOption.allCases.first {
-                    $0 != .auto && SourceLanguageDetector.languagesAreSame($0.rawValue, code)
-                }
-            }
+            sourceCode.flatMap(sourceLanguageOption(for:))
         }
 
         let resolved = resolveTargetLanguage(
@@ -1748,27 +1794,6 @@ public final class HomeViewModel: ObservableObject {
             ),
             reason: "Live preview"
         )
-    }
-
-    /// Match mode: detects source language constrained to candidate language codes only.
-    private func detectSourceCodeConstrained(for text: String, candidateCodes: [String]) -> String? {
-        let sourceLanguage = preferences.sourceLanguage
-        if sourceLanguage != .auto {
-            setDetectedSourceLanguage(sourceLanguage, reason: "Source language preference is pinned")
-            return sourceLanguage.rawValue
-        }
-        guard let detected = SourceLanguageDetector.detectLocaleLanguageConstrained(of: text, candidateCodes: candidateCodes)
-        else {
-            return nil
-        }
-        let code = detected.minimalIdentifier
-        let detectedOption = SourceLanguageOption(rawValue: code)
-            ?? SourceLanguageOption(rawValue: String(code.prefix(2)))
-        setDetectedSourceLanguage(
-            detectedOption,
-            reason: "Auto source detected within candidates=\(candidateCodes.joined(separator: ","))"
-        )
-        return code
     }
 
     /// If user chose source==target (or auto-detected source matches target), Apple Translate

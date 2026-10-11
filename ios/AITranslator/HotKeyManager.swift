@@ -14,19 +14,7 @@
 
     private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "HotKey")
 
-    /// Hot key configuration
-    struct HotKeyConfiguration: Equatable, Codable {
-        var keyCode: UInt32
-        var modifiers: UInt32
-
-        /// Empty configuration (no shortcut set)
-        static let empty = HotKeyConfiguration(keyCode: 0, modifiers: 0)
-
-        /// Whether the configuration is empty (no shortcut set)
-        var isEmpty: Bool {
-            keyCode == 0 && modifiers == 0
-        }
-
+    extension HotKeyConfiguration {
         /// Returns the display string for modifier keys
         var modifiersDisplayString: String {
             var result = ""
@@ -152,12 +140,11 @@
             for type: HotKeyType,
             defaults: UserDefaults
         ) -> HotKeyConfiguration {
-            let keyCode = defaults.object(forKey: type.storageKeyCode) as? UInt32
-            let modifiers = defaults.object(forKey: type.storageModifiers) as? UInt32
-            if let keyCode, let modifiers, keyCode != 0 {
-                return HotKeyConfiguration(keyCode: keyCode, modifiers: modifiers)
-            }
-            return .empty
+            HotKeyConfiguration.load(
+                from: defaults,
+                keyCodeKey: type.storageKeyCode,
+                modifiersKey: type.storageModifiers
+            )
         }
 
         /// Returns the configuration for a specific hotkey type
@@ -352,19 +339,7 @@
             if NSApp.isActive && hasVisibleWindow {
                 NSApp.hide(nil)
             } else {
-                AppDelegate.shared?.activateRegularMode()
-                NSApp.activate(ignoringOtherApps: true)
-
-                if !hasVisibleWindow {
-                    if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-                        window.makeKeyAndOrderFront(nil)
-                    }
-                } else {
-                    for window in NSApp.windows where window.isVisible && window.canBecomeMain {
-                        window.makeKeyAndOrderFront(nil)
-                        break
-                    }
-                }
+                AppDelegate.shared?.openMainWindow()
             }
         }
     }

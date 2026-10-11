@@ -20,6 +20,7 @@ import SwiftUI
 
 struct RootTabView: View {
     @ObservedObject private var configStore: AppConfigurationStore
+    @State private var homeInputRouteID = UUID()
 
     init(configStore: AppConfigurationStore = .shared) {
         self.configStore = configStore
@@ -90,11 +91,11 @@ struct RootTabView: View {
             case .models:
                 return "cpu"
             case .realtime:
-                return "waveform.and.mic"
+                return "waveform"
             case .settings:
-                return "gearshape.fill"
+                return "gearshape"
             case .debug:
-                return "ladybug.fill"
+                return "ladybug"
             }
         }
     }
@@ -110,6 +111,7 @@ struct RootTabView: View {
         #if os(macOS)
             SidebarLayoutView(initialTab: Self.initialTab, configStore: configStore)
                 .modifier(DeepLinkHandler())
+                .environment(\.homeInputRouteID, homeInputRouteID)
                 .modifier(WebsiteEntitlementRefreshHandler())
                 .modifier(AppStoreSubscriptionManagementPresenter())
                 .directUpdateAvailabilityProbe()
@@ -119,6 +121,7 @@ struct RootTabView: View {
             } else {
                 AdaptiveNavigationView(initialTab: Self.initialTab, configStore: configStore)
                     .modifier(DeepLinkHandler())
+                    .environment(\.homeInputRouteID, homeInputRouteID)
                     .modifier(WebsiteEntitlementRefreshHandler())
                     .modifier(AppStoreSubscriptionManagementPresenter())
             }
@@ -207,6 +210,8 @@ private struct WebsiteEntitlementRefreshHandler: ViewModifier {
 
 extension RootTabView {
     struct DeepLinkHandler: ViewModifier {
+        @Environment(\.homeInputRouteID) private var homeInputRouteID
+
         func body(content: Content) -> some View {
             content
                 .onOpenURL { url in
@@ -235,17 +240,9 @@ extension RootTabView {
                         return
                     }
                     guard let parsed = DeepLink.parse(url) else { return }
-                    var userInfo: [String: Any] = [DeepLink.NotificationKey.text: parsed.text]
-                    if let actionName = parsed.actionName {
-                        userInfo[DeepLink.NotificationKey.actionName] = actionName
-                    }
-                    if let configName = parsed.configName {
-                        userInfo[DeepLink.NotificationKey.configName] = configName
-                    }
-                    NotificationCenter.default.post(
-                        name: .deepLinkTextReceived,
-                        object: nil,
-                        userInfo: userInfo
+                    HomeInputRouter.shared.submit(
+                        .deepLink(text: parsed.text, actionName: parsed.actionName, configName: parsed.configName),
+                        routeID: homeInputRouteID
                     )
                 }
         }
@@ -345,6 +342,7 @@ extension RootTabView {
                                 } label: {
                                     Label("Vocabulary", systemImage: "bookmark")
                                 }
+                                .tint(.primary)
                                 .accessibilityIdentifier("history_vocabulary_button")
                             }
                         }
@@ -374,7 +372,7 @@ extension RootTabView {
                 ActionsView(configurationStore: configStore, embedsInNavigationStack: true)
             }
             .sheet(isPresented: $showSettings) {
-                SettingsView(configStore: configStore)
+                SettingsView(configStore: configStore, showsDoneButton: true)
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
@@ -408,6 +406,14 @@ extension RootTabView {
                 showSettings = false
                 showRealtime = true
                 realtimeControlModel.handleRealtimeDeepLink(notification)
+            }
+            .homeInputDestination {
+                showActions = false
+                showHistory = false
+                showModels = false
+                showSettings = false
+                showRealtime = false
+                showFeaturePaywall = false
             }
         }
 

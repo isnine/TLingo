@@ -231,11 +231,12 @@ public struct LanguageSwitcherView: View {
 
     public var body: some View {
         glassLayoutContent
+            .onAppear(perform: repairSameLanguageDirection)
             .sheet(isPresented: $isTargetPickerPresented) {
                 LanguagePickerView(
                     selectedCode: $targetCode,
                     isPresented: $isTargetPickerPresented,
-                    availableOptions: targetOptions,
+                    availableOptions: selectableTargetOptions,
                     title: String(localized: "Select Target Language")
                 )
                 .presentationDetents([.medium, .large])
@@ -261,6 +262,7 @@ public struct LanguageSwitcherView: View {
             .onChange(of: sourceCode) {
                 if let option = SourceLanguageOption(rawValue: sourceCode), isSourceOptionEnabled(option) {
                     let didChange = option != selectedSourceLanguage
+                    resolveTargetConflict(withNewSource: option)
                     setSourceLanguage(option, reason: "LanguageSwitcher source picker")
                     if didChange {
                         onSourceChanged?()
@@ -353,7 +355,7 @@ public struct LanguageSwitcherView: View {
         } label: {
             Image(systemName: "arrow.left.arrow.right")
                 .font(.system(size: usesCompactMetrics ? 12 : 16, weight: .medium))
-                .foregroundColor(colors.accent)
+                .foregroundColor(resolvedColor)
                 .frame(width: directionalIconWidth, height: chipHeight)
                 .contentShape(Rectangle())
         }
@@ -458,7 +460,7 @@ public struct LanguageSwitcherView: View {
     ) -> some View {
         let showResolved = resolved != selectedTargetLanguage
         return Menu {
-            ForEach(targetOptions.filter { $0 != .appLanguage && $0 != resolved }) { option in
+            ForEach(selectableTargetOptions.filter { $0 != .appLanguage && $0 != resolved }) { option in
                 Button(option.primaryLabel) {
                     selectResolvedTarget(option, onOverride: onOverride)
                 }
@@ -491,10 +493,13 @@ public struct LanguageSwitcherView: View {
     @ViewBuilder
     private var automaticTargetBadge: some View {
         if usesAutomaticTarget {
-            Image(systemName: "sparkles")
-                .font(chevronFont)
-                .foregroundStyle(colors.accent)
-                .accessibilityHidden(true)
+            Text("Auto")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(resolvedColor.opacity(0.7))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(resolvedColor.opacity(0.1), in: Capsule())
+                .fixedSize()
         }
     }
 
@@ -574,6 +579,33 @@ public struct LanguageSwitcherView: View {
         case .realtime:
             preferences.setRealtimeSourceLanguage(option, reason: reason)
         }
+    }
+
+    /// Targets that would just repeat the source language are not offered.
+    private var selectableTargetOptions: [TargetLanguageOption] {
+        targetOptions.filter {
+            !LanguageDirectionSwap.isSameLanguage(source: selectedSourceLanguage, target: $0)
+        }
+    }
+
+    /// Older settings could pair a language with itself; fall back to the automatic target.
+    private func repairSameLanguageDirection() {
+        guard LanguageDirectionSwap.isSameLanguage(source: selectedSourceLanguage, target: selectedTargetLanguage),
+              targetOptions.contains(.appLanguage)
+        else { return }
+        setTargetLanguage(.appLanguage, reason: "LanguageSwitcher same-language repair")
+        onSelectionChanged?()
+    }
+
+    /// Picking the current target as the source swaps the pair instead of leaving a no-op direction.
+    private func resolveTargetConflict(withNewSource source: SourceLanguageOption) {
+        guard LanguageDirectionSwap.isSameLanguage(source: source, target: selectedTargetLanguage) else { return }
+        let previousSource = selectedSourceLanguage
+        let replacement = previousSource == .auto
+            ? TargetLanguageOption.appLanguage
+            : LanguageDirectionSwap.swapped(source: previousSource, target: selectedTargetLanguage).target
+        guard targetOptions.contains(replacement) else { return }
+        setTargetLanguage(replacement, reason: "LanguageSwitcher source conflict")
     }
 
     private func isSourceOptionEnabled(_ option: SourceLanguageOption) -> Bool {

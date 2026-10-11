@@ -58,6 +58,7 @@ private let languageShortcutLogger = os.Logger(
             let scrollView = NSScrollView()
             scrollView.drawsBackground = false
             scrollView.hasVerticalScroller = true
+            scrollView.autohidesScrollers = true
             scrollView.contentView.drawsBackground = false
             scrollView.documentView = textView
             return scrollView
@@ -296,7 +297,6 @@ private let languageShortcutLogger = os.Logger(
         override func draw(_ dirtyRect: NSRect) {
             super.draw(dirtyRect)
             guard string.isEmpty,
-                  window?.firstResponder !== self,
                   let placeholder = placeholderAttributedString
             else {
                 return

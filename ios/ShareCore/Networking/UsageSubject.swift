@@ -68,11 +68,20 @@ enum DeviceIdentifierStore {
 
     static func current() -> String? {
         if let cached { return cached }
-        let query: [String: Any] = [
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
+        #if os(macOS)
+            // The legacy login keychain binds item ACLs to the creating app's
+            // signature, so App Store, Debug and Direct builds sharing this item
+            // trigger a password prompt. Direct has no provisioning profile and
+            // cannot use the data protection keychain.
+            if !BuildEnvironment.isDirectDistribution {
+                query[kSecUseDataProtectionKeychain as String] = true
+            }
+        #endif
 
         var lookup = query
         lookup[kSecReturnData as String] = true

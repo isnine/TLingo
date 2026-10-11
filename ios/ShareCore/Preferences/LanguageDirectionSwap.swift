@@ -23,6 +23,18 @@ public enum LanguageDirectionSwap {
         )
     }
 
+    /// True when translating would be a no-op, e.g. "en" → "en-US". Two regional variants
+    /// ("en-GB" → "en-US", "zh-Hans" → "zh-Hant") remain a valid direction.
+    public static func isSameLanguage(source: SourceLanguageOption, target: TargetLanguageOption) -> Bool {
+        guard source != .auto, target != .appLanguage else { return false }
+        if source.rawValue == target.rawValue {
+            return true
+        }
+        let sourceParts = source.rawValue.split(separator: "-")
+        let targetParts = target.rawValue.split(separator: "-")
+        return sourceParts.first == targetParts.first && (sourceParts.count == 1 || targetParts.count == 1)
+    }
+
     private static func sourceOption(from target: TargetLanguageOption) -> SourceLanguageOption {
         if target == .appLanguage {
             return .auto

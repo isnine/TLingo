@@ -33,6 +33,8 @@ import WebKit
 #endif
 
 public struct HomeView: View {
+    @Environment(\.homeInputRouteID) private var homeInputRouteID
+    @State private var inputReceiverID = UUID()
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.requestReview) private var requestReview
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -43,6 +45,7 @@ public struct HomeView: View {
     @ObservedObject private var preferences = AppPreferences.shared
     @ObservedObject private var entitlement = Entitlement.shared
     @State private var hasTriggeredAutoRequest = false
+    @State private var recentTextRecords: [HomeRecentRecord] = []
     @State private var isInputExpanded: Bool
     @State private var showingProviderInfo: String?
     @State private var activeConversationSession: ConversationSession?
@@ -363,6 +366,7 @@ public struct HomeView: View {
                         if let onHistoryTap {
                             ToolbarItem(placement: .topBarLeading) {
                                 Button("History", systemImage: "clock.arrow.circlepath", action: onHistoryTap)
+                                    .tint(.primary)
                                     .accessibilityIdentifier("home_history_button")
                             }
                         }
@@ -460,20 +464,25 @@ public struct HomeView: View {
                 #endif
             #endif
         }
+        .onAppear {
+            guard !openFromExtension, let homeInputRouteID else { return }
+            HomeInputRouter.shared.registerReceiver(id: inputReceiverID, routeID: homeInputRouteID) { request in
+                switch request {
+                case let .serviceText(text):
+                    viewModel.inputText = text
+                    viewModel.performSelectedAction()
+                case let .handoff(snapshot):
+                    viewModel.adoptStateSnapshot(snapshot)
+                case let .deepLink(text, actionName, configName):
+                    viewModel.applyDeepLink(text: text, actionName: actionName, configName: configName)
+                }
+                isInputExpanded = true
+            }
+        }
+        .onDisappear {
+            HomeInputRouter.shared.unregisterReceiver(id: inputReceiverID)
+        }
         #if os(macOS)
-        .onReceive(NotificationCenter.default.publisher(for: .serviceTextReceived)) { notification in
-            if let text = notification.userInfo?["text"] as? String {
-                viewModel.inputText = text
-                isInputExpanded = true
-                viewModel.performSelectedAction()
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .homeStateHandoff)) { notification in
-            if let snapshot = notification.userInfo?["snapshot"] as? HomeViewModel.StateSnapshot {
-                viewModel.adoptStateSnapshot(snapshot)
-                isInputExpanded = true
-            }
-        }
         .onAppear {
             // Notify the host app (macOS only) so AppleTranslationWindowManager can register
             // this viewModel with the hidden translation window bridge.
@@ -484,16 +493,6 @@ public struct HomeView: View {
             )
         }
         #endif
-        .onReceive(NotificationCenter.default.publisher(for: .deepLinkTextReceived)) { notification in
-            if let text = notification.userInfo?[DeepLink.NotificationKey.text] as? String {
-                let configName = notification.userInfo?[DeepLink.NotificationKey.configName] as? String
-                let actionName = notification.userInfo?[DeepLink.NotificationKey.actionName] as? String
-
-                // Switch configuration if needed before looking up the action
-                viewModel.applyDeepLink(text: text, actionName: actionName, configName: configName)
-                isInputExpanded = true
-            }
-        }
         .onChange(of: viewModel.showSatisfactionPrompt) { _, newValue in
             if newValue {
                 withAnimation(.easeInOut(duration: 0.25)) {
@@ -695,6 +694,13 @@ public struct HomeView: View {
                                 hintLabel
                                     .padding(.top, 24)
                             }
+                            #if os(iOS)
+                                if usesPhoneComposerChrome, context == nil,
+                                   viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                {
+                                    phoneEmptyStateSuggestions
+                                }
+                            #endif
                         } else if usesFlatResultsPanel {
                             flatResultsPanel(
                                 viewportHeight: geometry.size.height
@@ -712,9 +718,17 @@ public struct HomeView: View {
                     .padding(.top, bottomComposerResultsTopPadding)
                     .padding(.bottom, bottomComposerResultsBottomPadding)
                 }
+                #if os(iOS)
+                // A bar (not an inset) lets results fade under the composer instead of showing through it.
+                .safeAreaBar(edge: .bottom, spacing: 0) {
+                    bottomComposerDock(availableHeight: geometry.size.height)
+                }
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
+                #else
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     bottomComposerDock(availableHeight: geometry.size.height)
                 }
+                #endif
                 .background(colors.background.ignoresSafeArea())
                 .scrollIndicators(.hidden)
                 #if os(iOS)
@@ -759,12 +773,20 @@ public struct HomeView: View {
 
     private func centeredEmptyComposer(availableHeight: CGFloat) -> some View {
         VStack(spacing: 14) {
-            Spacer(minLength: 0)
+            #if os(macOS)
+                // Optical center sits above the geometric one; the editor placeholder replaces the hint.
+                Spacer(minLength: 0)
+                    .frame(maxHeight: availableHeight * 0.22)
 
-            bottomComposerContent(availableHeight: availableHeight)
+                bottomComposerContent(availableHeight: availableHeight)
+            #else
+                Spacer(minLength: 0)
 
-            hintLabel
-                .padding(.top, 2)
+                bottomComposerContent(availableHeight: availableHeight)
+
+                hintLabel
+                    .padding(.top, 2)
+            #endif
 
             Spacer(minLength: 0)
         }
@@ -777,7 +799,23 @@ public struct HomeView: View {
             .padding(.horizontal, 20)
             .padding(.top, bottomComposerDockTopPadding)
             .padding(.bottom, bottomComposerDockBottomPadding)
+        #if os(macOS)
             .background(colors.background.opacity(colorScheme == .dark ? 0.96 : 0.94).ignoresSafeArea(edges: .bottom))
+        #else
+            // Opaque ground with a short fade on top, so results never read through the chips.
+            .background {
+                colors.background
+                    .mask {
+                        LinearGradient(
+                            stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                    .padding(.top, -20)
+                    .ignoresSafeArea(edges: .bottom)
+            }
+        #endif
     }
 
     private func bottomComposerContent(availableHeight: CGFloat) -> some View {
@@ -1146,9 +1184,20 @@ public struct HomeView: View {
         }
     }
 
+    @ViewBuilder
     private var inputComposerBackground: some View {
-        Color.clear
-            .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
+        #if os(macOS)
+            // Solid card on the app ground, matching the design canvas.
+            RoundedRectangle(cornerRadius: TLingoRadius.large, style: .continuous)
+                .fill(colors.cardBackground)
+                .overlay {
+                    RoundedRectangle(cornerRadius: TLingoRadius.large, style: .continuous)
+                        .stroke(colors.divider, lineWidth: 1)
+                }
+        #else
+            Color.clear
+                .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
+        #endif
     }
 
     private var inputEditorMinHeight: CGFloat {
@@ -1327,26 +1376,45 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var modelSelectionButtonLabel: some View {
-        HStack(spacing: 7) {
-            Text(modelSelectionTitle)
+        #if os(macOS)
+            HStack(spacing: 5) {
+                Text(modelSelectionTitle)
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 8, weight: .semibold))
+                    .opacity(0.6)
+            }
+            .foregroundColor(colors.textPrimary)
+            .padding(.horizontal, 10)
+            .frame(height: 28)
+            .tlingoGlassCapsule(.control, interactive: true)
+            .frame(maxWidth: 200, alignment: .trailing)
+        #else
+            modelSelectionButtonLegacyLabel
+        #endif
+    }
+
+    @ViewBuilder
+    private var modelSelectionButtonLegacyLabel: some View {
+        HStack(spacing: 5) {
+            // Lead with the icon and name the model, so the label says which one is used.
+            Image(systemName: "cpu")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(colors.textSecondary)
+            Text(usesPhoneComposerChrome ? phoneModelSelectionTitle : modelSelectionTitle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
-            Image(systemName: "cpu")
-                .font(.system(size: 13, weight: .semibold))
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 8, weight: .semibold))
                 .opacity(0.65)
         }
         .foregroundColor(colors.textPrimary)
-        #if os(macOS)
-            .frame(width: 170, alignment: .trailing)
-            .contentShape(Rectangle())
-        #else
-            .frame(width: usesPhoneComposerChrome ? nil : 170, alignment: .trailing)
-            .frame(minHeight: 32)
-            .contentShape(Rectangle())
-        #endif
+        .frame(width: usesPhoneComposerChrome ? nil : 170, alignment: .trailing)
+        .frame(minHeight: 32)
+        .contentShape(Rectangle())
     }
 
     private var shouldShowModelSelectionInsideInput: Bool {
@@ -1366,6 +1434,14 @@ public struct HomeView: View {
             return selected[0].displayName
         }
         return String(localized: "\(selected.count) Models")
+    }
+
+    private var phoneModelSelectionTitle: String {
+        let selected = selectedDisplayModels
+        guard let first = selected.first else {
+            return String(localized: "Models")
+        }
+        return selected.count == 1 ? first.displayName : "\(first.displayName) +\(selected.count - 1)"
     }
 
     private func presentPendingPremiumIfNeeded() {
@@ -1492,7 +1568,7 @@ public struct HomeView: View {
                 }
             }
             .buttonStyle(.glass)
-            .tint(viewModel.isSpeakingInputText ? colors.error : colors.accent)
+            .tint(viewModel.isSpeakingInputText ? colors.error : colors.textPrimary)
             .buttonBorderShape(.circle)
         }
     }
@@ -1612,6 +1688,7 @@ public struct HomeView: View {
         private var phoneSettingsButton: some View {
             if let onSettingsTap {
                 Button("Settings", systemImage: "gearshape", action: onSettingsTap)
+                    .tint(.primary)
                     .accessibilityIdentifier("tab_settings")
             }
         }
@@ -1620,7 +1697,7 @@ public struct HomeView: View {
         @ViewBuilder
         private var imageTextInputButton: some View {
             if context == nil, viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                ImageTextInputButton(tint: colors.accent) { text in
+                ImageTextInputButton(tint: colors.textPrimary) { text in
                     viewModel.inputText = text
                     isInputExpanded = true
                 }
@@ -1644,15 +1721,15 @@ public struct HomeView: View {
             .accessibilityIdentifier("home_clear_input_button")
         }
 
-        /// The input's trailing slot: realtime entry while empty, send once text exists,
-        /// and "translate again" while the input still matches the shown result.
+        /// The input's trailing slot, like Messages: voice while empty, send once text exists.
+        /// Sending the same text again re-runs it; per-result retry lives on each result row.
         @ViewBuilder
         private var phonePrimaryInputButton: some View {
             let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
             if !hasText, let onRealtimeTap {
                 Button(action: onRealtimeTap) {
-                    phonePrimaryInputButtonIcon("waveform")
+                    phonePrimaryInputButtonIcon("mic.fill")
                 }
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.circle)
@@ -1660,18 +1737,14 @@ public struct HomeView: View {
                 .accessibilityLabel("Realtime Translation")
                 .accessibilityIdentifier("home_realtime_button")
             } else {
-                let isShowingCurrentResult = !viewModel.modelRuns.isEmpty
-                    && viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    == viewModel.currentRequestInputText.trimmingCharacters(in: .whitespacesAndNewlines)
-
                 Button(action: performInputActionIfPossible) {
-                    phonePrimaryInputButtonIcon(isShowingCurrentResult ? "arrow.clockwise" : "arrow.up")
+                    phonePrimaryInputButtonIcon("arrow.up")
                 }
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.circle)
                 .tint(colors.accent)
                 .disabled(!viewModel.canSend)
-                .accessibilityLabel(isShowingCurrentResult ? "Translate Again" : "Send")
+                .accessibilityLabel("Send")
                 .accessibilityIdentifier("home_send_button")
             }
         }
@@ -1680,6 +1753,92 @@ public struct HomeView: View {
             Image(systemName: systemName)
                 .font(.system(size: 16, weight: .bold))
                 .frame(width: 22, height: 22)
+        }
+
+        /// Empty Home offers a way to continue: the latest translations and the clipboard.
+        private var phoneEmptyStateSuggestions: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                if !recentTextRecords.isEmpty {
+                    HStack {
+                        Text("Recent")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(colors.textSecondary)
+                        Spacer()
+                        if let onHistoryTap {
+                            Button("Show All", action: onHistoryTap)
+                                .font(.subheadline)
+                                .accessibilityIdentifier("home_recent_show_all")
+                        }
+                    }
+                    .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        ForEach(recentTextRecords) { record in
+                            if record.id != recentTextRecords.first?.id {
+                                Divider()
+                                    .padding(.leading, 16)
+                            }
+                            Button {
+                                viewModel.inputText = record.sourceText
+                                isInputExpanded = true
+                            } label: {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(record.sourceText)
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(colors.textPrimary)
+                                    if let result = record.resultText {
+                                        Text(result)
+                                            .font(.subheadline)
+                                            .foregroundStyle(colors.textSecondary)
+                                    }
+                                }
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 11)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous))
+                }
+
+                PasteButton(payloadType: String.self) { strings in
+                    guard let text = strings.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+                          !text.isEmpty
+                    else { return }
+                    Task { @MainActor in
+                        viewModel.inputText = text
+                        isInputExpanded = true
+                        performInputActionIfPossible()
+                    }
+                }
+                .labelStyle(.titleAndIcon)
+                .buttonBorderShape(.capsule)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 6)
+            }
+            .onAppear(perform: refreshRecentTextRecords)
+            .onReceive(NotificationCenter.default.publisher(for: .translationRecordSaved)) { _ in
+                refreshRecentTextRecords()
+            }
+        }
+
+        private func refreshRecentTextRecords() {
+            let records = TranslationHistoryService.shared.fetchAll()
+            // Repeated lookups of the same text show once.
+            var seen = Set<String>()
+            var recents: [HomeRecentRecord] = []
+            for record in records
+                where !record.isRealtimeRecord && !record.isConversation
+            {
+                let recent = HomeRecentRecord(record)
+                guard seen.insert(recent.sourceText).inserted else { continue }
+                recents.append(recent)
+                if recents.count == 3 { break }
+            }
+            recentTextRecords = recents
         }
 
         private var shouldShowMatchFallbackHint: Bool {
@@ -1908,7 +2067,7 @@ public struct HomeView: View {
         } label: {
             Image(systemName: "rectangle.split.1x2")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isOn ? colors.onAccent : colors.accent)
+                .foregroundColor(isOn ? colors.onAccent : colors.textSecondary)
                 .frame(width: 28, height: 22)
                 .background {
                     if isOn {
@@ -1960,7 +2119,7 @@ public struct HomeView: View {
         } label: {
             Image(systemName: isSpeaking ? "stop.fill" : "speaker.wave.2")
                 .font(.system(size: 14))
-                .foregroundColor(colors.accent)
+                .foregroundColor(isSpeaking ? colors.accent : colors.textSecondary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isSpeaking ? "Stop Speaking" : "Speak")
@@ -2154,6 +2313,18 @@ public struct HomeView: View {
             // while resting content stays aligned with the rows above and below.
             .contentMargins(.horizontal, actionChipsEdgeBleed, for: .scrollContent)
             .padding(.horizontal, -actionChipsEdgeBleed)
+            .mask {
+                // Fade at the trailing screen edge so cut-off chips read as scrollable.
+                if actionChipsEdgeBleed > 0 {
+                    HStack(spacing: 0) {
+                        Color.black
+                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: actionChipsEdgeBleed * 2)
+                    }
+                } else {
+                    Color.black
+                }
+            }
             .onChange(of: viewModel.selectedActionID) { _, actionID in
                 scrollActionChip(actionID, proxy: proxy)
             }
@@ -2531,7 +2702,7 @@ public struct HomeView: View {
             } label: {
                 Image(systemName: isShowingDiff ? "eye.slash" : "eye")
                     .font(.system(size: 14))
-                    .foregroundColor(colors.accent)
+                    .foregroundColor(isShowingDiff ? colors.accent : colors.textSecondary)
             }
             .buttonStyle(.plain)
             .help(isShowingDiff ? "Hide changes" : "Show changes")
@@ -2647,7 +2818,7 @@ public struct HomeView: View {
         } label: {
             Image(systemName: "doc.on.doc")
                 .font(.system(size: 14))
-                .foregroundColor(colors.accent)
+                .foregroundColor(colors.textSecondary)
         }
         .buttonStyle(.plain)
     }
@@ -2664,7 +2835,7 @@ public struct HomeView: View {
             } label: {
                 Image(systemName: "text.bubble")
                     .font(.system(size: 14))
-                    .foregroundColor(colors.accent)
+                    .foregroundColor(colors.textSecondary)
             }
             .buttonStyle(.plain)
             .help("Continue conversation")
@@ -3069,8 +3240,7 @@ private extension View {
     @ViewBuilder
     func homeNavigationChrome(usesNativeNavigationHeader: Bool, colors: AppColorPalette) -> some View {
         #if os(macOS)
-            toolbarBackground(colors.background, for: .windowToolbar)
-                .toolbarBackground(.visible, for: .windowToolbar)
+            toolbarBackground(.hidden, for: .windowToolbar)
         #elseif os(iOS)
             if usesNativeNavigationHeader {
                 navigationTitle("Text")
@@ -3107,19 +3277,28 @@ private extension View {
 
 #if os(macOS)
     public extension Notification.Name {
-        /// Notification posted when text is received from macOS Services (right-click menu)
-        static let serviceTextReceived = Notification.Name("serviceTextReceived")
         /// Notification posted by AppleTranslationWindowManager to register a HomeViewModel
         /// with the hidden translation window bridge. userInfo["register"] is (HomeViewModel) -> Void.
         static let appleTranslationViewModelRegister = Notification.Name("appleTranslationViewModelRegister")
-        /// Notification posted by the menu bar popover to hand off its current translation
-        /// state (input text, selected action, model runs) to the main window's HomeViewModel.
-        /// userInfo["snapshot"] is a `HomeViewModel.StateSnapshot`.
-        static let homeStateHandoff = Notification.Name("homeStateHandoff")
     }
 #endif
 
-public extension Notification.Name {
-    /// Notification posted when text is received via deep link (tlingo://translate?text=...)
-    static let deepLinkTextReceived = Notification.Name("deepLinkTextReceived")
+/// A lightweight snapshot so Home doesn't hold SwiftData models.
+private struct HomeRecentRecord: Identifiable {
+    let id: UUID
+    let sourceText: String
+    let resultText: String?
+
+    init(_ record: TranslationRecord) {
+        id = record.id
+        sourceText = record.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Results are Markdown; the preview shows the first line as plain text.
+        resultText = record.modelResults.first?.resultText
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .first
+            .map { line in
+                let plain = (try? AttributedString(markdown: String(line))).map { String($0.characters) }
+                return (plain ?? String(line)).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+    }
 }

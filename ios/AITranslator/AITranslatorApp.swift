@@ -456,10 +456,8 @@ struct AITranslatorApp: App {
                     }
                 #endif
                 // Other deep links (e.g. tlingo://translate) are delivered by
-                // SwiftUI's onOpenURL on RootTabView. We don't re-post the
-                // notification here: NotificationCenter doesn't buffer, so
-                // posting before the view mounts (cold launch / menu-bar-only)
-                // would silently drop the payload.
+                // SwiftUI's onOpenURL on RootTabView, which owns the destination
+                // route. Submitting here too would translate the same URL twice.
             }
         }
 
@@ -480,6 +478,8 @@ struct AITranslatorApp: App {
             case let .dismiss(id):
                 if pendingTextPopup?.id == id {
                     pendingTextPopup = nil
+                }
+                selectionTranslationCoordinator.dismissPopup(requestID: id)
             case .listActions:
                 let actions = AppConfigurationStore.shared.actions.map {
                     TextPopupRequest.ActionSummary(
@@ -487,10 +487,8 @@ struct AITranslatorApp: App {
                     )
                 }
                 return try? TextPopupRequest.encodeActions(actions)
-                }
-            return nil
-                selectionTranslationCoordinator.dismissPopup(requestID: id)
             }
+            return nil
         }
 
         private func flushPendingTextPopup() {
@@ -625,14 +623,8 @@ struct AITranslatorApp: App {
 
             // Store the received text and bring app to foreground
             DispatchQueue.main.async {
-                NSApp.activate(ignoringOtherApps: true)
-
-                // Post notification so UI can respond
-                NotificationCenter.default.post(
-                    name: .serviceTextReceived,
-                    object: nil,
-                    userInfo: ["text": text]
-                )
+                HomeInputRouter.shared.submit(.serviceText(text))
+                self.openMainWindow()
             }
         }
     }
