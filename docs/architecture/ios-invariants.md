@@ -65,6 +65,8 @@ review_triggers:
 - Clear-display and start-new-session are different commands.
 - Recognition and translation buffers have explicit memory and duration bounds.
 - Parakeet EOU 320/1280, English Nemotron 560/1120/2240, and Nemotron 3.5 Multilingual 2240 share one realtime adapter and must flush with `finish()` before a session becomes terminal.
+- iOS offers only Parakeet EOU 320, Nemotron 1120, and Nemotron 3.5 Multilingual 2240 as downloadable models; the other English variants are macOS-only and their iOS caches are removed.
+- Downloaded recognition models live in Application Support `RecognitionModels/` (excluded from backup; migrated from Caches). Interrupted FluidAudio downloads keep their files so retries resume, and a model counts as cached only when every compiled bundle has `model.mil`, `coremldata.bin`, and `weights/weight.bin` and no `.partial` file remains. FluidAudio downloads fall back to `hf-mirror.com` when `huggingface.co` is unreachable.
 - Nemotron 3.5 Multilingual uses the full-vocabulary `multilingual/2240ms` variant. Explicit source languages are passed as model prompts; Auto uses model language detection.
 - Confucius4 R2T2 (`mlx-community/Confucius4-R2T2-8bit`) runs on MLX with the upstream stable-prefix protocol: 160 ms steps (merged up to 2 s under backlog), a 16 s audio window that drops its oldest 8 s, and one rolled-back token. Committed text is append-only; stop flushes without rollback. The MLX buffer cache is capped at 512 MB.
 - The Xcode workspace mirrors `mlx-swift` to the TLingo fork at version `0.31.7`. That fork updates its MLX core submodule to prevent Metal `Gather` from binding a null pointer for empty vector metadata. Keep the mirror and resolved version together until an upstream release includes the fix.

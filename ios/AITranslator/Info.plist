@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>TLingoTextPopupProtocolVersion</key>
-	<integer>1</integer>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -36,12 +34,14 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSSystemAudioCaptureUsageDescription</key>
+	<string>TLingo needs system audio access to create realtime subtitles from Mac audio.</string>
+	<key>TLingoTextPopupProtocolVersion</key>
+	<integer>1</integer>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
 	</array>
-	<key>NSSystemAudioCaptureUsageDescription</key>
-	<string>TLingo needs system audio access to create realtime subtitles from Mac audio.</string>
 	<key>com.apple.developer.translation-ui-provider.network-access</key>
 	<true/>
 </dict>

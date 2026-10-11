@@ -25,7 +25,12 @@
             #if os(macOS)
                 #expect(RecognitionModelStore.availableModels == [.appleSpeech] + fluidAudioModels)
             #else
-                #expect(RecognitionModelStore.availableModels == [.appleSpeech] + Array(fluidAudioModels.dropLast()))
+                #expect(RecognitionModelStore.availableModels == [
+                    .appleSpeech,
+                    .parakeetEOU320,
+                    .nemotronStreaming1120,
+                    .nemotronMultilingual2240,
+                ])
             #endif
             #expect(RecognitionModelStore.selectableModels == [.appleSpeech] + fluidAudioModels)
             #expect(RecognitionModelStore.knownModels == [
@@ -145,16 +150,17 @@
             ]
             for artifact in artifacts {
                 let artifactDirectory = modelDirectory.appendingPathComponent(artifact, isDirectory: true)
-                try FileManager.default.createDirectory(at: artifactDirectory, withIntermediateDirectories: true)
-                try Data("mil".utf8).write(to: artifactDirectory.appendingPathComponent("model.mil"))
+                try writeCompiledModel(at: artifactDirectory)
             }
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("tokenizer.json"))
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("metadata.json"))
 
             #expect(await store.isModelCached(.nemotronStreaming1120))
-            try FileManager.default.removeItem(
-                at: modelDirectory.appendingPathComponent("decoder_joint.mlmodelc/model.mil")
-            )
+            let weightURL = modelDirectory.appendingPathComponent("decoder_joint.mlmodelc/weights/weight.bin")
+            let partialURL = weightURL.appendingPathExtension("partial")
+            try FileManager.default.moveItem(at: weightURL, to: partialURL)
+            #expect(!(await store.isModelCached(.nemotronStreaming1120)))
+            try FileManager.default.removeItem(at: partialURL)
             #expect(!(await store.isModelCached(.nemotronStreaming1120)))
 
             try? FileManager.default.removeItem(at: cacheURL)
@@ -169,8 +175,7 @@
                 .appendingPathComponent("nemotron-multilingual/multilingual/2240ms", isDirectory: true)
             for artifact in ["preprocessor", "encoder", "decoder", "joint"] {
                 let artifactDirectory = modelDirectory.appendingPathComponent("\(artifact).mlmodelc", isDirectory: true)
-                try FileManager.default.createDirectory(at: artifactDirectory, withIntermediateDirectories: true)
-                try Data("mil".utf8).write(to: artifactDirectory.appendingPathComponent("model.mil"))
+                try writeCompiledModel(at: artifactDirectory)
             }
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("tokenizer.json"))
             try Data("{}".utf8).write(to: modelDirectory.appendingPathComponent("metadata.json"))
@@ -225,6 +230,14 @@
 
             try? FileManager.default.removeItem(at: cacheURL)
             try? FileManager.default.removeItem(at: sourceURL)
+        }
+
+        private func writeCompiledModel(at directory: URL) throws {
+            let weightsDirectory = directory.appendingPathComponent("weights", isDirectory: true)
+            try FileManager.default.createDirectory(at: weightsDirectory, withIntermediateDirectories: true)
+            try Data("mil".utf8).write(to: directory.appendingPathComponent("model.mil"))
+            try Data("ml".utf8).write(to: directory.appendingPathComponent("coremldata.bin"))
+            try Data("w".utf8).write(to: weightsDirectory.appendingPathComponent("weight.bin"))
         }
 
         private func makeDirectModel(

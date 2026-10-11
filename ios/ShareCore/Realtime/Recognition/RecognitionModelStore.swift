@@ -1,6 +1,9 @@
 #if os(macOS) || os(iOS)
     import CryptoKit
     import Foundation
+    #if os(iOS)
+        import UIKit
+    #endif
     #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
         import FluidAudio
     #endif
@@ -81,16 +84,41 @@
         private let downloader = RecognitionModelDownloader()
         private var downloadProgress: [String: Double] = [:]
         private var downloadTasks: [String: Task<URL, Error>] = [:]
+        private var hasSelectedModelRegistry = false
 
         public init(
             cacheDirectory: URL? = nil,
             fileManager: FileManager = .default
         ) {
             self.fileManager = fileManager
-            self.cacheDirectory = cacheDirectory ?? fileManager
-                .urls(for: .cachesDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("RecognitionModels", isDirectory: true)
+            self.cacheDirectory = cacheDirectory ?? Self.defaultCacheDirectory
         }
+
+        /// Application Support, not Caches: iOS purges Caches under storage pressure, which silently
+        /// dropped multi-hundred-MB models. Moves the legacy Caches directory on first access.
+        public static let defaultCacheDirectory: URL = {
+            let fileManager = FileManager.default
+            let legacyDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("RecognitionModels", isDirectory: true)
+            var directory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("RecognitionModels", isDirectory: true)
+            if !fileManager.fileExists(atPath: directory.path), fileManager.fileExists(atPath: legacyDirectory.path) {
+                try? fileManager.createDirectory(
+                    at: directory.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try? fileManager.moveItem(at: legacyDirectory, to: directory)
+            }
+            try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            var resourceValues = URLResourceValues()
+            resourceValues.isExcludedFromBackup = true
+            try? directory.setResourceValues(resourceValues)
+            // Models no longer offered on this platform are unreachable from the UI, so reclaim their space.
+            for model in knownModels where model.download != nil && !model.isAvailableOnCurrentPlatform {
+                try? fileManager.removeItem(at: directory.appendingPathComponent(model.id, isDirectory: true))
+            }
+            return directory
+        }()
 
         public static func descriptor(for engine: RealtimeRecognitionEngine) -> RecognitionModelDescriptor {
             switch engine {
@@ -186,6 +214,11 @@
             }
 
             let task = Task {
+                #if os(iOS)
+                    // Buys time to finish (or reach a resumable point) when the user switches apps.
+                    let backgroundActivity = await BackgroundDownloadActivity(name: "RecognitionModelDownload")
+                    defer { Task { @MainActor in backgroundActivity.end() } }
+                #endif
                 switch download {
                 case let .directFile(directDownload):
                     return try await downloadDirectModel(model, download: directDownload)
@@ -290,6 +323,7 @@
 
         private func isFluidAudioModelCached(_ model: RecognitionFluidAudioModel, at directory: URL) -> Bool {
             #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
+                guard !containsPartialDownload(in: directory) else { return false }
                 switch model {
                 case .parakeetEOU320, .parakeetEOU1280:
                     let repo: Repo = model == .parakeetEOU320 ? .parakeetEou320 : .parakeetEou1280
@@ -334,20 +368,32 @@
         }
 
         private func fluidAudioArtifactExists(at url: URL) -> Bool {
-            let payloadURL = switch url.pathExtension {
+            // FluidAudio moves each file into place only when complete, so an interrupted download
+            // shows up as missing files; check every payload Core ML needs, not just model.mil.
+            let payloadPaths = switch url.pathExtension {
             case "mlmodelc":
-                url.appendingPathComponent("model.mil")
+                ["model.mil", "coremldata.bin", "weights/weight.bin"]
             case "mlpackage":
-                url.appendingPathComponent("Manifest.json")
+                ["Manifest.json"]
             default:
-                url
+                [""]
             }
-            guard let attributes = try? fileManager.attributesOfItem(atPath: payloadURL.path),
-                  let size = attributes[.size] as? NSNumber
-            else {
+            return payloadPaths.allSatisfy { path in
+                let payloadURL = path.isEmpty ? url : url.appendingPathComponent(path)
+                guard let attributes = try? fileManager.attributesOfItem(atPath: payloadURL.path),
+                      let size = attributes[.size] as? NSNumber
+                else {
+                    return false
+                }
+                return size.int64Value > 0
+            }
+        }
+
+        private func containsPartialDownload(in directory: URL) -> Bool {
+            guard let enumerator = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil) else {
                 return false
             }
-            return size.int64Value > 0
+            return enumerator.contains { ($0 as? URL)?.pathExtension == "partial" }
         }
 
         private func downloadFluidAudioModel(
@@ -355,21 +401,25 @@
             descriptor: RecognitionModelDescriptor
         ) async throws -> URL {
             #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
+                // Keep an incomplete directory: FluidAudio skips finished files and resumes
+                // `.partial` ones, so a retry continues instead of starting over.
                 let modelDirectory = cachedModelURL(for: descriptor)
-                if fileManager.fileExists(atPath: modelDirectory.path),
-                   !isFluidAudioModelCached(fluidAudioModel, at: modelDirectory)
-                {
-                    try fileManager.removeItem(at: modelDirectory)
-                }
                 try fileManager.createDirectory(at: modelDirectory, withIntermediateDirectories: true)
 
                 downloadProgress[descriptor.id] = 0
+                await selectModelRegistryIfNeeded()
+                let config = DownloadConfig(timeout: Self.downloadIdleTimeout)
                 do {
                     if fluidAudioModel == .nemotronMultilingual2240 {
-                        let variantURL = try await StreamingNemotronMultilingualAsrManager.downloadVariant(
-                            languageCode: "auto",
-                            chunkMs: 2240,
-                            to: modelDirectory,
+                        // downloadVariant skips the download whenever metadata.json exists, which
+                        // would leave an interrupted variant incomplete; fetch the subdirectory directly.
+                        let repoDirectory = modelDirectory
+                            .appendingPathComponent(Repo.nemotronMultilingual.folderName, isDirectory: true)
+                        try await ModelHub.download(
+                            .nemotronMultilingual,
+                            subdirectory: "multilingual/2240ms",
+                            to: repoDirectory,
+                            config: config,
                             progressHandler: { [weak self] progress in
                                 Task {
                                     await self?.setDownloadProgress(
@@ -377,10 +427,11 @@
                                         for: descriptor.id
                                     )
                                 }
-                            }
+                            },
+                            shouldSkip: { $0.contains(".mlpackage") }
                         )
                         downloadProgress[descriptor.id] = nil
-                        return variantURL
+                        return repoDirectory.appendingPathComponent("multilingual/2240ms", isDirectory: true)
                     }
 
                     let repo: Repo = switch fluidAudioModel {
@@ -400,6 +451,7 @@
                     try await ModelHub.download(
                         repo,
                         to: modelDirectory,
+                        config: config,
                         progressHandler: { [weak self] progress in
                             Task { await self?.setDownloadProgress(progress.fractionCompleted, for: descriptor.id) }
                         }
@@ -448,6 +500,51 @@
             #endif
         }
     }
+
+    #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
+        private extension RecognitionModelStore {
+            /// Fails a stalled connection within a minute instead of FluidAudio's 30-minute default.
+            static let downloadIdleTimeout: TimeInterval = 60
+            static let mirrorRegistryURL = "https://hf-mirror.com"
+
+            /// huggingface.co is unreliable from mainland China. hf-mirror.com serves the same
+            /// files there and redirects to huggingface.co elsewhere, so it is safe as a fallback.
+            /// Decided once, before any FluidAudio download is in flight, because the registry is global.
+            func selectModelRegistryIfNeeded() async {
+                guard !hasSelectedModelRegistry else { return }
+                hasSelectedModelRegistry = true
+                var request = URLRequest(
+                    url: URL(string: "https://huggingface.co/api/models/FluidInference/parakeet-realtime-eou-120m-coreml")!,
+                    timeoutInterval: 6
+                )
+                request.httpMethod = "HEAD"
+                let isReachable = await (try? URLSession.shared.data(for: request))
+                    .map { ($0.1 as? HTTPURLResponse)?.statusCode == 200 } ?? false
+                if !isReachable {
+                    ModelRegistry.baseURL = Self.mirrorRegistryURL
+                }
+            }
+        }
+    #endif
+
+    #if os(iOS)
+        @MainActor
+        private final class BackgroundDownloadActivity {
+            private var identifier: UIBackgroundTaskIdentifier = .invalid
+
+            init(name: String) {
+                identifier = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
+                    self?.end()
+                }
+            }
+
+            func end() {
+                guard identifier != .invalid else { return }
+                UIApplication.shared.endBackgroundTask(identifier)
+                identifier = .invalid
+            }
+        }
+    #endif
 
     public extension RecognitionModelStore {
         static var isFluidAudioRuntimeAvailable: Bool {

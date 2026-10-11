@@ -50,9 +50,7 @@
             fileManager: FileManager = .default
         ) {
             self.fileManager = fileManager
-            self.cacheURL = cacheURL ?? fileManager
-                .urls(for: .cachesDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("RecognitionModels", isDirectory: true)
+            self.cacheURL = cacheURL ?? RecognitionModelStore.defaultCacheDirectory
                 .appendingPathComponent(Self.modelID, isDirectory: true)
         }
 
