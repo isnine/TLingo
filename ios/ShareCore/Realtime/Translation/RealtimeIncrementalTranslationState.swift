@@ -105,6 +105,20 @@
                 !hadPendingSource ||
                 !Self.isLikelyRevision(previousPendingSource, replacement: pendingSourceText)
             {
+                if !previousPendingTranslation.isEmpty {
+                    let reason = pendingSourceText.isEmpty ? "pendingEmpty"
+                        : (!hadPendingSource ? "noPreviousPending" : "notRevision")
+                    RealtimeLog.warn(
+                        "align",
+                        """
+                        pending translation cleared reason=\(reason) \
+                        prevPending=\(RealtimeLog.text(previousPendingSource)) \
+                        newPending=\(RealtimeLog.text(pendingSourceText)) \
+                        droppedTr=\(RealtimeLog.text(previousPendingTranslation)) \
+                        stableSegs=\(previousStableSegments.count)->\(sourceSegments.count)
+                        """
+                    )
+                }
                 pendingTranslatedText = ""
             }
         }
@@ -283,7 +297,8 @@
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage
                 )]
-                return finalPair ?? displayedPair(forSegment: segment, consuming: &existingPairsBySource)
+                return (finalPair ?? displayedPair(forSegment: segment, consuming: &existingPairsBySource))
+                    .map { Self.pair($0, rebasedOn: segment) }
             }
             assignDisplayedPairs(displayedPairs)
         }
@@ -300,7 +315,7 @@
                 if let exactIndex = remainingPairs.firstIndex(where: {
                     Self.normalizedSourceKey($0.original) == key
                 }) {
-                    return remainingPairs.remove(at: exactIndex)
+                    return Self.pair(remainingPairs.remove(at: exactIndex), rebasedOn: segment)
                 }
                 if let revisedIndex = remainingPairs.firstIndex(where: {
                     Self.isLikelyRevision($0.original, replacement: segment)
@@ -318,7 +333,7 @@
                     finalizedPreviewPairsBySource[key] = previewPair
                     return previewPair
                 }
-                return finalizedPreviewPairsBySource[key]
+                return finalizedPreviewPairsBySource[key].map { Self.pair($0, rebasedOn: segment) }
             }
             let droppedPairs = remainingPairs.filter {
                 !$0.translation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -333,6 +348,13 @@
                 )
             }
             assignDisplayedPairs(displayedPairs)
+        }
+
+        /// Pairs match segments by a punctuation- and case-insensitive key, but captions align them by
+        /// exact text. Carrying the current segment text keeps a revision such as "So doesn't" ->
+        /// "So, doesn't" from detaching its translation into an orphan line with an untranslated source.
+        private static func pair(_ pair: SentencePair, rebasedOn segment: String) -> SentencePair {
+            pair.original == segment ? pair : SentencePair(original: segment, translation: pair.translation)
         }
 
         private mutating func assignDisplayedPairs(_ pairs: [SentencePair]) {

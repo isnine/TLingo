@@ -473,4 +473,32 @@ struct RealtimeTranscriptAccumulatorTests {
         #expect(accumulator.committedText == "hello world")
         #expect(accumulator.partialText.isEmpty)
     }
+
+    @Test("Final that adds fillers around the volatile words replaces them")
+    func finalWithFillerReplacesVolatileWords() {
+        var accumulator = RealtimeTranscriptAccumulator()
+
+        _ = accumulator.append(
+            RealtimeRecognitionResult(text: "Earlier sentence.", confidence: 0.5, state: .final),
+            afterLongSilence: false
+        )
+        _ = accumulator.append(
+            RealtimeRecognitionResult(text: "specifically", confidence: 0.5, state: .partial),
+            afterLongSilence: false
+        )
+        _ = accumulator.append(
+            RealtimeRecognitionResult(text: "Uh, specifically.", confidence: 0.5, state: .final),
+            afterLongSilence: false
+        )
+
+        #expect(accumulator.committedText == "Earlier sentence.\n\nUh, specifically.")
+        #expect(accumulator.partialText.isEmpty)
+    }
+
+    @Test("Snapshot stable text keeps recognizer paragraph breaks")
+    func snapshotKeepsParagraphBreaks() {
+        let snapshot = RealtimeRecognitionSnapshot(stableText: "So,\n\nAnd that's  a different type.")
+
+        #expect(snapshot.stableText == "So,\n\nAnd that's a different type.")
+    }
 }

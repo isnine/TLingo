@@ -77,7 +77,7 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         audioOffset: TimeInterval? = nil,
         isTerminal: Bool = false
     ) {
-        self.stableText = Self.normalized(stableText)
+        self.stableText = Self.normalizedPreservingParagraphs(stableText)
         self.volatileText = Self.normalized(volatileText)
         stableSegments = []
         pendingSegment = nil
@@ -113,6 +113,15 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         text
             .split(whereSeparator: \.isWhitespace)
             .joined(separator: " ")
+    }
+
+    /// Recognizer finals are separated by blank lines; flattening them let the segmenter merge an
+    /// already-translated fragment like "So," into the next sentence.
+    private static func normalizedPreservingParagraphs(_ text: String) -> String {
+        text.components(separatedBy: "\n\n")
+            .map(normalized)
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n\n")
     }
 }
 
@@ -267,6 +276,13 @@ public struct RealtimeTranscriptAccumulator {
         if let suffix = Self.suffix(after: trimmed, in: partialText) {
             committedText = joined(committedText, trimmed)
             partialText = suffix
+            return visibleText
+        }
+        // Finals often insert fillers or punctuation around the volatile words
+        // ("specifically" -> "Uh, specifically."); the final supersedes that volatile text.
+        if Self.containsWords(of: partialText, in: trimmed) {
+            committedText = joined(committedText, trimmed)
+            partialText = ""
             return visibleText
         }
 
@@ -457,6 +473,12 @@ public struct RealtimeTranscriptAccumulator {
         return String(scalars)
             .split(whereSeparator: \.isWhitespace)
             .joined(separator: " ")
+    }
+
+    private static func containsWords(of part: String, in text: String) -> Bool {
+        let partNormalized = normalizedRecognitionText(part)
+        guard !partNormalized.isEmpty else { return false }
+        return " \(normalizedRecognitionText(text)) ".contains(" \(partNormalized) ")
     }
 
     private static func suffix(after prefix: String, in text: String) -> String? {

@@ -363,6 +363,35 @@
             #expect(state.translatedText == "第一句。 拆开的补充。")
         }
 
+        @Test("Keeps translation under its source when ASR only changes punctuation")
+        func keepsTranslationUnderSourceWhenASRChangesPunctuation() throws {
+            var state = RealtimeIncrementalTranslationState()
+            state.updateSources(committedText: "So doesn't lend you money to buy a home.", pendingText: "")
+            let request = try #require(state.makeFinalTranslationRequests(
+                provider: .appleTranslator,
+                sourceLanguage: .english,
+                source: SourceLanguageOption.english.localeLanguage,
+                targetLanguage: .simplifiedChinese
+            ).first)
+
+            // The final ASR result adds a comma before the in-flight translation lands.
+            state.updateSources(committedText: "So, doesn't lend you money to buy a home.", pendingText: "")
+            let result = ModelExecutionResult(
+                modelID: ModelConfig.appleTranslateID,
+                duration: 0,
+                response: .success("所以不要借钱给你买房子。")
+            )
+            _ = state.applyFinalTranslationSuccess(result, request: request)
+
+            let lines = RealtimeCaptionDisplay.lines(
+                from: state.sentencePairs,
+                translatedSourceSegments: state.sourceSegments,
+                translatedText: state.translatedText
+            )
+            #expect(lines.map(\.text) == ["So, doesn't lend you money to buy a home.", "所以不要借钱给你买房子。"])
+            #expect(lines.map(\.id) == ["0-source", "0-translation"])
+        }
+
         @Test("Keeps partial translation preview until final translation replaces it")
         func keepsPartialTranslationPreviewUntilFinalTranslationReplacesIt() throws {
             var transcript = RealtimeTranscriptAccumulator()
