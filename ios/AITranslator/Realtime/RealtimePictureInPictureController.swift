@@ -28,7 +28,7 @@
         private let preferences: AppPreferences
         private var pictureInPictureController: AVPictureInPictureController?
         private var cancellables: Set<AnyCancellable> = []
-        private let isPlaybackPaused = Atomic<Bool>(false)
+        private let isPlaybackPaused = Atomic<Bool>(true)
 
         init(store: RealtimeSessionStore, preferences: AppPreferences = .shared) {
             self.store = store
@@ -47,32 +47,33 @@
 
             store.$captionLines
                 .combineLatest(
-                    store.$isPaused,
                     store.$isRunning,
                     preferences.$accentTheme.combineLatest(preferences.$realtimePictureInPictureSize)
                 )
                 .receive(on: RunLoop.main)
-                .sink { [weak self] lines, isPaused, isRunning, _ in
-                    self?.render(lines: lines, isPaused: isPaused, isRunning: isRunning)
+                .sink { [weak self] lines, isRunning, _ in
+                    self?.render(lines: lines, isRunning: isRunning)
                 }
                 .store(in: &cancellables)
 
             displayView.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (_: SampleBufferDisplayView, _) in
                 guard let self else { return }
-                render(lines: self.store.captionLines, isPaused: self.store.isPaused, isRunning: self.store.isRunning)
+                render(lines: self.store.captionLines, isRunning: self.store.isRunning)
             }
 
-            // Only a live, unpaused microphone session moves into PiP; a paused session stops in the background.
+            // Keep AVKit's playback state and automatic-start eligibility in sync on both pause and resume.
             store.$isRunning
                 .combineLatest(store.$isPaused, store.$inputSource, preferences.$realtimePictureInPictureEnabled)
-                .receive(on: RunLoop.main)
                 .sink { [weak self] isRunning, isPaused, inputSource, isEnabled in
+                    guard let self else { return }
+                    isPlaybackPaused.store(isPaused || !isRunning, ordering: .relaxed)
+                    pictureInPictureController?.invalidatePlaybackState()
                     let isAvailable = isEnabled && isRunning && inputSource == .microphone
-                    self?.pictureInPictureController?.canStartPictureInPictureAutomaticallyFromInline =
+                    pictureInPictureController?.canStartPictureInPictureAutomaticallyFromInline =
                         isAvailable && !isPaused
                     // Pausing from the PiP window keeps it open.
                     if !isAvailable {
-                        self?.stopPictureInPicture()
+                        stopPictureInPicture()
                     }
                 }
                 .store(in: &cancellables)
@@ -90,10 +91,7 @@
             pictureInPictureController.stopPictureInPicture()
         }
 
-        private func render(lines: [RealtimeCaptionLine], isPaused: Bool, isRunning: Bool) {
-            isPlaybackPaused.store(isPaused, ordering: .relaxed)
-            pictureInPictureController?.invalidatePlaybackState()
-
+        private func render(lines: [RealtimeCaptionLine], isRunning: Bool) {
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
             let style = RealtimeCaptionTextView.Style(palette: palette)
@@ -251,25 +249,17 @@
     }
 
     extension RealtimePictureInPictureController: AVPictureInPictureControllerDelegate {
-        nonisolated func pictureInPictureControllerWillStartPictureInPicture(_: AVPictureInPictureController) {
-            MainActor.assumeIsolated {
-                store.continuesInBackground = true
-            }
-        }
-
         nonisolated func pictureInPictureController(
             _: AVPictureInPictureController,
             failedToStartPictureInPictureWithError error: Error
         ) {
             MainActor.assumeIsolated {
                 logger.error("PiP failed to start: \(error.localizedDescription, privacy: .public)")
-                store.continuesInBackground = false
             }
         }
 
         nonisolated func pictureInPictureControllerDidStopPictureInPicture(_: AVPictureInPictureController) {
             MainActor.assumeIsolated {
-                store.continuesInBackground = false
                 // Closing the PiP window from another app ends the session instead of recording invisibly.
                 guard UIApplication.shared.applicationState == .background, store.isRunning else { return }
                 Task { await store.stop() }

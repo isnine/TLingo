@@ -208,9 +208,7 @@
 
             private let broadcastStateStore: RealtimeBroadcastStateStore?
             private var broadcastStatePollingTask: Task<Void, Never>?
-            private var foregroundOnlyObservers: [NSObjectProtocol] = []
-            /// Set while Picture in Picture shows the captions, so leaving the app keeps microphone capture running.
-            public var continuesInBackground = false
+            private var sessionLifecycleObservers: [NSObjectProtocol] = []
             private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
         #endif
 
@@ -269,7 +267,7 @@
                 secondaryMicrophoneAudioCapture.delegate = self
             #endif
             #if os(iOS)
-                registerForegroundOnlyLifecycle()
+                registerSessionLifecycle()
             #endif
             if SnapshotLaunchArguments.isSnapshotMode(),
                let fixture = SnapshotLaunchArguments.fixture()
@@ -299,7 +297,7 @@
 
         deinit {
             #if os(iOS)
-                for observer in foregroundOnlyObservers {
+                for observer in sessionLifecycleObservers {
                     NotificationCenter.default.removeObserver(observer)
                 }
             #endif
@@ -1039,25 +1037,15 @@
         }
 
         #if os(iOS)
-            private func registerForegroundOnlyLifecycle() {
-                foregroundOnlyObservers = [
-                    NotificationCenter.default.addObserver(
-                        forName: UIApplication.didEnterBackgroundNotification,
-                        object: nil,
-                        queue: .main
-                    ) { [weak self] _ in
-                        Task { @MainActor in
-                            guard self?.continuesInBackground != true else { return }
-                            await self?.stopForForegroundOnlyLifecycle()
-                        }
-                    },
+            private func registerSessionLifecycle() {
+                sessionLifecycleObservers = [
                     NotificationCenter.default.addObserver(
                         forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
                         object: nil,
                         queue: .main
                     ) { [weak self] _ in
                         Task { @MainActor in
-                            await self?.stopForForegroundOnlyLifecycle()
+                            await self?.stopForSystemInterruption()
                         }
                     },
                     NotificationCenter.default.addObserver(
@@ -1072,13 +1060,13 @@
                             return
                         }
                         Task { @MainActor in
-                            await self?.stopForForegroundOnlyLifecycle()
+                            await self?.stopForSystemInterruption()
                         }
                     },
                 ]
             }
 
-            private func stopForForegroundOnlyLifecycle() async {
+            private func stopForSystemInterruption() async {
                 guard isRunning else { return }
                 guard inputSource != .iphoneAudio else { return }
                 await stop()

@@ -109,15 +109,6 @@
                     guard scenePhase == .active else { return }
                     await store.prewarmRecognitionModel()
                 }
-                .onChange(of: scenePhase) { _, phase in
-                    guard phase != .active else { return }
-                    guard !isIPhoneAudioInput else { return }
-                    // PiP starts while the scene resigns active; decide only once the app is backgrounded.
-                    if preferences.realtimePictureInPictureEnabled {
-                        guard phase == .background, !store.continuesInBackground else { return }
-                    }
-                    Task { await store.stop() }
-                }
                 .alert(
                     store.startFailureAlert?.title ?? "Realtime Failed",
                     isPresented: startFailureAlertPresentedBinding

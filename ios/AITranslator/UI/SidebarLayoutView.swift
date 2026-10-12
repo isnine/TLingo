@@ -262,10 +262,14 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 }
                 // White sidebar card inset on the grey app ground, concentric with the window corners.
                 .background {
-                    sidebarCardShape
-                        .fill(colors.cardBackground)
-                        .padding(sidebarCardInset)
-                        .ignoresSafeArea()
+                    ZStack {
+                        // Same ground as the detail column so the gutter around the card reads as one layer.
+                        colors.background
+                        sidebarCardShape
+                            .fill(colors.cardBackground)
+                            .padding(sidebarCardInset)
+                    }
+                    .ignoresSafeArea()
                 }
             } detail: {
                 contentView(for: selection ?? .tab(.home))
