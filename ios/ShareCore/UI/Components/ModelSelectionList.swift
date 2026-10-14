@@ -29,8 +29,7 @@ public struct ModelSelectionList: View {
     @State private var isLoading = false
     @State private var loadErrorMessage: String?
     @State private var alert: AlertContent?
-    @State private var showCollapsedFreeModels = false
-    @State private var showCollapsedPremiumModels = false
+    @State private var showCollapsedModels = false
     @State private var showInstalledLanguages = false
     @State private var showDownloadLanguagesGuide = false
     @State private var showModelOrder = false
@@ -80,11 +79,13 @@ public struct ModelSelectionList: View {
     }
 
     private var translationServices: [ModelConfig] {
-        offered(preferences.modelListOrder.models(in: .translation, cloudModels: cloudModels))
+        offered(preferences.modelListOrder.models(in: .translation, cloudModels: cloudModels, isPro: entitlement.isPro))
     }
 
     private var appleIntelligenceModels: [ModelConfig] {
-        offered(preferences.modelListOrder.models(in: .appleIntelligence, cloudModels: cloudModels))
+        offered(preferences.modelListOrder.models(
+            in: .appleIntelligence, cloudModels: cloudModels, isPro: entitlement.isPro
+        ))
     }
 
     private var displayedCloudModels: [ModelConfig] {
@@ -94,7 +95,10 @@ public struct ModelSelectionList: View {
 
     private var sections: ModelListSections {
         ModelListSections(
-            cloudModels: displayedCloudModels, enabledIDs: enabledIDs, order: preferences.modelListOrder
+            cloudModels: displayedCloudModels,
+            enabledIDs: enabledIDs,
+            order: preferences.modelListOrder,
+            isPro: entitlement.isPro
         )
     }
 
@@ -182,25 +186,14 @@ public struct ModelSelectionList: View {
             if !appleIntelligenceModels.isEmpty {
                 sectionCard(title: section.title, icon: section.icon, models: appleIntelligenceModels)
             }
-        case .free:
-            if !sections.visibleFreeModels.isEmpty || !sections.collapsedFreeModels.isEmpty {
-                sectionCard(
-                    title: section.title,
-                    icon: section.icon,
-                    models: sections.visibleFreeModels,
-                    collapsedModels: sections.collapsedFreeModels,
-                    isExpanded: $showCollapsedFreeModels
-                )
-            }
-        case .premium:
-            if !sections.visiblePremiumModels.isEmpty || !sections.collapsedPremiumModels.isEmpty {
+        case .ai:
+            if !sections.visibleModels.isEmpty || !sections.collapsedModels.isEmpty {
                 ModelSectionCard(
                     title: section.title,
                     icon: section.icon,
-                    tint: .orange,
-                    models: sections.visiblePremiumModels,
-                    collapsedModels: sections.collapsedPremiumModels,
-                    isExpanded: $showCollapsedPremiumModels,
+                    models: sections.visibleModels,
+                    collapsedModels: sections.collapsedModels,
+                    isExpanded: $showCollapsedModels,
                     dividerLeadingPadding: Self.dividerLeadingPadding,
                     cornerRadius: Self.cornerRadius
                 ) { model in
@@ -534,8 +527,7 @@ private extension ModelListSection {
         switch self {
         case .translation: "TRANSLATION"
         case .appleIntelligence: "APPLE INTELLIGENCE"
-        case .free: "FREE MODELS"
-        case .premium: "PREMIUM MODELS"
+        case .ai: "AI MODELS"
         }
     }
 
@@ -543,8 +535,7 @@ private extension ModelListSection {
         switch self {
         case .translation: "globe"
         case .appleIntelligence: "apple.intelligence"
-        case .free: "cpu"
-        case .premium: "crown.fill"
+        case .ai: "cpu"
         }
     }
 }
@@ -567,6 +558,7 @@ private struct ModelListOrderSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var preferences = AppPreferences.shared
+    @ObservedObject private var entitlement = Entitlement.shared
     /// Rebuilds the rows after a rejected move so the list drops the row's visual position.
     @State private var listRevision = 0
 
@@ -578,7 +570,7 @@ private struct ModelListOrderSheet: View {
 
     private var rows: [Row] {
         order.orderedSections.flatMap { section in
-            [Row.group(section)] + order.models(in: section, cloudModels: cloudModels).map { Row.model($0, in: section) }
+            [Row.group(section)] + order.models(in: section, cloudModels: cloudModels, isPro: entitlement.isPro).map { Row.model($0, in: section) }
         }
     }
 
@@ -644,7 +636,7 @@ private struct ModelListOrderSheet: View {
         HStack(spacing: Self.iconSpacing) {
             Image(systemName: section.icon)
                 .font(.body)
-                .foregroundStyle(section == .premium ? Color.orange : AppColors.palette(for: colorScheme).accent)
+                .foregroundStyle(AppColors.palette(for: colorScheme).accent)
                 .frame(width: Self.iconSize)
                 .accessibilityHidden(true)
             Text(section.name)
@@ -738,8 +730,7 @@ private extension ModelListSection {
         switch self {
         case .translation: "Translation"
         case .appleIntelligence: "Apple Intelligence"
-        case .free: "Free Models"
-        case .premium: "Premium Models"
+        case .ai: "AI Models"
         }
     }
 }

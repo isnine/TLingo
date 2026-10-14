@@ -3,6 +3,7 @@
 //  ShareCoreTests
 //
 
+import Foundation
 import ShareCore
 import Testing
 
@@ -17,66 +18,61 @@ struct ModelListSectionsTests {
         hidden: true
     )
 
-    @Test("Hidden free model is collapsed when disabled")
-    func hiddenFreeModelIsCollapsedWhenDisabled() {
-        let sections = ModelListSections(cloudModels: [hiddenFree], enabledIDs: [])
+    @Test("Hidden model is collapsed when disabled")
+    func hiddenModelIsCollapsedWhenDisabled() {
+        let sections = ModelListSections(cloudModels: [hiddenFree], enabledIDs: [], isPro: false)
 
-        #expect(sections.visibleFreeModels.isEmpty)
-        #expect(sections.collapsedFreeModels == [hiddenFree])
+        #expect(sections.visibleModels.isEmpty)
+        #expect(sections.collapsedModels == [hiddenFree])
     }
 
-    @Test("Hidden free model is visible when enabled")
-    func hiddenFreeModelIsVisibleWhenEnabled() {
-        let sections = ModelListSections(cloudModels: [hiddenFree], enabledIDs: [hiddenFree.id])
+    @Test("Hidden model is visible when enabled")
+    func hiddenModelIsVisibleWhenEnabled() {
+        let sections = ModelListSections(cloudModels: [hiddenFree], enabledIDs: [hiddenFree.id], isPro: false)
 
-        #expect(sections.visibleFreeModels == [hiddenFree])
-        #expect(sections.collapsedFreeModels.isEmpty)
+        #expect(sections.visibleModels == [hiddenFree])
+        #expect(sections.collapsedModels.isEmpty)
     }
 
-    @Test("Hidden premium model is collapsed when disabled")
-    func hiddenPremiumModelIsCollapsedWhenDisabled() {
-        let sections = ModelListSections(cloudModels: [hiddenPremium], enabledIDs: [])
-
-        #expect(sections.visiblePremiumModels.isEmpty)
-        #expect(sections.collapsedPremiumModels == [hiddenPremium])
+    @Test("Membership decides whether free or premium models lead the AI section")
+    func membershipDecidesDefaultAIOrder() {
+        let models = [visiblePremium, visibleFree, hiddenPremium, hiddenFree]
+        let free = ModelListSections(cloudModels: models, enabledIDs: [], isPro: false)
+        #expect(free.visibleModels == [visibleFree, visiblePremium])
+        #expect(free.collapsedModels == [hiddenFree, hiddenPremium])
+        let pro = ModelListSections(cloudModels: models, enabledIDs: [], isPro: true)
+        #expect(pro.visibleModels == [visiblePremium, visibleFree])
+        #expect(pro.collapsedModels == [hiddenPremium, hiddenFree])
     }
 
-    @Test("Free and premium models stay in separate sections")
-    func freeAndPremiumModelsStayInSeparateSections() {
-        let sections = ModelListSections(
-            cloudModels: [visibleFree, hiddenFree, visiblePremium, hiddenPremium],
-            enabledIDs: []
-        )
-
-        #expect(sections.visibleFreeModels == [visibleFree])
-        #expect(sections.collapsedFreeModels == [hiddenFree])
-        #expect(sections.visiblePremiumModels == [visiblePremium])
-        #expect(sections.collapsedPremiumModels == [hiddenPremium])
-    }
-
-    @Test("Empty model list returns empty sections")
-    func emptyModelListReturnsEmptySections() {
-        let sections = ModelListSections(cloudModels: [], enabledIDs: [])
-
-        #expect(sections.visibleFreeModels.isEmpty)
-        #expect(sections.collapsedFreeModels.isEmpty)
-        #expect(sections.visiblePremiumModels.isEmpty)
-        #expect(sections.collapsedPremiumModels.isEmpty)
-    }
-
-    @Test("Custom ordering preserves hidden-model visibility rules")
+    @Test("Custom ordering overrides membership and keeps hidden-model visibility rules")
     func customOrderKeepsHiddenModelsCollapsedUntilEnabled() {
         var order = ModelListOrder()
-        order.modelIDsBySection[ModelListSection.free.rawValue] = [hiddenFree.id, visibleFree.id]
+        order.modelIDsBySection[ModelListSection.ai.rawValue] = [hiddenFree.id, visibleFree.id, visiblePremium.id]
         let collapsed = ModelListSections(
-            cloudModels: [visibleFree, hiddenFree], enabledIDs: [], order: order
+            cloudModels: [visiblePremium, visibleFree, hiddenFree], enabledIDs: [], order: order, isPro: true
         )
-        #expect(collapsed.visibleFreeModels == [visibleFree])
-        #expect(collapsed.collapsedFreeModels == [hiddenFree])
+        #expect(collapsed.visibleModels == [visibleFree, visiblePremium])
+        #expect(collapsed.collapsedModels == [hiddenFree])
         let enabled = ModelListSections(
-            cloudModels: [visibleFree, hiddenFree], enabledIDs: [hiddenFree.id], order: order
+            cloudModels: [visiblePremium, visibleFree, hiddenFree], enabledIDs: [hiddenFree.id], order: order, isPro: true
         )
-        #expect(enabled.visibleFreeModels == [hiddenFree, visibleFree])
-        #expect(enabled.collapsedFreeModels.isEmpty)
+        #expect(enabled.visibleModels == [hiddenFree, visibleFree, visiblePremium])
+        #expect(enabled.collapsedModels.isEmpty)
+    }
+
+    @Test("Legacy free and premium orders migrate into the AI section")
+    func legacyOrderMigratesIntoAISection() throws {
+        let json = """
+        {"sections":["premium","translation","free","appleIntelligence"],
+         "modelIDsBySection":{"free":["f2","f1"],"premium":["p1"],"translation":["microsoft"]}}
+        """
+        let order = try JSONDecoder().decode(ModelListOrder.self, from: Data(json.utf8))
+        #expect(order.sections == [.ai, .translation, .appleIntelligence])
+        #expect(order.modelIDsBySection == ["ai": ["p1", "f2", "f1"], "translation": ["microsoft"]])
+        let untouched = """
+        {"sections":["translation","free","premium","appleIntelligence"],"modelIDsBySection":{}}
+        """
+        #expect(try JSONDecoder().decode(ModelListOrder.self, from: Data(untouched.utf8)) == ModelListOrder())
     }
 }

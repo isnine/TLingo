@@ -268,7 +268,9 @@ public final class HomeViewModel: ObservableObject {
         Self.sortModelRuns(
             modelRuns,
             order: preferences.modelResultOrder,
-            catalog: ModelListSections.resultOrder(cloudModels: models, order: preferences.modelListOrder)
+            catalog: ModelListSections.resultOrder(
+                cloudModels: models, order: preferences.modelListOrder, isPro: Entitlement.shared.isPro
+            )
         )
     }
 
@@ -544,9 +546,10 @@ public final class HomeViewModel: ObservableObject {
         }
         .store(in: &cancellables)
 
-        Publishers.Merge(
+        Publishers.Merge3(
             preferences.$modelResultOrder.dropFirst().map { _ in () },
-            preferences.$modelListOrder.dropFirst().map { _ in () }
+            preferences.$modelListOrder.dropFirst().map { _ in () },
+            Entitlement.shared.$state.map(\.isPro).removeDuplicates().dropFirst().map { _ in () }
         )
         .receive(on: RunLoop.main)
         .sink { [weak self] _ in

@@ -28,21 +28,27 @@ struct ModelResultOrderTests {
 
     @Test func catalogPreservesOrderWithinEachGroup() {
         let secondPremium = ModelConfig(id: "premium-2", displayName: "Premium 2", isPremium: true)
-        let catalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium])
+        let catalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium], isPro: false)
         #expect(catalog.map(\.id) == ModelConfig.translationServices.map(\.id)
             + [free.id, premium.id, secondPremium.id]
+            + ModelConfig.appleIntelligenceModels.map(\.id))
+        let proCatalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium], isPro: true)
+        #expect(proCatalog.map(\.id) == ModelConfig.translationServices.map(\.id)
+            + [premium.id, secondPremium.id, free.id]
             + ModelConfig.appleIntelligenceModels.map(\.id))
     }
 
     @Test func customGroupAndModelOrderControlsResults() {
         let secondPremium = ModelConfig(id: "premium-2", displayName: "Premium 2", isPremium: true)
         var order = ModelListOrder()
-        order.sections = [.premium, .free, .translation, .appleIntelligence]
-        order.modelIDsBySection[ModelListSection.premium.rawValue] = [secondPremium.id, premium.id]
+        order.sections = [.ai, .translation, .appleIntelligence]
+        order.modelIDsBySection[ModelListSection.ai.rawValue] = [secondPremium.id, premium.id, free.id]
         order.modelIDsBySection[ModelListSection.translation.rawValue] = [
             ModelConfig.microsoftTranslateID, ModelConfig.appleTranslateID,
         ]
-        let catalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium], order: order)
+        let catalog = ModelListSections.resultOrder(
+            cloudModels: [free, premium, secondPremium], order: order, isPro: false
+        )
         #expect(catalog.map(\.id) == [secondPremium.id, premium.id, free.id]
             + [ModelConfig.microsoftTranslateID, ModelConfig.appleTranslateID]
             + ModelConfig.appleIntelligenceModels.map(\.id))
@@ -56,12 +62,11 @@ struct ModelResultOrderTests {
     @Test func catalogChangesKeepSavedOrderAndAppendNewModels() {
         let newModel = ModelConfig(id: "new-free", displayName: "New Free")
         var order = ModelListOrder()
-        order.sections = [.free, .free]
-        order.modelIDsBySection[ModelListSection.free.rawValue] = ["removed", free.id, free.id]
-        #expect(order.orderedSections == [.free, .translation, .premium, .appleIntelligence])
-        #expect(order.models(in: .free, cloudModels: [newModel, premium, free]).map(\.id)
-            == [free.id, newModel.id])
-        #expect(order.models(in: .premium, cloudModels: [newModel, premium, free]) == [premium])
+        order.sections = [.ai, .ai]
+        order.modelIDsBySection[ModelListSection.ai.rawValue] = ["removed", free.id, free.id]
+        #expect(order.orderedSections == [.ai, .translation, .appleIntelligence])
+        #expect(order.models(in: .ai, cloudModels: [newModel, premium, free], isPro: false).map(\.id)
+            == [free.id, newModel.id, premium.id])
     }
 
     @Test func listOrderPersistsAndRefreshesAcrossPreferenceInstances() throws {
@@ -71,12 +76,12 @@ struct ModelResultOrderTests {
         let preferences = AppPreferences(defaults: defaults)
         #expect(preferences.modelListOrder == ModelListOrder())
         var order = ModelListOrder()
-        order.sections = [.premium, .free, .appleIntelligence, .translation]
-        order.modelIDsBySection[ModelListSection.premium.rawValue] = [premium.id]
+        order.sections = [.ai, .appleIntelligence, .translation]
+        order.modelIDsBySection[ModelListSection.ai.rawValue] = [premium.id]
         preferences.setModelListOrder(order)
         let other = AppPreferences(defaults: defaults)
         #expect(other.modelListOrder == order)
-        order.modelIDsBySection[ModelListSection.free.rawValue] = [free.id]
+        order.modelIDsBySection[ModelListSection.ai.rawValue] = [free.id, premium.id]
         other.setModelListOrder(order)
         preferences.refreshFromDefaults()
         #expect(preferences.modelListOrder == order)
