@@ -679,10 +679,8 @@ public struct HomeView: View {
 
     private var bottomComposerTextLayout: some View {
         GeometryReader { geometry in
-            if shouldCenterEmptyComposer {
-                centeredEmptyComposerLayout(availableHeight: geometry.size.height)
-            } else {
-                ScrollView {
+            ScrollView {
+                if !shouldCenterEmptyComposer {
                     VStack(alignment: .leading, spacing: 12) {
                         #if !os(macOS)
                             if !openFromExtension, !usesNativeNavigationChrome {
@@ -719,25 +717,25 @@ public struct HomeView: View {
                     .padding(.top, bottomComposerResultsTopPadding)
                     .padding(.bottom, bottomComposerResultsBottomPadding)
                 }
-                #if os(iOS)
-                // A bar (not an inset) lets results fade under the composer instead of showing through it.
-                .safeAreaBar(edge: .bottom, spacing: 0) {
-                    bottomComposerDock(availableHeight: geometry.size.height)
-                }
-                .scrollEdgeEffectStyle(.soft, for: .bottom)
-                #else
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    bottomComposerDock(availableHeight: geometry.size.height)
-                }
-                #endif
-                .background(colors.background.ignoresSafeArea())
-                .scrollIndicators(.hidden)
-                #if os(iOS)
-                    .onTapGesture {
-                        hideKeyboard()
-                    }
-                #endif
             }
+            #if os(iOS)
+            // A bar (not an inset) lets results fade under the composer instead of showing through it.
+            .safeAreaBar(edge: .bottom, spacing: 0) {
+                bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
+            }
+            .scrollEdgeEffectStyle(.soft, for: .bottom)
+            #else
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
+            }
+            #endif
+            .background(colors.background.ignoresSafeArea())
+            .scrollIndicators(.hidden)
+            #if os(iOS)
+                .onTapGesture {
+                    hideKeyboard()
+                }
+            #endif
         }
     }
 
@@ -749,57 +747,47 @@ public struct HomeView: View {
         16
     }
 
-    private func centeredEmptyComposerLayout(availableHeight: CGFloat) -> some View {
-        ZStack(alignment: .top) {
-            colors.background.ignoresSafeArea()
+    /// Both placements share this single view tree. Swapping trees when an edit clears the results
+    /// would rebuild the text view and drop its focus and IME composition (e.g. Pinyin).
+    private func bottomComposerDock(availableHeight: CGFloat, isCentered: Bool) -> some View {
+        VStack(spacing: 14) {
+            if isCentered {
+                #if os(macOS)
+                    // Optical center sits above the geometric one; the editor placeholder replaces the hint.
+                    Spacer(minLength: 0)
+                        .frame(maxHeight: availableHeight * 0.22)
+                #else
+                    keyboardDismissingSpacer
+                #endif
+            }
 
-            #if !os(macOS)
-                if !openFromExtension, !usesNativeNavigationChrome {
+            bottomComposerContent(availableHeight: availableHeight)
+
+            if isCentered {
+                #if os(macOS)
+                    Spacer(minLength: 0)
+                #else
+                    hintLabel
+                        .padding(.top, 2)
+                    keyboardDismissingSpacer
+                #endif
+            }
+        }
+        .frame(maxHeight: isCentered ? .infinity : nil)
+        .padding(.horizontal, 20)
+        .padding(.top, isCentered ? 0 : bottomComposerDockTopPadding)
+        .padding(.bottom, isCentered ? 0 : bottomComposerDockBottomPadding)
+        #if !os(macOS)
+            .overlay(alignment: .top) {
+                if isCentered, !openFromExtension, !usesNativeNavigationChrome {
                     header
                         .frame(maxWidth: bottomComposerContentMaxWidth, alignment: .leading)
                         .frame(maxWidth: .infinity, alignment: .top)
                         .padding(.horizontal, 20)
                         .padding(.top, 28)
                 }
-            #endif
-
-            centeredEmptyComposer(availableHeight: availableHeight)
-        }
-        #if os(iOS)
-        .onTapGesture {
-            hideKeyboard()
-        }
+            }
         #endif
-    }
-
-    private func centeredEmptyComposer(availableHeight: CGFloat) -> some View {
-        VStack(spacing: 14) {
-            #if os(macOS)
-                // Optical center sits above the geometric one; the editor placeholder replaces the hint.
-                Spacer(minLength: 0)
-                    .frame(maxHeight: availableHeight * 0.22)
-
-                bottomComposerContent(availableHeight: availableHeight)
-            #else
-                Spacer(minLength: 0)
-
-                bottomComposerContent(availableHeight: availableHeight)
-
-                hintLabel
-                    .padding(.top, 2)
-            #endif
-
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 20)
-    }
-
-    private func bottomComposerDock(availableHeight: CGFloat) -> some View {
-        bottomComposerContent(availableHeight: availableHeight)
-            .padding(.horizontal, 20)
-            .padding(.top, bottomComposerDockTopPadding)
-            .padding(.bottom, bottomComposerDockBottomPadding)
         #if os(macOS)
             .background(colors.background.opacity(colorScheme == .dark ? 0.96 : 0.94).ignoresSafeArea(edges: .bottom))
         #else
@@ -818,6 +806,16 @@ public struct HomeView: View {
             }
         #endif
     }
+
+    #if os(iOS)
+        private var keyboardDismissingSpacer: some View {
+            Spacer(minLength: 0)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    hideKeyboard()
+                }
+        }
+    #endif
 
     private func bottomComposerContent(availableHeight: CGFloat) -> some View {
         let heights = bottomComposerHeights(availableHeight: availableHeight)

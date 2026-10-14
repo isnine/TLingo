@@ -510,7 +510,8 @@
         func updateNSView(_ nsView: NSScrollView, context _: Context) {
             guard let textView = nsView.documentView as? LanguageSwapTextView else { return }
             textView.onSwapLanguages = onSwapLanguages
-            if textView.string != text {
+            // Overwriting during IME composition (e.g. Pinyin) discards the marked text.
+            if !textView.hasMarkedText(), textView.string != text {
                 textView.string = text
             }
             textView.textColor = NSColor(textColor)
@@ -551,7 +552,10 @@
             }
 
             func textDidChange(_ notification: Notification) {
-                guard let textView = notification.object as? NSTextView else { return }
+                // Publish only committed text so composing input doesn't trigger re-renders.
+                guard let textView = notification.object as? NSTextView,
+                      !textView.hasMarkedText()
+                else { return }
                 let updated = textView.string
                 if parent.text != updated {
                     parent.text = updated
