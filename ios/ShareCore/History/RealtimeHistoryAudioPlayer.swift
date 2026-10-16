@@ -27,7 +27,7 @@
                 let item = AVPlayerItem(asset: composition)
                 let player = AVPlayer(playerItem: item)
                 timeObserver = player.addPeriodicTimeObserver(
-                    forInterval: CMTime(seconds: 0.1, preferredTimescale: 600),
+                    forInterval: CMTime(seconds: 0.05, preferredTimescale: 600),
                     queue: .main
                 ) { [weak self] time in
                     MainActor.assumeIsolated {

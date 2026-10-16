@@ -399,6 +399,7 @@ private struct RealtimeHistoryDetailContent: View {
     @State private var trackDisplayMode: TrackDisplayMode
     @State private var selectedTrackID: UUID?
     @State private var playbackTime: TimeInterval = 0
+    @State private var isPlaying = false
     @State private var scrollTargetSegmentID: UUID?
     #if os(macOS) && arch(arm64)
         @State private var reconstructionProgress: RealtimeHistoryMOSSProgress?
@@ -440,7 +441,9 @@ private struct RealtimeHistoryDetailContent: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    sessionHeader
+                    #if !os(macOS)
+                        sessionHeader
+                    #endif
                     #if os(macOS)
                         reconstructionError
                     #endif
@@ -457,12 +460,24 @@ private struct RealtimeHistoryDetailContent: View {
                     proxy.scrollTo(segmentID, anchor: .center)
                 }
             }
+            .onChange(of: selectedTrack?.activeSegmentID(at: playbackTime)) { _, segmentID in
+                guard isPlaying, let segmentID else { return }
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    proxy.scrollTo(segmentID, anchor: .center)
+                }
+            }
         }
+        #if os(macOS)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            pinnedHeader
+        }
+        #else
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if currentSession.audioRecordings.contains(where: \.hasPlayableAudio) {
+            if hasPlayableAudio {
                 floatingAudioTimeline
             }
         }
+        #endif
         .background(colors.background.ignoresSafeArea())
         .fileExporter(
             isPresented: $isExportPresented,
@@ -676,14 +691,50 @@ private struct RealtimeHistoryDetailContent: View {
         primaryRealtimeCaptionSource(for: currentSession)
     }
 
+    private var hasPlayableAudio: Bool {
+        currentSession.audioRecordings.contains(where: \.hasPlayableAudio)
+    }
+
     private var audioTimeline: some View {
         RealtimeHistoryAudioTimelineView(
             recordings: currentSession.audioRecordings.filter(\.hasPlayableAudio),
             selectedSource: $visibleCaptionSource,
             playbackTime: $playbackTime,
+            isPlaying: $isPlaying,
             onScrub: scrollToPlaybackTime
         )
     }
+
+    #if os(macOS)
+        /// Title and player stay visible while the transcript scrolls underneath.
+        private var pinnedHeader: some View {
+            VStack(alignment: .leading, spacing: 14) {
+                sessionHeader
+                if hasPlayableAudio {
+                    audioTimeline
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(colors.cardBackground)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(colors.divider.opacity(0.6), lineWidth: 0.5)
+                        }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
+            .background(colors.background)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(colors.divider.opacity(0.5))
+                    .frame(height: 0.5)
+            }
+        }
+    #endif
 
     private var floatingAudioTimeline: some View {
         audioTimeline
@@ -1185,8 +1236,9 @@ private struct RealtimeHistoryDetailContent: View {
     ) -> some View {
         let track = track ?? selectedTrack
         let isActive = track?.activeSegmentID(at: playbackTime) == segment.id
-        let onSeek: (() -> Void)? = {
-            playbackTime = segment.offset
+        let spokenWords = isActive ? track.map { spokenWords(for: segment, in: $0) } : nil
+        let onSeek: ((TimeInterval) -> Void)? = { time in
+            playbackTime = time
         }
         #if os(macOS)
             let onRenameSpeaker = segment.speakerID.map { speakerID in
@@ -1202,9 +1254,23 @@ private struct RealtimeHistoryDetailContent: View {
             speakerName: speakerName(for: segment, track: track),
             alignment: transcriptAlignment(for: segment, track: track),
             isActive: isActive,
+            spokenWords: spokenWords,
+            playbackTime: playbackTime,
             annotation: annotation,
             onSeek: onSeek,
             onRenameSpeaker: onRenameSpeaker
+        )
+    }
+
+    private func spokenWords(
+        for segment: RealtimeHistoryTrackSegment,
+        in track: RealtimeHistoryTrack
+    ) -> RealtimeHistorySpokenWords {
+        RealtimeHistorySpokenWords(
+            text: segment.sourceText,
+            offset: segment.offset,
+            recordedDuration: segment.duration,
+            nextOffset: track.segments.lazy.map(\.offset).filter { $0 > segment.offset }.min()
         )
     }
 
@@ -1410,11 +1476,16 @@ private struct RealtimeTranscriptRow: View {
     let speakerName: String?
     let alignment: Alignment
     let isActive: Bool
+    let spokenWords: RealtimeHistorySpokenWords?
+    let playbackTime: TimeInterval
     let annotation: String?
-    let onSeek: (() -> Void)?
+    let onSeek: ((TimeInterval) -> Void)?
     let onRenameSpeaker: (() -> Void)?
 
     @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovered = false
+
+    private static let seekScheme = "tlingo-seek"
 
     init(
         segment: RealtimeHistorySegment,
@@ -1423,8 +1494,10 @@ private struct RealtimeTranscriptRow: View {
         speakerName: String? = nil,
         alignment: Alignment = .leading,
         isActive: Bool = false,
+        spokenWords: RealtimeHistorySpokenWords? = nil,
+        playbackTime: TimeInterval = 0,
         annotation: String?,
-        onSeek: (() -> Void)? = nil,
+        onSeek: ((TimeInterval) -> Void)? = nil,
         onRenameSpeaker: (() -> Void)? = nil
     ) {
         self.segment = segment
@@ -1433,6 +1506,8 @@ private struct RealtimeTranscriptRow: View {
         self.speakerName = speakerName
         self.alignment = alignment
         self.isActive = isActive
+        self.spokenWords = spokenWords
+        self.playbackTime = playbackTime
         self.annotation = annotation
         self.onSeek = onSeek
         self.onRenameSpeaker = onRenameSpeaker
@@ -1442,8 +1517,17 @@ private struct RealtimeTranscriptRow: View {
         AppColors.palette(for: colorScheme)
     }
 
+    /// Diarized conversations keep chat bubbles; plain transcripts read as a timestamped list.
+    private var isBubble: Bool {
+        speakerID != nil
+    }
+
+    private var hasTranslation: Bool {
+        !segment.translatedText.isEmpty
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: isBubble ? 12 : 6) {
             if alignment == .trailing {
                 Spacer(minLength: 120)
             } else {
@@ -1451,12 +1535,8 @@ private struct RealtimeTranscriptRow: View {
             }
 
             VStack(alignment: .leading, spacing: 5) {
-                HistoryMarkdownText(
-                    text: segment.sourceText,
-                    font: .system(size: 13),
-                    foregroundColor: colors.textSecondary
-                )
-                if !segment.translatedText.isEmpty {
+                sourceText
+                if hasTranslation {
                     HistoryMarkdownText(
                         text: segment.translatedText,
                         font: .system(size: 15, weight: .medium),
@@ -1477,21 +1557,27 @@ private struct RealtimeTranscriptRow: View {
                     )
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .frame(maxWidth: speakerID == nil ? .infinity : 760, alignment: .leading)
+            .padding(.horizontal, isBubble ? 14 : 10)
+            .padding(.vertical, isBubble ? 13 : 8)
+            .frame(maxWidth: isBubble ? 760 : .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isActive ? colors.accent.opacity(0.10) : colors.cardBackground)
+                    .fill(rowFill)
             )
-            .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(isActive ? colors.accent.opacity(0.45) : .clear, lineWidth: 1)
-            }
             .contentShape(Rectangle())
             .onTapGesture {
-                onSeek?()
+                // The active row's words are seek links; a row tap would override their time.
+                guard !isActive else { return }
+                onSeek?(segment.offset)
             }
+            .onHover { isHovered = $0 }
+            .environment(\.openURL, OpenURLAction { url in
+                guard url.scheme == Self.seekScheme, let time = TimeInterval(url.host() ?? "") else {
+                    return .systemAction
+                }
+                onSeek?(time)
+                return .handled
+            })
 
             if alignment == .leading {
                 Spacer(minLength: 0)
@@ -1499,6 +1585,43 @@ private struct RealtimeTranscriptRow: View {
                 timestampButton
             }
         }
+    }
+
+    private var rowFill: Color {
+        if isBubble {
+            return isActive ? colors.accent.opacity(0.08) : colors.cardBackground
+        }
+        return isHovered && !isActive && onSeek != nil ? colors.textSecondary.opacity(0.07) : .clear
+    }
+
+    /// Spoken text; while playing, the word under the playhead takes the accent color.
+    private var sourceText: some View {
+        Text(highlightedSource)
+            .font(.system(size: hasTranslation ? 13 : 15))
+            .foregroundStyle(hasTranslation && !isActive ? colors.textSecondary : colors.textPrimary)
+            .lineSpacing(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .contentDirectionAware(segment.sourceText)
+    }
+
+    private var highlightedSource: AttributedString {
+        let text = segment.sourceText
+        var attributed = AttributedString(text)
+        guard isActive, let spokenWords else { return attributed }
+
+        let activeIndex = spokenWords.wordIndex(at: playbackTime)
+        for (index, word) in spokenWords.words.enumerated() {
+            guard let range = Range(word.range, in: attributed) else { continue }
+            if onSeek != nil {
+                attributed[range].link = URL(string: "\(Self.seekScheme)://\(word.startTime)")
+            }
+            // Links default to the tint color; keep unspoken words in the row's text color.
+            attributed[range].foregroundColor = index == activeIndex ? colors.accent : colors.textPrimary
+            if index == activeIndex {
+                attributed[range].underlineStyle = .single
+            }
+        }
+        return attributed
     }
 
     private var timestampButton: some View {
@@ -1511,7 +1634,7 @@ private struct RealtimeTranscriptRow: View {
                     }
             } else {
                 Button {
-                    onSeek?()
+                    onSeek?(segment.offset)
                 } label: {
                     sideLabelText
                 }
@@ -1525,13 +1648,13 @@ private struct RealtimeTranscriptRow: View {
     private var sideLabelText: some View {
         Text(sideLabel)
             .font(.system(size: 11, weight: .semibold, design: .monospaced))
-            .foregroundColor(isActive ? colors.accent : colors.textSecondary)
+            .monospacedDigit()
+            .foregroundColor(isActive ? colors.accent : colors.textSecondary.opacity(isBubble ? 1 : 0.8))
             .frame(
-                width: speakerID == nil ? 42 : 82,
-                height: 32,
+                width: isBubble ? 82 : 42,
                 alignment: alignment == .trailing ? .leading : .trailing
             )
-            .padding(.top, 4)
+            .padding(.top, isBubble ? 15 : 10)
     }
 
     private var sideLabel: String {

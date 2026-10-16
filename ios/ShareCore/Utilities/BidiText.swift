@@ -129,7 +129,7 @@ extension View {
     /// punctuation. Applied at the leaf so the surrounding layout (which
     /// intentionally tracks the UI language) is unaffected.
     @ViewBuilder
-    func contentDirectionAware(_ text: String) -> some View {
+    public func contentDirectionAware(_ text: String) -> some View {
         let isRTL = BidiText.isRTLText(text)
         environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
             .multilineTextAlignment(isRTL ? .trailing : .leading)

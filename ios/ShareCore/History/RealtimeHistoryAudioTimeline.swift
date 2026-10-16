@@ -102,6 +102,62 @@
             return url
         }
 
+        /// Loudness envelope of the whole recording timeline, normalized to 0...1. Each bucket covers
+        /// `duration / bucketCount` seconds; gaps between audio segments stay silent.
+        public static func waveformLevels(
+            for recording: RealtimeHistoryAudioRecording,
+            bucketCount: Int
+        ) async throws -> [Float] {
+            let totalDuration = duration(for: recording)
+            guard totalDuration > 0, bucketCount > 0 else { return [] }
+            var sumOfSquares = [Double](repeating: 0, count: bucketCount)
+            var sampleCounts = [Int](repeating: 0, count: bucketCount)
+
+            for segment in recording.segments.sorted(by: { $0.offset < $1.offset }) {
+                try Task.checkCancellation()
+                guard let url = RealtimeHistoryAudioStorage.fileURL(for: segment),
+                      FileManager.default.fileExists(atPath: url.path)
+                else {
+                    throw RealtimeHistoryAudioTimelineError.missingAudioFile(segment.relativePath)
+                }
+                let file = try AVAudioFile(forReading: url)
+                let format = file.processingFormat
+                let bucketsPerFrame = Double(bucketCount) / (totalDuration * format.sampleRate)
+                let firstFrame = segment.offset * format.sampleRate
+                var framesRead: AVAudioFramePosition = 0
+
+                while file.framePosition < file.length {
+                    try Task.checkCancellation()
+                    let frameCount = min(readFrameCapacity, AVAudioFrameCount(file.length - file.framePosition))
+                    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+                        throw RealtimeHistoryAudioTimelineError.conversionUnavailable
+                    }
+                    try file.read(into: buffer, frameCount: frameCount)
+                    let length = Int(buffer.frameLength)
+                    guard length > 0, let channels = buffer.floatChannelData else { break }
+                    let channelCount = Int(format.channelCount)
+                    for frame in 0 ..< length {
+                        var sample: Float = 0
+                        for channel in 0 ..< channelCount {
+                            sample = max(sample, abs(channels[channel][frame]))
+                        }
+                        let position = (firstFrame + Double(framesRead + AVAudioFramePosition(frame))) * bucketsPerFrame
+                        let bucket = min(bucketCount - 1, max(0, Int(position)))
+                        sumOfSquares[bucket] += Double(sample * sample)
+                        sampleCounts[bucket] += 1
+                    }
+                    framesRead += AVAudioFramePosition(length)
+                }
+            }
+
+            let levels = zip(sumOfSquares, sampleCounts).map { sum, count in
+                count > 0 ? Float((sum / Double(count)).squareRoot()) : 0
+            }
+            guard let loudest = levels.max(), loudest > 0 else { return levels }
+            // A mild curve keeps quiet speech visible without flattening loud passages.
+            return levels.map { pow($0 / loudest, 0.8) }
+        }
+
         private static func writeSilence(
             frameCount: AVAudioFrameCount,
             format: AVAudioFormat,
