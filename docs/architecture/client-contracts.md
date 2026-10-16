@@ -44,6 +44,11 @@ headers = X-Timestamp, X-Signature
 `Recommended` 标签仅用于 `gemini-3.8-flash`，不改变免费默认模型或用户已保存的选择。
 会员目录包含 `deepseek-v4-pro`（DeepSeek-V4-Pro），其 `isPremium: true`、`supportsVision: false`；
 沿用聊天请求及结构化输出契约，不支持图片输入。`deepseek-flash` 继续保留且支持图片。
+会员目录同时包含 `gemini-4-argon`（Gemini 4 Argon），其 `isPremium: true`、`supportsVision: true`；
+沿用聊天、流式及 JSON Schema 输出契约。服务端将 `none`／`minimal` 推理级别映射为 `low`，
+保留显式 `low`／`medium`／`high`；不改变现有模型、推荐标签或免费默认选择。
+会员目录前两位依次为 `gemini-4-argon`、`gemini-3.8-flash`；Argon 带 `LATEST` 标签，
+Flash 保留原有标签和样式。其余模型相对顺序、免费目录和默认模型不变。
 
 ## 文本流式计时
 
