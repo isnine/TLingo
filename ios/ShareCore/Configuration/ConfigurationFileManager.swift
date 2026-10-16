@@ -227,79 +227,11 @@ public final class ConfigurationFileManager: @unchecked Sendable {
         return try loadConfiguration(from: fileURL)
     }
 
-    /// Delete a configuration file
-    public func deleteConfiguration(at url: URL) throws {
-        try fileManager.removeItem(at: url)
-    }
-
     /// Delete a configuration by name
     public func deleteConfiguration(named name: String) throws {
         let sanitizedName = Self.sanitizeFilename(name)
         let fileURL = configurationsDirectory.appendingPathComponent("\(sanitizedName).json")
         try fileManager.removeItem(at: fileURL)
-    }
-
-    /// Create and save the default configuration template
-    @MainActor
-    public func createDefaultTemplate(
-        from store: AppConfigurationStore,
-        preferences: AppPreferences
-    ) throws -> URL {
-        guard let data = ConfigurationService.shared.exportConfiguration(
-            from: store,
-            preferences: preferences
-        ) else {
-            throw ConfigurationError.invalidData
-        }
-
-        let config = try JSONDecoder().decode(AppConfiguration.self, from: data)
-        let name = generateUniqueName(base: "Default Template")
-        try saveConfiguration(config, name: name)
-
-        return configurationsDirectory.appendingPathComponent("\(Self.sanitizeFilename(name)).json")
-    }
-
-    /// Duplicate an existing configuration with a new name
-    public func duplicateConfiguration(from sourceURL: URL) throws -> URL {
-        let sourceConfig = try loadConfiguration(from: sourceURL)
-        let sourceName = sourceURL.deletingPathExtension().lastPathComponent
-        let newName = generateUniqueName(base: "\(sourceName) Copy")
-        try saveConfiguration(sourceConfig, name: newName)
-        return configurationsDirectory.appendingPathComponent("\(Self.sanitizeFilename(newName)).json")
-    }
-
-    /// Create a new configuration from the bundled default template
-    public func createFromDefaultTemplate() throws -> URL {
-        guard let bundleURL = Self.bundledDefaultConfigURL() else {
-            throw ConfigurationError.bundledConfigNotFound
-        }
-
-        // Load the bundled configuration
-        let bundledConfig = try loadConfiguration(from: bundleURL)
-
-        // Generate a unique name
-        let name = generateUniqueName(base: "New Configuration")
-        try saveConfiguration(bundledConfig, name: name)
-
-        return configurationsDirectory.appendingPathComponent("\(Self.sanitizeFilename(name)).json")
-    }
-
-    /// Generate a unique name if the base name already exists
-    private func generateUniqueName(base: String) -> String {
-        let existingNames = Set(listConfigurations().map { $0.name })
-
-        if !existingNames.contains(base) {
-            return base
-        }
-
-        var counter = 1
-        var candidate = "\(base) \(counter)"
-        while existingNames.contains(candidate) {
-            counter += 1
-            candidate = "\(base) \(counter)"
-        }
-
-        return candidate
     }
 
     /// Sanitize a filename to remove invalid characters

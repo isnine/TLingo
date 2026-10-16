@@ -386,24 +386,6 @@ public final class AppConfigurationStore: ObservableObject {
         )
     }
 
-    /// Reset to bundled default configuration (read-only mode)
-    public func resetToDefault() {
-        // Stop monitoring current config
-        if let name = currentConfigurationName {
-            configFileManager.stopMonitoring(configurationNamed: name)
-        }
-
-        if let name = currentConfigurationName {
-            do {
-                try configFileManager.deleteConfiguration(named: name)
-            } catch {
-                logger.error("Failed to delete configuration: \(error, privacy: .public)")
-            }
-        }
-
-        loadConfiguration()
-    }
-
     private func rebuildActions() {
         actions = Self.builtInActions + customActions
     }

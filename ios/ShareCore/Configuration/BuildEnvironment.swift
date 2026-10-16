@@ -44,12 +44,6 @@ public enum BuildEnvironment {
         isDirectDistribution = true
     }
 
-    /// Validates that required configuration is present.
-    /// - Returns: Array of missing configuration descriptions
-    public static func validateConfiguration() -> [String] {
-        AppSecrets.cloudSecret.isEmpty ? ["Cloud Secret"] : []
-    }
-
     /// Debug description of current configuration (secrets redacted)
     public static var debugDescription: String {
         let secret = AppSecrets.cloudSecret

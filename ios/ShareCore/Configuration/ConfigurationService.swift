@@ -28,18 +28,6 @@ public final class ConfigurationService: Sendable {
         return encodeConfiguration(config)
     }
 
-    /// Export current configuration to a formatted JSON string
-    @MainActor
-    public func exportConfigurationString(
-        from store: AppConfigurationStore,
-        preferences: AppPreferences
-    ) -> String? {
-        guard let data = exportConfiguration(from: store, preferences: preferences) else {
-            return nil
-        }
-        return String(data: data, encoding: .utf8)
-    }
-
     // MARK: - Import
 
     /// Import configuration from JSON data
@@ -167,7 +155,6 @@ public enum ConfigurationError: LocalizedError, Sendable {
     case fileNotFound(name: String)
     case fileWriteFailed(Error)
     case fileReadFailed(Error)
-    case bundledConfigNotFound
     case noActiveConfiguration
     case saveSuspended
 
@@ -190,8 +177,6 @@ public enum ConfigurationError: LocalizedError, Sendable {
             return String(localized: "Failed to write configuration file: \(error.localizedDescription)")
         case let .fileReadFailed(error):
             return String(localized: "Failed to read configuration file: \(error.localizedDescription)")
-        case .bundledConfigNotFound:
-            return String(localized: "Bundled default configuration not found in app bundle")
         case .noActiveConfiguration:
             return String(localized: "No active configuration to save")
         case .saveSuspended:

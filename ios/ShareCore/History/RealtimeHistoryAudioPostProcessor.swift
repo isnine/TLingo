@@ -638,24 +638,6 @@
                     try await body(buffer)
                 }
             }
-
-            private static func readFloatSamples(from url: URL) async throws -> [Float] {
-                let converter = RealtimePCMBufferConverter(commonFormat: .pcmFormatFloat32)
-                var samples: [Float] = []
-                try await forEachAudioBuffer(at: url) { buffer in
-                    try Task.checkCancellation()
-                    guard let converted = converter?.pcmBuffer(from: buffer),
-                          let channelData = converted.floatChannelData
-                    else {
-                        return
-                    }
-                    samples.append(contentsOf: UnsafeBufferPointer(
-                        start: channelData[0],
-                        count: Int(converted.frameLength)
-                    ))
-                }
-                return samples
-            }
         #endif
 
         private static func speechRecognizer(for language: SourceLanguageOption) throws -> SFSpeechRecognizer {

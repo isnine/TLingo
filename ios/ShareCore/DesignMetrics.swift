@@ -26,12 +26,3 @@ public enum TLingoSpacing {
     public static let lg: CGFloat = 20
     public static let xl: CGFloat = 24
 }
-
-public enum TLingoMetrics {
-    /// Minimum tappable size for icon-only buttons.
-    #if os(iOS)
-        public static let minimumHitTarget: CGFloat = 44
-    #else
-        public static let minimumHitTarget: CGFloat = 28
-    #endif
-}
