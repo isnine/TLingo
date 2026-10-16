@@ -6,8 +6,8 @@
 import Foundation
 
 public enum ModelListSection: String, CaseIterable, Codable, Identifiable, Sendable {
-    case translation
     case ai
+    case translation
     case appleIntelligence
 
     public var id: String {

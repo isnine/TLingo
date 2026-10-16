@@ -29,12 +29,12 @@ struct ModelResultOrderTests {
     @Test func catalogPreservesOrderWithinEachGroup() {
         let secondPremium = ModelConfig(id: "premium-2", displayName: "Premium 2", isPremium: true)
         let catalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium], isPro: false)
-        #expect(catalog.map(\.id) == ModelConfig.translationServices.map(\.id)
-            + [free.id, premium.id, secondPremium.id]
+        #expect(catalog.map(\.id) == [free.id, premium.id, secondPremium.id]
+            + ModelConfig.translationServices.map(\.id)
             + ModelConfig.appleIntelligenceModels.map(\.id))
         let proCatalog = ModelListSections.resultOrder(cloudModels: [free, premium, secondPremium], isPro: true)
-        #expect(proCatalog.map(\.id) == ModelConfig.translationServices.map(\.id)
-            + [premium.id, secondPremium.id, free.id]
+        #expect(proCatalog.map(\.id) == [premium.id, secondPremium.id, free.id]
+            + ModelConfig.translationServices.map(\.id)
             + ModelConfig.appleIntelligenceModels.map(\.id))
     }
 

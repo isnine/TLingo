@@ -73,6 +73,8 @@ struct ModelListSectionsTests {
         let untouched = """
         {"sections":["translation","free","premium","appleIntelligence"],"modelIDsBySection":{}}
         """
-        #expect(try JSONDecoder().decode(ModelListOrder.self, from: Data(untouched.utf8)) == ModelListOrder())
+        let untouchedOrder = try JSONDecoder().decode(ModelListOrder.self, from: Data(untouched.utf8))
+        #expect(untouchedOrder.sections == [.translation, .ai, .appleIntelligence])
+        #expect(untouchedOrder.modelIDsBySection.isEmpty)
     }
 }
