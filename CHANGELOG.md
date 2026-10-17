@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.9] - 2026-10-16
+
+### Added
+
+- Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export.
+- Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS.
+
+### Improved
+
+- Put AI Models first in the model picker, with premium models first for members until the user sets a custom order.
+- Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking.
+- Unified the language catalog with a searchable picker and refined translation results, settings, and macOS navigation.
+- Kept realtime running in the background, synced Picture in Picture pause state, and improved long-session performance.
+
+### Fixed
+
+- Stabilized realtime captions, stop timing, caption alignment, macOS caption scrolling, and speech model downloads.
+- Allowed more Apple Speech languages and repaired Apple Translate download routing.
+- Preserved IME composition and translation input, surfaced manual OAuth refresh failures, and kept vocabulary changes consistent.
+
 ## [3.8.6] - 2026-10-14
 
 ### Added
