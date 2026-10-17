@@ -11,7 +11,9 @@ import UniformTypeIdentifiers
 public struct VocabularyView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
-    @ObservedObject private var store = VocabularyStore.shared
+    // StateObject defers opening the store until the view is shown; hosts build
+    // this view eagerly (e.g. History's toolbar link) on the launch path.
+    @StateObject private var store = VocabularyStore.shared
     @State private var searchText = ""
     #if os(iOS)
         @State private var isExporting = false

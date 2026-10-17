@@ -83,7 +83,10 @@ public final class TranslationHistoryService {
             modelContainer = container
             persistentContext = context
             if pruneAudioRecordings {
-                Self.pruneUnreferencedAudioRecordings(using: context)
+                // The sweep reads every record; keep it off the main thread and Home's first frame.
+                Task.detached(priority: .utility) {
+                    Self.pruneUnreferencedAudioRecordings(using: ModelContext(container))
+                }
             }
             logger.info("Initialized at \(storeURL.path, privacy: .public)")
         } catch {
@@ -540,7 +543,7 @@ extension TranslationHistoryService {
         deleteAudio(recordings)
     }
 
-    static func pruneUnreferencedAudioRecordings(
+    nonisolated static func pruneUnreferencedAudioRecordings(
         fetchRecords: () throws -> [TranslationRecord],
         prune: (Set<String>) -> Void
     ) {
@@ -570,7 +573,7 @@ extension TranslationHistoryService {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    private static func pruneUnreferencedAudioRecordings(using context: ModelContext) {
+    private nonisolated static func pruneUnreferencedAudioRecordings(using context: ModelContext) {
         pruneUnreferencedAudioRecordings(
             fetchRecords: {
                 try context.fetch(FetchDescriptor<TranslationRecord>())

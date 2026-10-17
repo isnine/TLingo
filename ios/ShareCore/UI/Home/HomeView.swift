@@ -339,7 +339,7 @@ public struct HomeView: View {
 
     private var fullHomeContent: some View {
         ZStack {
-            homeContentLayout
+            homeContentLayout.erasedForLaunch()
 
             // Loading overlay when configuration is loading
             if viewModel.isLoadingConfiguration {
@@ -407,6 +407,7 @@ public struct HomeView: View {
                     .ignoresSafeArea(.all, edges: .vertical)
             }
         }
+        .erasedForLaunch()
         #if os(iOS)
         .sheet(item: $selectedResult) { selectedResult in
             resultDetailSheet(for: selectedResult.id)
@@ -483,6 +484,7 @@ public struct HomeView: View {
         .onDisappear {
             HomeInputRouter.shared.unregisterReceiver(id: inputReceiverID)
         }
+        .erasedForLaunch()
         #if os(macOS)
         .onAppear {
             // Notify the host app (macOS only) so AppleTranslationWindowManager can register
@@ -591,6 +593,7 @@ public struct HomeView: View {
             }
         }
         #endif
+        .erasedForLaunch()
         #if canImport(Translation)
         .translationTask(appleTranslationConfig) { session in
             logger.debug(".translationTask fired, session received")
@@ -716,12 +719,14 @@ public struct HomeView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, bottomComposerResultsTopPadding)
                     .padding(.bottom, bottomComposerResultsBottomPadding)
+                    .erasedForLaunch()
                 }
             }
             #if os(iOS)
             // A bar (not an inset) lets results fade under the composer instead of showing through it.
             .safeAreaBar(edge: .bottom, spacing: 0) {
                 bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
+                    .erasedForLaunch()
             }
             .scrollEdgeEffectStyle(.soft, for: .bottom)
             #else
@@ -1818,7 +1823,8 @@ public struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 6)
             }
-            .onAppear(perform: refreshRecentTextRecords)
+            // `.task` runs after the first frame commits, so opening the history store doesn't delay launch.
+            .task { refreshRecentTextRecords() }
             .onReceive(NotificationCenter.default.publisher(for: .translationRecordSaved)) { _ in
                 refreshRecentTextRecords()
             }
@@ -3310,6 +3316,12 @@ private extension View {
         #else
             self
         #endif
+    }
+
+    /// Cuts HomeView's modifier chain at stable seams. Without it the fully nested type makes the Swift
+    /// runtime demangle huge metadata names on the first frame (~200 ms on an iPhone 15 Plus).
+    func erasedForLaunch() -> AnyView {
+        AnyView(self)
     }
 
     func shimmer() -> some View {
