@@ -15,7 +15,6 @@
         @State private var isInspectorPresented: Bool
         @State private var isAdvancedSettingsExpanded = false
         @State private var isStartingRealtimeSession = false
-        @State private var isRealtimeOnboardingPresented = false
         @State private var inspectorWidth: CGFloat = InspectorColumnWidth.ideal
         @State private var inspectorDragStartWidth: CGFloat?
         @State private var isAddingLane = false
@@ -49,7 +48,6 @@
                         store: store,
                         preferences: preferences,
                         permissionManager: permissionManager,
-                        isOnboardingPresented: $isRealtimeOnboardingPresented,
                         inspectorTrailingPadding: isInspectorPresented ? inspectorWidth + 20 : 20,
                         startBlocker: startBlocker,
                         onImportAudio: {
@@ -209,13 +207,6 @@
                     allowsMultipleSelection: false
                 ) { result in
                     handleAudioImport(result)
-                }
-                .sheet(isPresented: $isRealtimeOnboardingPresented) {
-                    OnboardingView(
-                        isPresented: $isRealtimeOnboardingPresented,
-                        initialStep: 2,
-                        isSingleStep: true
-                    )
                 }
         }
     }

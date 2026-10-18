@@ -13,7 +13,6 @@
     @MainActor
     final class TranslationPopupController: NSObject, NSWindowDelegate {
         var onDismiss: (() -> Void)?
-        var onTranslationSucceeded: (() -> Void)?
 
         private var panel: TranslationPopupPanel?
         private var dismissMonitor: PopupDismissMonitor?
@@ -21,15 +20,9 @@
         private var currentRequestID: UUID?
 
         #if DIRECT_DISTRIBUTION
-            func showAtCursor(
-                selection: SelectionTextGrabber.Selection,
-                actionName: String? = nil,
-                trialModels: [ModelConfig] = []
-            ) {
+            func showAtCursor(selection: SelectionTextGrabber.Selection) {
                 showAtCursor(
                     text: selection.text,
-                    actionName: actionName,
-                    trialModels: trialModels,
                     onReplace: { text in await selection.replace(with: text) }
                 )
             }
@@ -40,14 +33,12 @@
             near point: CGPoint? = nil,
             requestID: UUID? = nil,
             actionID: String? = nil,
-            actionName: String? = nil,
-            trialModels: [ModelConfig] = [],
             onReplace: ((String) async -> Bool)? = nil
         ) {
             dismiss()
             currentRequestID = requestID
 
-            let viewModel = HomeViewModel(onboardingTrialModels: trialModels)
+            let viewModel = HomeViewModel()
             currentViewModel = viewModel
             // Lets Apple Translate download language packs through the hidden translation window.
             NotificationCenter.default.post(
@@ -79,9 +70,6 @@
                 },
                 onResizeEnded: { [weak self] in
                     self?.persistCurrentFrame()
-                },
-                onTranslationSucceeded: { [weak self] in
-                    self?.onTranslationSucceeded?()
                 },
                 onReplace: replace
             )
@@ -151,18 +139,14 @@
                 viewModel.inputText = text
                 return
             }
-            if let actionName {
-                viewModel.applyDeepLink(text: text, actionName: actionName, configName: nil)
-            } else {
-                viewModel.inputText = text
-                if let action = viewModel.actions.first(where: { $0.id == actionID }) {
-                    viewModel.selectAction(action)
-                }
-                viewModel.performSelectedAction(
-                    refreshEntitlement: false,
-                    allowModelFallback: true
-                )
+            viewModel.inputText = text
+            if let action = viewModel.actions.first(where: { $0.id == actionID }) {
+                viewModel.selectAction(action)
             }
+            viewModel.performSelectedAction(
+                refreshEntitlement: false,
+                allowModelFallback: true
+            )
         }
 
         func dismiss() {

@@ -49,7 +49,6 @@ struct SettingsView: View {
         @ObservedObject private var hotKeyManager = HotKeyManager.shared
         @State private var recordingHotKeyType: HotKeyType?
         @State private var localEventMonitor: Any?
-        @State private var showOnboarding = false
         #if DIRECT_DISTRIBUTION
             @State private var showAccessibilityOnboarding = false
             @StateObject private var accessibilityPermissionManager = AccessibilityPermissionManager()
@@ -188,11 +187,6 @@ struct SettingsView: View {
             )
         }
         #endif
-        #if os(macOS)
-        .sheet(isPresented: $showOnboarding) {
-            OnboardingView(isPresented: $showOnboarding)
-        }
-        #endif
         .onAppear {
             preferences.refreshFromDefaults()
         }
@@ -290,18 +284,6 @@ struct SettingsView: View {
                     openURL(Self.privacyPolicyURL)
                 } label: {
                     settingsLabel("Privacy Policy", systemImage: "hand.raised")
-                }
-            #endif
-
-            #if os(macOS)
-                actionRow {
-                    showOnboarding = true
-                } label: {
-                    settingsLabel(
-                        "Replay Onboarding",
-                        systemImage: "sparkles",
-                        subtitle: Text("Walk through the setup guide again")
-                    )
                 }
             #endif
         } header: {

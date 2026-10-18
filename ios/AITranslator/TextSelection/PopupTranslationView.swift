@@ -14,7 +14,6 @@
         @State private var showDataConsent = false
         var onResizeDrag: ((CGSize) -> Void)?
         var onResizeEnded: (() -> Void)?
-        var onTranslationSucceeded: (() -> Void)?
         var onReplace: ((String) -> Void)?
         @Environment(\.colorScheme) private var colorScheme
 
@@ -39,13 +38,6 @@
                         showDataConsent = true
                         viewModel.showDataConsentRequest = false
                     }
-                }
-                .onReceive(viewModel.$modelRuns) { runs in
-                    guard runs.contains(where: { run in
-                        if case .success = run.status { return true }
-                        return false
-                    }) else { return }
-                    onTranslationSucceeded?()
                 }
         }
 

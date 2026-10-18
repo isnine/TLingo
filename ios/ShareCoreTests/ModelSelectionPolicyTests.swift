@@ -139,4 +139,11 @@ struct ModelSelectionPolicyTests {
         #expect(freeSelection == nil)
         #expect(proSelection == premium.id)
     }
+
+    @Test("First run enables Microsoft Translate and the first free AI model")
+    func firstRunDefaultsUseFirstFreeAIModel() {
+        let catalog = [premium, secondFree, firstFree, ModelConfig.microsoftTranslate]
+        #expect(ModelConfig.defaultEnabledModelIDs(cloudModels: catalog) == [secondFree.id, ModelConfig.microsoftTranslateID])
+        #expect(ModelConfig.defaultEnabledModelIDs(cloudModels: [premium]) == [ModelConfig.microsoftTranslateID])
+    }
 }

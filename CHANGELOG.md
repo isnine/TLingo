@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improved
+
+- New installs start with Microsoft Translate and the first free AI model enabled, and results default to model list order.
+
 ## [5.5.9] - 2026-10-16
 
 ### Added

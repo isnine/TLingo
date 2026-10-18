@@ -104,4 +104,5 @@ Token JSON 使用 snake_case。`invalid_grant` 表示当前凭证不能继续使
 ## 客户端行为约定
 
 - 文本输入框中单独按 Tab 交换源语言和目标语言，不提交翻译；输入法组合文字或带修饰键时不拦截。
-- 结果排序偏好保存在 App Group UserDefaults（`model_result_order`），不通过 iCloud 同步；默认按首次出现结果的时间升序（出结果后位置固定，不随完成或失败跳动），`modelList` 按模型列表顺序。
+- 结果排序偏好保存在 App Group UserDefaults（`model_result_order`），不通过 iCloud 同步；默认按模型列表顺序（`modelList`），可选按首次出现结果的时间升序（出结果后位置固定，不随完成或失败跳动）。
+- 首次安装且未保存模型选择时，默认启用微软翻译和 AI 模型目录中的第一个免费模型（目录顺序），不启用付费模型。

@@ -515,7 +515,7 @@ public struct ModelSelectionList: View {
             let fetched = try await ModelsService.shared.fetchModels(forceRefresh: true)
             cloudModels = fetched
             if preferences.enabledModelIDs.isEmpty {
-                preferences.setEnabledModelIDs(Set(fetched.filter(\.isDefault).map(\.id)))
+                preferences.setEnabledModelIDs(ModelConfig.defaultEnabledModelIDs(cloudModels: fetched))
             }
         } catch is CancellationError {
             return

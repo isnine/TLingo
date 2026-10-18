@@ -139,6 +139,22 @@ struct HomeRequestRegressionTests {
         #expect(conversation.messages.last?.content == "译文")
     }
 
+    @Test("A fresh install requests the first free AI model and Microsoft Translate")
+    func freshInstallUsesFirstFreeAIModelAndMicrosoft() throws {
+        let harness = try HomeRequestHarness()
+        defer { harness.cleanup() }
+        harness.preferences.setHasAcceptedDataSharing(true)
+        let premium = ModelConfig(id: "premium", displayName: "Premium", isPremium: true)
+        let firstFree = ModelConfig(id: "free-first", displayName: "Free First", isDefault: true)
+        let secondFree = ModelConfig(id: "free-second", displayName: "Free Second")
+        let model = harness.makeModel(models: [premium, firstFree, secondFree])
+        #expect(model.selectedDisplayModels(enabledIDs: [], isPro: false).map(\.id)
+            == [ModelConfig.microsoftTranslateID, firstFree.id])
+        model.inputText = "Hello"
+        model.performSelectedAction(refreshEntitlement: false)
+        #expect(Set(model.modelRuns.map(\.model.id)) == [ModelConfig.microsoftTranslateID, firstFree.id])
+    }
+
     @Test("A handed-off result retains its originating languages")
     func handedOffContinuationKeepsOriginatingLanguages() throws {
         let harness = try HomeRequestHarness()

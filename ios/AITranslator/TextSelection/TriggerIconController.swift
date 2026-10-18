@@ -184,7 +184,6 @@
 
     @MainActor
     final class TriggerIconController {
-        var onTriggerHovered: (() -> Void)?
         /// Clicking the dot shows these as a toolbar; when empty it translates with the selected action.
         var actions: [TextPopupRequest.ActionSummary] = []
         /// The action ID is nil when the request should use TLingo's selected action.
@@ -212,7 +211,6 @@
             trackingView.onMouseEntered = { [weak self] in
                 guard let self else { return }
                 cancelAutoDismissTimer()
-                onTriggerHovered?()
                 // Hovering the dot is enough to reveal the actions; a click is not required.
                 if !actions.isEmpty {
                     showActionToolbar()

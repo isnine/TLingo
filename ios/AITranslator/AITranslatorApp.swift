@@ -73,12 +73,6 @@ struct AITranslatorApp: App {
         HomeViewModel.isSnapshotMode
     }
 
-    #if os(macOS)
-        static var currentAppVersion: String {
-            Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-        }
-    #endif
-
     var body: some Scene {
         WindowGroup(id: "main") {
             #if os(macOS)
@@ -182,8 +176,6 @@ struct AITranslatorApp: App {
     /// Wrapper view that captures the openWindow environment action and provides it to AppDelegate
     struct MainWindowContent: View {
         @Environment(\.openWindow) private var openWindow
-        @ObservedObject private var prefs = AppPreferences.shared
-        @State private var showOnboarding = false
 
         var body: some View {
             RootTabView()
@@ -202,17 +194,8 @@ struct AITranslatorApp: App {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             AITranslatorApp.configureSnapshotWindow()
                         }
-
                         // NOTE: Snapshot export is handled in AppDelegate.applicationDidFinishLaunching.
-                        return
                     }
-
-                    if RootTabView.forceOnboarding || !prefs.hasCompletedOnboarding {
-                        showOnboarding = true
-                    }
-                }
-                .sheet(isPresented: $showOnboarding) {
-                    OnboardingView(isPresented: $showOnboarding)
                 }
         }
     }
@@ -249,36 +232,6 @@ struct AITranslatorApp: App {
         }
 
         #if DIRECT_DISTRIBUTION
-            @MainActor
-            func showSelectionTrigger(near point: CGPoint) {
-                selectionTranslationCoordinator.showTrigger(near: point)
-            }
-
-            @MainActor
-            func dismissSelectionTrigger() {
-                selectionTranslationCoordinator.dismissTrigger()
-            }
-
-            @MainActor
-            func setSelectionTrialCallbacks(
-                actionName: String? = nil,
-                trialModels: [ModelConfig] = [],
-                onTriggerHovered: @escaping () -> Void,
-                onTranslationSucceeded: @escaping () -> Void
-            ) {
-                selectionTranslationCoordinator.setSelectionTrialCallbacks(
-                    actionName: actionName,
-                    trialModels: trialModels,
-                    onTriggerHovered: onTriggerHovered,
-                    onTranslationSucceeded: onTranslationSucceeded
-                )
-            }
-
-            @MainActor
-            func clearSelectionTrialCallbacks() {
-                selectionTranslationCoordinator.clearSelectionTrialCallbacks()
-            }
-
             @MainActor
             func translateCurrentSelection() {
                 selectionTranslationCoordinator.translateCurrentSelection()

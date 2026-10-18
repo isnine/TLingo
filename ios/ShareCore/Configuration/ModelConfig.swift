@@ -156,6 +156,22 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     /// Whether this model is executed through the cloud Worker.
     public var isCloudModel: Bool { !isDirectTranslation && !isFoundationModel }
 
+    /// The first free cloud model in catalog order, preferring models the AI section shows
+    /// instead of collapsed ones.
+    public static func firstFreeCloudModel(in cloudModels: [ModelConfig]) -> ModelConfig? {
+        let freeModels = cloudModels.filter { $0.isCloudModel && !$0.isPremium }
+        return freeModels.first(where: { !$0.hidden }) ?? freeModels.first
+    }
+
+    /// First-run selection: Microsoft Translate plus the first free AI model.
+    public static func defaultEnabledModelIDs(cloudModels: [ModelConfig]) -> Set<String> {
+        var ids: Set<String> = [microsoftTranslateID]
+        if let model = firstFreeCloudModel(in: cloudModels) {
+            ids.insert(model.id)
+        }
+        return ids
+    }
+
     /// Whether the given model ID refers to a non-LLM direct translation service.
     public static func isDirectTranslationID(_ id: String) -> Bool {
         id == appleTranslateID || id == microsoftTranslateID

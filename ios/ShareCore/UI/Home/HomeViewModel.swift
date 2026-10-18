@@ -811,8 +811,15 @@ public final class HomeViewModel: ObservableObject {
         displayModels.append(contentsOf: models.filter { enabledIDs.contains($0.id) })
         displayModels = displayModels.filter { isPro || !$0.isPremium }
         if displayModels.isEmpty {
-            displayModels = models.filter {
-                $0.isDefault && (isPro || !$0.isPremium)
+            if enabledIDs.isEmpty, !models.isEmpty {
+                displayModels = [ModelConfig.microsoftTranslate]
+                if let freeModel = ModelConfig.firstFreeCloudModel(in: models) {
+                    displayModels.append(freeModel)
+                }
+            } else {
+                displayModels = models.filter {
+                    $0.isDefault && (isPro || !$0.isPremium)
+                }
             }
         }
         if displayModels.isEmpty, !isLoadingModels, AppleTranslationService.shared.isAvailable {
@@ -907,21 +914,19 @@ public final class HomeViewModel: ObservableObject {
             return onboardingTrialModels
         }
 
-        let enabledIDs = preferences.enabledModelIDs
+        let storedEnabledIDs = preferences.enabledModelIDs
         let isPremium = cachedIsPremium ?? premiumAccess()
 
         logger
             .debug(
-                "getEnabledModels: enabledIDs=\(enabledIDs, privacy: .public), models.count=\(self.models.count, privacy: .public), isPremium=\(isPremium, privacy: .public)"
+                "getEnabledModels: enabledIDs=\(storedEnabledIDs, privacy: .public), models.count=\(self.models.count, privacy: .public), isPremium=\(isPremium, privacy: .public)"
             )
 
         let modelCatalog = models
-        var available: [ModelConfig]
-        if enabledIDs.isEmpty {
-            available = modelCatalog.filter { $0.isDefault }
-        } else {
-            available = modelCatalog.filter { enabledIDs.contains($0.id) }
-        }
+        let enabledIDs = storedEnabledIDs.isEmpty
+            ? ModelConfig.defaultEnabledModelIDs(cloudModels: modelCatalog)
+            : storedEnabledIDs
+        var available = modelCatalog.filter { enabledIDs.contains($0.id) }
 
         if !isPremium {
             available = available.filter { !$0.isPremium }
@@ -1038,10 +1043,7 @@ public final class HomeViewModel: ObservableObject {
         }
         var resolved = currentEnabled.intersection(availableIDs).union(builtInIDs)
         if resolved.isEmpty {
-            let defaults = Set(models.filter { $0.isDefault }.map { $0.id })
-            if !defaults.isEmpty {
-                resolved = resolved.union(defaults)
-            }
+            resolved = ModelConfig.defaultEnabledModelIDs(cloudModels: models)
         }
 
         if resolved != currentEnabled {

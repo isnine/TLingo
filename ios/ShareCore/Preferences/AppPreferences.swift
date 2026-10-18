@@ -44,8 +44,6 @@ public final class AppPreferences: ObservableObject {
     @Published public private(set) var accentTheme: AccentTheme
     @Published public private(set) var appleTranslateInstalledLanguages: Set<String>
     #if os(macOS)
-        @Published public private(set) var hasCompletedOnboarding: Bool
-        @Published public private(set) var lastCompletedOnboardingVersion: String?
         // Shared storage stays compatible; only Direct observes this value to start capture.
         @Published public private(set) var textSelectionTranslationEnabled: Bool
         /// User-resizable height for the menu bar quick translate popover.
@@ -158,8 +156,6 @@ public final class AppPreferences: ObservableObject {
         defaults.removeObject(forKey: "custom_config_directory")
 
         #if os(macOS)
-            hasCompletedOnboarding = defaults.bool(forKey: StorageKeys.hasCompletedOnboarding)
-            lastCompletedOnboardingVersion = defaults.string(forKey: StorageKeys.lastCompletedOnboardingVersion)
             textSelectionTranslationEnabled = defaults.bool(forKey: StorageKeys.textSelectionTranslationEnabled)
             menuBarPopoverHeight = AppPreferences.readMenuBarPopoverHeight(from: defaults)
             menuBarPopoverWidth = AppPreferences.readMenuBarPopoverWidth(from: defaults)
@@ -275,14 +271,14 @@ public final class AppPreferences: ObservableObject {
 
     private static func readModelResultOrder(from defaults: UserDefaults) -> ModelResultOrder {
         guard let stored = defaults.string(forKey: StorageKeys.modelResultOrder) else {
-            return .firstCompletedFirst
+            return .modelList
         }
         if stored == "lastCompletedFirst" {
             return .firstCompletedFirst
         }
         guard let order = ModelResultOrder(rawValue: stored) else {
             logger.error("Invalid model result order: \(stored, privacy: .public)")
-            return .firstCompletedFirst
+            return .modelList
         }
         return order
     }
@@ -346,20 +342,6 @@ public final class AppPreferences: ObservableObject {
     }
 
     #if os(macOS)
-        public func setHasCompletedOnboarding(_ completed: Bool) {
-            guard hasCompletedOnboarding != completed else { return }
-
-            hasCompletedOnboarding = completed
-            defaults.set(completed, forKey: StorageKeys.hasCompletedOnboarding)
-        }
-
-        public func setLastCompletedOnboardingVersion(_ version: String) {
-            guard lastCompletedOnboardingVersion != version else { return }
-
-            lastCompletedOnboardingVersion = version
-            defaults.set(version, forKey: StorageKeys.lastCompletedOnboardingVersion)
-        }
-
         public func setTextSelectionTranslationEnabled(_ enabled: Bool) {
             guard textSelectionTranslationEnabled != enabled else { return }
 
@@ -685,14 +667,6 @@ public final class AppPreferences: ObservableObject {
         }
 
         #if os(macOS)
-            let storedOnboarding = defaults.bool(forKey: StorageKeys.hasCompletedOnboarding)
-            if hasCompletedOnboarding != storedOnboarding {
-                hasCompletedOnboarding = storedOnboarding
-            }
-            let storedOnboardingVersion = defaults.string(forKey: StorageKeys.lastCompletedOnboardingVersion)
-            if lastCompletedOnboardingVersion != storedOnboardingVersion {
-                lastCompletedOnboardingVersion = storedOnboardingVersion
-            }
             let storedTextSelection = defaults.bool(forKey: StorageKeys.textSelectionTranslationEnabled)
             if textSelectionTranslationEnabled != storedTextSelection {
                 textSelectionTranslationEnabled = storedTextSelection
@@ -1035,8 +1009,6 @@ private enum StorageKeys {
     /// Key for Apple Translate installed language codes
     static let appleTranslateInstalledLanguages = "apple_translate_installed_languages"
     #if os(macOS)
-        static let hasCompletedOnboarding = "has_completed_onboarding"
-        static let lastCompletedOnboardingVersion = "last_completed_onboarding_version"
         static let textSelectionTranslationEnabled = "text_selection_translation_enabled"
         static let menuBarPopoverHeight = "menu_bar_popover_height"
         static let menuBarPopoverWidth = "menu_bar_popover_width"

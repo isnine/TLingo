@@ -7,8 +7,6 @@
         @ObservedObject var preferences: AppPreferences
         @ObservedObject var permissionManager: RealtimePermissionManager
 
-        @Binding var isOnboardingPresented: Bool
-
         let inspectorTrailingPadding: CGFloat
         let startBlocker: RealtimeStartBlocker?
         let onImportAudio: () -> Void
@@ -120,7 +118,7 @@
         }
 
         private func handleMissingPermission() {
-            isOnboardingPresented = true
+            Task { await permissionManager.requestInitialPermissionsIfNeeded() }
         }
 
         private func permissionTitle(for kind: RealtimePermissionKind) -> LocalizedStringKey {

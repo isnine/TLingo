@@ -1145,7 +1145,11 @@
             // Persist the picked premium models only once the user actually
             // subscribes — browsing other plans must leave their model list
             // untouched.
-            preferences.setEnabledModelIDs(preferences.enabledModelIDs.union(selectedPremiumIDs))
+            let catalog = ModelsService.shared.getCachedModels() ?? []
+            let base = preferences.enabledModelIDs.isEmpty
+                ? ModelConfig.defaultEnabledModelIDs(cloudModels: catalog)
+                : preferences.enabledModelIDs
+            preferences.setEnabledModelIDs(base.union(selectedPremiumIDs))
             scheduleSelectedReminders()
             // Reuse the success celebration + review prompt so an in-flow
             // trial purchase gets the same confetti and rating ask as the
