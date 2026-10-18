@@ -222,7 +222,7 @@ struct PaywallFeatures: View {
             row(
                 icon: "sparkles",
                 title: "Premium Models",
-                description: "GPT-5.6, DeepSeek-V4.1-Flash, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+                description: "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
             )
             row(icon: "bolt.fill", title: "Higher Quality", description: "More accurate and nuanced translations")
             row(icon: "text.badge.checkmark", title: "Unlimited Models", description: "Select as many models as you need")
