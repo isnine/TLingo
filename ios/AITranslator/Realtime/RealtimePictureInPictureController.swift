@@ -10,7 +10,7 @@
 
     private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimePiP")
 
-    /// Mirrors realtime microphone captions into a Picture in Picture window when the app moves to the background.
+    /// Mirrors realtime captions into a Picture in Picture window when the app moves to the background.
     /// PiP only shows video, so each caption change is drawn into a frame and enqueued on a sample buffer layer.
     /// Frames reuse the in-app caption text and palette, so both surfaces show the same captions.
     @MainActor
@@ -29,6 +29,9 @@
         private var pictureInPictureController: AVPictureInPictureController?
         private var cancellables: Set<AnyCancellable> = []
         private let isPlaybackPaused = Atomic<Bool>(true)
+        /// iPhone Audio is captured by the broadcast extension, so the host plays nothing and would be suspended
+        /// in the background, freezing the captions it polls. A silent, mixable engine keeps it running.
+        private var backgroundKeepAliveEngine: AVAudioEngine?
 
         init(store: RealtimeSessionStore, preferences: AppPreferences = .shared) {
             self.store = store
@@ -68,9 +71,10 @@
                     guard let self else { return }
                     isPlaybackPaused.store(isPaused || !isRunning, ordering: .relaxed)
                     pictureInPictureController?.invalidatePlaybackState()
-                    let isAvailable = isEnabled && isRunning && inputSource == .microphone
+                    let isAvailable = isEnabled && isRunning
                     pictureInPictureController?.canStartPictureInPictureAutomaticallyFromInline =
                         isAvailable && !isPaused
+                    setBackgroundKeepAliveActive(isAvailable && inputSource == .iphoneAudio)
                     // Pausing from the PiP window keeps it open.
                     if !isAvailable {
                         stopPictureInPicture()
@@ -89,6 +93,29 @@
         private func stopPictureInPicture() {
             guard let pictureInPictureController, pictureInPictureController.isPictureInPictureActive else { return }
             pictureInPictureController.stopPictureInPicture()
+        }
+
+        private func setBackgroundKeepAliveActive(_ isActive: Bool) {
+            if isActive {
+                guard backgroundKeepAliveEngine == nil else { return }
+                do {
+                    let audioSession = AVAudioSession.sharedInstance()
+                    // Mixing keeps the audio the broadcast is capturing playing.
+                    try audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                    try audioSession.setActive(true)
+                    let engine = AVAudioEngine()
+                    _ = engine.mainMixerNode
+                    try engine.start()
+                    backgroundKeepAliveEngine = engine
+                } catch {
+                    logger.error("PiP keep-alive failed to start: \(error.localizedDescription, privacy: .public)")
+                }
+            } else {
+                guard let engine = backgroundKeepAliveEngine else { return }
+                engine.stop()
+                backgroundKeepAliveEngine = nil
+                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
         }
 
         private func render(lines: [RealtimeCaptionLine], isRunning: Bool) {
@@ -272,6 +299,8 @@
             Task { @MainActor in
                 guard store.isRunning, store.isPaused == playing else { return }
                 store.togglePaused()
+                // iPhone Audio cannot pause; snap the PiP button back to the real state.
+                pictureInPictureController?.invalidatePlaybackState()
             }
         }
 

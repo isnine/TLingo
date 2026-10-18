@@ -71,7 +71,7 @@
             captionPane
                 .background {
                     // PiP can only start from an attached layer, so keep it out of the window until recording starts.
-                    if preferences.realtimePictureInPictureEnabled, store.isRunning, store.inputSource == .microphone {
+                    if preferences.realtimePictureInPictureEnabled, store.isRunning {
                         RealtimePictureInPictureSourceView(controller: pictureInPicture)
                             .accessibilityHidden(true)
                     }
