@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export.
 - Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS.
+- Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window.
 
 ### Improved
 
 - Put AI Models first in the model picker, with premium models first for members until the user sets a custom order.
+- Moved model reordering into the model picker sheet, with its own reset and done actions.
 - Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking.
 - Unified the language catalog with a searchable picker and refined translation results, settings, and macOS navigation.
 - Kept realtime running in the background, synced Picture in Picture pause state, and improved long-session performance.
