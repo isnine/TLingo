@@ -149,7 +149,7 @@ struct HomeRequestRegressionTests {
         let secondFree = ModelConfig(id: "free-second", displayName: "Free Second")
         let model = harness.makeModel(models: [premium, firstFree, secondFree])
         #expect(model.selectedDisplayModels(enabledIDs: [], isPro: false).map(\.id)
-            == [ModelConfig.microsoftTranslateID, firstFree.id])
+            == [firstFree.id, ModelConfig.microsoftTranslateID])
         model.inputText = "Hello"
         model.performSelectedAction(refreshEntitlement: false)
         #expect(Set(model.modelRuns.map(\.model.id)) == [ModelConfig.microsoftTranslateID, firstFree.id])

@@ -825,7 +825,16 @@ public final class HomeViewModel: ObservableObject {
         if displayModels.isEmpty, !isLoadingModels, AppleTranslationService.shared.isAvailable {
             displayModels = [ModelConfig.appleTranslate]
         }
-        return displayModels
+        let ranks = Dictionary(
+            ModelListSections.resultOrder(cloudModels: models, order: preferences.modelListOrder, isPro: isPro)
+                .enumerated().map { ($0.element.id, $0.offset) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        return displayModels.enumerated().sorted { lhs, rhs in
+            let left = ranks[lhs.element.id] ?? Int.max
+            let right = ranks[rhs.element.id] ?? Int.max
+            return left == right ? lhs.offset < rhs.offset : left < right
+        }.map(\.element)
     }
 
     public var selectedAction: ActionConfig? {

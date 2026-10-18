@@ -168,7 +168,7 @@
                 isPro: entitlement.isPro
             )
             guard let first = selected.first else { return String(localized: "Models") }
-            return selected.count == 1 ? first.displayName : String(localized: "\(selected.count) Models")
+            return selected.count == 1 ? first.displayName : "\(first.displayName) +\(selected.count - 1)"
         }
 
         // MARK: - Actions

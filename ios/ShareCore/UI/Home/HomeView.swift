@@ -1407,7 +1407,7 @@ public struct HomeView: View {
             Image(systemName: "cpu")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(colors.textSecondary)
-            Text(usesPhoneComposerChrome ? phoneModelSelectionTitle : modelSelectionTitle)
+            Text(modelSelectionTitle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -1434,18 +1434,7 @@ public struct HomeView: View {
         guard !selected.isEmpty else {
             return String(localized: "Models")
         }
-        if selected.count == 1 {
-            return selected[0].displayName
-        }
-        return String(localized: "\(selected.count) Models")
-    }
-
-    private var phoneModelSelectionTitle: String {
-        let selected = selectedDisplayModels
-        guard let first = selected.first else {
-            return String(localized: "Models")
-        }
-        return selected.count == 1 ? first.displayName : "\(first.displayName) +\(selected.count - 1)"
+        return selected.count == 1 ? selected[0].displayName : "\(selected[0].displayName) +\(selected.count - 1)"
     }
 
     private func presentPendingPremiumIfNeeded() {
