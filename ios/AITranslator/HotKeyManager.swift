@@ -45,6 +45,7 @@
         case screenshotTranslate = 4
         case screenshotOCR = 5
         case clipboardTranslate = 6
+        case quickPanel = 7
 
         static var availableCases: [Self] {
             #if DIRECT_DISTRIBUTION
@@ -62,6 +63,7 @@
             case .screenshotTranslate: return String(localized: "Screenshot Translate")
             case .screenshotOCR: return String(localized: "Screenshot OCR")
             case .clipboardTranslate: return String(localized: "Clipboard Translate")
+            case .quickPanel: return String(localized: "Quick Panel")
             }
         }
 
@@ -73,6 +75,7 @@
             case .screenshotTranslate: return String(localized: "Select a screen area and translate its text.")
             case .screenshotOCR: return String(localized: "Select a screen area and copy its text.")
             case .clipboardTranslate: return String(localized: "Translate the text or image on the clipboard.")
+            case .quickPanel: return String(localized: "Show/hide the translation panel in the center of the screen.")
             }
         }
 
@@ -84,6 +87,7 @@
             case .screenshotTranslate: return "text.viewfinder"
             case .screenshotOCR: return "doc.viewfinder"
             case .clipboardTranslate: return "doc.on.clipboard"
+            case .quickPanel: return "rectangle.and.text.magnifyingglass"
             }
         }
 
@@ -327,6 +331,8 @@
                 MainActor.assumeIsolated { AppDelegate.shared?.copyScreenshotText() }
             case .clipboardTranslate:
                 MainActor.assumeIsolated { AppDelegate.shared?.translateClipboard() }
+            case .quickPanel:
+                MainActor.assumeIsolated { QuickPanelController.shared.toggle() }
             }
         }
 

@@ -458,9 +458,12 @@
 
     /// A custom TextEditor wrapper that ensures selected text is always readable
     /// by setting high-contrast selection colors.
-    private struct SelectableTextEditor: NSViewRepresentable {
+    struct SelectableTextEditor: NSViewRepresentable {
         @Binding var text: String
         let textColor: Color
+        var fontSize: CGFloat = 13
+        /// When set, Return runs this and Shift-Return inserts a newline.
+        var onSubmit: (() -> Void)?
         var onUserEdit: () -> Void = {}
         var onSwapLanguages: (() -> Void)?
 
@@ -477,7 +480,7 @@
             textView.drawsBackground = false
             textView.textContainerInset = NSSize(width: 4, height: 4)
             textView.textContainer?.lineFragmentPadding = 0
-            textView.font = NSFont.systemFont(ofSize: 13)
+            textView.font = NSFont.systemFont(ofSize: fontSize)
             textView.textColor = NSColor(textColor)
             textView.insertionPointColor = NSColor(textColor)
             textView.isHorizontallyResizable = false
@@ -507,7 +510,8 @@
             return scrollView
         }
 
-        func updateNSView(_ nsView: NSScrollView, context _: Context) {
+        func updateNSView(_ nsView: NSScrollView, context: Context) {
+            context.coordinator.parent = self
             guard let textView = nsView.documentView as? LanguageSwapTextView else { return }
             textView.onSwapLanguages = onSwapLanguages
             // Overwriting during IME composition (e.g. Pinyin) discards the marked text.
@@ -519,7 +523,7 @@
         }
 
         final class Coordinator: NSObject, NSTextViewDelegate {
-            private let parent: SelectableTextEditor
+            fileprivate var parent: SelectableTextEditor
             private var eventMonitor: Any?
             weak var textView: NSTextView?
 
@@ -549,6 +553,16 @@
                 if let eventMonitor {
                     NSEvent.removeMonitor(eventMonitor)
                 }
+            }
+
+            func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+                guard selector == #selector(NSResponder.insertNewline(_:)),
+                      let onSubmit = parent.onSubmit,
+                      !textView.hasMarkedText(),
+                      NSApp.currentEvent?.modifierFlags.contains(.shift) != true
+                else { return false }
+                onSubmit()
+                return true
             }
 
             func textDidChange(_ notification: Notification) {
