@@ -1484,33 +1484,7 @@ public struct HomeView: View {
     }
 
     private var selectedDisplayModels: [ModelConfig] {
-        let enabledIDs = preferences.enabledModelIDs
-        var displayModels: [ModelConfig] = []
-        if enabledIDs.contains(ModelConfig.microsoftTranslateID) {
-            displayModels.append(ModelConfig.microsoftTranslate)
-        }
-        if enabledIDs.contains(ModelConfig.appleTranslateID), AppleTranslationService.shared.isAvailable {
-            displayModels.append(ModelConfig.appleTranslate)
-        }
-        if enabledIDs.contains(ModelConfig.foundationModelID) {
-            displayModels.append(ModelConfig.foundationModel)
-        }
-        if !BuildEnvironment.isDirectDistribution,
-           enabledIDs.contains(ModelConfig.privateCloudModelID)
-        {
-            displayModels.append(ModelConfig.privateCloudModel)
-        }
-        displayModels.append(contentsOf: viewModel.models.filter { enabledIDs.contains($0.id) })
-        displayModels = displayModels.filter { entitlement.isPro || !$0.isPremium }
-        if displayModels.isEmpty {
-            displayModels = viewModel.models.filter {
-                $0.isDefault && (entitlement.isPro || !$0.isPremium)
-            }
-        }
-        if displayModels.isEmpty, !viewModel.isLoadingModels, AppleTranslationService.shared.isAvailable {
-            displayModels = [ModelConfig.appleTranslate]
-        }
-        return displayModels
+        viewModel.selectedDisplayModels(enabledIDs: preferences.enabledModelIDs, isPro: entitlement.isPro)
     }
 
     private var inputSendButton: some View {

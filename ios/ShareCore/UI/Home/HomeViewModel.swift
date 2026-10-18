@@ -791,6 +791,36 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
+    /// Models the next run uses, as the composer's model button names them.
+    public func selectedDisplayModels(enabledIDs: Set<String>, isPro: Bool) -> [ModelConfig] {
+        var displayModels: [ModelConfig] = []
+        if enabledIDs.contains(ModelConfig.microsoftTranslateID) {
+            displayModels.append(ModelConfig.microsoftTranslate)
+        }
+        if enabledIDs.contains(ModelConfig.appleTranslateID), AppleTranslationService.shared.isAvailable {
+            displayModels.append(ModelConfig.appleTranslate)
+        }
+        if enabledIDs.contains(ModelConfig.foundationModelID) {
+            displayModels.append(ModelConfig.foundationModel)
+        }
+        if !BuildEnvironment.isDirectDistribution,
+           enabledIDs.contains(ModelConfig.privateCloudModelID)
+        {
+            displayModels.append(ModelConfig.privateCloudModel)
+        }
+        displayModels.append(contentsOf: models.filter { enabledIDs.contains($0.id) })
+        displayModels = displayModels.filter { isPro || !$0.isPremium }
+        if displayModels.isEmpty {
+            displayModels = models.filter {
+                $0.isDefault && (isPro || !$0.isPremium)
+            }
+        }
+        if displayModels.isEmpty, !isLoadingModels, AppleTranslationService.shared.isAvailable {
+            displayModels = [ModelConfig.appleTranslate]
+        }
+        return displayModels
+    }
+
     public var selectedAction: ActionConfig? {
         guard let id = selectedActionID else {
             return actions.first

@@ -35,10 +35,13 @@ public struct ModelSelectionList: View {
     @State private var showModelOrder = false
 
     private let mode: Mode
+    private let showsReorderButton: Bool
     private let onRequiresPro: (() -> Void)?
 
-    public init(mode: Mode, onRequiresPro: (() -> Void)? = nil) {
+    /// Pass `showsReorderButton: false` when the host offers reorder from its own toolbar.
+    public init(mode: Mode, showsReorderButton: Bool = true, onRequiresPro: (() -> Void)? = nil) {
         self.mode = mode
+        self.showsReorderButton = showsReorderButton
         self.onRequiresPro = onRequiresPro
         switch mode {
         case let .enabledModels(initialCloudModels):
@@ -116,7 +119,7 @@ public struct ModelSelectionList: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            if !isSingleSelection {
+            if !isSingleSelection, showsReorderButton {
                 HStack {
                     Spacer()
                     Button {
@@ -540,9 +543,60 @@ private extension ModelListSection {
     }
 }
 
+/// Presents `ModelListOrderList` on its own, for screens without a toolbar to host reorder mode.
+private struct ModelListOrderSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let cloudModels: [ModelConfig]
+
+    var body: some View {
+        NavigationStack {
+            ModelListOrderList(cloudModels: cloudModels)
+                .navigationTitle("Reorder")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+                .toolbar {
+                    ToolbarItem(placement: ModelListOrderResetButton.placement) {
+                        ModelListOrderResetButton()
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }
+                    }
+                }
+        }
+        #if os(macOS)
+        .frame(minWidth: 420, idealWidth: 480, minHeight: 480, idealHeight: 640)
+        #else
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        #endif
+    }
+}
+
+struct ModelListOrderResetButton: View {
+    @ObservedObject private var preferences = AppPreferences.shared
+
+    static var placement: ToolbarItemPlacement {
+        #if os(iOS)
+            .topBarLeading
+        #else
+            .destructiveAction
+        #endif
+    }
+
+    var body: some View {
+        Button("Reset", role: .destructive) {
+            preferences.setModelListOrder(ModelListOrder())
+        }
+        .disabled(preferences.modelListOrder == ModelListOrder())
+        .accessibilityIdentifier("models.reorder.reset")
+    }
+}
+
 /// One flat list: each group row is followed by its models. Dragging a group row reorders groups;
 /// a model only moves within its own group, and a drop outside it snaps back.
-private struct ModelListOrderSheet: View {
+struct ModelListOrderList: View {
     private enum Row: Identifiable {
         case group(ModelListSection)
         case model(ModelConfig, in: ModelListSection)
@@ -555,7 +609,6 @@ private struct ModelListOrderSheet: View {
         }
     }
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var preferences = AppPreferences.shared
     @ObservedObject private var entitlement = Entitlement.shared
@@ -575,57 +628,28 @@ private struct ModelListOrderSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(rows) { row in
-                        switch row {
-                        case let .group(section):
-                            groupRow(section)
-                        case let .model(model, _):
-                            modelRow(model)
-                        }
+        List {
+            Section {
+                ForEach(rows) { row in
+                    switch row {
+                    case let .group(section):
+                        groupRow(section)
+                    case let .model(model, _):
+                        modelRow(model)
                     }
-                    .onMove(perform: move)
-                } footer: {
-                    Text("Results sorted by Model List Order follow this order.")
                 }
+                .onMove(perform: move)
+            } footer: {
+                Text("Results sorted by Model List Order follow this order.")
             }
-            .id(listRevision)
-            #if os(iOS)
-                .listStyle(.insetGrouped)
-                .environment(\.editMode, .constant(.active))
-                .navigationBarTitleDisplayMode(.inline)
-            #else
-                .listStyle(.inset)
-            #endif
-                .navigationTitle("Reorder")
-                .toolbar {
-                    ToolbarItem(placement: resetPlacement) {
-                        Button("Reset", role: .destructive) {
-                            preferences.setModelListOrder(ModelListOrder())
-                        }
-                        .disabled(order == ModelListOrder())
-                        .accessibilityIdentifier("models.reorder.reset")
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { dismiss() }
-                    }
-                }
         }
-        #if os(macOS)
-        .frame(minWidth: 420, idealWidth: 480, minHeight: 480, idealHeight: 640)
-        #else
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-        #endif
-    }
-
-    private var resetPlacement: ToolbarItemPlacement {
+        .id(listRevision)
         #if os(iOS)
-            .topBarLeading
+            .listStyle(.insetGrouped)
+            .environment(\.editMode, .constant(.active))
         #else
-            .destructiveAction
+            .listStyle(.inset)
+            .scrollContentBackground(.hidden)
         #endif
     }
 
