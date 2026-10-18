@@ -14,7 +14,7 @@
         func definesPlatformSpecificInputSources() {
             #if os(iOS)
                 #expect(RealtimeAudioInputSource.default == .microphone)
-                #expect(RealtimeAudioInputSource.allCases == [.microphone])
+                #expect(RealtimeAudioInputSource.allCases == [.microphone, .iphoneAudio])
                 #expect(RealtimeAudioInputSource.iphoneAudio.title == "iPhone Audio")
             #elseif os(macOS)
                 #expect(RealtimeAudioInputSource.default == .macAudio)

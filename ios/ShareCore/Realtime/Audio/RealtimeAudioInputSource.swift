@@ -14,9 +14,7 @@
             #if os(macOS)
                 return [.macAudio, .microphone]
             #else
-                // iPhone Audio realtime input is temporarily disabled pending
-                // further work. Restore `.iphoneAudio` here to re-enable it.
-                return [.microphone]
+                return [.microphone, .iphoneAudio]
             #endif
         }
 
