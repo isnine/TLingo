@@ -1696,7 +1696,7 @@ public struct HomeView: View {
 
             if !hasText, let onRealtimeTap {
                 Button(action: onRealtimeTap) {
-                    phonePrimaryInputButtonIcon("mic.fill")
+                    phonePrimaryInputButtonIcon("waveform")
                 }
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.circle)
