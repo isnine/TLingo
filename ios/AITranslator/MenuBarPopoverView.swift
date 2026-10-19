@@ -462,8 +462,6 @@
         @Binding var text: String
         let textColor: Color
         var fontSize: CGFloat = 13
-        /// When set, Return runs this and Shift-Return inserts a newline.
-        var onSubmit: (() -> Void)?
         var onUserEdit: () -> Void = {}
         var onSwapLanguages: (() -> Void)?
 
@@ -553,16 +551,6 @@
                 if let eventMonitor {
                     NSEvent.removeMonitor(eventMonitor)
                 }
-            }
-
-            func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
-                guard selector == #selector(NSResponder.insertNewline(_:)),
-                      let onSubmit = parent.onSubmit,
-                      !textView.hasMarkedText(),
-                      NSApp.currentEvent?.modifierFlags.contains(.shift) != true
-                else { return false }
-                onSubmit()
-                return true
             }
 
             func textDidChange(_ notification: Notification) {
