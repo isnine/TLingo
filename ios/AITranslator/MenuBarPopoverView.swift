@@ -36,7 +36,7 @@
 
         /// Whether the quick translate hotkey is configured
         private var isHotkeyConfigured: Bool {
-            !hotKeyManager.quickTranslateConfiguration.isEmpty
+            !hotKeyManager.configuration(for: .quickTranslate).isEmpty
         }
 
         init(onClose: @escaping () -> Void) {

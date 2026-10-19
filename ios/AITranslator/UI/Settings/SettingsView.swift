@@ -601,12 +601,16 @@ private extension SettingsView {
     #if os(macOS)
         var macControlsSection: some View {
             Section("Mac Controls") {
-                ForEach(HotKeyType.availableCases.filter { $0 != .screenshotOCR }, id: \.self) { type in
+                ForEach(HotKeyType.availableCases, id: \.self) { type in
                     hotKeyRow(for: type)
                 }
                 #if DIRECT_DISTRIBUTION
                     textSelectionTranslationRow
                 #endif
+            }
+            .onDisappear { stopRecordingHotKey() }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+                stopRecordingHotKey()
             }
         }
 
@@ -653,36 +657,39 @@ private extension SettingsView {
             }
         }
 
+        private static let functionKeyCodes: Set<Int> = [
+            kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5, kVK_F6, kVK_F7, kVK_F8, kVK_F9, kVK_F10,
+            kVK_F11, kVK_F12, kVK_F13, kVK_F14, kVK_F15, kVK_F16, kVK_F17, kVK_F18, kVK_F19, kVK_F20,
+        ]
+
         private func startRecordingHotKey(for type: HotKeyType) {
+            stopRecordingHotKey()
             recordingHotKeyType = type
+            hotKeyManager.setSuspended(true)
 
-            localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
-                if event.type == .keyDown {
-                    let modifiers = event.modifierFlags.carbonModifiers
-                    let keyCode = UInt32(event.keyCode)
-
-                    // Escape to cancel
-                    if keyCode == 53 {
-                        stopRecordingHotKey()
-                        return nil
-                    }
-
-                    // Need at least one modifier (except for function keys)
-                    let isFunctionKey = (keyCode >= 122 && keyCode <= 135) || (keyCode >= 96 && keyCode <= 111)
-                    if modifiers == 0, !isFunctionKey {
-                        return nil
-                    }
-
-                    let config = HotKeyConfiguration(keyCode: keyCode, modifiers: modifiers)
-                    if hotKeyManager.conflictingType(for: config, excluding: type) != nil {
-                        NSSound.beep()
-                        return nil
-                    }
-                    hotKeyManager.updateConfiguration(config, for: type)
+            localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [self] event in
+                let keyCode = Int(event.keyCode)
+                if keyCode == kVK_Escape {
                     stopRecordingHotKey()
                     return nil
                 }
-                return event
+
+                // Shift alone would hijack normal typing; only function keys may go without a modifier.
+                let modifiers = event.modifierFlags.carbonModifiers
+                let hasCommandModifier = modifiers & UInt32(cmdKey | optionKey | controlKey) != 0
+                guard hasCommandModifier || Self.functionKeyCodes.contains(keyCode) else {
+                    NSSound.beep()
+                    return nil
+                }
+
+                let config = HotKeyConfiguration(keyCode: UInt32(keyCode), modifiers: modifiers)
+                if hotKeyManager.conflictingType(for: config, excluding: type) != nil {
+                    NSSound.beep()
+                    return nil
+                }
+                stopRecordingHotKey()
+                hotKeyManager.updateConfiguration(config, for: type)
+                return nil
             }
         }
 
@@ -692,6 +699,7 @@ private extension SettingsView {
                 NSEvent.removeMonitor(monitor)
                 localEventMonitor = nil
             }
+            hotKeyManager.setSuspended(false)
         }
 
         var realtimeCaptionsSection: some View {

@@ -47,11 +47,12 @@
         case clipboardTranslate = 6
         case quickPanel = 7
 
+        /// Screenshot OCR is a menu bar action only and has no global hotkey.
         static var availableCases: [Self] {
             #if DIRECT_DISTRIBUTION
-                allCases
+                allCases.filter { $0 != .screenshotOCR }
             #else
-                allCases.filter { $0 != .selectionTranslate }
+                allCases.filter { $0 != .screenshotOCR && $0 != .selectionTranslate }
             #endif
         }
 
@@ -91,7 +92,7 @@
             }
         }
 
-        fileprivate var storageKeyCode: String {
+        fileprivate var legacyKeyCodeKey: String {
             switch self {
             case .mainApp: return "hotkey_main_keycode"
             case .quickTranslate: return "hotkey_quick_keycode"
@@ -99,7 +100,7 @@
             }
         }
 
-        fileprivate var storageModifiers: String {
+        fileprivate var legacyModifiersKey: String {
             switch self {
             case .mainApp: return "hotkey_main_modifiers"
             case .quickTranslate: return "hotkey_quick_modifiers"
@@ -121,43 +122,71 @@
     final class HotKeyManager: ObservableObject {
         static let shared = HotKeyManager()
 
+        /// Stored per app in standard defaults, not the App Group, so builds sharing the group do not share hotkeys.
+        /// Debug builds use their own key because they share the Direct build's bundle ID and preferences file.
+        #if DEBUG
+            private static let storageKey = "hotKeys.debug"
+        #else
+            private static let storageKey = "hotKeys"
+        #endif
+
         private var eventHandler: EventHandlerRef?
         private var registeredHotKeys: [HotKeyType: EventHotKeyRef] = [:]
+        /// While true, no hotkey is registered so the shortcut recorder receives every key press.
+        private var isSuspended = false
 
-        /// Current hotkey configurations
-        @Published private(set) var mainAppConfiguration: HotKeyConfiguration
-        @Published private(set) var quickTranslateConfiguration: HotKeyConfiguration
-        @Published private(set) var actionConfigurations: [HotKeyType: HotKeyConfiguration] = [:]
+        /// Configured hotkeys; unset types have no entry.
+        @Published private(set) var configurations: [HotKeyType: HotKeyConfiguration]
         /// Hotkeys the system refused to register, usually because another app already uses them.
         @Published private(set) var unavailableHotKeys: Set<HotKeyType> = []
 
         private init() {
-            let defaults = AppPreferences.sharedDefaults
-            mainAppConfiguration = Self.loadHotKeyConfiguration(for: .mainApp, defaults: defaults)
-            quickTranslateConfiguration = Self.loadHotKeyConfiguration(for: .quickTranslate, defaults: defaults)
-            for type in HotKeyType.allCases where type != .mainApp && type != .quickTranslate {
-                actionConfigurations[type] = Self.loadHotKeyConfiguration(for: type, defaults: defaults)
-            }
+            configurations = Self.loadConfigurations()
         }
 
-        private static func loadHotKeyConfiguration(
-            for type: HotKeyType,
-            defaults: UserDefaults
-        ) -> HotKeyConfiguration {
-            HotKeyConfiguration.load(
-                from: defaults,
-                keyCodeKey: type.storageKeyCode,
-                modifiersKey: type.storageModifiers
-            )
+        private static func loadConfigurations() -> [HotKeyType: HotKeyConfiguration] {
+            if let data = UserDefaults.standard.data(forKey: storageKey),
+               let stored = try? JSONDecoder().decode([String: HotKeyConfiguration].self, from: data)
+            {
+                var result: [HotKeyType: HotKeyConfiguration] = [:]
+                for (key, configuration) in stored {
+                    if let rawValue = Int(key), let type = HotKeyType(rawValue: rawValue), !configuration.isEmpty {
+                        result[type] = configuration
+                    }
+                }
+                return result
+            }
+
+            #if DEBUG
+                return [:]
+            #else
+                // One-time migration from the per-field App Group keys. They are left in place so other
+                // installed builds can migrate their own copy.
+                var migrated: [HotKeyType: HotKeyConfiguration] = [:]
+                for type in HotKeyType.availableCases {
+                    let configuration = HotKeyConfiguration.load(
+                        from: AppPreferences.sharedDefaults,
+                        keyCodeKey: type.legacyKeyCodeKey,
+                        modifiersKey: type.legacyModifiersKey
+                    )
+                    if !configuration.isEmpty {
+                        migrated[type] = configuration
+                    }
+                }
+                save(migrated)
+                return migrated
+            #endif
+        }
+
+        private static func save(_ configurations: [HotKeyType: HotKeyConfiguration]) {
+            let stored = Dictionary(uniqueKeysWithValues: configurations.map { (String($0.key.rawValue), $0.value) })
+            guard let data = try? JSONEncoder().encode(stored) else { return }
+            UserDefaults.standard.set(data, forKey: storageKey)
         }
 
         /// Returns the configuration for a specific hotkey type
         func configuration(for type: HotKeyType) -> HotKeyConfiguration {
-            switch type {
-            case .mainApp: return mainAppConfiguration
-            case .quickTranslate: return quickTranslateConfiguration
-            default: return actionConfigurations[type] ?? .empty
-            }
+            configurations[type] ?? .empty
         }
 
         /// Returns another hotkey type already using the given shortcut.
@@ -167,36 +196,30 @@
 
         /// Updates the hotkey configuration for a specific type
         func updateConfiguration(_ newConfiguration: HotKeyConfiguration, for type: HotKeyType) {
-            let currentConfig = configuration(for: type)
-            guard currentConfig != newConfiguration else { return }
+            guard configuration(for: type) != newConfiguration else { return }
 
-            // Unregister the old hotkey first
             unregisterHotKey(for: type)
-
-            // Update configuration
-            switch type {
-            case .mainApp:
-                mainAppConfiguration = newConfiguration
-            case .quickTranslate:
-                quickTranslateConfiguration = newConfiguration
-            default:
-                actionConfigurations[type] = newConfiguration
-            }
-
-            // Save to UserDefaults
-            let defaults = AppPreferences.sharedDefaults
-            defaults.set(newConfiguration.keyCode, forKey: type.storageKeyCode)
-            defaults.set(newConfiguration.modifiers, forKey: type.storageModifiers)
-
-            // Register the new hotkey if not empty
-            if !newConfiguration.isEmpty {
-                registerHotKey(for: type)
-            }
+            configurations[type] = newConfiguration.isEmpty ? nil : newConfiguration
+            Self.save(configurations)
+            registerHotKey(for: type)
         }
 
         /// Clears the hotkey configuration for a specific type
         func clearConfiguration(for type: HotKeyType) {
             updateConfiguration(.empty, for: type)
+        }
+
+        /// Temporarily releases all hotkeys while a shortcut is being recorded.
+        func setSuspended(_ suspended: Bool) {
+            guard isSuspended != suspended else { return }
+            isSuspended = suspended
+            for type in HotKeyType.availableCases {
+                if suspended {
+                    unregisterHotKey(for: type)
+                } else {
+                    registerHotKey(for: type)
+                }
+            }
         }
 
         /// Registers all global hotkeys
@@ -226,18 +249,14 @@
                 return
             }
 
-            // Register all configured hotkeys
-            for type in HotKeyType.allCases {
-                let config = configuration(for: type)
-                if !config.isEmpty {
-                    registerHotKey(for: type)
-                }
+            for type in HotKeyType.availableCases {
+                registerHotKey(for: type)
             }
         }
 
         /// Registers a specific hotkey with the system
         private func registerHotKey(for type: HotKeyType) {
-            guard HotKeyType.availableCases.contains(type) else { return }
+            guard eventHandler != nil, !isSuspended, HotKeyType.availableCases.contains(type) else { return }
             guard registeredHotKeys[type] == nil else { return }
 
             let config = configuration(for: type)
