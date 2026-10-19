@@ -2738,6 +2738,7 @@
       }
     },
     "%lld Models" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -3856,6 +3857,7 @@
       }
     },
     "1. Select a sentence" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4105,6 +4107,7 @@
       }
     },
     "2. Move to the blue dot" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4354,6 +4357,7 @@
       }
     },
     "3. Choose Polish" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4478,6 +4482,7 @@
       }
     },
     "3. Choose Translate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8452,6 +8457,7 @@
       }
     },
     "After enabling Screen & System Audio Recording, macOS may require quitting and reopening TLingo." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -9696,6 +9702,7 @@
       }
     },
     "Already listed? Remove the old entry with −, then drag TLingo in again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -18140,6 +18147,7 @@
       }
     },
     "Checking" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19111,12 +19119,6 @@
             "value" : "Modelleri seç"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇模型"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19128,10 +19130,17 @@
             "state" : "translated",
             "value" : "選擇模型"
           }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇模型"
+          }
         }
       }
     },
     "Choose models to try" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19256,6 +19265,7 @@
       }
     },
     "Choose one or more models for more natural translations or clearer writing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21866,6 +21876,7 @@
       }
     },
     "Clearer writing on your device" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -24082,12 +24093,6 @@
             "value" : "Kompakt"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "緊湊"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24095,6 +24100,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "緊湊"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "緊湊"
@@ -33539,6 +33550,7 @@
       }
     },
     "Enable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41247,6 +41259,7 @@
       }
     },
     "Grant Permissions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -50690,6 +50703,7 @@
       }
     },
     "Loading premium models…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -52681,6 +52695,7 @@
       }
     },
     "Make your writing clearer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56157,6 +56172,7 @@
       }
     },
     "More natural translations and clearer writing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57152,6 +57168,7 @@
       }
     },
     "Nice!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -63211,12 +63228,6 @@
             "value" : "Uygulamada aç"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在應用程式中開啟"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -63227,6 +63238,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在應用中打開"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在應用程式中開啟"
           }
         }
       }
@@ -64227,6 +64244,7 @@
       }
     },
     "Open TLingo from any app with a key combination." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66592,6 +66610,7 @@
       }
     },
     "Please make this message clearer and more natural." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -67090,6 +67109,7 @@
       }
     },
     "Polish your writing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72161,12 +72181,6 @@
             "value" : "Hızlı panel"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快速面板"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -72174,6 +72188,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速面板"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "快速面板"
@@ -77276,6 +77296,7 @@
       }
     },
     "Relaunch TLingo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -78395,6 +78416,7 @@
       }
     },
     "Replay Onboarding" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79391,6 +79413,7 @@
       }
     },
     "Requested" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79763,6 +79786,7 @@
       }
     },
     "Requires at least one modifier key. Press Escape to cancel." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -83721,12 +83745,6 @@
             "value" : "Çalıştır"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "執行"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -83734,6 +83752,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "執行"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "執行"
@@ -84611,6 +84635,7 @@
       }
     },
     "Screen & System Audio Recording" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -84735,6 +84760,7 @@
       }
     },
     "Screen & System Audio Recording only takes effect after TLingo restarts." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -87092,6 +87118,7 @@
       }
     },
     "Select at least one AI model to continue." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -88458,6 +88485,7 @@
       }
     },
     "Select text in any app to translate or polish it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -93660,12 +93688,6 @@
             "value" : "Ekranın ortasındaki çeviri panelini göster/gizle."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在畫面中央顯示/隱藏翻譯面板。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -93673,6 +93695,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在畫面中央顯示/隱藏翻譯面板。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "在畫面中央顯示/隱藏翻譯面板。"
@@ -94799,6 +94827,7 @@
       }
     },
     "Skip" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -98005,12 +98034,6 @@
             "value" : "Standart"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "標準"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -98018,6 +98041,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "標準"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "標準"
@@ -112561,6 +112590,7 @@
       }
     },
     "Translate almost any language quickly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -112933,6 +112963,7 @@
       }
     },
     "Translate or polish text without switching apps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -113057,6 +113088,7 @@
       }
     },
     "Translate privately on your Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -113678,6 +113710,7 @@
       }
     },
     "Translate text with a shortcut" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -114548,6 +114581,7 @@
       }
     },
     "Translate without switching apps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116787,6 +116821,7 @@
       }
     },
     "Try AI Writing Polish" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -117036,6 +117071,7 @@
       }
     },
     "Try for %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -117160,6 +117196,7 @@
       }
     },
     "Try free" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -118033,6 +118070,7 @@
       }
     },
     "Try translating selected text" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -118508,12 +118546,6 @@
             "value" : "Metin yazın veya yapıştırın"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "輸入或貼上文字"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -118521,6 +118553,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入或貼上文字"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入或貼上文字"
@@ -123250,6 +123288,7 @@
       }
     },
     "View all plans" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -124614,6 +124653,7 @@
       }
     },
     "Walk through the setup guide again" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -124862,6 +124902,7 @@
       }
     },
     "We'll remind you before your trial ends, so you can cancel in time." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125213,12 +125254,6 @@
             "value" : "Pencere boyutu"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "視窗大小"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -125226,6 +125261,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視窗大小"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "視窗大小"
@@ -126230,6 +126271,7 @@
       }
     },
     "You just translated the selected text without switching apps." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -127098,6 +127140,7 @@
       }
     },
     "Your free trial ends tomorrow. Open TLingo to manage your subscription." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -127346,6 +127389,7 @@
       }
     },
     "Your free trial: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -127843,6 +127887,7 @@
       }
     },
     "Your writing is now clearer with TLingo." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
