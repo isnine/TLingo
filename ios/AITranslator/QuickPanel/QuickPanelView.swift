@@ -109,6 +109,7 @@
                     text: $viewModel.inputText,
                     textColor: colors.textPrimary,
                     fontSize: 20,
+                    onSubmit: run,
                     onUserEdit: { viewModel.markUserEditedInput() },
                     onSwapLanguages: { viewModel.swapInputLanguages() }
                 )
@@ -143,14 +144,9 @@
                 HStack(spacing: 5) {
                     Image(systemName: "cpu")
                         .font(.system(size: 12, weight: .medium))
-                    Text(modelTitle.name)
+                    Text(modelTitle)
                         .font(.system(size: 13, weight: .medium))
                         .lineLimit(1)
-                    if modelTitle.extraCount > 0 {
-                        Text(verbatim: "+\(modelTitle.extraCount)")
-                            .font(.system(size: 13, weight: .medium))
-                            .fixedSize()
-                    }
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 8, weight: .semibold))
                         .opacity(0.65)
@@ -163,14 +159,13 @@
             .help("Choose models")
         }
 
-        /// The name truncates on its own so the "+N" count stays visible.
-        private var modelTitle: (name: String, extraCount: Int) {
+        private var modelTitle: String {
             let selected = viewModel.selectedDisplayModels(
                 enabledIDs: preferences.enabledModelIDs,
                 isPro: entitlement.isPro
             )
-            guard let first = selected.first else { return (String(localized: "Models"), 0) }
-            return (first.displayName, selected.count - 1)
+            guard let first = selected.first else { return String(localized: "Models") }
+            return selected.count == 1 ? first.displayName : "\(first.displayName) +\(selected.count - 1)"
         }
 
         // MARK: - Actions
@@ -240,7 +235,6 @@
                     textFont: .system(size: 12, weight: .medium),
                     chevronFont: .system(size: 8),
                     foregroundColor: colors.textSecondary,
-                    showsControlBackgrounds: false,
                     languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
                     resolvedTarget: viewModel.resolvedTargetLanguage,
                     onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
@@ -251,11 +245,7 @@
                 Spacer(minLength: 0)
 
                 HStack(spacing: 16) {
-                    Button(action: run) {
-                        shortcutHint("Run", keys: ["⌘", "↩"], isPrimary: true)
-                    }
-                    .buttonStyle(.plain)
-                    .keyboardShortcut(.return, modifiers: .command)
+                    shortcutHint("Run", keys: ["↩"], isPrimary: true)
                     Button(action: openInMainApp) {
                         shortcutHint("Open in App", keys: ["⌘", "O"], isPrimary: false)
                     }
