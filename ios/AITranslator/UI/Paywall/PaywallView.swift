@@ -61,23 +61,52 @@ struct PaywallView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 28) {
-                    if context.showsOnboardingPages, !entitlement.isPro {
-                        PaywallOnboardingView(colors: colors)
-                    } else {
-                        PaywallHero(colors: colors, hasUpgradeOptions: hasUpgradeOptions, isPremium: entitlement.isPro)
-                        PaywallFeatures(colors: colors)
-                    }
+        layout
+            .tint(colors.accent)
+        .onChange(of: storeManager.activePremiumProductID) { _, newID in
+            if newID != nil {
+                triggerCelebration()
+            }
+        }
+        .onChange(of: entitlement.isPro) { wasPro, isPro in
+            if !wasPro, isPro {
+                triggerCelebration()
+            }
+        }
+    }
 
-                    if BuildEnvironment.isDirectDistribution {
-                        PaywallDirectContent(colors: colors)
-                    } else {
-                        PaywallAppStoreContent(colors: colors)
-                    }
+    @ViewBuilder
+    private var purchaseContent: some View {
+        if BuildEnvironment.isDirectDistribution {
+            PaywallDirectContent(colors: colors)
+        } else {
+            PaywallAppStoreContent(colors: colors)
+        }
+    }
 
-                    #if os(iOS)
+    @ViewBuilder
+    private var celebrationOverlay: some View {
+        if celebrate {
+            CelebrationOverlay(colors: colors)
+                .transition(.opacity)
+                .allowsHitTesting(false)
+        }
+    }
+
+    #if os(iOS)
+        private var layout: some View {
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: 28) {
+                        if context.showsOnboardingPages, !entitlement.isPro {
+                            PaywallOnboardingView(colors: colors)
+                        } else {
+                            PaywallHero(colors: colors, hasUpgradeOptions: hasUpgradeOptions, isPremium: entitlement.isPro)
+                            PaywallFeatures(colors: colors)
+                        }
+
+                        purchaseContent
+
                         if context.showsContinueFree, !entitlement.isPro {
                             Button {
                                 onContinueFree?()
@@ -92,30 +121,14 @@ struct PaywallView: View {
                             .buttonStyle(.plain)
                             .padding(.horizontal, 20)
                         }
-                    #endif
+                    }
+                    .padding(.vertical, 28)
                 }
-                .padding(.vertical, 28)
-            }
-            .background(colors.background.ignoresSafeArea())
-            .navigationTitle("")
-            #if os(iOS)
+                .background(colors.background.ignoresSafeArea())
+                .navigationTitle("")
                 .toolbar(.hidden, for: .navigationBar)
-            #else
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        closeButton
-                    }
-                }
-            #endif
-                .overlay {
-                    if celebrate {
-                        CelebrationOverlay(colors: colors)
-                            .transition(.opacity)
-                            .allowsHitTesting(false)
-                    }
-                }
-        }
-        #if os(iOS)
+                .overlay { celebrationOverlay }
+            }
             .safeAreaInset(edge: .top) {
                 HStack {
                     Spacer()
@@ -125,19 +138,63 @@ struct PaywallView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 4)
             }
-        #endif
-        .tint(colors.accent)
-        .onChange(of: storeManager.activePremiumProductID) { _, newID in
-            if newID != nil {
-                triggerCelebration()
-            }
         }
-        .onChange(of: entitlement.isPro) { wasPro, isPro in
-            if !wasPro, isPro {
-                triggerCelebration()
+    #else
+        /// Two-pane sheet sized to its content: value proposition on the left,
+        /// plans and checkout on the right, so no toolbar strips or empty bands.
+        private var layout: some View {
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 28) {
+                        PaywallHero(
+                            colors: colors,
+                            hasUpgradeOptions: hasUpgradeOptions,
+                            isPremium: entitlement.isPro,
+                            alignment: .leading
+                        )
+                        PaywallFeatures(colors: colors, showsCard: false)
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 32)
+                }
+                .scrollIndicators(.never)
+                .frame(width: 320)
+                .background(
+                    LinearGradient(
+                        colors: [colors.accent.opacity(0.16), colors.accent.opacity(0.04)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                Divider()
+
+                ViewThatFits(in: .vertical) {
+                    purchaseColumn
+                        .frame(maxHeight: .infinity)
+                    ScrollView { purchaseColumn }
+                }
+                .frame(maxWidth: .infinity)
             }
+            .frame(width: 780, height: 580)
+            .background(colors.background)
+            .overlay(alignment: .topTrailing) {
+                closeButton
+                    .keyboardShortcut(.cancelAction)
+                    .padding(14)
+            }
+            .overlay { celebrationOverlay }
         }
-    }
+
+        private var purchaseColumn: some View {
+            VStack(spacing: 20) {
+                purchaseContent
+            }
+            .padding(.top, 52)
+            .padding(.bottom, 28)
+            .padding(.horizontal, 8)
+        }
+    #endif
 
     private var closeButton: some View {
         Button {
@@ -175,9 +232,10 @@ struct PaywallHero: View {
     let colors: AppColorPalette
     let hasUpgradeOptions: Bool
     let isPremium: Bool
+    var alignment: HorizontalAlignment = .center
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: alignment, spacing: 12) {
             Image(systemName: "crown.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(
@@ -207,7 +265,7 @@ struct PaywallHero: View {
             )
             .font(.system(size: 16))
             .foregroundColor(colors.textSecondary)
-            .multilineTextAlignment(.center)
+            .multilineTextAlignment(alignment == .leading ? .leading : .center)
         }
         .padding(.top, 8)
     }
@@ -216,6 +274,7 @@ struct PaywallHero: View {
 /// "What you get" feature list. Identical content for both channels.
 struct PaywallFeatures: View {
     let colors: AppColorPalette
+    var showsCard = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -237,8 +296,8 @@ struct PaywallFeatures: View {
                 description: "One subscription, all your Apple devices"
             )
         }
-        .padding(20)
-        .background(PaywallCard(colors: colors))
+        .padding(showsCard ? 20 : 0)
+        .background(PaywallCard(colors: colors).opacity(showsCard ? 1 : 0))
     }
 
     private func row(icon: String, title: LocalizedStringKey, description: LocalizedStringKey) -> some View {
