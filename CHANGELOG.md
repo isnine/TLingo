@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.0] - 2026-10-20
+
+### Added
+
+- Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture.
+
 ### Improved
 
 - New installs start with Microsoft Translate and the first free AI model enabled, and results default to model list order.
+- The model button leads with the first selected model in list order, shown as "<model> +N" on every platform.
+- Refined Quick Panel controls and the realtime entry with a waveform.
+- Updated localized strings.
+
+### Fixed
+
+- Kept macOS global shortcuts separate per app and paused them while recording a new shortcut.
 
 ## [5.5.9] - 2026-10-16
 
