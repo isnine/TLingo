@@ -1242,18 +1242,12 @@ public final class HomeViewModel: ObservableObject {
         retryRun(runID: runID)
     }
 
-    private var sentenceTranslateAction: ActionConfig? {
-        let id = BuiltInActionCatalog.sentenceTranslateActionID
-        return allActions.first { $0.id == id } ?? BuiltInActionCatalog.actions.first { $0.id == id }
-    }
-
     /// Sentence pairs are offered on AI results of plain translation actions.
     public func canShowSentencePairs(for run: ModelRunViewState) -> Bool {
         guard let context = activeRequestContext,
               context.action.outputType == .translate,
               !context.isWordLookup,
-              !run.model.isDirectTranslation,
-              sentenceTranslateAction != nil
+              !run.model.isDirectTranslation
         else {
             return false
         }
@@ -1316,8 +1310,10 @@ public final class HomeViewModel: ObservableObject {
         case .standard:
             return context
         case .sentencePairs:
-            guard let action = sentenceTranslateAction else { return nil }
-            return context.withAction(action, historyRequestID: context.sentencePairsHistoryRequestID)
+            return context.withAction(
+                BuiltInActionCatalog.sentenceTranslateAction,
+                historyRequestID: context.sentencePairsHistoryRequestID
+            )
         }
     }
 

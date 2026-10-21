@@ -28,6 +28,10 @@ public final class AppConfigurationStore: ObservableObject {
         BuiltInActionCatalog.customActions(from: actions)
     }
 
+    public nonisolated static func selectionToolbarActions(from actions: [ActionConfig]) -> [ActionConfig] {
+        BuiltInActionCatalog.selectionToolbarActions(from: actions)
+    }
+
     public nonisolated static func displayName(forActionName name: String) -> String {
         BuiltInActionCatalog.displayName(forActionName: name)
     }

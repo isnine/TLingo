@@ -27,7 +27,6 @@ struct DefaultConfigurationTests {
 
         #expect(names == [
             "Translate",
-            "Sentence Translate",
             "Simplify",
             "Grammar Check",
             "Polish",
@@ -101,7 +100,7 @@ struct DefaultConfigurationTests {
         #expect(translate.languageDependencies.usesTargetLanguage)
         #expect(translate.prompt.localizedCaseInsensitiveContains("return only the translated text"))
 
-        let sentenceTranslate = try #require(builtInActions.first { $0.name == "Sentence Translate" })
+        let sentenceTranslate = BuiltInActionCatalog.sentenceTranslateAction
         #expect(sentenceTranslate.prompt.contains("{{sourceLanguage}}"))
         #expect(sentenceTranslate.prompt.contains("{{targetLanguage}}"))
         #expect(sentenceTranslate.languageDependencies.usesSourceLanguage)

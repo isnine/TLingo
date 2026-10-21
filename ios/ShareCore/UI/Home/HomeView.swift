@@ -2365,7 +2365,7 @@ public struct HomeView: View {
 
     private func actionChipsStack(onActionSelected: @escaping (ActionConfig.ID) -> Void) -> some View {
         HStack(spacing: TLingoSpacing.sm) {
-            ForEach(chipActions) { action in
+            ForEach(viewModel.actions) { action in
                 let isSelected = action.id == viewModel.selectedAction?.id
 
                 Button {
@@ -2406,14 +2406,6 @@ public struct HomeView: View {
                 manageActionsButton(action: onManageActionsTap)
             }
         }
-    }
-
-    /// With the flat result panel, sentence pairs live on each result row instead of in the chip row
-    /// (kept while it is the selected action so the selection stays visible).
-    private var chipActions: [ActionConfig] {
-        guard usesFlatResultsPanel else { return viewModel.actions }
-        let sentenceID = BuiltInActionCatalog.sentenceTranslateActionID
-        return viewModel.actions.filter { $0.id != sentenceID || $0.id == viewModel.selectedAction?.id }
     }
 
     private func scrollActionChip(_ actionID: ActionConfig.ID?, proxy: ScrollViewProxy) {

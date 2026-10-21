@@ -434,7 +434,10 @@ struct AITranslatorApp: App {
                 }
                 selectionTranslationCoordinator.dismissPopup(requestID: id)
             case .listActions:
-                let actions = AppConfigurationStore.shared.actions.map {
+                let toolbarActions = AppConfigurationStore.selectionToolbarActions(
+                    from: AppConfigurationStore.shared.actions
+                )
+                let actions = toolbarActions.map {
                     TextPopupRequest.ActionSummary(
                         id: $0.id, name: $0.displayName, symbol: $0.symbolName
                     )
