@@ -132,10 +132,10 @@ public struct SelectableModelRow: View {
     }
 
     private var iconColor: Color {
-        if isSelected {
-            return colors.accent
+        if isLocked {
+            return colors.textSecondary.opacity(0.45)
         }
-        return colors.textSecondary.opacity(isLocked ? 0.45 : 0.4)
+        return isSelected ? colors.accent : colors.textSecondary.opacity(0.4)
     }
 
     private var titleColor: Color {

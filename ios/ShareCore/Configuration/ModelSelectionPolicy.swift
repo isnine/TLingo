@@ -30,12 +30,13 @@ public enum ModelSelectionPolicy {
         availableModels: [ModelConfig],
         isPro: Bool
     ) -> ToggleResult {
-        if enabledIDs.contains(model.id) {
-            return disabling(model, enabledIDs: enabledIDs, availableModels: availableModels, isPro: isPro)
-        }
-
+        // Locked premium selections are kept so they come back when the subscription is restored.
         guard !model.isPremium || isPro else {
             return ToggleResult(enabledIDs: enabledIDs, reason: .requiresPro)
+        }
+
+        if enabledIDs.contains(model.id) {
+            return disabling(model, enabledIDs: enabledIDs, availableModels: availableModels, isPro: isPro)
         }
 
         var updated = enabledIDs
