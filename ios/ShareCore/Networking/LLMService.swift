@@ -423,6 +423,8 @@ public final class LLMService {
             let structuredParser = structuredOutputConfig.flatMap {
                 isStructuredOutputMode ? StreamingStructuredOutputParser(config: $0) : nil
             }
+            var emittedPairCount = 0
+            var emittedTextLength = 0
 
             for try await line in bytes.lines {
                 try Task.checkCancellation()
@@ -432,23 +434,24 @@ public final class LLMService {
                 if payload == "[DONE]" { break }
 
                 guard let data = payload.data(using: .utf8), !data.isEmpty else { continue }
-                let chunk = try decoder.decode(ChatCompletionsStreamChunk.self, from: data)
+                let chunk = try ChatCompletionsStreamChunk.decode(data, using: decoder)
                 let deltaText = chunk.combinedText
                 guard !deltaText.isEmpty else { continue }
                 timingTrace.receiveContent()
                 aggregatedText.append(deltaText)
 
+                // Deltas that only extend JSON scaffolding leave the visible output unchanged.
                 if let parser = sentencePairParser {
                     let pairs = parser.append(deltaText)
-                    if !pairs.isEmpty {
-                        timingTrace.mark(.firstUsefulContent)
-                    }
+                    guard pairs.count != emittedPairCount else { continue }
+                    emittedPairCount = pairs.count
+                    timingTrace.mark(.firstUsefulContent)
                     await partialHandler(model.id, .sentencePairs(pairs))
                 } else if let parser = structuredParser {
                     let displayText = parser.append(deltaText)
-                    if !displayText.isEmpty {
-                        timingTrace.mark(.firstUsefulContent)
-                    }
+                    guard displayText.utf16.count != emittedTextLength else { continue }
+                    emittedTextLength = displayText.utf16.count
+                    timingTrace.mark(.firstUsefulContent)
                     await partialHandler(model.id, .text(displayText))
                 } else {
                     timingTrace.mark(.firstUsefulContent)
@@ -635,7 +638,7 @@ public final class LLMService {
                 if payload == "[DONE]" { break }
 
                 guard let data = payload.data(using: .utf8), !data.isEmpty else { continue }
-                let chunk = try decoder.decode(ChatCompletionsStreamChunk.self, from: data)
+                let chunk = try ChatCompletionsStreamChunk.decode(data, using: decoder)
                 guard !chunk.combinedText.isEmpty || !chunk.combinedReasoning.isEmpty else { continue }
                 let partial = accumulator.append(
                     reasoning: chunk.combinedReasoning,
@@ -805,7 +808,7 @@ public final class LLMService {
             if payload == "[DONE]" { break }
             guard let data = payload.data(using: .utf8), !data.isEmpty else { continue }
 
-            let chunk = try JSONDecoder.llmDecoder.decode(ChatCompletionsStreamChunk.self, from: data)
+            let chunk = try ChatCompletionsStreamChunk.decode(data, using: JSONDecoder.llmDecoder)
             toolCallAccumulator.append(chunk.toolCallDeltas)
             guard !chunk.combinedText.isEmpty || !chunk.combinedReasoning.isEmpty else { continue }
             let partial = accumulator.append(
@@ -928,83 +931,87 @@ public final class LLMService {
 /// Incremental parser for streaming structured output (e.g., grammar check).
 /// Extracts field values as they stream in, hiding the JSON structure from the user.
 private final class StreamingStructuredOutputParser {
-    private var buffer = ""
-    private let config: ActionConfig.StructuredOutputConfig
+    private static let backslash: UTF16.CodeUnit = 0x5C
+    private static let quote: UTF16.CodeUnit = 0x22
+
+    private var prefixBuffer = ""
+    /// Undecoded UTF-16 units of the primary field value, e.g. an escape split across deltas.
+    private var pendingUnits: [UTF16.CodeUnit] = []
+    private var displayText = ""
+    private var hasValueStart = false
+    private var isComplete = false
     private let fieldRegex: NSRegularExpression?
 
     init(config: ActionConfig.StructuredOutputConfig) {
-        self.config = config
         let fieldPattern = "\"\(config.primaryField)\"\\s*:\\s*\""
         fieldRegex = try? NSRegularExpression(pattern: fieldPattern, options: [])
     }
 
     /// Append new delta text and return the display text for UI.
+    /// Each delta is decoded once, so a long response stays linear.
     func append(_ delta: String) -> String {
-        buffer.append(delta)
-        return extractDisplayText()
+        guard !isComplete else { return displayText }
+        if hasValueStart {
+            pendingUnits.append(contentsOf: delta.utf16)
+        } else {
+            // Look for pattern like "revised_text": "..."
+            prefixBuffer.append(delta)
+            guard let fieldRegex else { return "" }
+            let range = NSRange(location: 0, length: (prefixBuffer as NSString).length)
+            guard let match = fieldRegex.firstMatch(in: prefixBuffer, options: [], range: range) else {
+                return ""
+            }
+            hasValueStart = true
+            pendingUnits = Array(prefixBuffer.utf16.dropFirst(match.range.upperBound))
+            prefixBuffer = ""
+        }
+        decodePendingUnits()
+        return displayText
     }
 
-    private func extractDisplayText() -> String {
-        // Try to extract the primary field value incrementally
-        // Look for pattern like "revised_text": "..."
-        guard let fieldRegex else {
-            return ""
-        }
-
-        let nsBuffer = buffer as NSString
-        let range = NSRange(location: 0, length: nsBuffer.length)
-        guard let match = fieldRegex.firstMatch(in: buffer, options: [], range: range) else {
-            return ""
-        }
-
-        // Find content after the opening quote
-        let contentStart = match.range.upperBound
-        guard contentStart < nsBuffer.length else { return "" }
-
-        // UTF-16 character constants
-        let backslashChar: unichar = 0x5C // '\'
-        let quoteChar: unichar = 0x22 // '"'
-        let nChar: unichar = 0x6E // 'n'
-        let tChar: unichar = 0x74 // 't'
-        let rChar: unichar = 0x72 // 'r'
-
-        // Extract content, handling escaped characters
-        var result = ""
-        var index = contentStart
-        while index < nsBuffer.length {
-            let char = nsBuffer.character(at: index)
-            if char == backslashChar && index + 1 < nsBuffer.length {
-                // Handle escape sequence
-                let nextChar = nsBuffer.character(at: index + 1)
-                switch nextChar {
-                case nChar:
-                    result.append("\n")
-                case tChar:
-                    result.append("\t")
-                case rChar:
-                    result.append("\r")
-                case quoteChar:
-                    result.append("\"")
-                case backslashChar:
-                    result.append("\\")
-                default:
-                    if let scalar = UnicodeScalar(nextChar) {
-                        result.append(Character(scalar))
-                    }
-                }
-                index += 2
-            } else if char == quoteChar {
+    private func decodePendingUnits() {
+        var decoded: [UTF16.CodeUnit] = []
+        var index = 0
+        scan: while index < pendingUnits.count {
+            let unit = pendingUnits[index]
+            if unit == Self.quote {
                 // End of string value
+                isComplete = true
+                index = pendingUnits.count
                 break
-            } else {
-                if let scalar = UnicodeScalar(char) {
-                    result.append(Character(scalar))
-                }
-                index += 1
             }
+            guard unit == Self.backslash else {
+                decoded.append(unit)
+                index += 1
+                continue
+            }
+            guard index + 1 < pendingUnits.count else { break }
+            switch pendingUnits[index + 1] {
+            case 0x6E: decoded.append(0x0A) // \n
+            case 0x74: decoded.append(0x09) // \t
+            case 0x72: decoded.append(0x0D) // \r
+            case 0x62: decoded.append(0x08) // \b
+            case 0x66: decoded.append(0x0C) // \f
+            case 0x75: // \uXXXX
+                guard index + 6 <= pendingUnits.count else { break scan }
+                let hex = String(decoding: pendingUnits[(index + 2) ..< (index + 6)], as: UTF16.self)
+                if let value = UInt16(hex, radix: 16) {
+                    decoded.append(value)
+                }
+                index += 6
+                continue
+            default: // \" \\ \/
+                decoded.append(pendingUnits[index + 1])
+            }
+            index += 2
         }
-
-        return result
+        pendingUnits.removeFirst(index)
+        // A lead surrogate waits for its trail, which may arrive as a later escape.
+        if !isComplete, let last = decoded.last, UTF16.isLeadSurrogate(last) {
+            decoded.removeLast()
+            pendingUnits.insert(contentsOf: [last], at: 0)
+        }
+        displayText.append(String(decoding: decoded, as: UTF16.self))
     }
 }
 
@@ -1162,18 +1169,46 @@ private extension LLMService {
             let delta: Delta?
         }
 
-        let choices: [Choice]
+        /// Upstream providers report mid-stream failures as an `error` frame
+        /// without `choices`, either as an object or a bare string.
+        struct StreamError: Decodable {
+            let message: String?
+
+            init(from decoder: Decoder) throws {
+                if let text = try? decoder.singleValueContainer().decode(String.self) {
+                    message = text
+                } else {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+                    message = try container.decodeIfPresent(String.self, forKey: .message)
+                }
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case message
+            }
+        }
+
+        let choices: [Choice]?
+        let error: StreamError?
 
         var combinedText: String {
-            choices.compactMap { $0.delta?.content }.joined()
+            (choices ?? []).compactMap { $0.delta?.content }.joined()
         }
 
         var combinedReasoning: String {
-            choices.compactMap { $0.delta?.reasoningContent }.joined()
+            (choices ?? []).compactMap { $0.delta?.reasoningContent }.joined()
         }
 
         var toolCallDeltas: [Choice.Delta.ToolCallDelta] {
-            choices.flatMap { $0.delta?.toolCalls ?? [] }
+            (choices ?? []).flatMap { $0.delta?.toolCalls ?? [] }
+        }
+
+        static func decode(_ data: Data, using decoder: JSONDecoder) throws -> ChatCompletionsStreamChunk {
+            let chunk = try decoder.decode(ChatCompletionsStreamChunk.self, from: data)
+            if let error = chunk.error {
+                throw LLMServiceError.streamError(message: error.message ?? "")
+            }
+            return chunk
         }
     }
 
@@ -1434,7 +1469,9 @@ private extension ConversationResponse {
         let candidate = content[firstContentIndex...]
         let openingTag = "<think>"
 
-        if !isFinal, candidate.count < openingTag.count, openingTag.hasPrefix(candidate) {
+        // `candidate.count` walks the whole response on every delta; the ASCII tag makes
+        // the O(1) UTF-8 length equivalent once `candidate` is known to prefix it.
+        if !isFinal, openingTag.hasPrefix(candidate), candidate.utf8.count < openingTag.utf8.count {
             return .init(reasoning: reasoning, content: "")
         }
 

@@ -458,8 +458,8 @@ public struct HomeView: View {
                     if #available(iOS 17.4, *), needsAppleConfig {
                         let target = AppPreferences.shared.targetLanguage
                         let sourceLocale = AppPreferences.shared.sourceLanguage.localeLanguage
-                        let sourceKey = sourceLocale?.languageCode?.identifier
-                        let targetKey = target.localeLanguage.languageCode?.identifier ?? target.rawValue
+                        let sourceKey = sourceLocale?.minimalIdentifier
+                        let targetKey = target.localeLanguage.minimalIdentifier
                         appleTranslationConfigLanguagePair = (sourceKey, targetKey)
                         appleTranslationConfig = .init(source: sourceLocale, target: target.localeLanguage)
                     }
@@ -614,8 +614,8 @@ public struct HomeView: View {
             #else
                 if let target = newTarget {
                     let sourceLocale = viewModel.appleTranslateSourceLanguage
-                    let sourceKey = sourceLocale?.languageCode?.identifier
-                    let targetKey = target.localeLanguage.languageCode?.identifier ?? target.rawValue
+                    let sourceKey = sourceLocale?.minimalIdentifier
+                    let targetKey = target.localeLanguage.minimalIdentifier
                     logger
                         .debug(
                             "Apple config source=\(sourceKey ?? "auto", privacy: .public), target=\(targetKey, privacy: .public)"
@@ -1794,19 +1794,25 @@ public struct HomeView: View {
         }
 
         private func refreshRecentTextRecords() {
-            let records = TranslationHistoryService.shared.fetchAll()
+            let pageSize = 20
             // Repeated lookups of the same text show once.
             var seen = Set<String>()
             var recents: [HomeRecentRecord] = []
-            for record in records
-                where !record.isRealtimeRecord && !record.isConversation
-            {
-                let recent = HomeRecentRecord(record)
-                guard seen.insert(recent.sourceText).inserted else { continue }
-                recents.append(recent)
-                if recents.count == 3 { break }
+            var offset = 0
+            pages: while offset < 500 {
+                let records = TranslationHistoryService.shared.fetchTextRecords(offset: offset, limit: pageSize)
+                for record in records {
+                    let recent = HomeRecentRecord(record)
+                    guard seen.insert(recent.sourceText).inserted else { continue }
+                    recents.append(recent)
+                    if recents.count == 3 { break pages }
+                }
+                guard records.count == pageSize else { break }
+                offset += pageSize
             }
-            recentTextRecords = recents
+            if recents != recentTextRecords {
+                recentTextRecords = recents
+            }
         }
 
         private var shouldShowMatchFallbackHint: Bool {
@@ -3307,7 +3313,7 @@ private extension View {
 #endif
 
 /// A lightweight snapshot so Home doesn't hold SwiftData models.
-private struct HomeRecentRecord: Identifiable {
+private struct HomeRecentRecord: Identifiable, Equatable {
     let id: UUID
     let sourceText: String
     let resultText: String?

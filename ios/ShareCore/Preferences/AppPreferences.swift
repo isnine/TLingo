@@ -570,10 +570,25 @@ public final class AppPreferences: ObservableObject {
         return true
     }
 
+    private static let iCloudDocumentsLock = NSLock()
+    private nonisolated(unsafe) static var cachedICloudDocuments: (identity: (any NSObjectProtocol)?, url: URL?)?
+
     /// Returns the iCloud Documents directory URL if available
+    /// Resolving the container can block, and every configuration file access asks for it,
+    /// so the URL is cached until the iCloud account changes.
     public static var iCloudDocumentsURL: URL? {
-        FileManager.default.url(forUbiquityContainerIdentifier: nil)?
+        let identity: (any NSObjectProtocol)? = FileManager.default.ubiquityIdentityToken
+        iCloudDocumentsLock.lock()
+        defer { iCloudDocumentsLock.unlock() }
+        if let cachedICloudDocuments,
+           cachedICloudDocuments.identity?.isEqual(identity) ?? (identity == nil)
+        {
+            return cachedICloudDocuments.url
+        }
+        let url = identity == nil ? nil : FileManager.default.url(forUbiquityContainerIdentifier: nil)?
             .appendingPathComponent("Documents", isDirectory: true)
+        cachedICloudDocuments = (identity, url)
+        return url
     }
 
     public func refreshFromDefaults() {

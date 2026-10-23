@@ -211,7 +211,9 @@ public final class HomeViewModel: ObservableObject {
     @Published public var inputText: String = "" {
         didSet {
             guard inputText != oldValue else { return }
-            cancelActiveRequest(clearResults: true)
+            // Keep the one-shot target and detected source while typing; the
+            // debounced preview re-resolves them for the new text.
+            cancelActiveRequest(clearResults: true, resetsLanguages: false)
             scheduleLanguagePreviewRefresh()
         }
     }
@@ -403,6 +405,8 @@ public final class HomeViewModel: ObservableObject {
     private let premiumAccess: @MainActor () -> Bool
     private var cancellables = Set<AnyCancellable>()
     private var currentRequestTask: Task<Void, Never>?
+    /// Apple and Microsoft Translate runs started outside `currentRequestTask`.
+    private var serviceTasks: [Task<Void, Never>] = []
     private var activeRequestContext: RequestContext?
     private var requestGenerationTracker = RequestGenerationTracker()
 
@@ -1071,23 +1075,16 @@ public final class HomeViewModel: ObservableObject {
         let submittedAt = ContinuousClock.now
         cancelActiveRequest(clearResults: false)
         if refreshEntitlement {
-            currentRequestTask = Task { [weak self] in
-                await Entitlement.shared.refresh()
-                guard !Task.isCancelled else { return }
-                // Already refreshed once; per-model requests reuse the cached result.
-                self?.performSelectedActionWithCurrentEntitlement(
-                    refreshEntitlement: false,
-                    allowModelFallback: allowModelFallback,
-                    submittedAt: submittedAt
-                )
-            }
-        } else {
-            performSelectedActionWithCurrentEntitlement(
-                refreshEntitlement: false,
-                allowModelFallback: allowModelFallback,
-                submittedAt: submittedAt
-            )
+            // StoreManager already follows `Transaction.updates`, so the cached
+            // entitlement is current; refresh without delaying this request.
+            Task { await Entitlement.shared.refresh() }
         }
+        // Per-model requests reuse the cached result.
+        performSelectedActionWithCurrentEntitlement(
+            refreshEntitlement: false,
+            allowModelFallback: allowModelFallback,
+            submittedAt: submittedAt
+        )
     }
 
     private func performSelectedActionWithCurrentEntitlement(
@@ -1906,7 +1903,7 @@ public final class HomeViewModel: ObservableObject {
                     if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
                         apply(result: shortCircuit, context: context, runToken: appleRunToken, allowDiff: false)
                     } else {
-                        Task { [weak self] in
+                        serviceTasks.append(Task { [weak self] in
                             guard let self else { return }
                             if #available(iOS 17.4, macOS 14.4, *) {
                                 do {
@@ -2089,7 +2086,7 @@ public final class HomeViewModel: ObservableObject {
                                     )
                                 }
                             }
-                        }
+                        })
                     }
                 } else {
                     // Non-SwiftUI context (e.g. extension): use TranslationSession(installedSource:target:)
@@ -2099,7 +2096,7 @@ public final class HomeViewModel: ObservableObject {
                     if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
                         apply(result: shortCircuit, context: context, runToken: appleRunToken, allowDiff: false)
                     } else {
-                        Task { [weak self] in
+                        serviceTasks.append(Task { [weak self] in
                             guard let self else { return }
                             // Always true at runtime (guarded by isAvailable in getEnabledModels),
                             // but required for the compiler's availability check.
@@ -2164,7 +2161,7 @@ public final class HomeViewModel: ObservableObject {
                                     )
                                 }
                             }
-                        }
+                        })
                     }
                 }
             } else {
@@ -2192,7 +2189,7 @@ public final class HomeViewModel: ObservableObject {
                     // An unsupported source is left to Microsoft's own detection.
                     let sourceCode: String? = resolved.sourceCode.flatMap(MicrosoftTranslateService.translatorCode(for:))
                     let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
-                    Task { [weak self] in
+                    serviceTasks.append(Task { [weak self] in
                         guard let self else { return }
                         let result = await MicrosoftTranslateService.shared.translate(
                             text: text, sourceCode: sourceCode, targetCode: targetCode,
@@ -2214,7 +2211,7 @@ public final class HomeViewModel: ObservableObject {
                             context: context,
                             runToken: serviceRunToken
                         )
-                    }
+                    })
                 } else {
                     let result = ModelExecutionResult(
                         modelID: model.id,
@@ -2366,9 +2363,13 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func cancelActiveRequest(clearResults: Bool) {
+    private func cancelActiveRequest(clearResults: Bool, resetsLanguages: Bool = true) {
         currentRequestTask?.cancel()
         currentRequestTask = nil
+        for task in serviceTasks {
+            task.cancel()
+        }
+        serviceTasks.removeAll()
         for task in perRunTasks.values {
             task.cancel()
         }
@@ -2383,10 +2384,14 @@ public final class HomeViewModel: ObservableObject {
         pendingAppleTranslateRunToken = nil
         appleTranslateSourceLanguage = nil
         appleTranslateTargetLanguage = nil
-        setDetectedSourceLanguage(nil, reason: "Active request cancelled")
+        if resetsLanguages {
+            setDetectedSourceLanguage(nil, reason: "Active request cancelled")
+        }
         if clearResults {
             if !modelRuns.isEmpty { modelRuns = [] }
-            setTargetLanguageOverride(nil, reason: "Active request cancelled and results cleared")
+            if resetsLanguages {
+                setTargetLanguageOverride(nil, reason: "Active request cancelled and results cleared")
+            }
         }
     }
 

@@ -12,6 +12,7 @@ public enum LLMServiceError: LocalizedError {
     case httpError(statusCode: Int, body: String)
     case visionNotSupported(modelName: String)
     case trialUnavailable
+    case streamError(message: String)
 
     public var errorDescription: String? {
         switch self {
@@ -30,6 +31,10 @@ public enum LLMServiceError: LocalizedError {
             return Self.trialUnavailableDescription
         case let .visionNotSupported(modelName):
             return String(localized: "\(modelName) does not support image input")
+        case let .streamError(message):
+            return message.isEmpty
+                ? String(localized: "The model stopped responding with an error")
+                : message
         }
     }
 

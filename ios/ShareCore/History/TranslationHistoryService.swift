@@ -360,6 +360,21 @@ public final class TranslationHistoryService {
         return (try? persistentContext.fetch(descriptor)) ?? []
     }
 
+    /// Newest text translations (no realtime or conversation records), one page at a time.
+    public func fetchTextRecords(offset: Int, limit: Int) -> [TranslationRecord] {
+        guard let persistentContext else { return [] }
+        let realtimeActionName = TranslationRecord.realtimeActionName
+        var descriptor = FetchDescriptor<TranslationRecord>(
+            predicate: #Predicate {
+                !$0.isConversation && $0.realtimeSessionData == nil && $0.actionName != realtimeActionName
+            },
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchOffset = offset
+        descriptor.fetchLimit = limit
+        return (try? persistentContext.fetch(descriptor)) ?? []
+    }
+
     public func fetchSince(_ date: Date) -> [TranslationRecord] {
         guard let persistentContext else { return [] }
         var descriptor = FetchDescriptor<TranslationRecord>(
