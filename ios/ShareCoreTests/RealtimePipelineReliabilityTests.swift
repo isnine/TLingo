@@ -36,12 +36,12 @@ import Testing
             @Test("Bounds pending FluidAudio input")
             func boundsPendingFluidAudioInput() {
                 #expect(RealtimeFluidAudioRecognizer.acceptsPendingAudio(
-                    pendingSampleCount: 14 * 16000,
+                    pendingSampleCount: 15 * 16000,
                     incomingSampleCount: 16000,
                     sampleRate: 16000
                 ))
                 #expect(!RealtimeFluidAudioRecognizer.acceptsPendingAudio(
-                    pendingSampleCount: 15 * 16000,
+                    pendingSampleCount: 30 * 16000,
                     incomingSampleCount: 1,
                     sampleRate: 16000
                 ))

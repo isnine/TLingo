@@ -1016,11 +1016,17 @@ private struct RealtimeHistoryDetailContent: View {
 
     private var transcriptList: some View {
         let annotations = record.historyAnnotations
-        return VStack(alignment: .leading, spacing: 10) {
+        return LazyVStack(alignment: .leading, spacing: 10) {
             if let selectedTrack {
+                // Resolved once per playback tick instead of once per row.
+                let activeSegmentID = selectedTrack.activeSegmentID(at: playbackTime)
                 ForEach(selectedTrack.segments) { segment in
-                    transcriptRow(segment, annotation: annotations[segment.id.uuidString])
-                        .id(segment.id)
+                    transcriptRow(
+                        segment,
+                        activeSegmentID: activeSegmentID,
+                        annotation: annotations[segment.id.uuidString]
+                    )
+                    .id(segment.id)
                 }
             } else {
                 ForEach(visibleTranscriptSegments) { segment in
@@ -1040,10 +1046,12 @@ private struct RealtimeHistoryDetailContent: View {
                     VStack(alignment: .leading, spacing: 12) {
                         trackHeader(track)
 
+                        let activeSegmentID = track.activeSegmentID(at: playbackTime)
                         ForEach(track.segments) { segment in
                             transcriptRow(
                                 segment,
                                 track: track,
+                                activeSegmentID: activeSegmentID,
                                 annotation: record.historyAnnotations[segment.id.uuidString]
                             )
                             .id(segment.id)
@@ -1232,10 +1240,11 @@ private struct RealtimeHistoryDetailContent: View {
     private func transcriptRow(
         _ segment: RealtimeHistoryTrackSegment,
         track: RealtimeHistoryTrack? = nil,
+        activeSegmentID: UUID?,
         annotation: String?
     ) -> some View {
         let track = track ?? selectedTrack
-        let isActive = track?.activeSegmentID(at: playbackTime) == segment.id
+        let isActive = activeSegmentID == segment.id
         let spokenWords = isActive ? track.map { spokenWords(for: segment, in: $0) } : nil
         let onSeek: ((TimeInterval) -> Void)? = { time in
             playbackTime = time
@@ -1255,7 +1264,8 @@ private struct RealtimeHistoryDetailContent: View {
             alignment: transcriptAlignment(for: segment, track: track),
             isActive: isActive,
             spokenWords: spokenWords,
-            playbackTime: playbackTime,
+            // Only the active row reads the clock; the rest stay unchanged between ticks.
+            playbackTime: isActive ? playbackTime : 0,
             annotation: annotation,
             onSeek: onSeek,
             onRenameSpeaker: onRenameSpeaker

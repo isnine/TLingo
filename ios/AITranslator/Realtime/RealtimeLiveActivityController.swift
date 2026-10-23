@@ -22,6 +22,7 @@
         init(store: RealtimeSessionStore, preferences: AppPreferences = .shared) {
             self.store = store
             self.preferences = preferences
+            Self.endUntrackedActivities()
 
             store.$isRunning
                 .removeDuplicates()
@@ -46,6 +47,7 @@
 
         private func start() {
             guard activity == nil, ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+            Self.endUntrackedActivities()
             let attributes = RealtimeActivityAttributes(languagePair: languagePair)
             let state = Self.contentState(lines: store.captionLines, isPaused: store.isPaused)
             do {
@@ -71,6 +73,16 @@
             let finalState = Self.contentState(lines: store.captionLines, isPaused: true)
             Task {
                 await activity.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
+            }
+        }
+
+        /// Activities outlive the process, so one left by a terminated session would
+        /// stay on the Lock Screen next to the new one.
+        private static func endUntrackedActivities() {
+            for orphan in Activity<RealtimeActivityAttributes>.activities {
+                Task {
+                    await orphan.end(nil, dismissalPolicy: .immediate)
+                }
             }
         }
 

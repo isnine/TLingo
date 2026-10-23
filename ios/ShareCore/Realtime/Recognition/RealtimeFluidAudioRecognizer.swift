@@ -287,7 +287,9 @@
             let endOffset: TimeInterval
         }
 
-        private static let maximumPendingAudioDuration: TimeInterval = 15
+        /// Startup replay can deliver up to 15 s at once, so the bound leaves room for
+        /// the live audio that keeps arriving while recognition catches up.
+        private static let maximumPendingAudioDuration: TimeInterval = 30
         private static let lagReportInterval: TimeInterval = 3
 
         nonisolated static func acceptsPendingAudio(
@@ -367,9 +369,16 @@
             await engine.setPartialTranscriptCallback { [weak self] text in
                 self?.publishStreamingPartial(text, sessionID: sessionID)
             }
-            stateLock.withLock {
+            let isCurrentSession = stateLock.withLock {
+                guard activeSessionID == sessionID, !isStopping else { return false }
                 self.model = fluidAudioModel
                 streamingEngine = engine
+                return true
+            }
+            guard isCurrentSession else {
+                // stop() ran while the engine was loading and found nothing to check in.
+                await RealtimeFluidAudioEngineCache.shared.checkIn(engine, model: fluidAudioModel)
+                throw CancellationError()
             }
             RealtimeLog.log(
                 "fluid",

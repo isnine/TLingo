@@ -573,9 +573,13 @@
             stateLock.lock()
             state.audioSampleCount += 1
             let count = state.audioSampleCount
-            if count == 1 || count % Self.audioLevelReportInterval == 0 {
-                state.audioLevel = level
+            // Persisting re-encodes the shared App Group state, so only the level
+            // cadence writes it; that still heartbeats far inside `staleTimeout`.
+            guard count == 1 || count % Self.audioLevelReportInterval == 0 else {
+                stateLock.unlock()
+                return count
             }
+            state.audioLevel = level
             state.lastUpdatedAt = Date()
             let snapshot = state
             stateStore.save(snapshot)

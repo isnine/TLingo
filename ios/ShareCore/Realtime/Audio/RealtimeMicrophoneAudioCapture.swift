@@ -24,18 +24,33 @@
 
         private let sampleQueue = DispatchQueue(label: "TLingo.RealtimeMicrophoneAudioCapture.sampleQueue")
         #if os(macOS)
+            /// `startRunning` and `stopRunning` block until the device settles, so keep them off main.
+            private let sessionQueue = DispatchQueue(label: "TLingo.RealtimeMicrophoneAudioCapture.sessionQueue")
+        #endif
+        #if os(macOS)
             private var session: AVCaptureSession?
             private var output: AVCaptureAudioDataOutput?
             private var sessionObservers: [NSObjectProtocol] = []
+            private var audioSampleCount = 0
         #elseif os(iOS)
+            /// Conversion state for one installed tap. Only the audio thread touches it,
+            /// so start, stop and restart on the main thread never race the tap.
+            private final class TapState: @unchecked Sendable {
+                let targetFormat: AVAudioFormat
+                var converter: AVAudioConverter?
+                var conversionFailureCount = 0
+                var audioSampleCount = 0
+
+                init(targetFormat: AVAudioFormat) {
+                    self.targetFormat = targetFormat
+                }
+            }
+
             private let audioEngine = AVAudioEngine()
-            private var converter: AVAudioConverter?
             private var targetFormat: AVAudioFormat?
-            private var conversionFailureCount = 0
             private var engineSampleRate = 16000
             private var configurationChangeObserver: NSObjectProtocol?
         #endif
-        private var audioSampleCount = 0
 
         @MainActor
         func start(sampleRate: Int = 16000, allowsPlayback: Bool = false) async throws {
@@ -79,7 +94,12 @@
                 self.output = output
                 self.session = session
                 registerSessionObservers(for: session)
-                session.startRunning()
+                await withCheckedContinuation { continuation in
+                    sessionQueue.async {
+                        session.startRunning()
+                        continuation.resume()
+                    }
+                }
             #elseif os(iOS)
                 engineSampleRate = sampleRate
                 try startAudioEngine(sampleRate: sampleRate)
@@ -91,8 +111,12 @@
             #if os(macOS)
                 removeSessionObservers()
                 output?.setSampleBufferDelegate(nil, queue: nil)
-                if let session, session.isRunning {
-                    session.stopRunning()
+                if let session {
+                    sessionQueue.async {
+                        if session.isRunning {
+                            session.stopRunning()
+                        }
+                    }
                 }
                 output = nil
                 session = nil
@@ -106,7 +130,6 @@
                 if audioEngine.inputNode.isVoiceProcessingEnabled {
                     try? audioEngine.inputNode.setVoiceProcessingEnabled(false)
                 }
-                converter = nil
                 targetFormat = nil
             #endif
             #if os(iOS)
@@ -209,11 +232,9 @@
                 }
 
                 self.targetFormat = targetFormat
-                converter = nil
-                conversionFailureCount = 0
-                audioSampleCount = 0
+                let tapState = TapState(targetFormat: targetFormat)
                 inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
-                    self?.handleInputBuffer(buffer)
+                    self?.handleInputBuffer(buffer, state: tapState)
                 }
                 audioEngine.prepare()
                 do {
@@ -274,36 +295,36 @@
                 return nodeFormat
             }
 
-            private func handleInputBuffer(_ buffer: AVAudioPCMBuffer) {
-                guard let convertedBuffer = convertedPCMBuffer(from: buffer) else {
+            private func handleInputBuffer(_ buffer: AVAudioPCMBuffer, state: TapState) {
+                guard let convertedBuffer = convertedPCMBuffer(from: buffer, state: state) else {
                     // Dropped audio never reaches the recognizer, so speech silently goes missing.
-                    conversionFailureCount += 1
-                    if conversionFailureCount == 1 || conversionFailureCount % 50 == 0 {
+                    state.conversionFailureCount += 1
+                    if state.conversionFailureCount == 1 || state.conversionFailureCount % 50 == 0 {
                         RealtimeLog.warn(
                             "audio",
-                            "buffer conversion failed count=\(conversionFailureCount) input=\(buffer.format.description)"
+                            "buffer conversion failed count=\(state.conversionFailureCount) input=\(buffer.format.description)"
                         )
                     }
                     return
                 }
 
-                audioSampleCount += 1
+                state.audioSampleCount += 1
                 delegate?.realtimeMicrophoneAudioCapture(self, didOutput: convertedBuffer)
-                if audioSampleCount == 1 || audioSampleCount % Self.audioLevelReportInterval == 0 {
+                if state.audioSampleCount == 1 || state.audioSampleCount % Self.audioLevelReportInterval == 0 {
                     delegate?.realtimeMicrophoneAudioCapture(
                         self,
-                        didReceiveAudioSampleCount: audioSampleCount,
+                        didReceiveAudioSampleCount: state.audioSampleCount,
                         level: realtimeAudioLevel(from: convertedBuffer)
                     )
                 }
             }
 
-            private func convertedPCMBuffer(from inputBuffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
-                guard let targetFormat else { return nil }
-                if converter?.inputFormat != inputBuffer.format {
-                    converter = AVAudioConverter(from: inputBuffer.format, to: targetFormat)
+            private func convertedPCMBuffer(from inputBuffer: AVAudioPCMBuffer, state: TapState) -> AVAudioPCMBuffer? {
+                let targetFormat = state.targetFormat
+                if state.converter?.inputFormat != inputBuffer.format {
+                    state.converter = AVAudioConverter(from: inputBuffer.format, to: targetFormat)
                 }
-                guard let converter else { return nil }
+                guard let converter = state.converter else { return nil }
                 let sampleRateRatio = targetFormat.sampleRate / inputBuffer.format.sampleRate
                 let frameCapacity = AVAudioFrameCount((Double(inputBuffer.frameLength) * sampleRateRatio).rounded(.up)) + 1
                 guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity) else {

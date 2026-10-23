@@ -128,11 +128,11 @@
                     throw RealtimeHistoryAudioPostProcessorError.unsupportedRecognitionModel(model.title)
                 }
                 #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
-                    return try await transcribeWithFluidAudio(
-                        url: url,
-                        model: model,
-                        language: sourceLanguage
-                    )
+                    let engine = try await loadFluidAudioEngine(model: model, language: sourceLanguage)
+                    try await forEachAudioBuffer(at: url) { buffer in
+                        try await engine.process(buffer)
+                    }
+                    return try await engine.finish()
                 #else
                     throw RealtimeHistoryAudioPostProcessorError.unsupportedRecognitionModel(model.title)
                 #endif
@@ -548,24 +548,25 @@
                 language: SourceLanguageOption,
                 onSegmentUpdate: @escaping TranscriptSegmentUpdate = { _ in }
             ) async throws -> [RealtimeHistoryTranscriptSegment] {
-                try await transcribeSegments(
+                // Loading compiles the CoreML encoder, so load once and reset between segments.
+                let engine = try await loadFluidAudioEngine(model: model, language: language)
+                return try await transcribeSegments(
                     recordings,
                     logLabel: "Realtime history FluidAudio transcription",
                     onSegmentUpdate: onSegmentUpdate
                 ) { url, _ in
-                    try await transcribeWithFluidAudio(
-                        url: url,
-                        model: model,
-                        language: language
-                    )
+                    try await engine.reset()
+                    try await forEachAudioBuffer(at: url) { buffer in
+                        try await engine.process(buffer)
+                    }
+                    return try await engine.finish()
                 }
             }
 
-            private static func transcribeWithFluidAudio(
-                url: URL,
+            private static func loadFluidAudioEngine(
                 model: RecognitionModelDescriptor,
                 language: SourceLanguageOption
-            ) async throws -> String {
+            ) async throws -> RealtimeFluidAudioStreamingEngine {
                 guard case let .fluidAudio(fluidAudioModel) = model.download else {
                     throw RealtimeHistoryAudioPostProcessorError.unsupportedRecognitionModel(model.title)
                 }
@@ -577,11 +578,7 @@
                         chunkSize: fluidAudioModel == .parakeetEOU320 ? .ms320 : .ms1280
                     )
                     try await manager.loadModels(to: modelDirectory)
-                    try await forEachAudioBuffer(at: url) { buffer in
-                        try await manager.appendAudio(buffer)
-                        try await manager.processBufferedAudio()
-                    }
-                    return try await manager.finish()
+                    return .eou(manager)
                 case .nemotronStreaming560, .nemotronStreaming1120, .nemotronStreaming2240:
                     let chunkSize: NemotronChunkSize = switch fluidAudioModel {
                     case .nemotronStreaming560: .ms560
@@ -594,11 +591,7 @@
                     try await manager.loadModels(
                         from: modelDirectory.appendingPathComponent(chunkSize.repo.folderName, isDirectory: true)
                     )
-                    try await forEachAudioBuffer(at: url) { buffer in
-                        try await manager.appendAudio(buffer)
-                        try await manager.processBufferedAudio()
-                    }
-                    return try await manager.finish()
+                    return .standard(manager)
                 case .nemotronMultilingual2240:
                     let manager = StreamingNemotronMultilingualAsrManager()
                     try await manager.loadModels(
@@ -611,10 +604,7 @@
                             ? "auto"
                             : RealtimeFluidAudioLanguageMapper.nemotronLanguageCode(language.rawValue)
                     )
-                    try await forEachAudioBuffer(at: url) { buffer in
-                        _ = try await manager.process(audioBuffer: buffer)
-                    }
-                    return try await manager.finish()
+                    return .multilingual(manager)
                 }
             }
 
@@ -658,8 +648,44 @@
             request.shouldReportPartialResults = true
             request.taskHint = .dictation
             let operation = SpeechRecognitionOperation(request: request)
+            // One consumer keeps partials in order; only the newest pending one matters.
+            let (partials, partialSink) = AsyncStream.makeStream(
+                of: String.self,
+                bufferingPolicy: .bufferingNewest(1)
+            )
+            let partialDelivery = Task {
+                for await partial in partials {
+                    await onPartial(partial)
+                }
+            }
 
-            return try await withTaskCancellationHandler {
+            let result: Result<String, Error>
+            do {
+                result = try await .success(recognize(
+                    url: url,
+                    recognizer: recognizer,
+                    request: request,
+                    operation: operation,
+                    partialSink: partialSink
+                ))
+            } catch {
+                result = .failure(error)
+            }
+            // A partial delivered after the final text would overwrite it.
+            partialSink.finish()
+            partialDelivery.cancel()
+            await partialDelivery.value
+            return try result.get()
+        }
+
+        private static func recognize(
+            url: URL,
+            recognizer: SFSpeechRecognizer,
+            request: SFSpeechAudioBufferRecognitionRequest,
+            operation: SpeechRecognitionOperation,
+            partialSink: AsyncStream<String>.Continuation
+        ) async throws -> String {
+            try await withTaskCancellationHandler {
                 try Task.checkCancellation()
                 return try await withCheckedThrowingContinuation { continuation in
                     operation.setContinuation(continuation)
@@ -680,9 +706,7 @@
                         if let result {
                             let latest = result.bestTranscription.formattedString
                             operation.updateLatest(latest)
-                            Task {
-                                await onPartial(latest)
-                            }
+                            partialSink.yield(latest)
                             if result.isFinal {
                                 operation.complete(.success(latest))
                             }

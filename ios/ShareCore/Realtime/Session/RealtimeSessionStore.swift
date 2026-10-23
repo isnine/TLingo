@@ -76,6 +76,8 @@
         @Published public private(set) var isRunning = false
         @Published public private(set) var isStarting = false
         @Published public private(set) var isStopping = false
+        /// A producer failure reported while `start()` is still bringing capture up.
+        private var pendingStartFailure: Error?
         @Published public private(set) var isPaused = false
         @Published public private(set) var sourceText = ""
         @Published public private(set) var translatedText = ""
@@ -196,6 +198,7 @@
         private var realtimeHistoryTitleTasks: [UUID: Task<Void, Never>] = [:]
         private var realtimeHistoryTitleRequestIDs: Set<UUID> = []
         private var lastBroadcastStateLogSignature: String?
+        private var lastAppliedBroadcastSourceSegments: [String] = []
         private var lastCaptionDiagnosticsSignature: String?
         private var queuedFinalTranslationRequests: [RealtimeTextTranslationRequest] = []
         private var latestPartialTranslationRequest: RealtimeTextTranslationRequest?
@@ -657,8 +660,10 @@
                 isImportedAudioSession = importedAudioURL != nil
             #endif
             isStarting = true
+            pendingStartFailure = nil
             defer {
                 isStarting = false
+                pendingStartFailure = nil
             }
 
             #if os(iOS)
@@ -702,6 +707,7 @@
                 }
                 #if os(macOS)
                     if let importedAudioURL {
+                        if let pendingStartFailure { throw pendingStartFailure }
                         isRunning = true
                         statusText = String(localized: "Recognizing speech")
                         startImportedAudioTask(url: importedAudioURL, sessionID: sessionID)
@@ -724,6 +730,7 @@
                     await stop()
                     return
                 }
+                if let pendingStartFailure { throw pendingStartFailure }
                 isRunning = true
                 statusText = String(localized: "Listening to \(inputSource.title)")
                 logRealtime("start succeeded input=\(inputSource.rawValue) sampleRate=\(audioSampleRate)")
@@ -1102,6 +1109,7 @@
                 isRunning = true
                 statusText = String(localized: "Waiting for iPhone Audio broadcast")
                 lastBroadcastStateLogSignature = nil
+                lastAppliedBroadcastSourceSegments = []
                 logRealtime("waiting session=\(sessionID)", stage: "broadcast")
                 startBroadcastStatePolling(sessionID: sessionID)
             }
@@ -1176,21 +1184,38 @@
             }
 
             private func applyBroadcastState(_ state: RealtimeBroadcastState) {
-                sourceText = state.sourceText
-                translationSourceText = state.translationSourceText
-                presentationSourceSegments = state.sourceSegments.isEmpty
-                    ? RealtimeTranscriptSegmenter.segments(from: state.translationSourceText)
-                    : state.sourceSegments
-                pendingSourceText = state.pendingSourceText
-                translatedText = state.translatedText
-                pendingTranslatedText = state.pendingTranslatedText
-                sentencePairs = state.sentencePairs
-                audioSampleCount = state.audioSampleCount
-                audioLevel = state.audioLevel
-                errorMessage = state.errorMessage
+                // Polling mostly delivers heartbeats; skip transcript work and
+                // `@Published` writes when the text did not move.
+                let transcriptChanged = sourceText != state.sourceText
+                    || translationSourceText != state.translationSourceText
+                    || pendingSourceText != state.pendingSourceText
+                    || translatedText != state.translatedText
+                    || pendingTranslatedText != state.pendingTranslatedText
+                    || sentencePairs != state.sentencePairs
+                    || lastAppliedBroadcastSourceSegments != state.sourceSegments
+                assignIfChanged(&sourceText, state.sourceText)
+                if transcriptChanged {
+                    lastAppliedBroadcastSourceSegments = state.sourceSegments
+                    assignIfChanged(&translationSourceText, state.translationSourceText)
+                    assignIfChanged(
+                        &presentationSourceSegments,
+                        state.sourceSegments.isEmpty
+                            ? RealtimeTranscriptSegmenter.segments(from: state.translationSourceText)
+                            : state.sourceSegments
+                    )
+                    assignIfChanged(&pendingSourceText, state.pendingSourceText)
+                    assignIfChanged(&translatedText, state.translatedText)
+                    assignIfChanged(&pendingTranslatedText, state.pendingTranslatedText)
+                    assignIfChanged(&sentencePairs, state.sentencePairs)
+                }
+                assignIfChanged(&audioSampleCount, state.audioSampleCount)
+                assignIfChanged(&audioLevel, state.audioLevel)
+                assignIfChanged(&errorMessage, state.errorMessage)
                 latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
                 autosaveRealtimeHistoryIfNeeded()
-                refreshCaptionLines(event: "broadcastState")
+                if transcriptChanged {
+                    refreshCaptionLines(event: "broadcastState")
+                }
                 logBroadcastStateIfNeeded(state)
 
                 if state.isStale(), state.phase != .stopped, state.phase != .failed {
@@ -2131,6 +2156,12 @@
 
         private func handleRuntimeFailure(_ error: Error, context: String) async {
             guard !Self.isCancellationError(error) else { return }
+            if isStarting, !isStopping {
+                // start() surfaces it before marking the session running.
+                pendingStartFailure = pendingStartFailure ?? error
+                logRealtime("runtimeFailure deferred to start context=\(context)")
+                return
+            }
             guard isRunning, !isStopping else {
                 logRealtime(
                     "runtimeFailure ignored context=\(context) running=\(isRunning) stopping=\(isStopping)"
@@ -2373,7 +2404,10 @@
                 let displayLines = visibleLines
             #endif
             if captionLines != displayLines {
-                logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
+                #if DEBUG
+                    // Re-segments the whole transcript; too costly for every release partial.
+                    logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
+                #endif
                 logCaptionLayoutChange(event: event, from: captionLines, to: displayLines)
             }
             assignIfChanged(&captionLines, displayLines)
@@ -2911,8 +2945,8 @@
                     return
                 }
 
-                let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
                 realtimePipelineAudioFanout.append(sampleBuffer)
+                let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
                 if completedAudioSegment {
                     Task { @MainActor [weak self] in
                         self?.autosaveRealtimeHistoryIfNeeded()
@@ -2961,12 +2995,12 @@
                 }
             #endif
 
-            let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
             #if os(macOS)
                 realtimePipelineAudioFanout.append(sampleBuffer)
             #else
                 activeRecognizer.append(sampleBuffer)
             #endif
+            let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
             if completedAudioSegment {
                 Task { @MainActor [weak self] in
                     self?.autosaveRealtimeHistoryIfNeeded()
@@ -2990,13 +3024,14 @@
                 }
             #endif
 
-            let completedAudioSegment = audioHistoryRecorder.append(pcmBuffer)
+            // Recognition first; the capture tap delivers a fresh buffer, so AAC encoding can
+            // run on the recorder's queue instead of the realtime audio thread.
             #if os(macOS)
                 realtimePipelineAudioFanout.append(pcmBuffer)
             #else
                 activeRecognizer.append(pcmBuffer)
             #endif
-            if completedAudioSegment {
+            audioHistoryRecorder.enqueue(pcmBuffer) { [weak self] in
                 Task { @MainActor [weak self] in
                     self?.autosaveRealtimeHistoryIfNeeded()
                 }

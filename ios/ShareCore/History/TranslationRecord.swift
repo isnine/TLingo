@@ -359,10 +359,18 @@ public struct RealtimeHistoryTrack: Codable, Identifiable, Hashable, Sendable {
     /// started, or the first one before playback reaches it, so gaps and overlaps never leave
     /// zero or two highlights.
     public func activeSegmentID(at time: TimeInterval) -> UUID? {
-        let ordered = segments.enumerated().sorted {
-            $0.element.offset == $1.element.offset ? $0.offset < $1.offset : $0.element.offset < $1.element.offset
+        // Single pass; on equal offsets the later segment wins once started, the earlier one before.
+        var latestStarted: (offset: TimeInterval, id: UUID)?
+        var earliest: (offset: TimeInterval, id: UUID)?
+        for segment in segments {
+            if segment.offset <= time, segment.offset >= (latestStarted?.offset ?? -.infinity) {
+                latestStarted = (segment.offset, segment.id)
+            }
+            if segment.offset < (earliest?.offset ?? .infinity) {
+                earliest = (segment.offset, segment.id)
+            }
         }
-        return (ordered.last { $0.element.offset <= time } ?? ordered.first)?.element.id
+        return (latestStarted ?? earliest)?.id
     }
 
     public func closestSegmentID(to time: TimeInterval) -> UUID? {
