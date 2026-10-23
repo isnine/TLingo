@@ -5,7 +5,7 @@
 //  Manages trigger icon lifecycle: show near cursor, hover/click to translate, auto-dismiss.
 //
 
-#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
+#if os(macOS) && TLINGO_HELPER
     import AppKit
     #if !TLINGO_HELPER
         import ShareCore

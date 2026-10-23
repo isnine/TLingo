@@ -24,11 +24,7 @@
         case quit
 
         static var availableCases: [Self] {
-            #if DIRECT_DISTRIBUTION
-                allCases
-            #else
-                allCases.filter { $0 != .selectionTranslate }
-            #endif
+            allCases.filter { $0 != .selectionTranslate }
         }
 
         var title: String {
@@ -323,9 +319,7 @@
             case .screenshotTranslate:
                 AppDelegate.shared?.translateScreenshot()
             case .selectionTranslate:
-                #if DIRECT_DISTRIBUTION
-                    AppDelegate.shared?.translateCurrentSelection()
-                #endif
+                break
             case .screenshotOCR:
                 AppDelegate.shared?.copyScreenshotText()
             case .clipboardTranslate:

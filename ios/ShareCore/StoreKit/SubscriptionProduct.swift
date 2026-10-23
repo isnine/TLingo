@@ -36,15 +36,6 @@ public enum PremiumProduct {
         }
     }
 
-    public static func tierDisplayName(forWebsitePlan plan: String) -> String? {
-        switch plan.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "monthly": return String(localized: "Monthly")
-        case "yearly", "annual": return String(localized: "Annual")
-        case "lifetime": return String(localized: "Lifetime")
-        default: return nil
-        }
-    }
-
     public static func tierPriority(for productID: String) -> Int {
         switch productID {
         case SubscriptionProduct.monthly.rawValue: return 0

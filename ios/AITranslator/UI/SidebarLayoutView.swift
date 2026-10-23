@@ -164,9 +164,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         @ObservedObject private var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject private var storeManager = StoreManager.shared
-        #if DIRECT_DISTRIBUTION
-            @ObservedObject private var updater = UpdaterController.shared
-        #endif
 
         init(initialTab: RootTabView.TabItem, configStore: AppConfigurationStore) {
             let scene = MacSnapshotScene.current()
@@ -365,25 +362,7 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                 ActionsView(configurationStore: configStore, embedsInNavigationStack: true)
             }
 
-            #if DIRECT_DISTRIBUTION
-                content
-                    .toolbar {
-                        if let update = updater.availableUpdate {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    updater.checkForUpdates()
-                                } label: {
-                                    Text("Update to \(update.displayVersion)")
-                                        .foregroundStyle(preferences.accentTheme.color)
-                                }
-                                .help("Update to \(update.fullVersionDescription)")
-                                .accessibilityIdentifier("direct_update_available_button")
-                            }
-                        }
-                    }
-            #else
-                content
-            #endif
+            content
         }
 
         private func refreshHistory() {
@@ -650,7 +629,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
 
 private struct PremiumSidebarFooter: View {
     @ObservedObject private var preferences = AppPreferences.shared
-    @ObservedObject private var oauth = OAuthCoordinator.shared
     @ObservedObject private var entitlement = Entitlement.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var showPaywall = false
@@ -695,7 +673,6 @@ private struct PremiumSidebarFooter: View {
                             .foregroundStyle(.secondary)
                     }
                     .foregroundStyle(accentColor)
-                    signedInEmailLine
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -720,9 +697,6 @@ private struct PremiumSidebarFooter: View {
                             Spacer()
                         }
                         .foregroundStyle(accentColor)
-                        // Surface the signed-in email when not Pro so users can
-                        // tell whether "Restore" is checking the right account.
-                        signedInEmailLine
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -743,36 +717,6 @@ private struct PremiumSidebarFooter: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .oauthCallbackNeedsActivation)) { _ in
-            showPaywall = true
-            oauth.acknowledgeActivationPrompt()
-        }
-        .onChange(of: oauth.needsActivationPrompt) { needs in
-            if needs {
-                showPaywall = true
-                oauth.acknowledgeActivationPrompt()
-            }
-        }
-        .onAppear {
-            // Cold-launch catch-up: callback may have arrived before the
-            // sidebar mounted, in which case the notification was lost but
-            // the sticky flag still holds.
-            if oauth.needsActivationPrompt {
-                showPaywall = true
-                oauth.acknowledgeActivationPrompt()
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var signedInEmailLine: some View {
-        if let email = oauth.tokens?.email, !email.isEmpty {
-            Text(email)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
         }
     }
 }

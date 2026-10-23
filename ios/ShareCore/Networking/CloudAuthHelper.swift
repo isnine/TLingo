@@ -22,11 +22,8 @@ enum CloudAuthHelper {
         request.setValue(signature, forHTTPHeaderField: "X-Signature")
     }
 
-    /// Marks a premium request. The Worker verifies the App Store transaction
-    /// in `X-AppStore-Transaction`; `X-Premium` remains for web entitlements
-    /// until those carry a verifiable token too.
+    /// Attaches the App Store transaction the Worker verifies for premium models.
     static func applyPremiumProof(to request: inout URLRequest) {
-        request.setValue("true", forHTTPHeaderField: "X-Premium")
         if let transactionJWS = StoreManager.premiumTransactionJWS {
             request.setValue(transactionJWS, forHTTPHeaderField: "X-AppStore-Transaction")
         }

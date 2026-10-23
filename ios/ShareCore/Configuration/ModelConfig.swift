@@ -128,7 +128,7 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     )
 
     public static var appleIntelligenceModels: [ModelConfig] {
-        BuildEnvironment.isDirectDistribution ? [foundationModel] : [foundationModel, privateCloudModel]
+        [foundationModel, privateCloudModel]
     }
 
     /// Built-in direct translation services, in display order. Apple Translate is

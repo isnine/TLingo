@@ -2,9 +2,7 @@
 //  PaywallView.swift
 //  TLingo
 //
-//  Routes the paywall body by distribution channel:
-//    • App Store target → PaywallAppStoreContent (StoreKit IAP)
-//    • Direct target    → PaywallDirectContent (Web Stripe + OAuth)
+//  Paywall shell; the purchase body is PaywallAppStoreContent (StoreKit IAP).
 //
 
 import ShareCore
@@ -51,8 +49,7 @@ struct PaywallView: View {
     }
 
     private var hasUpgradeOptions: Bool {
-        if entitlement.state.suppressesAppStoreUpgrades { return false }
-        return currentTierPriority < 2
+        currentTierPriority < 2
     }
 
     private var currentTierPriority: Int {
@@ -75,13 +72,8 @@ struct PaywallView: View {
         }
     }
 
-    @ViewBuilder
     private var purchaseContent: some View {
-        if BuildEnvironment.isDirectDistribution {
-            PaywallDirectContent(colors: colors)
-        } else {
-            PaywallAppStoreContent(colors: colors)
-        }
+        PaywallAppStoreContent(colors: colors)
     }
 
     @ViewBuilder

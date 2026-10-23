@@ -5,7 +5,7 @@
 //  Tiny floating panel that hosts the trigger icon near the cursor.
 //
 
-#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
+#if os(macOS) && TLINGO_HELPER
     import AppKit
 
     final class TriggerIconPanel: NSPanel {

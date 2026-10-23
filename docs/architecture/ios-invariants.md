@@ -41,7 +41,7 @@ review_triggers:
 
 - Services, text deep links and Quick Translate handoffs persist the newest pending request in `HomeInputRouter` until the destination Home is mounted.
 - A request activates its destination before it is consumed, and is delivered to one receiver only. Popup results-only and extension views do not consume main-app input.
-- macOS Quick Translate presents the same required cloud consent as Home; Direct retains its existing consent bypass.
+- macOS Quick Translate presents the same required cloud consent as Home.
 - The Main App hotkey preserves the hide toggle and uses the main-window creation path when no window exists.
 - macOS global hotkeys are stored per app in standard defaults (`hotKeys`, or `hotKeys.debug` in Debug builds), never in the App Group. Recording a shortcut suspends every registered hotkey and keeps at most one key monitor, which stops when Settings disappears or the app resigns active.
 

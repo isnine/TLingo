@@ -3,8 +3,9 @@
 //  ShareCore
 //
 //  Runtime gate that exposes debug-only features (currently the network
-//  request inspector) to a hard-coded developer email on Direct builds,
-//  and to TestFlight builds where the tester toggled developer mode on. Local Debug builds also expose the inspector. App Store builds never see these features.
+//  request inspector) to TestFlight builds where the tester toggled developer
+//  mode on. Local Debug builds also expose the inspector. App Store builds
+//  never see these features.
 //
 
 import Foundation
@@ -12,21 +13,15 @@ import Foundation
 /// Runtime developer-mode flag. Source of truth for gating features that
 /// were previously `#if DEBUG`-only (network request inspector, etc.).
 ///
-/// Enabled for local Debug builds, or when:
-/// - The Direct build is signed in via OAuth as the developer's email, OR
-/// - The TestFlight build has developer mode toggled on.
+/// Enabled for local Debug builds, or when the TestFlight build has
+/// developer mode toggled on.
 ///
-/// App Store production builds (no TestFlight, no Direct) always return
+/// App Store production builds (no TestFlight) always return
 /// `false`, so the App Store binary never exposes inspector UI even though
 /// the code paths are compiled in.
 public enum DeveloperMode {
-    /// Hard-coded developer email. Lowercased comparison.
-    public static let developerEmail = "xiaozwan@outlook.com"
-
-    /// Synchronous read for SwiftUI / call sites. Cheap (UserDefaults +
-    /// keychain look-up via OAuthTokenStore.load) — fine to call per-render
-    /// for typical UI traffic. Hot paths (per-request logging) should
-    /// cache the result if they care.
+    /// Synchronous read for SwiftUI / call sites. Cheap (UserDefaults only) —
+    /// fine to call per-render.
     @MainActor
     public static var isEnabled: Bool {
         if isEnabledNonisolated {
@@ -49,15 +44,6 @@ public enum DeveloperMode {
         return enabled
     }
 
-    /// Direct-only check: signed-in OAuth email matches the developer.
-    /// Safe to read from any actor (keychain access is sync and thread-safe).
-    public static var isDeveloperSignedInDirect: Bool {
-        guard !SnapshotLaunchArguments.isSnapshotMode() else { return false }
-        guard BuildEnvironment.isDirectDistribution else { return false }
-        guard let tokens = OAuthTokenStore.load() else { return false }
-        return tokens.email.lowercased() == developerEmail
-    }
-
     /// Non-isolated probe usable from any actor — including the URLProtocol
     /// hot path (`DebugNetworkProtocol.canInit`) which runs off the main
     /// actor. Mirrors `isEnabled` without touching `StoreManager.shared`
@@ -67,9 +53,6 @@ public enum DeveloperMode {
         #if DEBUG
             return true
         #else
-            if isDeveloperSignedInDirect {
-                return true
-            }
             // App Store / TestFlight: the flag is persisted in the App Group
             // defaults and only meaningful in TestFlight builds. We can't call
             // `StoreManager.isTestFlight` here cheaply (it's main-actor isolated

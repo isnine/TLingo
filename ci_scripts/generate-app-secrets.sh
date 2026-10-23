@@ -2,10 +2,9 @@
 #
 # Writes the gitignored ios/ShareCore/Configuration/AppSecrets.swift.
 #
-# - Xcode Cloud: require the credentials used by the selected distribution and
-#   fail instead of shipping an app that points at placeholder hosts.
+# - Xcode Cloud: require the cloud credentials and fail instead of shipping an app that points at placeholder hosts.
 # - TLINGO_CLOUD_SECRET set: write real values from TLINGO_* environment variables.
-# - Legacy AITRANSLATOR_*/SUPABASE_* names remain supported while the Xcode Cloud
+# - Legacy AITRANSLATOR_* names remain supported while the Xcode Cloud
 #   workflows migrate to TLINGO_* names.
 # - File already exists: keep it (local developer copy).
 # - Otherwise: write placeholders so the app compiles with cloud features disabled.
@@ -17,18 +16,11 @@ OUTPUT="$ROOT/ios/ShareCore/Configuration/AppSecrets.swift"
 
 CLOUD_ENDPOINT="${TLINGO_CLOUD_ENDPOINT:-${AITRANSLATOR_CLOUD_ENDPOINT:-}}"
 CLOUD_SECRET="${TLINGO_CLOUD_SECRET:-${AITRANSLATOR_CLOUD_SECRET:-}}"
-SUPABASE_URL="${TLINGO_SUPABASE_URL:-${SUPABASE_URL:-}}"
-SUPABASE_ANON_KEY="${TLINGO_SUPABASE_ANON_KEY:-${SUPABASE_ANON_KEY:-}}"
 
 if [[ -n "${CI_XCODE_CLOUD:-}" ]]; then
     missing_variables=()
     [[ -n "$CLOUD_ENDPOINT" ]] || missing_variables+=("TLINGO_CLOUD_ENDPOINT")
     [[ -n "$CLOUD_SECRET" ]] || missing_variables+=("TLINGO_CLOUD_SECRET")
-
-    if [[ "${CI_WORKFLOW:-}" == "${DIRECT_RELEASE_WORKFLOW_NAME:-Direct Release}" ]]; then
-        [[ -n "$SUPABASE_URL" ]] || missing_variables+=("TLINGO_SUPABASE_URL")
-        [[ -n "$SUPABASE_ANON_KEY" ]] || missing_variables+=("TLINGO_SUPABASE_ANON_KEY")
-    fi
 
     if (( ${#missing_variables[@]} > 0 )); then
         printf 'Missing required Xcode Cloud environment variables: %s\n' \
@@ -57,9 +49,7 @@ public enum AppSecrets {
     public static let cloudEndpoint = URL(string: "${CLOUD_ENDPOINT:-https://example.invalid}")!
     public static let cloudSecret = "$CLOUD_SECRET"
     public static let cloudAPIVersion = "${TLINGO_CLOUD_API_VERSION:-2025-01-01-preview}"
-    public static let supabaseURL = URL(string: "${SUPABASE_URL:-https://example.invalid}")!
-    public static let supabaseAnonKey = "$SUPABASE_ANON_KEY"
 }
 EOF
 
-echo "Wrote $OUTPUT (cloud configured: $([[ -n "$CLOUD_SECRET" ]] && echo yes || echo no), Supabase configured: $([[ -n "$SUPABASE_ANON_KEY" ]] && echo yes || echo no))"
+echo "Wrote $OUTPUT (cloud configured: $([[ -n "$CLOUD_SECRET" ]] && echo yes || echo no))"

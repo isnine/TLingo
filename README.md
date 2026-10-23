@@ -1,13 +1,12 @@
 # TLingo
 
-TLingo is a SwiftUI translation app for iOS and macOS. It supports system translation, LLM providers, realtime captions, text-selection translation, App Store subscriptions, and a Direct (Developer ID + Sparkle) macOS build.
+TLingo is a SwiftUI translation app for iOS and macOS. It supports system translation, LLM providers, realtime captions, text-selection translation, and App Store subscriptions.
 
 ## Download
 
 | Channel | Platform | Updates |
 | --- | --- | --- |
 | [App Store](https://apps.apple.com/app/id6754217103) | iOS, iPadOS, macOS | App Store |
-| [Direct](https://tlingo.zanderwang.com/download) | macOS | Sparkle |
 
 ## Requirements
 
@@ -23,12 +22,11 @@ cd TLingo
 open ios/AITranslator.xcodeproj
 ```
 
-`generate-app-secrets.sh` writes the gitignored `ios/ShareCore/Configuration/AppSecrets.swift`. Without `TLINGO_*` environment variables it writes placeholders: the app builds and runs, but the hosted TLingo cloud models, Direct sign-in, and website purchase restore are unavailable. System translation and your own LLM providers still work. Replace `DEVELOPMENT_TEAM` in `ios/Configuration/*.xcconfig` with your own team to sign.
+`generate-app-secrets.sh` writes the gitignored `ios/ShareCore/Configuration/AppSecrets.swift`. Without `TLINGO_*` environment variables it writes placeholders: the app builds and runs, but the hosted TLingo cloud models are unavailable. System translation and your own LLM providers still work. Replace `DEVELOPMENT_TEAM` in `ios/Configuration/*.xcconfig` with your own team to sign.
 
 Main schemes:
 
 - `TLingo`
-- `TLingo-Direct`
 - `TLingoTranslation`
 - `TLingoUITests`
 
@@ -36,7 +34,7 @@ Main schemes:
 
 ```text
 ios/          Apple app, shared framework, and extensions
-ci_scripts/   Xcode Cloud and Direct release automation
+ci_scripts/   Xcode Cloud automation
 docs/         Client architecture, contracts, and workflows
 ```
 

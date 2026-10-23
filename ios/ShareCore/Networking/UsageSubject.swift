@@ -15,23 +15,7 @@ struct UsageSubject {
 enum UsageSubjectProvider {
     static func current() async -> UsageSubject? {
         await MainActor.run {
-            if let tokens = OAuthTokenStore.load(),
-               !tokens.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            {
-                let email = tokens.email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                return UsageSubject(type: "email", id: email, label: email)
-            }
-
-            if let email = WebEntitlementProvider.shared.email?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased(),
-                !email.isEmpty
-            {
-                return UsageSubject(type: "email", id: email, label: email)
-            }
-
-            if !BuildEnvironment.isDirectDistribution,
-               StoreManager.shared.isPremium,
+            if StoreManager.shared.isPremium,
                let appStoreSubjectID = StoreManager.shared.usageAppStoreSubjectID
             {
                 return UsageSubject(
@@ -75,12 +59,9 @@ enum DeviceIdentifierStore {
         ]
         #if os(macOS)
             // The legacy login keychain binds item ACLs to the creating app's
-            // signature, so App Store, Debug and Direct builds sharing this item
-            // trigger a password prompt. Direct has no provisioning profile and
-            // cannot use the data protection keychain.
-            if !BuildEnvironment.isDirectDistribution {
-                query[kSecUseDataProtectionKeychain as String] = true
-            }
+            // signature, so App Store and Debug builds sharing this item would
+            // trigger a password prompt.
+            query[kSecUseDataProtectionKeychain as String] = true
         #endif
 
         var lookup = query

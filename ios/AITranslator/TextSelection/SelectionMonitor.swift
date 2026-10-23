@@ -6,7 +6,7 @@
 //  Does not read text — that happens lazily when the user engages with the trigger icon.
 //
 
-#if os(macOS) && (DIRECT_DISTRIBUTION || TLINGO_HELPER)
+#if os(macOS) && TLINGO_HELPER
     import AppKit
     import os
 
@@ -71,11 +71,6 @@
                 guard !(event.window is TriggerIconPanel),
                       event.window.map({ String(describing: type(of: $0)).contains("FloatingDropPanel") }) != true
                 else { return event }
-                #if DIRECT_DISTRIBUTION
-                    guard !(event.window is TranslationPopupPanel),
-                          !(event.window?.sheetParent is TranslationPopupPanel)
-                    else { return event }
-                #endif
                 let screenPoint = NSEvent.mouseLocation
                 let eventType = event.type
                 let clickCount = event.clickCount

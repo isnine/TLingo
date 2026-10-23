@@ -59,7 +59,6 @@ enum ClientUserAgent {
         #if DEBUG
             return "Debug"
         #else
-            if BuildEnvironment.isDirectDistribution { return "Direct" }
             // A macOS TestFlight install is only recognized from its second
             // launch, after StoreManager has persisted the AppTransaction probe.
             return DeveloperMode.isLikelyTestFlight ? "TestFlight" : "AppStore"

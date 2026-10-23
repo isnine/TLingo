@@ -43,10 +43,6 @@
 		CEAB00012FB5000000000001 /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
 		CEAB00022FB5000000000001 /* TLingoBroadcastUpload.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CEAB00142FB5000000000001 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEAB00132FB5000000000001 /* ReplayKit.framework */; };
-		CED1263F2FB0733E00A567CD /* ShareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; };
-		CED126432FB0733E00A567CD /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CE23B5982EAA44B40033543C /* Localizable.xcstrings */; };
-		CED126472FB0733E00A567CD /* ShareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		CED1267202FB0733E00A567CE /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = CED1267102FB0733E00A567CE /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,13 +102,6 @@
 			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
 			remoteInfo = ShareCore;
 		};
-		CED1263A2FB0733E00A567CD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CE4EB11D2EA4F47400DDDFA5;
-			remoteInfo = ShareCore;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -150,27 +139,6 @@
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CED126442FB0733E00A567CD /* Embed ExtensionKit Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			name = "Embed ExtensionKit Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		CED126462FB0733E00A567CD /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				CED126472FB0733E00A567CD /* ShareCore.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -200,8 +168,6 @@
 		CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "TLingo: AI Translator.storekit"; sourceTree = "<group>"; };
 		CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TLingoBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEAB00132FB5000000000001 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
-		CED1264B2FB0733E00A567CD /* TLingo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TLingo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CED126502FB0733E00A567CE /* Direct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Direct.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -240,20 +206,6 @@
 			);
 			target = CEAB00092FB5000000000001 /* TLingoBroadcastUpload */;
 		};
-		CED1264D2FB0733F00A567CD /* Exceptions for "AITranslator" folder in "TLingo-Direct" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = CED126382FB0733E00A567CD /* TLingo-Direct */;
-		};
-		CED1264E2FB0733F00A567CE /* Exceptions for "Direct" folder in "TLingo-Direct" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = CED126382FB0733E00A567CD /* TLingo-Direct */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -287,7 +239,6 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				CE4EB13B2EA50B1300DDDFA5 /* Exceptions for "AITranslator" folder in "TLingo" target */,
-				CED1264D2FB0733F00A567CD /* Exceptions for "AITranslator" folder in "TLingo-Direct" target */,
 			);
 			path = AITranslator;
 			sourceTree = "<group>";
@@ -311,14 +262,6 @@
 				CEAB00062FB5000000000001 /* Exceptions for "TLingoBroadcastUpload" folder in "TLingoBroadcastUpload" target */,
 			);
 			path = TLingoBroadcastUpload;
-			sourceTree = "<group>";
-		};
-		CED126602FB0733E00A567CE /* Direct */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				CED1264E2FB0733F00A567CE /* Exceptions for "Direct" folder in "TLingo-Direct" target */,
-			);
-			path = Direct;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -393,16 +336,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CED1263E2FB0733E00A567CD /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CED1263F2FB0733E00A567CD /* ShareCore.framework in Frameworks */,
-				CED1267202FB0733E00A567CE /* Sparkle in Frameworks */,
-				CE7F10022FF5000000000001 /* PermissionFlow in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -435,7 +368,6 @@
 			isa = PBXGroup;
 			children = (
 				CE3703262F2E39700039FC39 /* Base.xcconfig */,
-				CED126502FB0733E00A567CE /* Direct.xcconfig */,
 				AF1100000000000000000029 /* Helper.xcconfig */,
 			);
 			path = Configuration;
@@ -447,7 +379,6 @@
 				CE9B52822F70331F00914308 /* TLingo: AI Translator.storekit */,
 				CE23B5982EAA44B40033543C /* Localizable.xcstrings */,
 				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
-				CED126602FB0733E00A567CE /* Direct */,
 				AF1100000000000000000031 /* TLingoHelper */,
 				AF1100000000000000000033 /* Helper Shared Sources */,
 				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
@@ -473,7 +404,6 @@
 				CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */,
 				CE3703402F3E000000000001 /* ShareCoreTests.xctest */,
 				CE37034F2F3E000000000001 /* TLingoUITests.xctest */,
-				CED1264B2FB0733E00A567CD /* TLingo.app */,
 				AF110000000000000000002A /* TLingoHelper.app */,
 			);
 			name = Products;
@@ -697,34 +627,6 @@
 			productReference = CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		CED126382FB0733E00A567CD /* TLingo-Direct */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CED126482FB0733E00A567CD /* Build configuration list for PBXNativeTarget "TLingo-Direct" */;
-			buildPhases = (
-				CED1263D2FB0733E00A567CD /* Sources */,
-				CED1263E2FB0733E00A567CD /* Frameworks */,
-				CED126412FB0733E00A567CD /* Resources */,
-				CED126442FB0733E00A567CD /* Embed ExtensionKit Extensions */,
-				CED126462FB0733E00A567CD /* Embed Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				CED126392FB0733E00A567CD /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CE4EB0DF2EA33ADD00DDDFA5 /* AITranslator */,
-				CED126602FB0733E00A567CE /* Direct */,
-			);
-			name = "TLingo-Direct";
-			packageProductDependencies = (
-				CED1267102FB0733E00A567CE /* Sparkle */,
-				CE7F10032FF5000000000001 /* PermissionFlow */,
-			);
-			productName = TLingo;
-			productReference = CED1264B2FB0733E00A567CD /* TLingo.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -772,7 +674,6 @@
 			packageReferences = (
 				A10000010000000000000003 /* XCRemoteSwiftPackageReference "mlx-audio-swift" */,
 				3F636BFB3A90A8AA4F69C7EE /* XCRemoteSwiftPackageReference "FluidAudio" */,
-				CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */,
 				CE2668FA2FF41EEC00B169B9 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */,
 				CE6A10022FF4400000AA0001 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				CE7F10002FF5000000000001 /* XCRemoteSwiftPackageReference "PermissionFlow" */,
@@ -789,7 +690,6 @@
 				CE4EB11D2EA4F47400DDDFA5 /* ShareCore */,
 				CE3703402F3E000000000007 /* ShareCoreTests */,
 				CE37034F2F3E000000000006 /* TLingoUITests */,
-				CED126382FB0733E00A567CD /* TLingo-Direct */,
 				AF1100000000000000000040 /* TLingoHelper */,
 			);
 		};
@@ -856,14 +756,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		CED126412FB0733E00A567CD /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CED126432FB0733E00A567CD /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -937,13 +829,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CED1263D2FB0733E00A567CD /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -989,11 +874,6 @@
 			isa = PBXTargetDependency;
 			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
 			targetProxy = CEAB000F2FB5000000000001 /* PBXContainerItemProxy */;
-		};
-		CED126392FB0733E00A567CD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = CE4EB11D2EA4F47400DDDFA5 /* ShareCore */;
-			targetProxy = CED1263A2FB0733E00A567CD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1685,64 +1565,6 @@
 			};
 			name = Release;
 		};
-		CED126492FB0733E00A567CD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = CED126502FB0733E00A567CE /* Direct.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CURRENT_PROJECT_VERSION = 2;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 5.6.0;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		CED1264A2FB0733E00A567CD /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = CED126502FB0733E00A567CE /* Direct.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CURRENT_PROJECT_VERSION = 2;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 5.6.0;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1827,15 +1649,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CED126482FB0733E00A567CD /* Build configuration list for PBXNativeTarget "TLingo-Direct" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				CED126492FB0733E00A567CD /* Debug */,
-				CED1264A2FB0733E00A567CD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -1879,14 +1692,6 @@
 				minimumVersion = 2.5.0;
 			};
 		};
-		CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1919,11 +1724,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CE7F10002FF5000000000001 /* XCRemoteSwiftPackageReference "PermissionFlow" */;
 			productName = PermissionFlow;
-		};
-		CED1267102FB0733E00A567CE /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CED1267002FB0733E00A567CE /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

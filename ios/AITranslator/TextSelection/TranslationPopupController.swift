@@ -19,15 +19,6 @@
         private var currentViewModel: HomeViewModel?
         private var currentRequestID: UUID?
 
-        #if DIRECT_DISTRIBUTION
-            func showAtCursor(selection: SelectionTextGrabber.Selection) {
-                showAtCursor(
-                    text: selection.text,
-                    onReplace: { text in await selection.replace(with: text) }
-                )
-            }
-        #endif
-
         func showAtCursor(
             text: String,
             near point: CGPoint? = nil,

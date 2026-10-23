@@ -49,10 +49,6 @@ struct SettingsView: View {
         @ObservedObject private var hotKeyManager = HotKeyManager.shared
         @State private var recordingHotKeyType: HotKeyType?
         @State private var localEventMonitor: Any?
-        #if DIRECT_DISTRIBUTION
-            @State private var showAccessibilityOnboarding = false
-            @StateObject private var accessibilityPermissionManager = AccessibilityPermissionManager()
-        #endif
     #endif
 
     private var colors: AppColorPalette {
@@ -177,16 +173,6 @@ struct SettingsView: View {
                 .frame(minWidth: 600, minHeight: 500)
             #endif
         }
-        #if os(macOS) && DIRECT_DISTRIBUTION
-        .sheet(isPresented: $showAccessibilityOnboarding) {
-            AccessibilityOnboardingView(
-                permissionManager: accessibilityPermissionManager,
-                onPermissionGranted: {
-                    preferences.setTextSelectionTranslationEnabled(true)
-                }
-            )
-        }
-        #endif
         .onAppear {
             preferences.refreshFromDefaults()
         }
@@ -308,25 +294,21 @@ struct SettingsView: View {
         // Premium is never granted by client-side toggles outside Debug builds;
         // the Worker verifies App Store transactions. TestFlight only toggles
         // developer tools.
-        #if DIRECT_DISTRIBUTION
-            return label
-        #else
-            return label.onTapGesture(count: 2) {
-                #if DEBUG
-                    let enabled = storeManager.toggleDebugPremium()
-                    testFlightAlertMessage = enabled
-                        ? "Premium activated (Debug)"
-                        : "Premium deactivated (Debug)"
-                #else
-                    guard StoreManager.isTestFlight else { return }
-                    let enabled = DeveloperMode.toggleTestFlightDeveloperMode()
-                    testFlightAlertMessage = enabled
-                        ? "Developer mode on (TestFlight)"
-                        : "Developer mode off (TestFlight)"
-                #endif
-                showTestFlightAlert = true
-            }
-        #endif
+        return label.onTapGesture(count: 2) {
+            #if DEBUG
+                let enabled = storeManager.toggleDebugPremium()
+                testFlightAlertMessage = enabled
+                    ? "Premium activated (Debug)"
+                    : "Premium deactivated (Debug)"
+            #else
+                guard StoreManager.isTestFlight else { return }
+                let enabled = DeveloperMode.toggleTestFlightDeveloperMode()
+                testFlightAlertMessage = enabled
+                    ? "Developer mode on (TestFlight)"
+                    : "Developer mode off (TestFlight)"
+            #endif
+            showTestFlightAlert = true
+        }
     }
 
     // MARK: - Row Builders
@@ -444,7 +426,7 @@ private extension SettingsView {
     }
 
     private var subscriptionActionTitle: String {
-        if hasManageableAppStoreSubscription || entitlement.state.hasWebsiteEntitlement {
+        if hasManageableAppStoreSubscription {
             return String(localized: "Manage")
         }
         if entitlement.isPro {
@@ -604,9 +586,6 @@ private extension SettingsView {
                 ForEach(HotKeyType.availableCases, id: \.self) { type in
                     hotKeyRow(for: type)
                 }
-                #if DIRECT_DISTRIBUTION
-                    textSelectionTranslationRow
-                #endif
             }
             .onDisappear { stopRecordingHotKey() }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
@@ -747,38 +726,6 @@ private extension SettingsView {
             RealtimeFloatingCaptionWindowController.open(store: RealtimeSessionStore.shared)
         }
 
-        #if DIRECT_DISTRIBUTION
-            var textSelectionTranslationRow: some View {
-                Toggle(isOn: Binding(
-                    get: { preferences.textSelectionTranslationEnabled },
-                    set: { newValue in
-                        if newValue {
-                            if AXIsProcessTrusted() {
-                                preferences.setTextSelectionTranslationEnabled(true)
-                            } else {
-                                showAccessibilityOnboarding = true
-                            }
-                        } else {
-                            preferences.setTextSelectionTranslationEnabled(false)
-                        }
-                    }
-                )) {
-                    settingsLabel(
-                        "Text Selection Translation",
-                        systemImage: "text.cursor",
-                        subtitle: Text(textSelectionTranslationSubtitle)
-                    )
-                }
-            }
-
-            private var textSelectionTranslationSubtitle: LocalizedStringKey {
-                if preferences.textSelectionTranslationEnabled {
-                    return "Ready in other apps"
-                }
-                return accessibilityPermissionManager
-                    .isAccessibilityGranted ? "Select text in any app to translate" : "Requires Accessibility Permission"
-            }
-        #endif
     #endif
 }
 

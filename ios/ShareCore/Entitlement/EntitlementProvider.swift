@@ -2,9 +2,8 @@
 //  EntitlementProvider.swift
 //  ShareCore
 //
-//  Unified entitlement abstraction. The app reads `Entitlement.shared.isPro`
-//  without caring whether the underlying source is StoreKit (App Store build)
-//  or a web subscription (Direct build).
+//  Unified entitlement abstraction backed by StoreKit. The app reads
+//  `Entitlement.shared.isPro` without touching `StoreManager` directly.
 //
 //  Implemented as an `ObservableObject` so SwiftUI views can observe changes
 //  via `@ObservedObject`.
@@ -22,54 +21,30 @@ public final class Entitlement: ObservableObject {
 
     @Published public private(set) var state = EntitlementState(
         hasAppStoreEntitlement: false,
-        appStoreTierName: nil,
-        hasWebsiteEntitlement: false
+        appStoreTierName: nil
     )
 
     public var isPro: Bool { state.isPro }
-    public var expiresAt: Date? { state.expiresAt }
 
     private var cancellables: Set<AnyCancellable> = []
-    private var appStoreIsPro = false
-    private var appStoreTierName: String?
-    private var websiteIsPro = false
-    private var websiteTierName: String?
-    private var websiteExpiresAt: Date?
 
     private init() {
-        // ShareCore is compiled once for both targets; switch sources at runtime
-        // via the Info.plist channel marker since `#if DIRECT_DISTRIBUTION` is
-        // always false inside the framework.
-        let direct = BuildEnvironment.isDirectDistribution
-        logger.info("init – channel=\(direct ? "direct" : "appstore", privacy: .public)")
-        if direct {
-            bindWeb()
-        } else {
-            bindAppStore()
-        }
+        let store = StoreManager.shared
+        publishState(from: store)
+        logger.info("init – initial isPro=\(self.isPro, privacy: .public)")
+        Publishers.CombineLatest3(store.$isPremium, store.$activePremiumProductID, store.$premiumSourceDisplayName)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.publishState(from: store)
+            }
+            .store(in: &cancellables)
     }
 
-    /// Force a refresh against the underlying source.
+    /// Force a refresh against StoreKit.
     public func refresh() async {
-        if BuildEnvironment.isDirectDistribution {
-            let provider = WebEntitlementProvider.shared
-            await provider.refresh()
-            syncWebsiteState(from: provider)
-        } else {
-            let store = StoreManager.shared
-            let provider = WebEntitlementProvider.shared
-            if OAuthTokenStore.load() != nil {
-                async let storeRefresh: Void = store.refreshSubscriptionStatus()
-                async let webRefresh: Void = provider.refresh()
-                _ = await (storeRefresh, webRefresh)
-            } else {
-                await store.refreshSubscriptionStatus()
-            }
-            appStoreIsPro = store.isPremium
-            appStoreTierName = appStoreTierName(from: store)
-            syncWebsiteState(from: provider)
-        }
-        publishCurrentState()
+        let store = StoreManager.shared
+        await store.refreshSubscriptionStatus()
+        publishState(from: store)
     }
 
     @discardableResult
@@ -78,102 +53,16 @@ public final class Entitlement: ObservableObject {
         return isPro
     }
 
-    private func bindWeb() {
-        let provider = WebEntitlementProvider.shared
-        syncWebsiteState(from: provider)
-        publishCurrentState()
-        logger.info("bindWeb – initial isPro=\(self.isPro, privacy: .public)")
-        provider.$isPro
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                logger.info("bindWeb – isPro changed -> \($0, privacy: .public)")
-                self?.websiteIsPro = $0
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        provider.$expiresAt
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                self?.websiteExpiresAt = $0
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        provider.$plan
-            .receive(on: RunLoop.main)
-            .sink { [weak self] plan in
-                self?.websiteTierName = plan.flatMap { PremiumProduct.tierDisplayName(forWebsitePlan: $0) }
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-    }
-
-    private func bindAppStore() {
-        let store = StoreManager.shared
-        let provider = WebEntitlementProvider.shared
-        appStoreIsPro = store.isPremium
-        appStoreTierName = appStoreTierName(from: store)
-        syncWebsiteState(from: provider)
-        publishCurrentState()
-        logger.info("bindAppStore – initial isPro=\(self.isPro, privacy: .public)")
-        store.$isPremium
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                logger.info("bindAppStore – isPremium changed -> \($0, privacy: .public)")
-                self?.appStoreIsPro = $0
-                self?.appStoreTierName = self?.appStoreTierName(from: store)
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        Publishers.Merge(store.$activePremiumProductID, store.$premiumSourceDisplayName)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.appStoreTierName = self?.appStoreTierName(from: store)
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        provider.$isPro
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                logger.info("bindAppStore – website isPro changed -> \($0, privacy: .public)")
-                self?.websiteIsPro = $0
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        provider.$expiresAt
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                self?.websiteExpiresAt = $0
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-        provider.$plan
-            .receive(on: RunLoop.main)
-            .sink { [weak self] plan in
-                self?.websiteTierName = plan.flatMap { PremiumProduct.tierDisplayName(forWebsitePlan: $0) }
-                self?.publishCurrentState()
-            }
-            .store(in: &cancellables)
-    }
-
-    private func syncWebsiteState(from provider: WebEntitlementProvider) {
-        websiteIsPro = provider.isPro
-        websiteTierName = provider.plan.flatMap { PremiumProduct.tierDisplayName(forWebsitePlan: $0) }
-        websiteExpiresAt = provider.expiresAt
-    }
-
-    private func appStoreTierName(from store: StoreManager) -> String? {
-        store.activePremiumProductID.flatMap { PremiumProduct.tierDisplayName(for: $0) } ?? store.premiumSourceDisplayName
-    }
-
-    private func publishCurrentState() {
+    private func publishState(from store: StoreManager) {
         let next = EntitlementState(
-            hasAppStoreEntitlement: appStoreIsPro,
-            appStoreTierName: appStoreTierName,
-            hasWebsiteEntitlement: websiteIsPro,
-            websiteTierName: websiteTierName,
-            expiresAt: websiteExpiresAt
+            hasAppStoreEntitlement: store.isPremium,
+            appStoreTierName: store.activePremiumProductID.flatMap { PremiumProduct.tierDisplayName(for: $0) }
+                ?? store.premiumSourceDisplayName
         )
         guard state != next else { return }
+        if next.isPro != state.isPro {
+            logger.info("isPro changed -> \(next.isPro, privacy: .public)")
+        }
         state = next
     }
 }

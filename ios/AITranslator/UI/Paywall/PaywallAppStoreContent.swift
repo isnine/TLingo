@@ -6,9 +6,6 @@
 //  button, "current plan" badge, and the legal footer (Apple-mandated
 //  Restore + Terms + Privacy links and the auto-renew disclosure).
 //
-//  Inert in Direct builds — `PaywallView` only instantiates this when
-//  `BuildEnvironment.isDirectDistribution == false`.
-//
 
 import ShareCore
 import StoreKit
@@ -20,7 +17,6 @@ struct PaywallAppStoreContent: View {
     @ObservedObject private var storeManager = StoreManager.shared
     @ObservedObject private var entitlement = Entitlement.shared
     @State private var selectedProduct: Product?
-    @State private var showEmailRestore = false
     @State private var trialDurations: [String: String] = [:]
 
     private var currentTierPriority: Int {
@@ -29,8 +25,7 @@ struct PaywallAppStoreContent: View {
     }
 
     private var hasUpgradeOptions: Bool {
-        if entitlement.state.suppressesAppStoreUpgrades { return false }
-        return currentTierPriority < 2
+        currentTierPriority < 2
     }
 
     private func isUpgrade(_ product: Product) -> Bool {
@@ -53,11 +48,6 @@ struct PaywallAppStoreContent: View {
             } else {
                 currentPlanBadge
                 legalFooter
-            }
-        }
-        .sheet(isPresented: $showEmailRestore) {
-            WebsitePurchaseRestoreView(colors: colors) {
-                showEmailRestore = false
             }
         }
         .task(id: storeManager.products.map(\.id).joined(separator: "|")) {
@@ -370,21 +360,6 @@ struct PaywallAppStoreContent: View {
                     Task { await storeManager.restorePurchases() }
                 } label: {
                     Text("Restore")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.blue)
-                        .underline()
-                }
-                .buttonStyle(.plain)
-            }
-
-            HStack(spacing: 4) {
-                Text("Have an existing account?")
-                    .font(.system(size: 13))
-                    .foregroundColor(colors.textSecondary)
-                Button {
-                    showEmailRestore = true
-                } label: {
-                    Text("Restore with Email")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.blue)
                         .underline()

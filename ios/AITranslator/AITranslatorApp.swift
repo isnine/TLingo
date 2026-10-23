@@ -40,23 +40,11 @@ struct AITranslatorApp: App {
     #endif
 
     init() {
-        // Distribution channel marker. MUST run before any ShareCore code
-        // touches StoreManager / AppPreferences / Entitlement, otherwise those
-        // singletons will initialize on the App Store path even in a Direct
-        // binary. We rely on the compile-time `DIRECT_DISTRIBUTION` flag here
-        // (defined only on the TLingo-Direct app target) and pass the result
-        // into ShareCore as a runtime value, because ShareCore is built once
-        // and shared by both targets — it cannot see the macro itself.
-        #if DIRECT_DISTRIBUTION
-            BuildEnvironment.markAsDirectDistribution()
-        #endif
         MetricKitReporter.shared.start()
 
         // Debug: Print configuration on launch
         #if DEBUG
             logger.info("AITranslator launching...")
-            logger
-                .info("Distribution channel: \(BuildEnvironment.isDirectDistribution ? "direct" : "appstore", privacy: .public)")
             logger.debug("\(BuildEnvironment.debugDescription, privacy: .public)")
             let secret = AppSecrets.cloudSecret
             if secret.isEmpty {
@@ -95,11 +83,9 @@ struct AITranslatorApp: App {
         .windowResizability(.contentMinSize)
         .defaultLaunchBehavior(Self.isSnapshotMode || AppDelegate.isTextPopupLaunch ? .suppressed : .presented)
         #endif
-        // Match BOTH URL schemes so deeplinks reuse the existing window instead
-        // of spawning a new one. `tlingo-direct://oauth/callback` (Supabase OAuth
-        // return) is Direct-only; if it isn't listed here SwiftUI opens a fresh
-        // WindowGroup instance to receive the event.
-        .handlesExternalEvents(matching: ["tlingo-direct", "tlingo"])
+        // Match the URL scheme so deeplinks reuse the existing window; otherwise
+        // SwiftUI opens a fresh WindowGroup instance to receive the event.
+        .handlesExternalEvents(matching: ["tlingo"])
         #if os(macOS)
             .commands {
                 CommandGroup(after: .help) {
@@ -107,13 +93,6 @@ struct AITranslatorApp: App {
                         exportLogsFromHelpMenu()
                     }
                 }
-                #if DIRECT_DISTRIBUTION
-                    CommandGroup(after: .appInfo) {
-                        CheckForUpdatesView()
-                        Divider()
-                        SignInMenuItem()
-                    }
-                #endif
             }
         #endif
     }
@@ -183,7 +162,7 @@ struct AITranslatorApp: App {
             #if DEBUG
                 .background(AppleTranslationStrategyBenchmarkView())
             #endif
-                .handlesExternalEvents(preferring: ["tlingo-direct", "tlingo"], allowing: ["*"])
+                .handlesExternalEvents(preferring: ["tlingo"], allowing: ["*"])
                 .onAppear {
                     AppDelegate.shared?.openWindowAction = openWindow
 
@@ -217,9 +196,6 @@ struct AITranslatorApp: App {
         /// TLingoHelper launches TLingo in the background; keep it windowless until the user opens it.
         static let isTextPopupLaunch = ProcessInfo.processInfo.arguments.contains("-TLingoTextPopupLaunch")
         private(set) var isInitialTextPopupLaunch = isTextPopupLaunch
-        #if DIRECT_DISTRIBUTION
-            private var selectionTranslationCancellable: AnyCancellable?
-        #endif
 
         override init() {
             super.init()
@@ -230,13 +206,6 @@ struct AITranslatorApp: App {
             // observer is registered before any HomeView.onAppear fires.
             _ = AppleTranslationWindowManager.shared
         }
-
-        #if DIRECT_DISTRIBUTION
-            @MainActor
-            func translateCurrentSelection() {
-                selectionTranslationCoordinator.translateCurrentSelection()
-            }
-        #endif
 
         @MainActor
         func translateScreenshot() {
@@ -326,16 +295,6 @@ struct AITranslatorApp: App {
             // Observe window lifecycle for smart Dock icon management
             setupWindowObservers()
 
-            #if DIRECT_DISTRIBUTION
-                selectionTranslationCancellable = AppPreferences.shared.$textSelectionTranslationEnabled
-                    .sink { [weak self] enabled in
-                        if enabled {
-                            self?.selectionTranslationCoordinator.start()
-                        } else {
-                            self?.selectionTranslationCoordinator.stop()
-                        }
-                    }
-            #endif
             flushPendingTextPopup()
         }
 
@@ -345,11 +304,6 @@ struct AITranslatorApp: App {
 
             // Unregister global hotkey
             HotKeyManager.shared.unregister()
-
-            #if DIRECT_DISTRIBUTION
-                selectionTranslationCoordinator.stop()
-                selectionTranslationCancellable?.cancel()
-            #endif
 
             // Teardown menu bar
             Task { @MainActor in
@@ -401,13 +355,6 @@ struct AITranslatorApp: App {
                     )
             }
             for url in urls {
-                #if DIRECT_DISTRIBUTION
-                    if OAuthCoordinator.shared.handleCallbackIfMatching(url) {
-                        logger.info("OAuth callback consumed by AppDelegate; bringing existing window to front")
-                        openMainWindow()
-                        continue
-                    }
-                #endif
                 // Other deep links (e.g. tlingo://translate) are delivered by
                 // SwiftUI's onOpenURL on RootTabView, which owns the destination
                 // route. Submitting here too would translate the same URL twice.

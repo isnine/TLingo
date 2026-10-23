@@ -4,7 +4,7 @@ owner: architecture
 verified_commit: initial
 review_triggers:
   - Swift endpoint changes
-  - HMAC or OAuth changes
+  - HMAC or entitlement changes
 ---
 
 # 客户端契约
@@ -15,7 +15,6 @@ review_triggers:
 
 - `AppSecrets.cloudEndpoint` 指向 API host（生产为 `https://tlingo.zanderwang.com/api`）。
 - 客户端请求 `/api/<internal-path>`，签名使用不含 `/api` 的 internal path。
-- Direct 更新资源位于 `updates.tlingo.zanderwang.com`。
 
 ## HMAC
 
@@ -33,7 +32,6 @@ headers = X-Timestamp, X-Signature
 | `/{model}/chat/completions` | HMAC，会员模型另需 entitlement |
 | `/translate/microsoft` | HMAC |
 | `/tts`、`/marketplace/actions*` | HMAC |
-| `/oauth/token` | PKCE / refresh token |
 
 模型 ID 含 `/` 时作为多级路径请求（如 `/api/qwen/qwen3.7-flash/chat/completions`），HMAC 对完整路径签名。
 
@@ -69,16 +67,16 @@ Gemini 3.8 Flash 使用零思考预算。Argon 固定最低档 `low`。不改变
 `X-Upstream-TTFB` 表示上游响应 header 等待时间，不代表首个内容 token。
 末个内容、`[DONE]` 与传输 EOF 只能在流中或结束日志里测量，不能事后补写已发出的响应 header。
 
-聊天请求附带 `X-Usage-Subject-Type/ID/Label` 标识请求主体，按优先级为：邮箱（OAuth 或网站购买恢复）、
+聊天请求附带 `X-Usage-Subject-Type/ID/Label` 标识请求主体，按优先级为：
 App Store 会员（`appAccountToken`）、设备（`device`）。设备标识是首次使用时生成的随机 UUID，存于 Keychain
 （`ThisDeviceOnly`，不随 iCloud 同步），不来自硬件或广告标识符。Worker 仅将其用于 AI Gateway 日志归属。
 
 共享网络会话的请求使用 `User-Agent: TLingo/<版本> (<构建号>; <平台> <系统版本>; <设备型号>; <渠道>)`，
-例如 `TLingo/3.8.4 (504; iOS 26.1; iPhone17,3; AppStore)`；渠道为 `AppStore`、`TestFlight`、`Direct` 或 `Debug`。
+例如 `TLingo/3.8.4 (504; iOS 26.1; iPhone17,3; AppStore)`；渠道为 `AppStore`、`TestFlight` 或 `Debug`。
 它只用于日志归属，不参与鉴权。
 
 会员请求附带 `X-AppStore-Transaction`：当前有效会员交易的 StoreKit 2 JWS（`jwsRepresentation`），
-由服务端校验；TestFlight 沙盒购买同样有效。`X-Premium: true` 仅为兼容旧服务端保留。客户端不再提供
+由服务端校验；TestFlight 沙盒购买同样有效，这是会员模型的唯一凭证。客户端不再提供
 TestFlight 本地开通会员的入口，TestFlight 双击版本号只切换开发者模式；Debug 构建保留本地会员开关。
 
 新手试用先以 `POST /onboarding/trial` 提交 `{deviceID, deviceToken}`（设备 UUID 与 DeviceCheck token），
@@ -94,12 +92,6 @@ header 等待减上游 header 等待仅是包含 Worker 前置开销的估计，
 ## 微软翻译
 
 `POST /api/translate/microsoft` 接收 `{text, sourceCode?, targetCode}`，省略源语言时自动检测，返回 `{text}`。文本上限 50000 UTF-16 code units。
-
-## OAuth（Direct）
-
-App 生成 state 与 PKCE challenge 打开 Web 激活页；Web 完成邮箱 OTP 后通过 custom URL 回调 App；App 以 verifier 调用 `/oauth/token` 换取 tokens 和 entitlement。
-
-Token JSON 使用 snake_case。`invalid_grant` 表示当前凭证不能继续使用；刷新失败不清除本地权益，在已保存有效期内继续有效。
 
 ## 客户端行为约定
 

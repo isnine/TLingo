@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed the Direct (Developer ID + Sparkle) macOS build, email sign-in, and website purchase restore. Premium now comes only from App Store subscriptions.
+
 ## [5.6.0] - 2026-10-20
 
 ### Added

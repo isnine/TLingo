@@ -44,6 +44,14 @@ public struct FeedbackMailDraft: Identifiable {
 
 @MainActor
 public enum FeedbackMail {
+    nonisolated static var currentAppVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+    }
+
+    nonisolated static var currentBuildNumber: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+    }
+
     public static let recipient = "iamzanderwang@outlook.com"
 
     public static func makeDraft() -> FeedbackMailDraft {
@@ -87,8 +95,8 @@ public enum FeedbackMail {
     #endif
 
     private static func body(isPremium: Bool) -> String {
-        let appVersion = OAuthActivationDiagnostics.currentAppVersion
-        let buildNumber = OAuthActivationDiagnostics.currentBuildNumber
+        let appVersion = currentAppVersion
+        let buildNumber = currentBuildNumber
         return [
             "Please describe what happened:",
             "",
@@ -320,8 +328,8 @@ enum FeedbackLogFormatter {
     ) -> String {
         var lines: [String] = []
         let generatedTimestamp = timestamp(generatedAt)
-        let appVersion = OAuthActivationDiagnostics.currentAppVersion
-        let buildNumber = OAuthActivationDiagnostics.currentBuildNumber
+        let appVersion = FeedbackMail.currentAppVersion
+        let buildNumber = FeedbackMail.currentBuildNumber
         lines.append("\(generatedTimestamp) [TLingo] \(title)")
         lines.append("\(generatedTimestamp) [TLingo] app=\(appVersion) build=\(buildNumber)")
         lines.append("\(generatedTimestamp) [TLingo] system=\(ProcessInfo.processInfo.operatingSystemVersionString)")

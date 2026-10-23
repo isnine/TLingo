@@ -35,8 +35,6 @@ public final class StoreManager: ObservableObject {
     private static let premiumKey = "is_premium_subscriber"
     private static let appAccountTokenKey = "storekit_app_account_token"
     private static let usageAppStoreSubjectIDKey = "usage.appstore.subject_id"
-    private var webEntitlementCancellable: AnyCancellable?
-
     /// `true` when running via TestFlight.
     ///
     /// Detection strategy:
@@ -86,17 +84,6 @@ public final class StoreManager: ObservableObject {
     // MARK: - Init
 
     private init() {
-        // Direct distribution: bridge `isPremium` to `WebEntitlementProvider`.
-        // Legacy `is_premium_subscriber` purge happens in `AppPreferences.init`.
-        if BuildEnvironment.isDirectDistribution {
-            isPremium = WebEntitlementProvider.shared.isPro
-            webEntitlementCancellable = WebEntitlementProvider.shared.$isPro
-                .receive(on: RunLoop.main)
-                .sink { [weak self] in self?.isPremium = $0 }
-            logger.info("Direct build – StoreKit bypassed, bridged to WebEntitlementProvider")
-            return
-        }
-
         #if DEBUG
             // Auto-enable premium in development builds unless user toggled it off
             isDebugPremiumDisabled = AppPreferences.sharedDefaults.bool(forKey: Self.debugPremiumDisabledKey)
@@ -175,10 +162,6 @@ public final class StoreManager: ObservableObject {
 
     @discardableResult
     public func purchase(_ product: Product) async -> Bool {
-        if BuildEnvironment.isDirectDistribution {
-            logger.warning("purchase() called on Direct build – ignoring (entitlement is web-based)")
-            return false
-        }
         isPurchasing = true
         purchaseError = nil
         purchaseFailedDeviceVerification = false
@@ -221,11 +204,6 @@ public final class StoreManager: ObservableObject {
     // MARK: - Restore Purchases
 
     public func restorePurchases() async {
-        if BuildEnvironment.isDirectDistribution {
-            logger.warning("restorePurchases() called on Direct build – delegating to web entitlement refresh")
-            await Entitlement.shared.refresh()
-            return
-        }
         isPurchasing = true
         purchaseError = nil
         defer { isPurchasing = false }
@@ -278,7 +256,11 @@ public final class StoreManager: ObservableObject {
             }
 
             activePremiumProductID = activeProductID
-            AppPreferences.sharedDefaults.set(activeTransactionJWS, forKey: Self.premiumTransactionJWSKey)
+            // Unchanged writes still post `UserDefaults.didChangeNotification`,
+            // which makes `AppPreferences` re-read every key.
+            if Self.premiumTransactionJWS != activeTransactionJWS {
+                AppPreferences.sharedDefaults.set(activeTransactionJWS, forKey: Self.premiumTransactionJWSKey)
+            }
             updatePremiumStatus(hasActiveSubscription)
         #endif
     }

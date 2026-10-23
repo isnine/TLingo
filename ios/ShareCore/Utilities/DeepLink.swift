@@ -5,20 +5,13 @@
 
 import Foundation
 
-/// Constants and helpers for the `tlingo://` and `tlingo-direct://` deep
-/// link schemes.
+/// Constants and helpers for the `tlingo://` deep link scheme.
 ///
 /// - `tlingo://translate` — share-extension / shortcuts entry, App Store target.
 /// - `tlingo://realtime` — App Store event / campaign entry for realtime translation.
 /// - `tlingo://realtime/models` — opens realtime options on the recognition model picker.
-/// - `tlingo-direct://oauth/callback` — OAuth activation return target,
-///   handled by `OAuthCoordinator.handleCallbackIfMatching` in the
-///   Direct macOS build. Uses a distinct scheme so macOS Launch Services
-///   can't route the callback to the App Store TLingo (both apps share
-///   the bundle id and would otherwise both register `tlingo://`).
 public enum DeepLink {
     public static let scheme = "tlingo"
-    public static let directScheme = "tlingo-direct"
     public static let translateHost = "translate"
     public static let realtimeHost = "realtime"
     public static let realtimeModelsPath = "/models"

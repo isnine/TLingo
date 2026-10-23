@@ -101,8 +101,7 @@ struct RootTabView: View {
     }
 
     /// Debug tab visibility — visible when developer mode is enabled
-    /// (TestFlight override on App Store/TestFlight, or developer email
-    /// signed in on Direct).
+    /// (Debug builds or the TestFlight override).
     static var isDebugTabVisible: Bool {
         DeveloperMode.isEnabled
     }
@@ -112,9 +111,7 @@ struct RootTabView: View {
             SidebarLayoutView(initialTab: Self.initialTab, configStore: configStore)
                 .modifier(DeepLinkHandler())
                 .environment(\.homeInputRouteID, homeInputRouteID)
-                .modifier(WebsiteEntitlementRefreshHandler())
                 .modifier(AppStoreSubscriptionManagementPresenter())
-                .directUpdateAvailabilityProbe()
         #else
             if ProcessInfo.processInfo.arguments.contains("-SNAPSHOT_EXTENSION_PREVIEW") {
                 DefaultTranslationSnapshotView()
@@ -122,89 +119,11 @@ struct RootTabView: View {
                 AdaptiveNavigationView(initialTab: Self.initialTab, configStore: configStore)
                     .modifier(DeepLinkHandler())
                     .environment(\.homeInputRouteID, homeInputRouteID)
-                    .modifier(WebsiteEntitlementRefreshHandler())
                     .modifier(AppStoreSubscriptionManagementPresenter())
             }
         #endif
     }
 }
-
-// MARK: - Website entitlement refresh
-
-/// Keeps restored website entitlements reasonably fresh between launches.
-/// Stripe webhook updates have no client push channel, so we poll on a leash.
-private struct WebsiteEntitlementRefreshHandler: ViewModifier {
-    /// Polling cadence. Six hours balances "users notice cancellation /
-    /// renewal in a usable time" against API quota and battery.
-    private static let staleAfter: TimeInterval = 6 * 3600
-
-    func body(content: Content) -> some View {
-        content
-            .task {
-                await OAuthCoordinator.shared.refreshIfStale(maxAge: 0, reason: "launch")
-            }
-            .task {
-                let nanos = UInt64(Self.staleAfter * 1_000_000_000)
-                while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: nanos)
-                    await OAuthCoordinator.shared.refreshIfStale(maxAge: Self.staleAfter, reason: "timer")
-                }
-            }
-            .onReceive(Self.activeNotificationPublisher) { _ in
-                Task { await OAuthCoordinator.shared.refreshIfStale(maxAge: Self.staleAfter, reason: "foreground") }
-            }
-    }
-
-    private static let activeNotificationPublisher: NotificationCenter.Publisher = {
-        #if os(macOS)
-            NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
-        #else
-            NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
-        #endif
-    }()
-}
-
-#if os(macOS)
-    private extension View {
-        @ViewBuilder
-        func directUpdateAvailabilityProbe() -> some View {
-            #if DIRECT_DISTRIBUTION
-                modifier(DirectUpdateAvailabilityProbe())
-            #else
-                self
-            #endif
-        }
-    }
-#endif
-
-#if os(macOS) && DIRECT_DISTRIBUTION
-    private struct DirectUpdateAvailabilityProbe: ViewModifier {
-        private static let staleAfter: TimeInterval = 6 * 3600
-
-        @State private var lastProbeDate: Date?
-
-        func body(content: Content) -> some View {
-            content
-                .task {
-                    await probe(force: true)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    Task { await probe(force: false) }
-                }
-        }
-
-        @MainActor
-        private func probe(force: Bool) {
-            let now = Date()
-            if !force, let lastProbeDate, now.timeIntervalSince(lastProbeDate) < Self.staleAfter {
-                return
-            }
-
-            lastProbeDate = now
-            UpdaterController.shared.checkForUpdateInformationIfAllowed()
-        }
-    }
-#endif
 
 // MARK: - Deep Link Handling
 
@@ -227,10 +146,6 @@ extension RootTabView {
                                 """
                             )
                     #endif
-                    // OAuth activation callback (Mac Direct only).
-                    if OAuthCoordinator.shared.handleCallbackIfMatching(url) {
-                        return
-                    }
                     if DeepLink.isRealtimeURL(url) {
                         NotificationCenter.default.post(
                             name: .deepLinkRealtimeRequested,

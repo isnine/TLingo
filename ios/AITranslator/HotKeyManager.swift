@@ -49,11 +49,7 @@
 
         /// Screenshot OCR is a menu bar action only and has no global hotkey.
         static var availableCases: [Self] {
-            #if DIRECT_DISTRIBUTION
-                allCases.filter { $0 != .screenshotOCR }
-            #else
-                allCases.filter { $0 != .screenshotOCR && $0 != .selectionTranslate }
-            #endif
+            allCases.filter { $0 != .screenshotOCR && $0 != .selectionTranslate }
         }
 
         var displayName: String {
@@ -341,9 +337,7 @@
             case .quickTranslate:
                 NotificationCenter.default.post(name: .toggleMenuBarPopover, object: nil)
             case .selectionTranslate:
-                #if DIRECT_DISTRIBUTION
-                    MainActor.assumeIsolated { AppDelegate.shared?.translateCurrentSelection() }
-                #endif
+                break
             case .screenshotTranslate:
                 MainActor.assumeIsolated { AppDelegate.shared?.translateScreenshot() }
             case .screenshotOCR:

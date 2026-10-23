@@ -22,7 +22,6 @@ final class AppStoreSubscriptionManagementRouter: ObservableObject {
     private init() {}
 
     func present() {
-        guard !BuildEnvironment.isDirectDistribution else { return }
         isPresented = true
     }
 }

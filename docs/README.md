@@ -21,7 +21,6 @@ review_triggers:
 
 - [`verification.md`](./verification.md)：按变更范围选择构建和测试。
 - [`ios-agent-workflow.md`](./ios-agent-workflow.md)：iOS App 编译、运行、交互和运行时验证流程。
-- [`direct-release.md`](./direct-release.md)：Direct 构建、签名、公证和 Sparkle 发布流程。
 
 ## 领域文档
 

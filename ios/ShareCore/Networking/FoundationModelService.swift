@@ -94,7 +94,6 @@ public final class FoundationModelService: Sendable {
 
     public static func availability(for model: ModelConfig) -> FoundationModelAvailability {
         guard model.isPrivateCloudModel else { return availability }
-        guard !BuildEnvironment.isDirectDistribution else { return .privateCloudUnavailable }
 #if compiler(>=6.4)
         guard #available(iOS 27.0, macOS 27.0, *) else { return .privateCloudUnavailable }
         return resolveAvailability(PrivateCloudComputeLanguageModel().availability)
