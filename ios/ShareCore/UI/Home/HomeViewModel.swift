@@ -803,9 +803,7 @@ public final class HomeViewModel: ObservableObject {
         if enabledIDs.contains(ModelConfig.foundationModelID) {
             displayModels.append(ModelConfig.foundationModel)
         }
-        if !BuildEnvironment.isDirectDistribution,
-           enabledIDs.contains(ModelConfig.privateCloudModelID)
-        {
+        if enabledIDs.contains(ModelConfig.privateCloudModelID) {
             displayModels.append(ModelConfig.privateCloudModel)
         }
         displayModels.append(contentsOf: models.filter { enabledIDs.contains($0.id) })
@@ -957,9 +955,7 @@ public final class HomeViewModel: ObservableObject {
         if enabledIDs.contains(ModelConfig.foundationModelID) {
             available.insert(ModelConfig.foundationModel, at: 0)
         }
-        if !BuildEnvironment.isDirectDistribution,
-           enabledIDs.contains(ModelConfig.privateCloudModelID)
-        {
+        if enabledIDs.contains(ModelConfig.privateCloudModelID) {
             available.insert(ModelConfig.privateCloudModel, at: 0)
         }
 
@@ -1047,8 +1043,7 @@ public final class HomeViewModel: ObservableObject {
         // Preserve built-in model IDs that do not come from the cloud model list.
         let builtInIDs = currentEnabled.filter {
             ModelConfig.isDirectTranslationID($0)
-                || (ModelConfig.isFoundationModelID($0)
-                    && (!BuildEnvironment.isDirectDistribution || $0 != ModelConfig.privateCloudModelID))
+                || ModelConfig.isFoundationModelID($0)
         }
         var resolved = currentEnabled.intersection(availableIDs).union(builtInIDs)
         if resolved.isEmpty {
@@ -1101,10 +1096,8 @@ public final class HomeViewModel: ObservableObject {
         submittedAt: ContinuousClock.Instant
     ) {
         // Check data sharing consent before sending any data (macOS only).
-        // Direct distribution bypasses this notice — Direct users explicitly opted into
-        // a self-hosted/Developer-ID build and the cloud proxy is not the default path.
         #if os(macOS)
-            if !BuildEnvironment.isDirectDistribution, !preferences.hasAcceptedDataSharing {
+            if !preferences.hasAcceptedDataSharing {
                 showDataConsentRequest = true
                 return
             }

@@ -104,33 +104,6 @@ public final class AppPreferences: ObservableObject {
             RetiredRealtimeAzureMigration.cleanup(defaults: defaults)
         #endif
 
-        // Direct distribution: clear App-Store-only premium flags that may
-        // have been left in defaults by a prior App Store install at the same
-        // Bundle ID. Direct's premium state lives in WebEntitlementProvider.
-        //
-        // We deliberately DO NOT touch `entitlement.web.*` keys here — those
-        // belong to WebEntitlementProvider and represent legitimate Pro state
-        // for signed-in users (the offline-grace cache). The provider's own
-        // `hydrateFromCache()` already refuses cached `isPro=true` when no
-        // Supabase session is present, so unauthenticated stale caches are
-        // already covered without us purging signed-in users on every launch.
-        if BuildEnvironment.isDirectDistribution {
-            let staleAppGroupIsPremium = defaults.object(forKey: StorageKeys.isPremium) != nil
-            let staleTFOverride = defaults.object(forKey: "testflight_premium_override") != nil
-
-            if staleAppGroupIsPremium || staleTFOverride {
-                logger.info(
-                    """
-                    Direct init – purging stale App Store premium keys: \
-                    appGroup.isPremium=\(staleAppGroupIsPremium, privacy: .public) \
-                    appGroup.tfOverride=\(staleTFOverride, privacy: .public)
-                    """
-                )
-                defaults.removeObject(forKey: StorageKeys.isPremium)
-                defaults.removeObject(forKey: "testflight_premium_override")
-            }
-        }
-
         targetLanguage = AppPreferences.readTargetLanguage(from: defaults)
         sourceLanguage = AppPreferences.readSourceLanguage(from: defaults)
         currentConfigName = defaults.string(forKey: StorageKeys.currentConfigName)
@@ -294,16 +267,12 @@ public final class AppPreferences: ObservableObject {
         }
     }
 
-    /// Updates the cached premium flag. Called by `WebEntitlementProvider`
-    /// (Direct builds) when the Worker reports a fresh status, and by
-    /// `StoreManager` (App Store builds) on transaction events.
+    /// Updates the cached premium flag. Called by `StoreManager` on
+    /// transaction events.
     public func setIsPremium(_ value: Bool) {
         let currentIsPremium = isPremium
         guard currentIsPremium != value else { return }
-        let isDirect = BuildEnvironment.isDirectDistribution
-        logger.info(
-            "setIsPremium \(currentIsPremium, privacy: .public)->\(value, privacy: .public) direct=\(isDirect, privacy: .public)"
-        )
+        logger.info("setIsPremium \(currentIsPremium, privacy: .public)->\(value, privacy: .public)")
         isPremium = value
         defaults.set(value, forKey: StorageKeys.isPremium)
     }
