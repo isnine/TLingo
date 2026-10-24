@@ -4857,6 +4857,7 @@
       }
     },
     "6-digit code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5479,6 +5480,7 @@
       }
     },
     "Accessibility" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6471,6 +6473,7 @@
       }
     },
     "Activation cancelled (%@). Tap Try Again to retry." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6595,6 +6598,7 @@
       }
     },
     "Activation completed, but this account is not Pro. Contact support if you already paid." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6719,6 +6723,7 @@
       }
     },
     "Activation failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6843,6 +6848,7 @@
       }
     },
     "Activation failed: %@. Tap Try Again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6967,6 +6973,7 @@
       }
     },
     "Activation needs attention" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -9951,6 +9958,7 @@
       }
     },
     "Already purchased?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -12682,127 +12690,127 @@
         }
       }
     },
-    "Apple Translate has not downloaded this language pair. Use Apple Translate in the main window once and wait for the system prompt to download the target language, then start realtime translation again." : {
+    "Apple Translate needs to download this language pair before it can translate. Choose Download to get it now." : {
       "comment" : "Shown when realtime Apple Translate starts without the required language pack",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate لم يقم بتنزيل زوج اللغات هذا. افتح Apple Translate في النافذة الرئيسية مرة واحدة وانتظر مطالبة النظام لتنزيل اللغة المستهدفة، ثم ابدأ الترجمة في الوقت الفعلي مرة أخرى."
+            "value" : "يحتاج Apple Translate إلى تنزيل هذا الزوج اللغوي قبل أن يتمكن من الترجمة. اختر \"تنزيل\" للحصول عليه الآن."
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate har ikke downloadet dette sprogpar. Brug Apple Translate i hovedvinduet én gang og vent på systemprompten for at downloade målsproget, og start derefter realtime-oversættelsen igen."
+            "value" : "Apple Translate skal downloade dette sprogpar, før det kan oversætte. Vælg Download for at hente det nu."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate hat dieses Sprachpaar nicht heruntergeladen. Öffnen Sie Apple Translate einmal im Hauptfenster und warten Sie auf die Systemaufforderung, um die Zielsprache herunterzuladen, und starten Sie dann die Echtzeitübersetzung erneut."
+            "value" : "Apple Translate muss dieses Sprachpaar laden, bevor übersetzt werden kann. Wählen Sie „Herunterladen“, um es jetzt zu laden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate has not downloaded this language pair. Use Apple Translate in the main window once and wait for the system prompt to download the target language, then start realtime translation again."
+            "value" : "Apple Translate needs to download this language pair before it can translate. Choose Download to get it now."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate no ha descargado este par de idiomas. Abra Apple Translate en la ventana principal una vez y espere el mensaje del sistema para descargar el idioma de destino, luego inicie la traducción en tiempo real nuevamente."
+            "value" : "Apple Translate necesita descargar este par de idiomas antes de poder traducir. Elija Descargar para obtenerlo ahora."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate n'a pas téléchargé cette paire de langues. Utilisez Apple Translate dans la fenêtre principale une fois et attendez l'invite du système pour télécharger la langue cible, puis relancez la traduction en temps réel."
+            "value" : "Apple Translate doit télécharger cette paire de langues avant de pouvoir traduire. Choisissez Télécharger pour l’obtenir maintenant."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate belum mengunduh pasangan bahasa ini. Gunakan Apple Translate di jendela utama sekali dan tunggu permintaan sistem untuk mengunduh bahasa target, lalu mulai terjemahan waktu nyata lagi."
+            "value" : "Apple Translate perlu mengunduh pasangan bahasa ini sebelum dapat menerjemahkan. Pilih Unduh untuk mendapatkannya sekarang."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate non ha scaricato questa coppia di lingue. Usa Apple Translate nella finestra principale una volta e attendi il prompt di sistema per scaricare la lingua di destinazione, quindi avvia nuovamente la traduzione in tempo reale."
+            "value" : "Apple Translate deve scaricare questa coppia di lingue prima di poter tradurre. Scegli Scarica per ottenerla ora."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translateはこの言語ペアをダウンロードしていません。メインウィンドウで一度Apple Translateを使用し、システムのプロンプトでターゲット言語をダウンロードするのを待ってから、再度リアルタイム翻訳を開始してください。"
+            "value" : "翻訳するには、Apple Translate でこの言語ペアをダウンロードする必要があります。「ダウンロード」を選択して今すぐ入手してください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate가 이 언어 쌍을 다운로드하지 않았습니다. 메인 창에서 한 번 Apple Translate를 사용하고 시스템 프롬프트가 대상 언어를 다운로드할 때까지 기다린 다음 실시간 번역을 다시 시작하세요."
+            "value" : "번역하려면 Apple Translate에서 이 언어 쌍을 다운로드해야 합니다. 지금 받으려면 다운로드를 선택하세요."
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate belum memuat turun pasangan bahasa ini. Gunakan Apple Translate di tetingkap utama sekali dan tunggu arahan sistem untuk memuat turun bahasa sasaran, kemudian mulakan semula terjemahan masa nyata."
+            "value" : "Apple Translate perlu memuat turun pasangan bahasa ini sebelum boleh menterjemah. Pilih Muat turun untuk mendapatkannya sekarang."
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate har ikke lastet ned dette språkparet. Bruk Apple Translate i hovedvinduet én gang og vent på systemprompten for å laste ned målspråket, så start sanntidsoversettelsen på nytt."
+            "value" : "Apple Translate må laste ned dette språkparet før det kan oversette. Velg Last ned for å hente det nå."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate heeft deze taalcombinatie niet gedownload. Gebruik Apple Translate één keer in het hoofdvenster en wacht op de systeemprompt om de doeltaal te downloaden, en start vervolgens de realtimevertaling opnieuw."
+            "value" : "Apple Translate moet dit taalpaar downloaden voordat het kan vertalen. Kies Download om het nu op te halen."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate nie pobrał tej pary językowej. Użyj Apple Translate w głównym oknie raz i poczekaj na systemowy komunikat, aby pobrać język docelowy, a następnie ponownie rozpocznij tłumaczenie w czasie rzeczywistym."
+            "value" : "Apple Translate musi pobrać tę parę językową, zanim będzie mógł tłumaczyć. Wybierz Pobierz, aby pobrać ją teraz."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate não baixou este par de idiomas. Use o Apple Translate na janela principal uma vez e aguarde o prompt do sistema para baixar o idioma de destino, então inicie a tradução em tempo real novamente."
+            "value" : "O Apple Translate precisa baixar este par de idiomas antes de traduzir. Escolha Baixar para obtê-lo agora."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate har inte laddat ner detta språkpar. Använd Apple Translate i huvudfönstret en gång och vänta på systemprompten för att ladda ner målspråket, starta sedan realtidsöversättningen igen."
+            "value" : "Apple Translate måste ladda ner det här språkparet innan det kan översätta. Välj Ladda ner för att hämta det nu."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate bu dil çiftini indirmedi. Ana pencerede bir kez Apple Translate'i kullanın ve hedef dili indirmek için sistem istemini bekleyin, ardından gerçek zamanlı çeviriyi tekrar başlatın."
+            "value" : "Apple Translate’in çeviri yapabilmesi için bu dil çiftini indirmesi gerekiyor. Şimdi almak için İndir’i seçin."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate 尚未下载此语言对。请在主窗口中打开 Apple Translate 一次，并等待系统提示下载目标语言，然后再次开始实时翻译。"
+            "value" : "Apple 翻译需要先下载此语言对才能翻译。选择“下载”即可立即获取。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate 尚未下載此語言對。請在主視窗使用 Apple Translate 一次，並等待系統提示下載目標語言，然後再次啟動即時翻譯。"
+            "value" : "Apple 翻譯需要先下載此語言組合才能翻譯。選擇「下載」立即取得。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Translate 未下載此語言對。請在主視窗中使用 Apple Translate 一次，並等候系統提示下載目標語言，然後再次開始即時翻譯。"
+            "value" : "Apple 翻譯需要先下載此語言組合才能翻譯。選擇「下載」立即取得。"
           }
         }
       }
@@ -18023,6 +18031,7 @@
       }
     },
     "Check for Updates…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -25603,6 +25612,7 @@
       }
     },
     "Contact support" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -25727,6 +25737,7 @@
       }
     },
     "Contact Support" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27832,6 +27843,7 @@
       }
     },
     "Couldn't refresh" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33301,6 +33313,7 @@
       }
     },
     "Email" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34172,6 +34185,7 @@
       }
     },
     "Enable Text Selection Translation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34669,6 +34683,7 @@
       }
     },
     "Enter a valid email address." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35043,6 +35058,7 @@
       }
     },
     "Enter the 6-digit code from your email." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35167,6 +35183,7 @@
       }
     },
     "Enter the 6-digit code sent to your email." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35291,6 +35308,7 @@
       }
     },
     "Enter the email used for your existing purchase." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41508,6 +41526,7 @@
       }
     },
     "Have an existing account?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -53068,6 +53087,7 @@
       }
     },
     "Manage Subscription" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -63996,6 +64016,7 @@
       }
     },
     "Open System Settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66237,6 +66258,7 @@
       }
     },
     "Plan: Free" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -67606,6 +67628,7 @@
       }
     },
     "Premium · %@ · Website" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -67854,6 +67877,7 @@
       }
     },
     "Premium · App Store + Website" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -67978,6 +68002,7 @@
       }
     },
     "Premium · Website" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70586,6 +70611,7 @@
       }
     },
     "Pro" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70710,6 +70736,7 @@
       }
     },
     "Pro (Lifetime)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70834,6 +70861,7 @@
       }
     },
     "Pro (Monthly)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70958,6 +70986,7 @@
       }
     },
     "Pro (Yearly)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -71082,6 +71111,7 @@
       }
     },
     "Pro features will be locked until you activate again. Your subscription on the web is unaffected." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -73075,6 +73105,7 @@
       }
     },
     "Ready in other apps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -77048,6 +77079,7 @@
       }
     },
     "Refresh entitlement" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -77172,6 +77204,7 @@
       }
     },
     "Refresh subscription status" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -78666,6 +78699,7 @@
       }
     },
     "Request a new code first." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79538,6 +79572,7 @@
       }
     },
     "Required to detect text selections" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79662,6 +79697,7 @@
       }
     },
     "Requires Accessibility Permission" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -81406,6 +81442,7 @@
       }
     },
     "Restore Purchase…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -81530,6 +81567,7 @@
       }
     },
     "Restore with Email" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -88237,6 +88275,7 @@
       }
     },
     "Select text in any app to instantly translate it. TLingo needs Accessibility permission to detect your text selections." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -88361,6 +88400,7 @@
       }
     },
     "Select text in any app to translate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89604,6 +89644,7 @@
       }
     },
     "Send Code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -93709,6 +93750,7 @@
       }
     },
     "Sign Out" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -93833,6 +93875,7 @@
       }
     },
     "Sign out of this Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -93957,6 +94000,7 @@
       }
     },
     "Sign out of TLingo on this Mac?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -94081,6 +94125,7 @@
       }
     },
     "Sign-in link expired. Tap Try Again to start over." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -94205,6 +94250,7 @@
       }
     },
     "Sign-in link is invalid or expired. Tap Try Again to retry." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -94329,6 +94375,7 @@
       }
     },
     "Signed in as" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -94453,6 +94500,7 @@
       }
     },
     "Signed in as %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101283,6 +101331,7 @@
       }
     },
     "Subscribe on the web to unlock Pro on this Mac." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101407,6 +101456,7 @@
       }
     },
     "Subscribe on Web" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101531,6 +101581,7 @@
       }
     },
     "Subscribe on Web…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101779,6 +101830,7 @@
       }
     },
     "Subscription status updated" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -103148,6 +103200,7 @@
       }
     },
     "System" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -105384,6 +105437,7 @@
       }
     },
     "Text Selection Translation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106371,6 +106425,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此裝置目前無法使用免費試用。請稍後再試。"
+          }
+        }
+      }
+    },
+    "The model stopped responding with an error" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقف النموذج عن الاستجابة بسبب خطأ"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellen stoppede med at svare på grund af en fejl"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Modell hat die Antwort aufgrund eines Fehlers eingestellt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model stopped responding with an error"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modelo dejó de responder debido a un error"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le modèle a cessé de répondre en raison d'une erreur"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model berhenti merespons karena kesalahan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il modello ha smesso di rispondere a causa di un errore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルがエラーにより応答を停止しました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델이 오류로 인해 응답을 중단했습니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model berhenti memberi respons kerana ralat"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellen sluttet å svare på grunn av en feil"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het model stopte met reageren vanwege een fout"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model przestał odpowiadać z powodu błędu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O modelo parou de responder devido a um erro"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellen slutade svara på grund av ett fel"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model bir hata nedeniyle yanıt vermeyi durdurdu"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型因錯誤而停止回應"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型因错误而停止响应"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型因錯誤而停止回應"
           }
         }
       }
@@ -107742,6 +107920,7 @@
       }
     },
     "This account has no active subscription on Stripe." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -107866,6 +108045,7 @@
       }
     },
     "This account has no active subscription on Stripe. Possible reasons:\n\n• You haven't subscribed yet — tap “Subscribe on Web”.\n• You subscribed with a different email — sign out and try the other one.\n• You just paid and the state hasn't synced yet — tap “Refresh subscription status”.\n\nStill stuck? Tap “Contact support” below." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -108611,6 +108791,7 @@
       }
     },
     "This email has no active website purchase." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116697,6 +116878,7 @@
       }
     },
     "Try Again" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -118939,6 +119121,7 @@
       }
     },
     "Unexpected response from the activation server." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -119807,6 +119990,7 @@
       }
     },
     "Update to %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -122790,6 +122974,7 @@
       }
     },
     "Verify" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -124404,6 +124589,130 @@
         }
       }
     },
+    "Waiting for audio to play..." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في انتظار تشغيل الصوت..."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter på, at lyden afspilles..."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf Audiowiedergabe..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for audio to play..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que se reproduzca el audio..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de la lecture de l'audio..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu audio diputar..."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa della riproduzione audio..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音声の再生を待機中..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 재생을 기다리는 중..."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu audio dimainkan..."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter på at lyden skal spilles av..."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten tot audio wordt afgespeeld..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na odtwarzanie dźwięku..."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aguardando a reprodução do áudio..."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Väntar på att ljudet ska spelas upp..."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesin oynatılması bekleniyor..."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待播放音訊..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待播放音频..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待播放音訊..."
+          }
+        }
+      }
+    },
     "Waiting for iPhone Audio broadcast" : {
       "localizations" : {
         "ar" : {
@@ -124524,6 +124833,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "等待 iPhone 音訊廣播"
+          }
+        }
+      }
+    },
+    "Waiting for someone to speak..." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في انتظار أن يتحدث شخص ما..."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter på, at nogen taler..."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten darauf, dass jemand spricht..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for someone to speak..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que alguien hable..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente que quelqu'un parle..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu seseorang berbicara..."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa che qualcuno parli..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが話すのを待機中..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "누군가 말하기를 기다리는 중..."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menunggu seseorang bercakap..."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter på at noen skal snakke..."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten tot iemand spreekt..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie, aż ktoś zacznie mówić..."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aguardando alguém falar..."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Väntar på att någon ska tala..."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birinin konuşması bekleniyor..."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待有人說話..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待有人说话..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待有人說話..."
           }
         }
       }
@@ -126396,6 +126829,7 @@
       }
     },
     "You're activated as Pro (plan: %@)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -126520,6 +126954,7 @@
       }
     },
     "You're activated as Pro." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

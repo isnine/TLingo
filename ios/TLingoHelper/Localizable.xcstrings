@@ -8,6 +8,24 @@
             "state" : "translated",
             "value" : "辅助功能"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibility"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輔助使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輔助使用"
+          }
         }
       }
     },
@@ -17,6 +35,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请在“系统设置 › 通用 › 登录项”中允许 TLingoHelper。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow TLingoHelper in System Settings › General › Login Items."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "喺「系統設定」›「一般」›「登入項目」入面允許 TLingoHelper。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「系統設定」›「一般」›「登入項目」中允許 TLingoHelper。"
           }
         }
       }
@@ -28,6 +64,24 @@
             "state" : "translated",
             "value" : "无法读取选中的文字，请重新选中后重试。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read the selected text. Select it again and retry."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讀取唔到已揀選嘅文字。請再揀一次然後重試。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取所選文字。請再次選取然後重試。"
+          }
         }
       }
     },
@@ -37,6 +91,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "授权…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant Access…"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授予存取權…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授予存取權…"
           }
         }
       }
@@ -48,6 +120,24 @@
             "state" : "translated",
             "value" : "授予辅助功能权限…"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant Accessibility Access…"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授予輔助使用存取權…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授予輔助使用存取權…"
+          }
         }
       }
     },
@@ -57,6 +147,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请授予 TLingoHelper 辅助功能权限后重试。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant TLingoHelper Accessibility access, then try again."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請授予 TLingoHelper 輔助使用存取權，然後再試一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請授予 TLingoHelper 輔助使用存取權，然後再試一次。"
           }
         }
       }
@@ -68,6 +176,24 @@
             "state" : "translated",
             "value" : "已授权"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Granted"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授予"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授予"
+          }
         }
       }
     },
@@ -77,6 +203,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "如果列表中已有 TLingoHelper，请用 − 移除后重新添加。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If TLingoHelper is already listed, remove it with − and add it again."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果 TLingoHelper 已經喺清單入面，請用 − 移除佢然後再重新加入。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果 TLingoHelper 已在清單中，請用 − 將其移除然後重新加入。"
           }
         }
       }
@@ -88,6 +232,24 @@
             "state" : "translated",
             "value" : "请安装 TLingo 以翻译选中的文字。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install TLingo to translate selected text."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 TLingo 以翻譯已揀選嘅文字。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 TLingo 以翻譯所選文字。"
+          }
         }
       }
     },
@@ -98,11 +260,54 @@
             "state" : "translated",
             "value" : "文本翻译浮窗请求无效。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid text popup request."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無效嘅文字彈出視窗請求。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無效的文字彈出視窗請求。"
+          }
         }
       }
     },
     "More Actions" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Actions"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多操作"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多操作"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多操作"
+          }
+        }
+      }
     },
     "Needs Accessibility Access" : {
       "localizations" : {
@@ -110,6 +315,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要辅助功能权限"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Accessibility Access"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要輔助使用權限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要輔助使用權限"
           }
         }
       }
@@ -121,6 +344,24 @@
             "state" : "translated",
             "value" : "登录时打开"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open at Login"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入時開啟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入時開啟"
+          }
         }
       }
     },
@@ -130,6 +371,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开 TLingo"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open TLingo"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟 TLingo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟 TLingo"
           }
         }
       }
@@ -141,6 +400,24 @@
             "state" : "translated",
             "value" : "正在打开 TLingo 并发送选中的文字…"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening TLingo and sending selected text…"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在開啟 TLingo 並傳送選取的文字…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在開啟 TLingo 並傳送選取的文字…"
+          }
         }
       }
     },
@@ -150,6 +427,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "翻译时会在后台自动打开"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens in the background when you translate"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻譯時在背景開啟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻譯時在背景開啟"
           }
         }
       }
@@ -161,6 +456,24 @@
             "state" : "translated",
             "value" : "已暂停"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暫停"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暫停"
+          }
         }
       }
     },
@@ -170,6 +483,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "权限"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "權限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "權限"
           }
         }
       }
@@ -181,6 +512,24 @@
             "state" : "translated",
             "value" : "退出 TLingoHelper"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit TLingoHelper"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束 TLingoHelper"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束 TLingoHelper"
+          }
         }
       }
     },
@@ -190,6 +539,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在读取选中的文字…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading selected text…"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在讀取選取的文字…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在讀取選取的文字…"
           }
         }
       }
@@ -201,6 +568,24 @@
             "state" : "translated",
             "value" : "读取你在其他应用中选中的文字。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads the text you select in other apps."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讀取您在其他應用程式中選取的文字。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讀取您在其他應用程式中選取的文字。"
+          }
         }
       }
     },
@@ -211,6 +596,24 @@
             "state" : "translated",
             "value" : "已准备好在其他应用中使用"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready in other apps"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已可在其他應用程式中使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已可在其他應用程式中使用"
+          }
         }
       }
     },
@@ -220,6 +623,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "运行中 %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running %@"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在執行 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在執行 %@"
           }
         }
       }
@@ -253,6 +674,24 @@
             "state" : "translated",
             "value" : "文字读取已取消，请重新选中后重试。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selection capture was cancelled. Select the text again and retry."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消選取擷取。請重新選取文字並再試一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消選取擷取。請重新選取文字並再試一次。"
+          }
         }
       }
     },
@@ -262,6 +701,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "设置…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings…"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定…"
           }
         }
       }
@@ -339,11 +796,54 @@
             "state" : "translated",
             "value" : "选中的文字过长，无法发送给 TLingo。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected text is too long to send to TLingo."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選取的文字太長，無法傳送至 TLingo。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選取的文字太長，無法傳送至 TLingo。"
+          }
         }
       }
     },
     "TLingo" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo"
+          }
+        }
+      }
     },
     "TLingo quit before the text was sent. Try again." : {
       "localizations" : {
@@ -352,11 +852,55 @@
             "state" : "translated",
             "value" : "TLingo 在收到文字前已退出，请重试。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo quit before the text was sent. Try again."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 在傳送文字前已結束。請再試一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 在傳送文字前已結束。請再試一次。"
+          }
         }
       }
     },
     "TLingoHelper" : {
-      "shouldTranslate" : false
+      "shouldTranslate" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingoHelper"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingoHelper"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingoHelper"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingoHelper"
+          }
+        }
+      }
     },
     "Translate selected text" : {
       "localizations" : {
@@ -387,6 +931,24 @@
             "state" : "translated",
             "value" : "请在“隐私与安全性 › 辅助功能”中打开 TLingoHelper，而不是 TLingo。"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on TLingoHelper, not TLingo, in Privacy & Security › Accessibility."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在「私隱與安全性 › 輔助使用」中開啟 TLingoHelper，而非 TLingo。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在「隱私權與安全性 › 輔助使用」中開啟 TLingoHelper，而非 TLingo。"
+          }
         }
       }
     },
@@ -396,6 +958,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请更新 TLingo 以配合 TLingoHelper 使用。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update TLingo to use it with TLingoHelper."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 TLingo 以搭配 TLingoHelper 使用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 TLingo 以搭配 TLingoHelper 使用。"
           }
         }
       }
