@@ -57,11 +57,13 @@
             sourceLanguage: SourceLanguageOption,
             targetLanguage: TargetLanguageOption,
             speechAuthorization: RealtimeIPhoneAudioSpeechAuthorization,
-            translationPackStatus: RealtimeIPhoneAudioTranslationPackStatus
+            translationPackStatus: RealtimeIPhoneAudioTranslationPackStatus,
+            requiresTranslation: Bool = true
         ) -> RealtimeIPhoneAudioPreflightFailure? {
             guard sourceLanguage != .auto else { return .missingSourceLanguage }
-            guard targetLanguage != .appLanguage else { return .missingTargetLanguage }
+            guard !requiresTranslation || targetLanguage != .appLanguage else { return .missingTargetLanguage }
             guard speechAuthorization == .authorized else { return .speechNotAuthorized }
+            guard requiresTranslation else { return nil }
             if let source = sourceLanguage.localeLanguage,
                RealtimeLanguageMatcher.matches(source, targetLanguage.localeLanguage) {
                 return nil
@@ -110,7 +112,8 @@
 
         public static func evaluateAfterRequestingSpeechAuthorization(
             sourceLanguage: SourceLanguageOption,
-            targetLanguage: TargetLanguageOption
+            targetLanguage: TargetLanguageOption,
+            requiresTranslation: Bool = true
         ) async -> RealtimeIPhoneAudioPreflightFailure? {
             let speechAuthorization = await requestSpeechAuthorizationIfNeeded()
             guard sourceLanguage != .auto else {
@@ -118,15 +121,17 @@
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
                     speechAuthorization: speechAuthorization,
-                    translationPackStatus: .unknown
+                    translationPackStatus: .unknown,
+                    requiresTranslation: requiresTranslation
                 )
             }
-            guard targetLanguage != .appLanguage else {
+            guard requiresTranslation, targetLanguage != .appLanguage else {
                 return validate(
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
                     speechAuthorization: speechAuthorization,
-                    translationPackStatus: .unknown
+                    translationPackStatus: .unknown,
+                    requiresTranslation: requiresTranslation
                 )
             }
 
@@ -135,28 +140,32 @@
                 sourceLanguage: sourceLanguage,
                 targetLanguage: targetLanguage,
                 speechAuthorization: speechAuthorization,
-                translationPackStatus: packStatus
+                translationPackStatus: packStatus,
+                requiresTranslation: requiresTranslation
             )
         }
 
         public static func evaluate(
             sourceLanguage: SourceLanguageOption,
-            targetLanguage: TargetLanguageOption
+            targetLanguage: TargetLanguageOption,
+            requiresTranslation: Bool = true
         ) async -> RealtimeIPhoneAudioPreflightFailure? {
             guard sourceLanguage != .auto else {
                 return validate(
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
                     speechAuthorization: currentSpeechAuthorization(),
-                    translationPackStatus: .unknown
+                    translationPackStatus: .unknown,
+                    requiresTranslation: requiresTranslation
                 )
             }
-            guard targetLanguage != .appLanguage else {
+            guard requiresTranslation, targetLanguage != .appLanguage else {
                 return validate(
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
                     speechAuthorization: currentSpeechAuthorization(),
-                    translationPackStatus: .unknown
+                    translationPackStatus: .unknown,
+                    requiresTranslation: requiresTranslation
                 )
             }
 
@@ -165,7 +174,8 @@
                 sourceLanguage: sourceLanguage,
                 targetLanguage: targetLanguage,
                 speechAuthorization: currentSpeechAuthorization(),
-                translationPackStatus: packStatus
+                translationPackStatus: packStatus,
+                requiresTranslation: requiresTranslation
             )
         }
 

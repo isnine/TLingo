@@ -58,7 +58,8 @@ final class SampleHandler: RPBroadcastSampleHandler {
             do {
                 try await pipeline.start(
                     sourceLanguage: preferences.realtimeSourceLanguage,
-                    targetLanguage: preferences.realtimeTargetLanguage
+                    targetLanguage: preferences.realtimeTargetLanguage,
+                    translatesText: preferences.realtimeTranslationProvider.performsTranslation
                 )
             } catch {
                 self?.finishBroadcast(error)

@@ -1153,10 +1153,12 @@
             }
 
             enforceIPhoneAudioLocalRoute(store: store, preferences: preferences)
+            // A missing language pack falls through: store.start() shows the alert that offers the download.
             if let failure = await RealtimeIPhoneAudioPreflight.evaluateAfterRequestingSpeechAuthorization(
                 sourceLanguage: preferences.realtimeSourceLanguage,
-                targetLanguage: preferences.realtimeTargetLanguage
-            ) {
+                targetLanguage: preferences.realtimeTargetLanguage,
+                requiresTranslation: preferences.realtimeTranslationProvider.performsTranslation
+            ), failure != .translationPackNotInstalled {
                 startBlockedAlert = StartBlockedAlert(
                     title: String(localized: "iPhone Audio Not Ready"),
                     message: failure
@@ -1176,7 +1178,8 @@
                 preferences.setRealtimeRecognitionEngine(.appleSpeech)
             }
             preferences.setRealtimeRecognitionModelID(RecognitionModelDescriptor.appleSpeech.id)
-            if preferences.realtimeTranslationProvider != .appleTranslator {
+            // The broadcast extension translates only with Apple Translator; transcription only is kept.
+            if preferences.realtimeTranslationProvider == .appleTranslationRealtime {
                 preferences.setRealtimeTranslationProvider(.appleTranslator)
                 store.languageSelectionDidChange()
             }

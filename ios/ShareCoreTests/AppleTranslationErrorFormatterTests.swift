@@ -42,15 +42,14 @@ struct AppleTranslationErrorFormatterTests {
         #expect(message.contains("Source and target are both English"))
     }
 
-    @Test("Missing Apple Translate language pack errors include realtime guidance")
-    func missingLanguagePackIncludesRealtimeGuidance() {
+    @Test("Missing Apple Translate language pack errors point to the download action")
+    func missingLanguagePackPointsToDownload() {
         let error = LocalProviderError.languagePackNotInstalled(languagePair: "English -> 简体中文")
 
         let message = error.localizedDescription
 
         #expect(message.contains("English -> 简体中文"))
-        #expect(message.contains("download the target language"))
-        #expect(message.contains("realtime translation"))
+        #expect(message.contains("Choose Download"))
     }
 
     @Test("Not installed errors are recognized as missing language packs")

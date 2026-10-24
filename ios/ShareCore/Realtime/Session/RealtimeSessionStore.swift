@@ -1088,9 +1088,18 @@
                     """,
                     stage: "broadcast"
                 )
+                // Runs first so a missing language pack surfaces as the alert that offers the download.
+                do {
+                    try await ensureAppleTranslateLanguagesInstalledIfNeeded()
+                } catch {
+                    logRealtime("languagePreflightFailed error=\(Self.describe(error))", stage: "broadcast")
+                    handleStartFailure(error)
+                    return
+                }
                 if let failure = await RealtimeIPhoneAudioPreflight.evaluate(
                     sourceLanguage: preferences.realtimeSourceLanguage,
-                    targetLanguage: preferences.realtimeTargetLanguage
+                    targetLanguage: preferences.realtimeTargetLanguage,
+                    requiresTranslation: preferences.realtimeTranslationProvider.performsTranslation
                 ) {
                     logRealtime("preflightFailed error=\(Self.describe(failure))", stage: "broadcast")
                     handleStartFailure(failure)
@@ -2383,11 +2392,6 @@
         }
 
         var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
-            #if os(iOS)
-                if inputSource == .iphoneAudio {
-                    return captionDisplayMode
-                }
-            #endif
             let provider = preferences.realtimeTranslationProvider
             if !provider.performsTranslation {
                 return .sourceOnly

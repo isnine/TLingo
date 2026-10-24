@@ -727,8 +727,7 @@ public enum LocalProviderError: LocalizedError {
             )
         case let .languagePackNotInstalled(languagePair):
             let message = NSLocalizedString(
-                "Apple Translate has not downloaded this language pair. Use Apple Translate in the main window once " +
-                    "and wait for the system prompt to download the target language, then start realtime translation again.",
+                "Apple Translate needs to download this language pair before it can translate. Choose Download to get it now.",
                 comment: "Shown when realtime Apple Translate starts without the required language pack"
             )
             return AppleTranslationErrorFormatter.withLanguagePair(message, languagePair: languagePair)

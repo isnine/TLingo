@@ -51,17 +51,18 @@
             store.$captionLines
                 .combineLatest(
                     store.$isRunning,
+                    store.$inputSource,
                     preferences.$accentTheme.combineLatest(preferences.$realtimePictureInPictureSize)
                 )
                 .receive(on: RunLoop.main)
-                .sink { [weak self] lines, isRunning, _ in
-                    self?.render(lines: lines, isRunning: isRunning)
+                .sink { [weak self] lines, isRunning, inputSource, _ in
+                    self?.render(lines: lines, isRunning: isRunning, inputSource: inputSource)
                 }
                 .store(in: &cancellables)
 
             displayView.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (_: SampleBufferDisplayView, _) in
                 guard let self else { return }
-                render(lines: self.store.captionLines, isRunning: self.store.isRunning)
+                render(lines: self.store.captionLines, isRunning: self.store.isRunning, inputSource: self.store.inputSource)
             }
 
             // Keep AVKit's playback state and automatic-start eligibility in sync on both pause and resume.
@@ -118,7 +119,7 @@
             }
         }
 
-        private func render(lines: [RealtimeCaptionLine], isRunning: Bool) {
+        private func render(lines: [RealtimeCaptionLine], isRunning: Bool, inputSource: RealtimeAudioInputSource) {
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
             let style = RealtimeCaptionTextView.Style(palette: palette)
@@ -132,7 +133,7 @@
                 background: UIColor(palette.background),
                 captions: RealtimeCaptionTextView.attributedText(for: visibleLines, style: style),
                 placeholder: visibleLines.isEmpty
-                    ? Self.placeholderText(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: isRunning), style: style)
+                    ? Self.placeholderText(Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource), style: style)
                     : nil
             )
             guard let sampleBuffer = Self.makeSampleBuffer(frame: frame) else { return }
@@ -149,6 +150,17 @@
             var background: UIColor
             var captions: NSAttributedString
             var placeholder: NSAttributedString?
+        }
+
+        /// The PiP window is viewed from another app, so name the audio it is waiting for instead of a generic "Listening".
+        private static func emptyPlaceholderText(isRunning: Bool, inputSource: RealtimeAudioInputSource) -> String {
+            guard isRunning else { return RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: false) }
+            switch inputSource {
+            case .microphone:
+                return String(localized: "Waiting for someone to speak...")
+            case .iphoneAudio:
+                return String(localized: "Waiting for audio to play...")
+            }
         }
 
         private static func placeholderText(_ text: String, style: RealtimeCaptionTextView.Style) -> NSAttributedString {

@@ -48,8 +48,14 @@
             }
         }
 
-        public func start(sourceLanguage: SourceLanguageOption, targetLanguage: TargetLanguageOption) async throws {
-            Self.log("start requested source=\(sourceLanguage.rawValue) target=\(targetLanguage.rawValue)")
+        public func start(
+            sourceLanguage: SourceLanguageOption,
+            targetLanguage: TargetLanguageOption,
+            translatesText: Bool = true
+        ) async throws {
+            Self.log(
+                "start requested source=\(sourceLanguage.rawValue) target=\(targetLanguage.rawValue) translates=\(translatesText)"
+            )
             guard stateLock.withLock({ !isStopping }) else { return }
             if stateLock.withLock({ isStarted }) {
                 await stop()
@@ -57,7 +63,7 @@
             guard sourceLanguage != .auto else {
                 throw RealtimeIPhoneAudioPreflightFailure.missingSourceLanguage
             }
-            guard targetLanguage != .appLanguage else {
+            guard !translatesText || targetLanguage != .appLanguage else {
                 throw RealtimeIPhoneAudioPreflightFailure.missingTargetLanguage
             }
             let recognitionSessionID = UUID()
@@ -70,7 +76,8 @@
             guard canStart else { return }
 
             self.sourceLanguage = sourceLanguage
-            self.targetLanguage = targetLanguage
+            // Without a target, recognition results are published without scheduling translation.
+            self.targetLanguage = translatesText ? targetLanguage : nil
             transcriptAccumulator.reset()
             cancelTranslationWork()
             translationState.reset()
