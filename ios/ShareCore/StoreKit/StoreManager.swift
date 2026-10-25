@@ -80,6 +80,10 @@ public final class StoreManager: ObservableObject {
     }
 
     private nonisolated static let premiumTransactionJWSKey = "storekit_premium_transaction_jws"
+    /// Last verified premium entitlement, kept so an empty `currentEntitlements`
+    /// (e.g. storekitd reporting `noAccount`) doesn't reset premium before it expires.
+    private static let premiumProductIDKey = "storekit_premium_product_id"
+    private static let premiumExpirationKey = "storekit_premium_expiration"
 
     // MARK: - Init
 
@@ -179,7 +183,7 @@ public final class StoreManager: ObservableObject {
                     activePremiumProductID = transaction.productID
                     updatePremiumStatus(true)
                 }
-                await checkSubscriptionStatus()
+                await checkSubscriptionStatus(including: (transaction, verification.jwsRepresentation))
                 logger.info("Purchase successful: \(product.id, privacy: .public)")
                 return true
 
@@ -228,41 +232,85 @@ public final class StoreManager: ObservableObject {
     }
 
     public func checkSubscriptionStatus() async {
+        await checkSubscriptionStatus(including: nil)
+    }
+
+    /// `verified` is a transaction just delivered by `Product.purchase` or `Transaction.updates`;
+    /// see `PremiumEntitlementResolver` for why it is passed separately.
+    private func checkSubscriptionStatus(including verified: (transaction: Transaction, jws: String)?) async {
         #if DEBUG
             let hasDebugPremium = !isDebugPremiumDisabled
             premiumSourceDisplayName = hasDebugPremium ? String(localized: "Debug") : nil
             updatePremiumStatus(hasDebugPremium)
         #else
             premiumSourceDisplayName = nil
-            var hasActiveSubscription = false
-            var activeProductID: String?
-            var activeTransactionJWS: String?
+            var entitlements: [PremiumEntitlementCandidate] = []
 
             for await result in Transaction.currentEntitlements {
-                guard let transaction = try? checkVerified(result) else { continue }
-
-                if PremiumProduct.allIdentifiers.contains(transaction.productID) {
-                    updateUsageSubject(from: transaction)
-                    if transaction.revocationDate == nil {
-                        hasActiveSubscription = true
-                        let newPriority = PremiumProduct.tierPriority(for: transaction.productID)
-                        let currentPriority = activeProductID.map { PremiumProduct.tierPriority(for: $0) } ?? -1
-                        if newPriority > currentPriority {
-                            activeProductID = transaction.productID
-                            activeTransactionJWS = result.jwsRepresentation
-                        }
-                    }
-                }
+                guard let transaction = try? checkVerified(result),
+                      PremiumProduct.allIdentifiers.contains(transaction.productID) else { continue }
+                updateUsageSubject(from: transaction)
+                entitlements.append(Self.candidate(transaction, jws: result.jwsRepresentation))
             }
 
-            activePremiumProductID = activeProductID
+            let defaults = AppPreferences.sharedDefaults
+            let resolution = PremiumEntitlementResolver.resolve(
+                verified: verified.map { Self.candidate($0.transaction, jws: $0.jws) },
+                currentEntitlements: entitlements,
+                cache: defaults.string(forKey: Self.premiumProductIDKey).map {
+                    CachedPremiumEntitlement(
+                        productID: $0,
+                        expirationDate: (defaults.object(forKey: Self.premiumExpirationKey) as? Double)
+                            .map(Date.init(timeIntervalSince1970:))
+                    )
+                },
+                wasPremium: isPremium,
+                now: Date()
+            )
+
             // Unchanged writes still post `UserDefaults.didChangeNotification`,
             // which makes `AppPreferences` re-read every key.
-            if Self.premiumTransactionJWS != activeTransactionJWS {
-                AppPreferences.sharedDefaults.set(activeTransactionJWS, forKey: Self.premiumTransactionJWSKey)
+            switch resolution {
+            case let .active(entitlement):
+                let expiration = entitlement.expirationDate?.timeIntervalSince1970
+                if defaults.string(forKey: Self.premiumProductIDKey) != entitlement.productID {
+                    defaults.set(entitlement.productID, forKey: Self.premiumProductIDKey)
+                }
+                if defaults.object(forKey: Self.premiumExpirationKey) as? Double != expiration {
+                    defaults.set(expiration, forKey: Self.premiumExpirationKey)
+                }
+                if Self.premiumTransactionJWS != entitlement.jws {
+                    defaults.set(entitlement.jws, forKey: Self.premiumTransactionJWSKey)
+                }
+                activePremiumProductID = entitlement.productID
+                updatePremiumStatus(true)
+
+            case let .cached(productID):
+                // Keep the cached JWS; the Worker still decides whether it is valid.
+                logger.info("No current entitlements; keeping cached premium \(productID, privacy: .public)")
+                activePremiumProductID = productID
+
+            case .inactive:
+                if defaults.object(forKey: Self.premiumProductIDKey) != nil {
+                    defaults.removeObject(forKey: Self.premiumProductIDKey)
+                    defaults.removeObject(forKey: Self.premiumExpirationKey)
+                }
+                if Self.premiumTransactionJWS != nil {
+                    defaults.removeObject(forKey: Self.premiumTransactionJWSKey)
+                }
+                activePremiumProductID = nil
+                updatePremiumStatus(false)
             }
-            updatePremiumStatus(hasActiveSubscription)
         #endif
+    }
+
+    private static func candidate(_ transaction: Transaction, jws: String) -> PremiumEntitlementCandidate {
+        PremiumEntitlementCandidate(
+            productID: transaction.productID,
+            jws: jws,
+            expirationDate: transaction.expirationDate,
+            isRevoked: transaction.revocationDate != nil
+        )
     }
 
     // MARK: - TestFlight Environment Probe
@@ -306,7 +354,8 @@ public final class StoreManager: ObservableObject {
                 guard let self else { return }
                 if let transaction = try? await self.checkVerified(result) {
                     await transaction.finish()
-                    await self.checkSubscriptionStatus()
+                    // currentEntitlements omits refunded transactions, so the revocation is only visible here.
+                    await self.checkSubscriptionStatus(including: (transaction, result.jwsRepresentation))
                 }
             }
         }
