@@ -54,10 +54,21 @@ struct RealtimeLanguagePreferencesTests {
     @Test("Realtime target default skips English preferred languages")
     func targetDefaultSkipsEnglishPreferredLanguages() {
         let target = TargetLanguageOption.defaultRealtimeTargetLanguage(
+            appLanguageIdentifier: "en",
             preferredLanguages: ["en-US", "en-GB", "zh-Hans", "ja-JP"]
         )
 
         #expect(target == .simplifiedChinese)
+    }
+
+    @Test("Realtime target default prefers a non-English app language")
+    func targetDefaultPrefersAppLanguage() {
+        let target = TargetLanguageOption.defaultRealtimeTargetLanguage(
+            appLanguageIdentifier: "ja",
+            preferredLanguages: ["en-US", "zh-Hans"]
+        )
+
+        #expect(target == .japanese)
     }
 
     private func makeDefaults() throws -> UserDefaults {

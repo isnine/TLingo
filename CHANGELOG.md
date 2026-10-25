@@ -14,8 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding.
 - Added transcription-only realtime history on iPhone Audio.
 
+### Fixed
+
+- Preserved valid Premium access when StoreKit temporarily returns no entitlements.
+
 ### Improved
 
+- Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language.
 - Stabilized realtime captions during translation updates and added pause-based sentence breaks.
 - Clarified recognition model loading status and kept untranslated sessions readable in History.
 

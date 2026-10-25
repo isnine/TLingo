@@ -11,6 +11,7 @@
 
 #if os(iOS)
     import AVFoundation
+    import Combine
     import os
     import ShareCore
     import Speech
@@ -58,6 +59,8 @@
         @State private var isRequestingPermissions = false
         @State private var originalInputSource: RealtimeAudioInputSource?
         @State private var showSkipOption = false
+        @State private var hasPlayedSampleClip = false
+        @StateObject private var sampleClipPlayer = OnboardingSampleClipPlayer()
 
         private let inputs: [OnboardingRealtimeInput]
         private let onBack: () -> Void
@@ -237,11 +240,6 @@
             }
             .task(id: languagePairKey) {
                 await refreshPackStatus()
-            }
-            .task(id: step) {
-                // Loading the local recognition model while the user sets up shortens the first start.
-                guard usesMicrophone, step == .download || step == .permissions else { return }
-                await store.prewarmRecognitionModel()
             }
             .task(id: "\(step.rawValue)-\(inputIndex)") {
                 guard step == .tryIt else { return }
@@ -868,6 +866,24 @@
 
         // MARK: Try: capture iPhone audio
 
+        private enum CaptureStage: Int {
+            case startCapture = 1
+            case playClip
+            case watchCaptions
+        }
+
+        private var isCapturingIPhoneAudio: Bool {
+            store.isRunning && store.inputSource == .iphoneAudio
+        }
+
+        private var captureStage: CaptureStage {
+            if !isCapturingIPhoneAudio, !hasCaption { return .startCapture }
+            if !hasPlayedSampleClip, !hasCaption { return .playClip }
+            return .watchCaptions
+        }
+
+        private static let sampleClipPhrase = "Where were you last night?"
+
         private var capturePage: some View {
             VStack(alignment: .leading, spacing: 24) {
                 pageHeader(
@@ -875,63 +891,121 @@
                     Text("TLingo listens to audio playing on your iPhone, so it does not need the microphone.")
                 )
 
-                if hasCaption {
-                    captionCard
-                        .frame(height: 220)
-                } else {
-                    capturePreview
-                }
+                sampleClip
 
                 VStack(alignment: .leading, spacing: 14) {
-                    captureStep(1, "Tap Start capture, then choose TLingo.")
-                    captureStep(2, "Tap Start Broadcast.")
-                    captureStep(3, "Open a video and press play.")
+                    captureStep(.startCapture, "Tap Start capture, choose TLingo, then tap Start Broadcast.")
+                    captureStep(.playClip, "Tap play on the clip above.")
+                    captureStep(.watchCaptions, "Watch the captions appear on the clip.")
+                    if hasCaption {
+                        Text("Captions keep running in other apps too. Play any video to try it.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(colors.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .transition(.opacity)
+                    }
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onboardingCardBackground(colors: colors)
+                .animation(.easeInOut(duration: 0.2), value: captureStage)
+                .animation(.easeInOut(duration: 0.2), value: hasCaption)
             }
+            .onDisappear { sampleClipPlayer.stop() }
         }
 
-        /// Illustrative caption over a video frame; the sample pair is not localized.
-        private var capturePreview: some View {
-            ZStack(alignment: .bottom) {
+        /// A stand-in video whose play button speaks a line, so the capture can be tried without leaving TLingo.
+        private var sampleClip: some View {
+            let canPlay = isCapturingIPhoneAudio && !sampleClipPlayer.isPlaying
+            return ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     // The frame stands in for video, so it stays dark in both appearances.
                     .fill(AppColors.Palette(colorScheme: .light, accentTheme: preferences.accentTheme).textPrimary)
-                Image(systemName: "play.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(.white)
-                    .frame(width: 48, height: 48)
-                    .background(Circle().fill(.white.opacity(0.16)))
-                    .frame(maxHeight: .infinity)
-                VStack(spacing: 2) {
-                    Text(verbatim: "Where were you last night?")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.white.opacity(0.78))
-                    Text(verbatim: "你昨晚去哪儿了？")
-                        .font(.system(size: 16, weight: .semibold))
+                Button {
+                    hasPlayedSampleClip = true
+                    sampleClipPlayer.speak(Self.sampleClipPhrase, languageCode: "en-US")
+                } label: {
+                    Image(systemName: sampleClipPlayer.isPlaying ? "waveform" : "play.fill")
+                        .font(.system(size: 20))
                         .foregroundStyle(.white)
+                        .symbolEffect(.variableColor.iterative, isActive: sampleClipPlayer.isPlaying)
+                        .frame(width: 56, height: 56)
+                        .background(Circle().fill(.white.opacity(canPlay ? 0.24 : 0.12)))
+                        .overlay {
+                            if captureStage == .playClip {
+                                Circle().stroke(colors.accent, lineWidth: 2)
+                            }
+                        }
                 }
-                .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
-                .padding(.bottom, 14)
+                .buttonStyle(.plain)
+                .disabled(!canPlay)
+                .opacity(isCapturingIPhoneAudio ? 1 : 0.5)
+                .frame(maxHeight: .infinity)
+                .accessibilityLabel(Text("Play sample clip"))
+                .accessibilityIdentifier("onboarding_realtime_play_sample")
+
+                sampleClipCaption
+                    .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 14)
             }
             .frame(height: 197)
-            .accessibilityHidden(true)
         }
 
-        private func captureStep(_ number: Int, _ text: LocalizedStringKey) -> some View {
-            HStack(spacing: 12) {
-                Text(verbatim: "\(number)")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(colors.onAccent)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(colors.accentFill))
+        /// The latest recognized line and its translation, straight from the running session.
+        @ViewBuilder
+        private var sampleClipCaption: some View {
+            let source = store.captionLines.last { $0.kind == .source && !$0.text.isEmpty }
+            let translation = store.captionLines.last { $0.kind == .translation && !$0.text.isEmpty }
+            VStack(spacing: 2) {
+                if source == nil, translation == nil {
+                    Text(isCapturingIPhoneAudio ? "Captions appear here" : "Start capture to play the clip")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.6))
+                } else {
+                    if let source {
+                        Text(verbatim: source.text)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.78))
+                    }
+                    if let translation {
+                        Text(verbatim: translation.text)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .opacity(translation.isPending ? 0.7 : 1)
+                    }
+                }
+            }
+            .multilineTextAlignment(.center)
+            .lineLimit(2)
+        }
+
+        private func captureStep(_ stage: CaptureStage, _ text: LocalizedStringKey) -> some View {
+            let isDone = stage.rawValue < captureStage.rawValue || (stage == .watchCaptions && hasCaption)
+            let isCurrent = stage == captureStage && !isDone
+            return HStack(spacing: 12) {
+                Group {
+                    if isDone {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 12, weight: .bold))
+                    } else {
+                        Text(verbatim: "\(stage.rawValue)")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(isDone || isCurrent ? colors.onAccent : colors.textSecondary)
+                .frame(width: 24, height: 24)
+                .background(
+                    Circle().fill(
+                        isDone ? colors.success : (isCurrent ? colors.accentFill : colors.chipSecondaryBackground)
+                    )
+                )
                 Text(text)
-                    .font(.system(size: 15))
-                    .foregroundStyle(colors.textPrimary)
+                    .font(.system(size: 15, weight: isCurrent ? .semibold : .regular))
+                    .foregroundStyle(isCurrent || isDone ? colors.textPrimary : colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .accessibilityElement(children: .combine)
         }
 
         private var tryStatusRow: some View {
@@ -1126,19 +1200,17 @@
             if originalInputSource == nil {
                 originalInputSource = store.inputSource
             }
-            // Realtime needs an explicit pair; a fresh install may still hold Auto / app-language defaults.
-            if preferences.realtimeSourceLanguage == .auto {
-                preferences.setRealtimeSourceLanguage(.english, reason: "RealtimeOnboarding.prepare")
-            }
-            if preferences.realtimeTargetLanguage == .appLanguage {
-                preferences.setRealtimeTargetLanguage(
-                    TargetLanguageOption.defaultRealtimeTargetLanguage(),
-                    reason: "RealtimeOnboarding.prepare"
-                )
-            }
+            // Onboarding starts from English into the app language (or the next non-English system language).
+            preferences.setRealtimeSourceLanguage(.english, reason: "RealtimeOnboarding.prepare")
+            preferences.setRealtimeTargetLanguage(
+                TargetLanguageOption.defaultRealtimeTargetLanguage(),
+                reason: "RealtimeOnboarding.prepare"
+            )
             if preferences.realtimeTranslationProvider == .transcriptionOnly {
                 preferences.setRealtimeTranslationProvider(.appleTranslator)
             }
+            // Onboarding only offers the built-in recognizer; downloadable models stay in Settings.
+            preferences.setRealtimeRecognitionModelID(RecognitionModelDescriptor.appleSpeech.id)
             store.languageSelectionDidChange()
             refreshPermissionStatus()
         }
@@ -1154,6 +1226,7 @@
             if !store.isRunning {
                 store.resetTranscript()
             }
+            hasPlayedSampleClip = false
             applyCurrentInput()
         }
 
@@ -1398,6 +1471,42 @@
             case .microphone: .microphone
             case .iphoneAudio: .iphoneAudio
             }
+        }
+    }
+
+    /// Speaks the sample clip through the app's audio output, which the broadcast extension captures.
+    @MainActor
+    private final class OnboardingSampleClipPlayer: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
+        @Published private(set) var isPlaying = false
+        private let synthesizer = AVSpeechSynthesizer()
+
+        override init() {
+            super.init()
+            synthesizer.delegate = self
+        }
+
+        func speak(_ text: String, languageCode: String) {
+            // Playback ignores the ring/silent switch, so the capture still hears the clip.
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.mixWithOthers])
+            try? AVAudioSession.sharedInstance().setActive(true)
+            let utterance = AVSpeechUtterance(string: text)
+            utterance.voice = AVSpeechSynthesisVoice(language: languageCode)
+            synthesizer.stopSpeaking(at: .immediate)
+            synthesizer.speak(utterance)
+            isPlaying = true
+        }
+
+        func stop() {
+            synthesizer.stopSpeaking(at: .immediate)
+            isPlaying = false
+        }
+
+        nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+            Task { @MainActor in self.isPlaying = false }
+        }
+
+        nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+            Task { @MainActor in self.isPlaying = false }
         }
     }
 #endif

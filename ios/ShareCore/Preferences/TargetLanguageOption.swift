@@ -74,10 +74,12 @@ public struct TargetLanguageOption: RawRepresentable, Hashable, CaseIterable, Id
         realtimeSelectionOptions.first { $0.englishName == englishName }
     }
 
+    /// The app language wins; when it is English, the first non-English system language is used.
     public static func defaultRealtimeTargetLanguage(
+        appLanguageIdentifier: String = TargetLanguageOption.appLanguageIdentifier,
         preferredLanguages: [String] = Locale.preferredLanguages
     ) -> TargetLanguageOption {
-        for identifier in preferredLanguages where !isEnglishLanguageIdentifier(identifier) {
+        for identifier in [appLanguageIdentifier] + preferredLanguages where !isEnglishLanguageIdentifier(identifier) {
             if let option = optionForCode(identifier), option != .appLanguage {
                 return option
             }
