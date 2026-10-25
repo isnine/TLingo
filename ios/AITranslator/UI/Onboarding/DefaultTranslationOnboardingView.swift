@@ -772,7 +772,7 @@
                     .foregroundColor(colors.textPrimary)
                     .multilineTextAlignment(.center)
 
-                Text("Select the text below, then tap Grammar Check from the text menu.")
+                Text("Select the text below, then tap Translate from the text menu.")
                     .font(.system(size: Constants.FontSize.body))
                     .foregroundColor(colors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -791,7 +791,7 @@
             OnboardingTrialTextEditor(
                 text: $trialInputText,
                 font: .preferredFont(forTextStyle: .body),
-                customActionTitle: String(localized: "Grammar Check"),
+                customActionTitle: String(localized: "Translate"),
                 onCustomAction: { selectedText in
                     presentTrialSheet(inputText: selectedText)
                 },
@@ -1046,8 +1046,8 @@
             // list is fetched dynamically and carries no explicit tier field.
             let powerModels = models.filter { !$0.id.lowercased().contains("nano") }
             premiumModels = powerModels
-            if selectedPremiumIDs.isEmpty, let first = powerModels.first {
-                selectedPremiumIDs = [first.id]
+            if selectedPremiumIDs.isEmpty {
+                selectedPremiumIDs = Set(powerModels.prefix(4).map(\.id))
             }
         }
 

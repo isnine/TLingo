@@ -92990,6 +92990,7 @@
       }
     },
     "Select the text below, then tap Grammar Check from the text menu." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -93109,6 +93110,130 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選取下方這段包含語病的內容，輕點選單中的「語法檢查」"
+          }
+        }
+      }
+    },
+    "Select the text below, then tap Translate from the text menu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the text below, then tap Translate from the text menu."
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حدّد النص أدناه، ثم اضغط على ترجمة من قائمة النص."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markér teksten nedenfor, og tryk derefter på Oversæt i tekstmenuen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle den Text unten aus und tippe dann im Textmenü auf Übersetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona el texto de abajo y luego toca Traducir en el menú de texto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionnez le texte ci-dessous, puis touchez Traduire dans le menu du texte."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih teks di bawah, lalu ketuk Terjemahkan dari menu teks."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona il testo qui sotto, quindi tocca Traduci dal menu del testo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下のテキストを選択してから、テキストメニューから「翻訳」をタップします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래 텍스트를 선택한 다음 텍스트 메뉴에서 번역을 탭하세요."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih teks di bawah, kemudian ketik Terjemah dalam menu teks."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velg teksten nedenfor, og trykk deretter på Oversett i tekstmenyen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecteer de tekst hieronder en tik vervolgens op Vertalen in het tekstmenu."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaznacz tekst poniżej, a następnie dotknij Przetłumacz w menu tekstu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecione o texto abaixo e toque em Traduzir no menu de texto."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markera texten nedan och tryck sedan på Översätt i textmenyn."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aşağıdaki metni seçin, ardından metin menüsünden Çevir'e dokunun."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選取下方的文字，然後從文字選單中點一下「翻譯」。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择下方文本，然后从文本菜单中点按“翻译”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選取下方的文字，然後從文字選單中點一下「翻譯」。"
           }
         }
       }
