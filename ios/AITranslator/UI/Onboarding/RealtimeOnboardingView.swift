@@ -868,6 +868,7 @@
 
         private enum CaptureStage: Int {
             case startCapture = 1
+            case waitForCapture
             case playClip
             case watchCaptions
         }
@@ -876,8 +877,14 @@
             store.isRunning && store.inputSource == .iphoneAudio
         }
 
+        /// The broadcast is accepted seconds before the extension can recognize audio; a clip played earlier is lost.
+        private var isCaptureReady: Bool {
+            isCapturingIPhoneAudio && store.isIPhoneAudioCaptureReady
+        }
+
         private var captureStage: CaptureStage {
             if !isCapturingIPhoneAudio, !hasCaption { return .startCapture }
+            if !isCaptureReady, !hasPlayedSampleClip, !hasCaption { return .waitForCapture }
             if !hasPlayedSampleClip, !hasCaption { return .playClip }
             return .watchCaptions
         }
@@ -895,6 +902,7 @@
 
                 VStack(alignment: .leading, spacing: 14) {
                     captureStep(.startCapture, "Tap Start capture, choose TLingo, then tap Start Broadcast.")
+                    captureStep(.waitForCapture, "Wait a moment while capture gets ready.")
                     captureStep(.playClip, "Tap play on the clip above.")
                     captureStep(.watchCaptions, "Watch the captions appear on the clip.")
                     if hasCaption {
@@ -916,7 +924,7 @@
 
         /// A stand-in video whose play button speaks a line, so the capture can be tried without leaving TLingo.
         private var sampleClip: some View {
-            let canPlay = isCapturingIPhoneAudio && !sampleClipPlayer.isPlaying
+            let canPlay = isCaptureReady && !sampleClipPlayer.isPlaying
             return ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     // The frame stands in for video, so it stays dark in both appearances.
@@ -939,7 +947,7 @@
                 }
                 .buttonStyle(.plain)
                 .disabled(!canPlay)
-                .opacity(isCapturingIPhoneAudio ? 1 : 0.5)
+                .opacity(isCaptureReady ? 1 : 0.5)
                 .frame(maxHeight: .infinity)
                 .accessibilityLabel(Text("Play sample clip"))
                 .accessibilityIdentifier("onboarding_realtime_play_sample")
@@ -959,9 +967,17 @@
             let translation = store.captionLines.last { $0.kind == .translation && !$0.text.isEmpty }
             VStack(spacing: 2) {
                 if source == nil, translation == nil {
-                    Text(isCapturingIPhoneAudio ? "Captions appear here" : "Start capture to play the clip")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.6))
+                    Group {
+                        if isCaptureReady {
+                            Text("Captions appear here")
+                        } else if isCapturingIPhoneAudio {
+                            Text("Getting capture ready…")
+                        } else {
+                            Text("Start capture to play the clip")
+                        }
+                    }
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white.opacity(0.6))
                 } else {
                     if let source {
                         Text(verbatim: source.text)
@@ -988,6 +1004,10 @@
                     if isDone {
                         Image(systemName: "checkmark")
                             .font(.system(size: 12, weight: .bold))
+                    } else if isCurrent, stage == .waitForCapture {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(colors.onAccent)
                     } else {
                         Text(verbatim: "\(stage.rawValue)")
                             .font(.system(size: 13, weight: .semibold))

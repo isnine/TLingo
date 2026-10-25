@@ -101,6 +101,7 @@
                 state.audioLevel = nil
                 state.errorMessage = nil
                 state.stopRequested = false
+                state.isRecognitionReady = false
                 state.realtimeHistorySession = nil
             }
             Self.log("start reset \(Self.stateSummary(state))")
@@ -123,7 +124,10 @@
                 }
                 let shouldRemainPaused = startState.isPaused
                 transcriber.setPaused(shouldRemainPaused)
-                updateState { $0.phase = shouldRemainPaused ? .paused : .broadcasting }
+                updateState { state in
+                    state.phase = shouldRemainPaused ? .paused : .broadcasting
+                    state.isRecognitionReady = true
+                }
                 Self.log("start succeeded paused=\(shouldRemainPaused)")
             } catch {
                 guard stateLock.withLock({

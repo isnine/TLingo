@@ -122,6 +122,9 @@
             @Published public private(set) var isRealtimeMemoryConstrained = false
             @Published public private(set) var importedAudioURL: URL?
             @Published public private(set) var modelDownloads: [RealtimeModelDownload] = []
+        #else
+            /// True once the iPhone Audio broadcast extension is recognizing app audio.
+            @Published public private(set) var isIPhoneAudioCaptureReady = false
         #endif
 
         public var audioLevelFraction: Double {
@@ -1120,6 +1123,7 @@
                 startFailureAlert = nil
                 audioLevel = nil
                 audioSampleCount = 0
+                isIPhoneAudioCaptureReady = false
 
                 let sessionID = UUID().uuidString
                 broadcastStateStore?.reset(sessionID: sessionID, phase: .waiting)
@@ -1228,6 +1232,7 @@
                 assignIfChanged(&audioSampleCount, state.audioSampleCount)
                 assignIfChanged(&audioLevel, state.audioLevel)
                 assignIfChanged(&errorMessage, state.errorMessage)
+                assignIfChanged(&isIPhoneAudioCaptureReady, state.isRecognitionReady)
                 latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
                 autosaveRealtimeHistoryIfNeeded()
                 if transcriptChanged {
@@ -1282,6 +1287,7 @@
                 isPaused = false
                 audioLevel = nil
                 audioSampleCount = 0
+                isIPhoneAudioCaptureReady = false
                 statusText = status
                 logRealtime("finished status=\(status)", stage: "broadcast")
             }

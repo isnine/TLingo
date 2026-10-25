@@ -50,6 +50,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
             state.audioLevel = nil
             state.errorMessage = nil
             state.stopRequested = false
+            state.isRecognitionReady = false
         }
         startHeartbeat()
 

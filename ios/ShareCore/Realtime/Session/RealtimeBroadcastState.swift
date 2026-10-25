@@ -30,6 +30,8 @@
         public var errorMessage: String?
         public var lastUpdatedAt: Date
         public var stopRequested: Bool
+        /// Set by the extension once speech recognition has started and app audio is being used.
+        public var isRecognitionReady: Bool
         public var realtimeHistorySession: RealtimeHistorySession?
 
         public init(
@@ -47,6 +49,7 @@
             errorMessage: String? = nil,
             lastUpdatedAt: Date = Date(),
             stopRequested: Bool = false,
+            isRecognitionReady: Bool = false,
             realtimeHistorySession: RealtimeHistorySession? = nil
         ) {
             self.sessionID = sessionID
@@ -63,6 +66,7 @@
             self.errorMessage = errorMessage
             self.lastUpdatedAt = lastUpdatedAt
             self.stopRequested = stopRequested
+            self.isRecognitionReady = isRecognitionReady
             self.realtimeHistorySession = realtimeHistorySession
         }
 
@@ -81,6 +85,7 @@
             case errorMessage
             case lastUpdatedAt
             case stopRequested
+            case isRecognitionReady
             case realtimeHistorySession
         }
 
@@ -100,6 +105,7 @@
             errorMessage = try container.decodeIfPresent(String.self, forKey: .errorMessage)
             lastUpdatedAt = try container.decodeIfPresent(Date.self, forKey: .lastUpdatedAt) ?? Date()
             stopRequested = try container.decodeIfPresent(Bool.self, forKey: .stopRequested) ?? false
+            isRecognitionReady = try container.decodeIfPresent(Bool.self, forKey: .isRecognitionReady) ?? false
             realtimeHistorySession = try container.decodeIfPresent(
                 RealtimeHistorySession.self,
                 forKey: .realtimeHistorySession
