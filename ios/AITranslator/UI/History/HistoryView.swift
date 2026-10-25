@@ -578,7 +578,11 @@ private struct RealtimeHistoryRow: View {
                         .monospacedDigit()
                         .foregroundStyle(colors.textSecondary)
                 }
-                let preview = session.translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+                let translatedPreview = session.translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+                // Transcription-only sessions have no translation to preview.
+                let preview = translatedPreview.isEmpty
+                    ? session.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    : translatedPreview
                 if !preview.isEmpty {
                     Text(preview)
                         .font(.subheadline)

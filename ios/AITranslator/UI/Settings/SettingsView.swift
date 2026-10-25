@@ -40,6 +40,10 @@ struct SettingsView: View {
     @State private var testFlightAlertMessage = ""
     @State private var showDefaultTranslationOnboarding = false
     @State private var pendingDefaultTranslationUpgrade = false
+    #if os(iOS)
+        @State private var showOnboardingReplay = false
+        @State private var pendingOnboardingReplayResult: OnboardingFlowResult = .dismissed
+    #endif
     @State private var feedbackDraft: FeedbackMailDraft?
 
     @State private var showNetworkDebug = false
@@ -142,6 +146,12 @@ struct SettingsView: View {
             DefaultTranslationOnboardingView { outcome in
                 pendingDefaultTranslationUpgrade = outcome == .upgrade
                 showDefaultTranslationOnboarding = false
+            }
+        }
+        .fullScreenCover(isPresented: $showOnboardingReplay, onDismiss: handleOnboardingReplayDismiss) {
+            OnboardingFlowContainer { result in
+                pendingOnboardingReplayResult = result
+                showOnboardingReplay = false
             }
         }
         #endif
@@ -259,6 +269,13 @@ struct SettingsView: View {
             }
 
             #if os(iOS)
+                actionRow {
+                    showOnboardingReplay = true
+                } label: {
+                    settingsLabel("Replay Onboarding", systemImage: "sparkles")
+                }
+                .accessibilityIdentifier("settings_replay_onboarding_row")
+
                 actionRow {
                     openURL(Self.writeReviewURL)
                 } label: {
@@ -576,6 +593,14 @@ private extension SettingsView {
 
             guard pendingDefaultTranslationUpgrade else { return }
             pendingDefaultTranslationUpgrade = false
+            showPaywall = true
+        }
+
+        private func handleOnboardingReplayDismiss() {
+            let result = pendingOnboardingReplayResult
+            pendingOnboardingReplayResult = .dismissed
+            // A replay skips the first-run paywall; only an explicit upgrade tap opens it.
+            guard result == .upgrade, !entitlement.isPro else { return }
             showPaywall = true
         }
     #endif

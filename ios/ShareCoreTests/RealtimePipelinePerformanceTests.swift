@@ -50,14 +50,36 @@
         func commitsAtLikelySentenceStart() {
             var state = RealtimeStreamingTranscriptState()
             let firstSentence = (1 ... 22).map { "word\($0)" }
-            let words = firstSentence + ["I", "started", "another", "thought"]
+            let words = firstSentence + ["We", "started", "another", "thought"]
 
             let update = state.updatePartial(words.joined(separator: " "), audioOffset: 3)
 
             #expect(update)
             #expect(state.stableSegments.first?.text == firstSentence.joined(separator: " "))
             #expect(state.stableSegments.first?.boundaryReason == .lengthFallback)
-            #expect(state.pendingText == "I started another thought")
+            #expect(state.pendingText == "We started another thought")
+        }
+
+        @Test("Does not treat a mid-sentence I as a sentence start")
+        func doesNotSplitBeforeMidSentenceI() {
+            var state = RealtimeStreamingTranscriptState()
+            let words = (1 ... 22).map { "word\($0)" } + ["but", "I", "honestly", "might", "just"]
+
+            state.updatePartial(words.joined(separator: " "), audioOffset: 3)
+
+            #expect(state.stableSegments.isEmpty)
+        }
+
+        @Test("Prefers a clause mark over a guessed sentence start")
+        func commitsAtClauseMark() {
+            var state = RealtimeStreamingTranscriptState()
+            let clause = (1 ... 21).map { "word\($0)" } + ["word22,"]
+            let words = clause + ["word23", "we", "continued"]
+
+            state.updatePartial(words.joined(separator: " "), audioOffset: 3)
+
+            #expect(state.stableSegments.first?.text == clause.joined(separator: " "))
+            #expect(state.pendingText == "word23 we continued")
         }
 
         @Test("Does not split a pronoun after a connector")
@@ -71,15 +93,31 @@
             #expect(state.pendingText == words.joined(separator: " "))
         }
 
-        @Test("Uses a thirty-six word hard fallback")
+        @Test("Uses a fifty-six word hard fallback")
         func commitsAtHardWordLimit() {
             var state = RealtimeStreamingTranscriptState()
-            let words = (1 ... 40).map { "word\($0)" }
+            let words = (1 ... 60).map { "word\($0)" }
 
             state.updatePartial(words.joined(separator: " "), audioOffset: 4)
 
-            #expect(state.stableSegments.first?.text == words.prefix(36).joined(separator: " "))
+            #expect(state.stableSegments.first?.text == words.prefix(56).joined(separator: " "))
             #expect(state.pendingText == words.suffix(4).joined(separator: " "))
+        }
+
+        @Test("Reports a pause once after silence outlasts decode latency")
+        func reportsPauseOnceAfterDecodeLatency() {
+            var detector = RealtimeSpeechPauseDetector()
+            var offset: TimeInterval = 0
+            func feed(_ rms: Float) -> Bool {
+                defer { offset += 0.1 }
+                return detector.process(rms: rms, startOffset: offset, endOffset: offset + 0.1, decodeLatency: 0.76)
+            }
+
+            #expect(!(0 ..< 10).map { _ in feed(0.1) }.contains(true))
+            let pauses = (0 ..< 12).map { _ in feed(0.005) }
+            #expect(pauses.firstIndex(of: true) == 7)
+            #expect(pauses.filter { $0 }.count == 1)
+            #expect(!feed(0.1))
         }
 
         @Test("Maps TLingo Chinese locale identifiers to Nemotron prompts")

@@ -88,20 +88,64 @@
         }
     }
 
+    /// Detects speaker pauses from processed audio energy. Levels are relative to recent speech so
+    /// quiet microphones and loud media both work without a fixed threshold.
+    struct RealtimeSpeechPauseDetector {
+        static let minimumPauseDuration: TimeInterval = 0.6
+        private static let silenceFloorRMS: Float = 0.002
+        private static let relativeSilenceRatio: Float = 0.2
+        private static let speechLevelHalfLife: TimeInterval = 3
+
+        private var speechLevel: Float = 0
+        private var silenceStartOffset: TimeInterval?
+        private var hasReportedCurrentPause = false
+
+        /// Returns true once per silence run, after the run outlasts both the minimum pause and the
+        /// model's decode latency so words spoken before the pause have been emitted.
+        mutating func process(
+            rms: Float,
+            startOffset: TimeInterval,
+            endOffset: TimeInterval,
+            decodeLatency: TimeInterval
+        ) -> Bool {
+            let decay = Float(pow(0.5, max(0, endOffset - startOffset) / Self.speechLevelHalfLife))
+            speechLevel = max(rms, speechLevel * decay)
+            guard rms < max(Self.silenceFloorRMS, speechLevel * Self.relativeSilenceRatio) else {
+                silenceStartOffset = nil
+                hasReportedCurrentPause = false
+                return false
+            }
+            let silenceStart = silenceStartOffset ?? startOffset
+            silenceStartOffset = silenceStart
+            guard !hasReportedCurrentPause,
+                  endOffset - silenceStart >= max(Self.minimumPauseDuration, decodeLatency)
+            else {
+                return false
+            }
+            hasReportedCurrentPause = true
+            return true
+        }
+    }
+
     struct RealtimeStreamingTranscriptState {
+        // Pauses are the primary boundary; these word-count fallbacks only cover continuous speech.
         private static let minimumBoundaryWordCount = 20
-        private static let weakBoundaryWordCount = 32
-        private static let maximumBoundaryWordCount = 36
+        private static let weakBoundaryWordCount = 40
+        private static let maximumBoundaryWordCount = 56
+        private static let clauseTerminators: Set<Character> = [",", ";", ":", "，", "；", "：", "、"]
+        // "I", "but", and "so" appear mid-sentence too often ("but I honestly") to be strong starts.
         private static let likelySentenceStarters: Set<String> = [
-            "i", "we", "he", "she", "they", "it", "there", "this",
-            "what", "why", "how", "when", "but", "so", "then", "meanwhile", "anyway",
+            "we", "he", "she", "they", "it", "there", "this",
+            "what", "why", "how", "when", "meanwhile", "anyway",
         ]
         private static let weakSentenceStarters: Set<String> = [
-            "and", "because", "however", "therefore",
+            "and", "because", "but", "so", "however", "therefore",
         ]
         private static let precedingConnectors: Set<String> = [
-            "and", "or", "that", "because", "when", "if", "while", "as", "although", "though",
-            "which", "who", "where",
+            "and", "or", "but", "so", "that", "because", "when", "if", "while", "as", "although", "though",
+            "which", "who", "where", "what", "how", "like", "than", "then", "um", "uh",
+            "the", "a", "an", "to", "of", "in", "on", "at", "for", "with", "about", "from", "into", "by",
+            "is", "was", "are", "were", "be", "do", "did", "does", "know", "think", "guess", "mean", "said", "see",
         ]
 
         private(set) var stableSegments: [RealtimeRecognitionSegment] = []
@@ -248,6 +292,14 @@
         private static func fallbackBoundaryIndex(in words: [Substring]) -> Int? {
             guard words.count > minimumBoundaryWordCount else { return nil }
 
+            // Split after a clause mark; the word following it must already exist.
+            let clauseRange = minimumBoundaryWordCount ..< min(words.count, maximumBoundaryWordCount + 1)
+            if let index = clauseRange.first(where: {
+                words[$0 - 1].last.map(clauseTerminators.contains) == true
+            }) {
+                return index
+            }
+
             let strongRange = minimumBoundaryWordCount ..< min(words.count, weakBoundaryWordCount)
             if let index = strongRange.first(where: { isLikelySentenceStart(words, at: $0) }) {
                 return index
@@ -314,6 +366,7 @@
         private var pendingSampleChunks: [[Float]] = []
         private var processingTask: Task<Void, Never>?
         private var transcriptState = RealtimeStreamingTranscriptState()
+        private var pauseDetector = RealtimeSpeechPauseDetector()
         private var totalSampleCount = 0
         private var processedSampleCount = 0
         private var callbackAudioOffset: TimeInterval = 0
@@ -521,6 +574,7 @@
                 pendingSampleChunks.removeAll()
                 processingTask = nil
                 transcriptState.reset()
+                pauseDetector = RealtimeSpeechPauseDetector()
                 totalSampleCount = 0
                 processedSampleCount = 0
                 callbackAudioOffset = 0
@@ -543,6 +597,7 @@
                 pendingSampleChunks.removeAll()
                 processingTask = nil
                 transcriptState.reset()
+                pauseDetector = RealtimeSpeechPauseDetector()
                 totalSampleCount = 0
                 processedSampleCount = 0
                 callbackAudioOffset = 0
@@ -599,12 +654,25 @@
                 do {
                     try await work.streamingEngine.process(buffer)
 
+                    let rms = Self.rms(of: work.samples)
                     let shouldReset = stateLock.withLock { () -> Bool in
+                        let startOffset = Double(processedSampleCount) / Double(sampleRate)
                         processedSampleCount += work.samples.count
+                        let isPause = pauseDetector.process(
+                            rms: rms,
+                            startOffset: startOffset,
+                            endOffset: work.endOffset,
+                            decodeLatency: model.map(Self.decodeLatency(of:)) ?? 0
+                        )
+                        // Resetting at a pause also restarts the model's word count, which
+                        // count-based trimming cannot track for unspaced CJK hypotheses.
+                        if isPause, transcriptState.commit(boundaryReason: .pause, audioOffset: work.endOffset) {
+                            engineNeedsReset = true
+                        }
                         return engineNeedsReset
                     }
                     if shouldReset {
-                        RealtimeLog.log("fluid", "engine reset after EOU at=\(String(format: "%.1fs", work.endOffset))")
+                        RealtimeLog.log("fluid", "engine reset at boundary at=\(String(format: "%.1fs", work.endOffset))")
                         publishCurrentSnapshot(sessionID: sessionID)
                         try await work.streamingEngine.reset()
                         stateLock.withLock {
@@ -708,6 +776,24 @@
         func rawFloatSamples(from buffer: AVAudioPCMBuffer) -> [Float]? {
             guard let channelData = buffer.floatChannelData else { return nil }
             return Array(UnsafeBufferPointer(start: channelData[0], count: Int(buffer.frameLength)))
+        }
+
+        static func rms(of samples: [Float]) -> Float {
+            guard !samples.isEmpty else { return 0 }
+            let squareSum = samples.reduce(0.0) { $0 + Double($1) * Double($1) }
+            return Float(sqrt(squareSum / Double(samples.count)))
+        }
+
+        /// Audio the engine can hold before emitting words: one model chunk plus a decode margin.
+        static func decodeLatency(of model: RecognitionFluidAudioModel) -> TimeInterval {
+            let chunkDuration: TimeInterval = switch model {
+            case .parakeetEOU320: 0.32
+            case .parakeetEOU1280: 1.28
+            case .nemotronStreaming560: 0.56
+            case .nemotronStreaming1120: 1.12
+            case .nemotronStreaming2240, .nemotronMultilingual2240: 2.24
+            }
+            return chunkDuration + 0.2
         }
 
         static func pcmBuffer(from samples: [Float]) -> AVAudioPCMBuffer? {

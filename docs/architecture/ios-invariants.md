@@ -29,6 +29,14 @@ review_triggers:
 - Opening the translation extension unlocks Continue; it never advances the onboarding page automatically.
 - During the trial, the extension invocation notification immediately triggers the existing celebration overlay in the main app, independently of translation completion. Its toast sits below the top safe area so it remains visible above the extension sheet. The extension UI remains unchanged.
 
+## First-Run Onboarding Scenarios
+
+- The first-run cover starts with a scenario picker (Words and selected text, Live conversations, Shows and videos; multi-select). `OnboardingRoute` in ShareCore decides the phases: Realtime runs before the words flow so the words flow's premium offer stays last. Skipping the picker or picking nothing keeps the original words-only flow.
+- Realtime-only selections never show the words flow's premium offer; after the cover dismisses they present the first-run paywall instead, and `hasSeenIOSPaywallOnboarding` is set only by that paywall. Every other path sets it on dismissal as before.
+- `RealtimeOnboardingView` is one flow parameterized by input: Live conversations uses the microphone, Shows and videos uses iPhone Audio (Speech Recognition only, plus the broadcast picker). Selecting both tries the microphone first, then iPhone Audio.
+- The flow drives the real `RealtimeSessionStore` / `RealtimeControlModel` (start, stop, permission and language-pack alerts). It restores the previous input source and clears the transcript on exit. Trial sessions are recorded in History like any other session.
+- Existing users with `hasSeenDefaultTranslationOnboarding` already set do not see the picker.
+
 ## Language Resolution
 
 - Detection equivalence and translation equivalence are separate concepts.

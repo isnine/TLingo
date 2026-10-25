@@ -31,6 +31,11 @@
         private var queuedFinalTranslationKeys: Set<String> = []
         private var partialTranslationSourceTracker = RealtimeTranslationSourceTracker()
 
+        /// Committed and in-progress source sentences without translations, for transcription-only history.
+        var sourceOnlyPairs: [SentencePair] {
+            (sourceSegments + [pendingSourceText]).map { SentencePair(original: $0, translation: "") }
+        }
+
         mutating func reset() {
             translationSourceText = ""
             pendingSourceText = ""

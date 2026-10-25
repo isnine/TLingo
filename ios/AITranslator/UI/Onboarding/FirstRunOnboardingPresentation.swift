@@ -8,7 +8,8 @@
     import SwiftUI
 
     extension View {
-        /// Presents the default-translation onboarding, then the first-run paywall.
+        /// Presents the first-run onboarding (scenario picker, Realtime setup, default translation),
+        /// then the first-run paywall.
         /// `isBlocked` is re-read after the launch delay so containers can defer while another sheet is up.
         func firstRunOnboardingPresentation(isBlocked: @escaping @MainActor () -> Bool) -> some View {
             modifier(FirstRunOnboardingPresentation(isBlocked: isBlocked))
@@ -22,7 +23,7 @@
         @ObservedObject private var entitlement = Entitlement.shared
         @State private var showDefaultTranslationOnboarding = false
         @State private var showDefaultTranslationPaywall = false
-        @State private var pendingDefaultTranslationUpgrade = false
+        @State private var pendingResult: OnboardingFlowResult = .dismissed
         @State private var showFirstRunPaywall = false
 
         func body(content: Content) -> some View {
@@ -31,8 +32,8 @@
                     isPresented: $showDefaultTranslationOnboarding,
                     onDismiss: handleDefaultTranslationOnboardingDismiss
                 ) {
-                    DefaultTranslationOnboardingView { outcome in
-                        pendingDefaultTranslationUpgrade = outcome == .upgrade
+                    OnboardingFlowContainer { result in
+                        pendingResult = result
                         showDefaultTranslationOnboarding = false
                     }
                 }
@@ -104,12 +105,107 @@
 
         @MainActor
         private func handleDefaultTranslationOnboardingDismiss() {
+            let result = pendingResult
+            pendingResult = .dismissed
             preferences.setHasSeenDefaultTranslationOnboarding(true)
-            preferences.setHasSeenIOSPaywallOnboarding(true)
 
-            guard pendingDefaultTranslationUpgrade else { return }
-            pendingDefaultTranslationUpgrade = false
-            showDefaultTranslationPaywall = true
+            switch result {
+            case .dismissed:
+                preferences.setHasSeenIOSPaywallOnboarding(true)
+            case .upgrade:
+                preferences.setHasSeenIOSPaywallOnboarding(true)
+                showDefaultTranslationPaywall = true
+            case .firstRunPaywall:
+                // Realtime-only users never saw the words flow's premium offer, so show the first-run paywall.
+                guard !entitlement.isPro, !preferences.hasSeenIOSPaywallOnboarding else { return }
+                showFirstRunPaywall = true
+            }
+        }
+    }
+
+    /// How the onboarding cover ended.
+    enum OnboardingFlowResult {
+        case dismissed
+        case upgrade
+        case firstRunPaywall
+    }
+
+    /// Runs the scenario picker, then the Realtime and words flows the picked scenarios need.
+    struct OnboardingFlowContainer: View {
+        private enum Stage: Equatable {
+            case picker
+            case realtime
+            case words
+        }
+
+        let onFinished: (OnboardingFlowResult) -> Void
+
+        @State private var stage: Stage = .picker
+        @State private var route = OnboardingRoute(scenarios: [])
+        @State private var selection: Set<OnboardingScenario> = []
+
+        var body: some View {
+            ZStack {
+                switch stage {
+                case .picker:
+                    OnboardingScenarioPickerView(
+                        initialSelection: selection,
+                        onContinue: { scenarios in
+                            selection = scenarios
+                            start(OnboardingRoute(scenarios: scenarios))
+                        },
+                        onSkip: {
+                            selection = []
+                            start(OnboardingRoute(scenarios: []))
+                        }
+                    )
+                    .transition(.opacity)
+                case .realtime:
+                    RealtimeOnboardingView(
+                        inputs: route.realtimeInputs,
+                        onBack: { move(to: .picker) },
+                        onFinished: { advance(after: .realtime) }
+                    )
+                    .transition(.opacity)
+                case .words:
+                    DefaultTranslationOnboardingView { outcome in
+                        onFinished(outcome == .upgrade ? .upgrade : .dismissed)
+                    }
+                    .transition(.opacity)
+                }
+            }
+        }
+
+        private func start(_ route: OnboardingRoute) {
+            self.route = route
+            guard let first = route.phases.first else {
+                onFinished(.dismissed)
+                return
+            }
+            move(to: stage(for: first))
+        }
+
+        private func advance(after phase: OnboardingRoute.Phase) {
+            guard let index = route.phases.firstIndex(of: phase),
+                  route.phases.indices.contains(index + 1)
+            else {
+                onFinished(route.endsWithFirstRunPaywall ? .firstRunPaywall : .dismissed)
+                return
+            }
+            move(to: stage(for: route.phases[index + 1]))
+        }
+
+        private func stage(for phase: OnboardingRoute.Phase) -> Stage {
+            switch phase {
+            case .realtime: .realtime
+            case .words: .words
+            }
+        }
+
+        private func move(to newStage: Stage) {
+            withAnimation(.easeInOut(duration: OnboardingMetrics.stepTransition)) {
+                stage = newStage
+            }
         }
     }
 #endif

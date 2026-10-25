@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.1] - 2026-10-24
+
+### Added
+
+- Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding.
+- Added transcription-only realtime history on iPhone Audio.
+
+### Improved
+
+- Stabilized realtime captions during translation updates and added pause-based sentence breaks.
+- Clarified recognition model loading status and kept untranslated sessions readable in History.
+
 ### Removed
 
 - Removed the Direct (Developer ID + Sparkle) macOS build, email sign-in, and website purchase restore. Premium now comes only from App Store subscriptions.

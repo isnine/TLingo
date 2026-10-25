@@ -85,11 +85,13 @@
             return max(0, end.timeIntervalSince(startedAt) - pausedDuration)
         }
 
-        mutating func sync(pairs: [SentencePair], at date: Date = Date()) {
+        /// Untranslated pairs are kept only for transcription-only sessions; otherwise a sentence
+        /// joins history once its translation arrives.
+        mutating func sync(pairs: [SentencePair], allowsUntranslated: Bool = false, at date: Date = Date()) {
             let cleanPairs = pairs.compactMap { pair -> (source: String, translation: String)? in
                 let source = pair.original.trimmingCharacters(in: .whitespacesAndNewlines)
                 let translation = pair.translation.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !source.isEmpty, !translation.isEmpty else { return nil }
+                guard !source.isEmpty, allowsUntranslated || !translation.isEmpty else { return nil }
                 return (source, translation)
             }
 

@@ -72,13 +72,15 @@
         let style: Style
         /// Height of the bottom accessory (control dock) that SwiftUI does not report as UIKit safe area.
         let bottomAccessoryHeight: CGFloat
+        /// `RealtimeSessionStore.captionRevision` of `lines`; ties `[RT][view]` logs to `[RT][ui]`.
+        let revision: Int
 
         func makeUIView(context _: Context) -> CaptionTextView {
             CaptionTextView()
         }
 
         func updateUIView(_ view: CaptionTextView, context _: Context) {
-            view.update(lines: lines, style: style, bottomAccessoryHeight: bottomAccessoryHeight)
+            view.update(lines: lines, style: style, bottomAccessoryHeight: bottomAccessoryHeight, revision: revision)
         }
 
         @MainActor
@@ -86,13 +88,29 @@
             private static let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "Realtime")
             /// Distance from the bottom that still counts as "following" after the user scrolls.
             private static let followThreshold: CGFloat = 32
+            /// Largest blank space kept under the last line when captions shrink, about one translation line plus a source line.
+            private static let maxBottomSlack: CGFloat = 120
 
             private var renderedLines: [RealtimeCaptionLine] = []
             private var lineRanges: [NSRange] = []
             private var style: Style?
             private var bottomAccessoryHeight: CGFloat = 0
             private var isFollowingBottom = true
-            private var lastLoggedContentHeight: CGFloat = 0
+            private var revision = 0
+            /// Blank space under the last line that absorbs a shrink (a long preview translation replaced by
+            /// a shorter final one) so text above does not drop down; later growth consumes it first.
+            private var bottomSlack: CGFloat = 0
+            /// Layout state before the current `update` rewrote text storage. Replacing the tail lets
+            /// UITextView clamp `contentOffset` against a stale content size before `applyLayout` runs.
+            private var layoutBaseline: LayoutSnapshot?
+
+            private struct LayoutSnapshot {
+                var height: CGFloat
+                var slack: CGFloat
+                var offset: CGFloat
+            }
+            /// Lines rewritten by the last `update`; `-` when layout ran without a content change.
+            private var lastReplaced = "-"
 
             init() {
                 let storage = NSTextStorage()
@@ -129,18 +147,28 @@
                 fatalError("init(coder:) has not been implemented")
             }
 
-            func update(lines: [RealtimeCaptionLine], style: Style, bottomAccessoryHeight: CGFloat) {
+            func update(lines: [RealtimeCaptionLine], style: Style, bottomAccessoryHeight: CGFloat, revision: Int) {
+                self.revision = revision
                 let styleChanged = self.style != style
                 self.style = style
                 let insetsChanged = self.bottomAccessoryHeight != bottomAccessoryHeight
                 self.bottomAccessoryHeight = bottomAccessoryHeight
 
+                let previousCount = renderedLines.count
+                lastReplaced = "-"
+                layoutBaseline = LayoutSnapshot(height: laidOutContentHeight, slack: bottomSlack, offset: contentOffset.y)
+                defer { layoutBaseline = nil }
                 if styleChanged {
                     replaceLines(from: 0, with: lines)
+                    lastReplaced = "0..<\(lines.count)/\(previousCount)"
                 } else if let firstChange = firstChangedIndex(in: lines) {
                     replaceLines(from: firstChange, with: lines)
+                    lastReplaced = "\(firstChange)..<\(lines.count)/\(previousCount)"
                 } else if !insetsChanged {
                     return
+                }
+                if styleChanged || lines.isEmpty {
+                    bottomSlack = 0
                 }
                 applyLayout(reason: styleChanged ? "style" : (insetsChanged ? "insets" : "content"))
             }
@@ -150,6 +178,12 @@
                 if bounds.size != lastLayoutSize {
                     lastLayoutSize = bounds.size
                     applyLayout(reason: "bounds")
+                } else if isFollowingBottom, !isTracking, !isDecelerating, bounds.height > 0, contentOffset.y != maxOffsetY {
+                    // UITextView's own pass can clamp the offset against its lagging contentSize.
+                    Self.logger.notice(
+                        "[RT][view] rev=\(self.revision, privacy: .public) repin offset=\(Int(self.contentOffset.y), privacy: .public)->\(Int(self.maxOffsetY), privacy: .public) contentSize=\(Int(self.contentSize.height), privacy: .public)"
+                    )
+                    contentOffset = CGPoint(x: 0, y: maxOffsetY)
                 }
             }
 
@@ -224,15 +258,19 @@
             /// Bottom-aligns short content through the top inset, then pins to the bottom if following.
             private func applyLayout(reason: String) {
                 guard bounds.height > 0 else { return }
+                let before = layoutBaseline ?? LayoutSnapshot(height: laidOutContentHeight, slack: bottomSlack, offset: contentOffset.y)
                 let height = contentHeight
                 laidOutContentHeight = height
+                if reason == "content", isFollowingBottom, !isTracking, !isDecelerating {
+                    bottomSlack = min(Self.maxBottomSlack, max(0, before.height + before.slack - height))
+                }
                 let obscured = effectiveObscuredInsets
                 let viewport = bounds.height - obscured.top - obscured.bottom
-                let alignmentGap = max(0, viewport - height)
+                let alignmentGap = max(0, viewport - height - bottomSlack)
                 let insets = UIEdgeInsets(
                     top: obscured.top + alignmentGap,
                     left: 0,
-                    bottom: obscured.bottom,
+                    bottom: obscured.bottom + bottomSlack,
                     right: 0
                 )
                 if contentInset != insets {
@@ -246,7 +284,7 @@
                         contentOffset = target
                     }
                 }
-                logLayout(reason: reason, contentHeight: height)
+                logLayout(reason: reason, before: before)
             }
 
             /// Measured eagerly in `applyLayout`; `contentSize` lags until UITextView's next layout pass.
@@ -288,20 +326,36 @@
                 )
             }
 
-            private func logLayout(reason: String, contentHeight: CGFloat) {
-                let delta = contentHeight - lastLoggedContentHeight
-                guard abs(delta) >= 40 || reason != "content" else { return }
-                lastLoggedContentHeight = contentHeight
+            /// One line per layout pass. `shift` is how far text above the edited line moved on screen
+            /// (negative = up, positive = the downward jump a shrink causes); `slack` is blank space
+            /// kept under the last line to absorb shrinks.
+            private func logLayout(reason: String, before: LayoutSnapshot) {
+                let heightDelta = laidOutContentHeight - before.height
+                let offsetDelta = contentOffset.y - before.offset
+                // Text above the edit keeps its content y, so its screen y moves by -(offset change).
+                let shift = -offsetDelta
+                let tailHeight = lineRanges.last.map {
+                    layoutManager.boundingRect(
+                        forGlyphRange: layoutManager.glyphRange(forCharacterRange: $0, actualCharacterRange: nil),
+                        in: textContainer
+                    ).height
+                } ?? 0
                 Self.logger.notice(
                     """
-                    [RT][scroll] layout reason=\(reason, privacy: .public) content=\(Int(contentHeight), privacy: .public) \
-                    delta=\(Int(delta), privacy: .public) viewport=\(Int(self.bounds.height), privacy: .public) \
-                    offset=\(Int(self.contentOffset.y), privacy: .public) insetTop=\(Int(self.contentInset.top), privacy: .public) \
-                    dock=\(Int(self.bottomAccessoryHeight), privacy: .public) \
+                    [RT][view] rev=\(self.revision, privacy: .public) reason=\(reason, privacy: .public) \
+                    replaced=\(self.lastReplaced, privacy: .public) \
+                    height=\(Int(before.height), privacy: .public)->\(Int(self.laidOutContentHeight), privacy: .public)(\(Int(heightDelta), privacy: .public)) \
+                    offset=\(Int(before.offset), privacy: .public)->\(Int(self.contentOffset.y), privacy: .public)(\(Int(offsetDelta), privacy: .public)) \
+                    insetTop=\(Int(self.contentInset.top), privacy: .public) \
+                    slack=\(Int(before.slack), privacy: .public)->\(Int(self.bottomSlack), privacy: .public) \
+                    shift=\(Int(shift), privacy: .public) tailH=\(Int(tailHeight), privacy: .public) \
+                    viewport=\(Int(self.bounds.height), privacy: .public) dock=\(Int(self.bottomAccessoryHeight), privacy: .public) \
                     safeArea=\(Int(self.safeAreaInsets.top), privacy: .public)/\(Int(self.safeAreaInsets.bottom), privacy: .public) \
-                    following=\(self.isFollowingBottom, privacy: .public) lines=\(self.renderedLines.count, privacy: .public)
+                    following=\(self.isFollowingBottom, privacy: .public) tracking=\(self.isTracking || self.isDecelerating, privacy: .public) \
+                    lines=\(self.renderedLines.count, privacy: .public)
                     """
                 )
+                lastReplaced = "-"
             }
         }
     }

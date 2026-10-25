@@ -283,10 +283,16 @@
                 )
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(store.statusText)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(colors.textPrimary)
-                        .contentTransition(.opacity)
+                    Group {
+                        if let modelTitle = store.loadingRecognitionModelTitle {
+                            RealtimeModelLoadingStatusText(modelTitle: modelTitle)
+                        } else {
+                            Text(store.statusText)
+                        }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colors.textPrimary)
+                    .contentTransition(.opacity)
                     if let modelLoad = store.recognitionModelLoad {
                         RealtimeModelLoadProgressView(
                             progress: modelLoad,
@@ -660,7 +666,8 @@
                 RealtimeCaptionTextView(
                     lines: lines,
                     style: captionStyle,
-                    bottomAccessoryHeight: controlDockHeight
+                    bottomAccessoryHeight: controlDockHeight,
+                    revision: store.captionRevision
                 )
                 .ignoresSafeArea(.container, edges: .vertical)
 
@@ -738,15 +745,6 @@
                             }
                         }
                         .disabled(store.isRunning)
-                    }
-
-                    Section("Captions") {
-                        Picker("Display", selection: captionDisplayModeBinding) {
-                            ForEach(RealtimeCaptionDisplayMode.allCases) { mode in
-                                Text(captionDisplayModeTitle(for: mode))
-                                    .tag(mode)
-                            }
-                        }
                     }
 
                     if AVPictureInPictureController.isPictureInPictureSupported() {
@@ -865,13 +863,6 @@
             )
         }
 
-        private var captionDisplayModeBinding: Binding<RealtimeCaptionDisplayMode> {
-            Binding(
-                get: { store.captionDisplayMode },
-                set: { store.captionDisplayMode = $0 }
-            )
-        }
-
         private var startFailureAlertPresentedBinding: Binding<Bool> {
             Binding(
                 get: { store.startFailureAlert != nil },
@@ -894,20 +885,40 @@
             )
         }
 
-        private func captionDisplayModeTitle(for mode: RealtimeCaptionDisplayMode) -> String {
-            switch mode {
-            case .sourceOnly:
-                return String(localized: "Source")
-            case .translationOnly:
-                return String(localized: "Translation")
-            case .bilingual:
-                return String(localized: "Bilingual")
-            }
-        }
-
         private func openAppSettings() {
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
             openURL(url)
+        }
+    }
+
+    /// Shortens the model title (dropping the latency suffix, then trailing words) until the
+    /// status fits one line, so the sentence itself is never truncated.
+    private struct RealtimeModelLoadingStatusText: View {
+        let modelTitle: String
+
+        var body: some View {
+            let candidates = abbreviatedTitles
+            ViewThatFits(in: .horizontal) {
+                ForEach(candidates.dropLast(), id: \.self) { title in
+                    Text(RealtimeSessionStore.loadingRecognitionModelStatus(modelTitle: title))
+                }
+                Text(RealtimeSessionStore.loadingRecognitionModelStatus(modelTitle: candidates.last ?? modelTitle))
+                    .truncationMode(.middle)
+            }
+        }
+
+        private var abbreviatedTitles: [String] {
+            var words = modelTitle.split(separator: " ")
+            var titles = [modelTitle]
+            if let last = words.last, last.hasSuffix("ms"), last.dropLast(2).allSatisfy(\.isNumber), words.count > 1 {
+                words.removeLast()
+                titles.append(words.joined(separator: " "))
+            }
+            while words.count > 1 {
+                words.removeLast()
+                titles.append(words.joined(separator: " "))
+            }
+            return titles
         }
     }
 
@@ -942,7 +953,7 @@
     final class RealtimeControlModel: ObservableObject {
         @Published var isStartingRealtimeSession = false
         @Published var broadcastPickerTrigger: UUID?
-        @Published fileprivate var startBlockedAlert: StartBlockedAlert?
+        @Published var startBlockedAlert: StartBlockedAlert?
         /// Set by a `tlingo://realtime/models` deep link; consumed by `RealtimeView`.
         @Published var opensRecognitionModels = false
 
@@ -1186,13 +1197,13 @@
         }
     }
 
-    fileprivate struct StartBlockedAlert {
+    struct StartBlockedAlert {
         let title: String
         let message: String
         var opensAppSettings = false
     }
 
-    private struct BroadcastPickerLauncher: UIViewRepresentable {
+    struct BroadcastPickerLauncher: UIViewRepresentable {
         @Binding var trigger: UUID?
 
         func makeUIView(context _: Context) -> RPSystemBroadcastPickerView {

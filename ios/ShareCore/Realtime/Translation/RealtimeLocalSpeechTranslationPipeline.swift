@@ -17,6 +17,8 @@
         private var state: RealtimeBroadcastState
         private var sourceLanguage: SourceLanguageOption?
         private var targetLanguage: TargetLanguageOption?
+        /// Kept when transcription-only clears `targetLanguage`, so history still records the pair.
+        private var historyTargetLanguage: TargetLanguageOption?
         private var transcriptAccumulator = RealtimeTranscriptAccumulator()
         private var translationState = RealtimeIncrementalTranslationState()
         private var historySessionBuilder = RealtimeHistorySessionBuilder()
@@ -78,6 +80,7 @@
             self.sourceLanguage = sourceLanguage
             // Without a target, recognition results are published without scheduling translation.
             self.targetLanguage = translatesText ? targetLanguage : nil
+            historyTargetLanguage = targetLanguage
             transcriptAccumulator.reset()
             cancelTranslationWork()
             translationState.reset()
@@ -550,20 +553,25 @@
         }
 
         private func syncRealtimeHistorySession(into state: inout RealtimeBroadcastState, force: Bool = false) {
-            guard let sourceLanguage, let targetLanguage else {
+            guard let sourceLanguage, let historyTargetLanguage else {
                 state.realtimeHistorySession = nil
                 return
             }
-            historySessionBuilder.sync(pairs: translationState.sentencePairs)
+            let provider: RealtimeTranslationProvider = targetLanguage == nil ? .transcriptionOnly : .appleTranslator
+            if targetLanguage == nil {
+                historySessionBuilder.sync(pairs: translationState.sourceOnlyPairs, allowsUntranslated: true)
+            } else {
+                historySessionBuilder.sync(pairs: translationState.sentencePairs)
+            }
             if !force, state.realtimeHistorySession?.segments == historySessionBuilder.segments {
                 return
             }
             state.realtimeHistorySession = historySessionBuilder.makeSession(
                 inputSource: String(localized: "iPhone Audio"),
                 sourceLanguage: sourceLanguage.englishName,
-                targetLanguage: targetLanguage.englishName,
-                modelID: RealtimeTranslationProvider.appleTranslator.modelID,
-                modelDisplayName: RealtimeTranslationProvider.appleTranslator.model.displayName
+                targetLanguage: historyTargetLanguage.englishName,
+                modelID: provider.modelID,
+                modelDisplayName: provider.model.displayName
             )
         }
 

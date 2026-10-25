@@ -86,6 +86,8 @@
         @Published public private(set) var pendingSourceText = ""
         @Published public private(set) var pendingTranslatedText = ""
         @Published public private(set) var captionLines: [RealtimeCaptionLine] = []
+        /// Bumped on every `captionLines` change so `[RT][ui]` and `[RT][view]` logs share one id.
+        public private(set) var captionRevision = 0
         @Published public private(set) var statusText = String(localized: "Ready")
         @Published public private(set) var errorMessage: String?
         @Published public private(set) var startFailureAlert: RealtimeStartFailureAlert?
@@ -93,6 +95,8 @@
         @Published public private(set) var savedHistoryNotice: RealtimeSavedHistoryNotice?
         /// Set while a start waits for a local recognition model to finish loading.
         @Published public private(set) var recognitionModelLoad: RealtimeModelLoadProgress?
+        /// Title of the recognition model a start is loading; views abbreviate it to fit one line.
+        @Published public private(set) var loadingRecognitionModelTitle: String?
         /// Set while a start waits for the system Apple Translate download prompt. Language packs can
         /// only be downloaded through `prepareTranslation()` on a session from `.translationTask`,
         /// so realtime views host that modifier and hand the session back. Kept after a request so a
@@ -200,6 +204,10 @@
         private var lastBroadcastStateLogSignature: String?
         private var lastAppliedBroadcastSourceSegments: [String] = []
         private var lastCaptionDiagnosticsSignature: String?
+        /// Origin of the next caption refresh (`asr#12`, `txp#3`, `txf#4`), carried into `[RT][ui]`.
+        private var captionUpdateCause = "-"
+        private var captionTraceSequence = 0
+        private var lastCaptionRevisionTime: ContinuousClock.Instant?
         private var queuedFinalTranslationRequests: [RealtimeTextTranslationRequest] = []
         private var latestPartialTranslationRequest: RealtimeTextTranslationRequest?
         private var nextPartialTranslationAllowedAt: Date?
@@ -1324,7 +1332,9 @@
                     if preferences.realtimeRecognitionModelID != model.id {
                         preferences.setRealtimeRecognitionModelID(model.id)
                     }
-                    statusText = String(localized: "Preparing speech recognition...")
+                    statusText = Self.loadingRecognitionModelStatus(modelTitle: model.title)
+                    loadingRecognitionModelTitle = model.title
+                    defer { loadingRecognitionModelTitle = nil }
                     switch model.runtime {
                     case .appleSpeech:
                         try await transcriber.start(model: model, locale: speechLocale(), sessionID: sessionID)
@@ -1333,7 +1343,6 @@
                     case .fluidAudio:
                         #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
                             if let progress = await RealtimeFluidAudioEngineCache.shared.loadProgress(for: model) {
-                                statusText = String(localized: "Loading recognition model...")
                                 recognitionModelLoad = progress
                             }
                             defer { recognitionModelLoad = nil }
@@ -1349,6 +1358,10 @@
                     }
                 }
             #endif
+        }
+
+        public static func loadingRecognitionModelStatus(modelTitle: String) -> String {
+            String(localized: "Loading \(modelTitle) to recognize speech...")
         }
 
         #if os(macOS)
@@ -1602,6 +1615,12 @@
         }
 
         private func handleRecognized(_ result: RealtimeRecognitionResult) {
+            beginCaptionTrace(
+                "asr",
+                "state=\(result.state) at=\(result.audioOffset.map { String(format: "%.2fs", $0) } ?? "-") " +
+                    "text=\(RealtimeLog.text(result.text, limit: 64))"
+            )
+            defer { captionUpdateCause = "-" }
             let previousSegments = translationState.sourceSegments
             let previousPairCount = sentencePairs.count
             let previousDisplayedTranslationLength = translatedText.count + pendingTranslatedText.count
@@ -1967,7 +1986,9 @@
         private func currentRealtimeHistorySession() -> RealtimeHistorySession? {
             #if os(iOS)
                 if inputSource == .iphoneAudio {
-                    guard preferences.realtimeTranslationProvider == .appleTranslator else { return nil }
+                    guard [.appleTranslator, .transcriptionOnly].contains(preferences.realtimeTranslationProvider) else {
+                        return nil
+                    }
                     var session = latestBroadcastRealtimeHistorySession
                     session?.inputSourceID = historyInputSourceID(for: inputSource)
                     return session
@@ -2048,7 +2069,7 @@
             #if os(macOS)
                 return !laneConfigurations.isEmpty
             #else
-                return preferences.realtimeTranslationProvider.usesAppleTextTranslation
+                return true
             #endif
         }
 
@@ -2139,6 +2160,12 @@
 
         private func syncRealtimeHistorySession() {
             guard usesRealtimeSessionHistory else { return }
+            #if os(iOS)
+                if !preferences.realtimeTranslationProvider.performsTranslation {
+                    historySessionBuilder.sync(pairs: translationState.sourceOnlyPairs, allowsUntranslated: true)
+                    return
+                }
+            #endif
             historySessionBuilder.sync(pairs: realtimeHistoryPairs())
         }
 
@@ -2413,8 +2440,52 @@
                     logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
                 #endif
                 logCaptionLayoutChange(event: event, from: captionLines, to: displayLines)
+                logCaptionRevision(event: event, from: captionLines, to: displayLines)
             }
             assignIfChanged(&captionLines, displayLines)
+        }
+
+        /// Starts one traced input (ASR result or translation reply); every caption revision it
+        /// produces logs `cause=<kind>#<n>`, so a jump can be followed from input to layout.
+        func beginCaptionTrace(_ kind: String, _ detail: String) {
+            captionTraceSequence += 1
+            captionUpdateCause = "\(kind)#\(captionTraceSequence)"
+            RealtimeLog.log("trace", "\(captionUpdateCause) \(detail) rev=\(captionRevision)")
+        }
+
+        /// Logs every published caption change with the lines that changed, unfiltered.
+        func logCaptionRevision(
+            event: String,
+            from oldLines: [RealtimeCaptionLine],
+            to newLines: [RealtimeCaptionLine]
+        ) {
+            captionRevision += 1
+            let now = ContinuousClock.now
+            let gap = lastCaptionRevisionTime.map { "\(Int(($0.duration(to: now) / .milliseconds(1)).rounded()))ms" } ?? "-"
+            lastCaptionRevisionTime = now
+
+            let common = min(oldLines.count, newLines.count)
+            let firstChanged = (0 ..< common).first { oldLines[$0] != newLines[$0] } ?? common
+            let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            let changes = newLines.dropFirst(firstChanged).prefix(6).map { line -> String in
+                let flag = line.isPending ? "*" : ""
+                guard let old = oldByID[line.id] else {
+                    return "+\(line.id)\(flag)=\(RealtimeLog.text(line.text, limit: 40))"
+                }
+                if old == line { return "=\(line.id)" }
+                let pending = old.isPending == line.isPending ? "" : " pending:\(old.isPending)->\(line.isPending)"
+                return "~\(line.id)\(flag)\(pending) \(RealtimeLog.text(old.text, limit: 40))->\(RealtimeLog.text(line.text, limit: 40))"
+            }
+            let newIDs = Set(newLines.map(\.id))
+            let removed = oldLines.dropFirst(firstChanged).filter { !newIDs.contains($0.id) }.map { "-\($0.id)" }
+            RealtimeLog.log(
+                "ui",
+                """
+                rev=\(captionRevision) cause=\(captionUpdateCause) event=\(event) gap=\(gap) \
+                lines=\(oldLines.count)->\(newLines.count) from=\(firstChanged) \
+                \((changes + removed).joined(separator: " | "))
+                """
+            )
         }
 
         /// Logs caption changes likely to shift layout height: line identity churn or a large
@@ -2717,6 +2788,8 @@
             _ result: ModelExecutionResult,
             request: RealtimeTextTranslationRequest
         ) {
+            beginCaptionTrace("txf", "src=\(RealtimeLog.text(request.translationText))")
+            defer { captionUpdateCause = "-" }
             guard requestMatchesCurrentConfiguration(request) else {
                 RealtimeLog.warn(
                     "tx",
@@ -2771,6 +2844,8 @@
             _ result: ModelExecutionResult,
             request: RealtimeTextTranslationRequest
         ) {
+            beginCaptionTrace("txp", "src=\(RealtimeLog.text(request.translationText))")
+            defer { captionUpdateCause = "-" }
             guard requestMatchesCurrentConfiguration(request) else {
                 RealtimeLog.warn(
                     "tx",

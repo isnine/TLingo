@@ -27,6 +27,7 @@ public struct RealtimeRecognitionTokenTiming: Equatable, Sendable {
 public enum RealtimeRecognitionBoundaryReason: String, Equatable, Sendable {
     case modelEOU
     case punctuation
+    case pause
     case stableWindow
     case lengthFallback
     case terminal
