@@ -984,7 +984,13 @@
 
         public func applySnapshotFixture(_ fixture: SnapshotRealtimeBilingualLiveFixture) {
             cancelTranslationWork()
-            inputSource = .microphone
+            #if os(iOS)
+                inputSource = SnapshotLaunchArguments.isSnapshotMode()
+                    && SnapshotLaunchArguments.value(after: "-SNAPSHOT_SCENE") == "video"
+                    ? .iphoneAudio : .microphone
+            #else
+                inputSource = .microphone
+            #endif
             preferences.setRealtimeTranslationProvider(fixture.translationProvider)
             captionDisplayMode = fixture.captionDisplayMode
             isRunning = true

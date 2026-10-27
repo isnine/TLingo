@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.0] - 2026-10-27
+
+### Changed
+
+- Prepared App Store product pages for text, iPhone audio, and microphone translation.
+- Added screenshot fixtures for video and travel examples; app features are unchanged.
+
 ## [5.6.1] - 2026-10-24
 
 ### Added

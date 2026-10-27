@@ -210,8 +210,36 @@ public enum SnapshotFixtureData {
 
     public static func realtimeBilingualLive(localeID: String? = nil) -> SnapshotRealtimeBilingualLiveFixture {
         let locale = localeID.map(SnapshotLocaleCatalog.configuration(for:)) ?? SnapshotLocaleCatalog.current()
-        let translations = locale.realtimeTranslations
-        let sources = SnapshotLocaleCatalog.realtimeSourceTexts
+        var translations = locale.realtimeTranslations
+        var sources = SnapshotLocaleCatalog.realtimeSourceTexts
+        if locale.id == "es-ES" {
+            switch SnapshotLaunchArguments.value(after: "-SNAPSHOT_SCENE") {
+            case "video":
+                sources = [
+                    "Wait for me by the old bridge.",
+                    "There's something I need to tell you.",
+                    "We'll find our way home.",
+                ]
+                translations = [
+                    "Espérame junto al viejo puente.",
+                    "Hay algo que necesito decirte.",
+                    "Encontraremos el camino a casa.",
+                ]
+            case "travel":
+                sources = [
+                    "Where is the nearest train station?",
+                    "Does this train go to the city center?",
+                    "Thank you for your help.",
+                ]
+                translations = [
+                    "¿Dónde está la estación de tren más cercana?",
+                    "¿Este tren va al centro de la ciudad?",
+                    "Gracias por tu ayuda.",
+                ]
+            default:
+                break
+            }
+        }
         return SnapshotRealtimeBilingualLiveFixture(
             translationProvider: .appleTranslator,
             sourceLanguage: .english,
