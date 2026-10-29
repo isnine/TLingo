@@ -39,13 +39,13 @@ headers = X-Timestamp, X-Signature
 
 `/models` 返回的 `tags` 是有序字符串数组。可选 `tagStyles` 按标签文字匹配，每项可提供 `textColor` 和 `backgroundColor`（`#RRGGBB`）；缺省或无法解析时使用默认颜色。
 
-`Recommended` 标签仅用于 `gemini-3.8-flash`，不改变免费默认模型或用户已保存的选择。
+`gemini-4-argon` 与 `gemini-3.8-flash` 限时免费，带 `Limited Time Free` 标签；不改变免费默认模型或用户已保存的选择。
 会员目录包含 `deepseek-v4-pro`（DeepSeek-V4-Pro），其 `isPremium: true`、`supportsVision: false`；
 沿用聊天请求及结构化输出契约，不支持图片输入。`deepseek-flash` 继续保留且支持图片。
 会员目录同时包含 `gemini-4-argon`（Gemini 4 Argon），其 `isPremium: true`、`supportsVision: true`；
 沿用聊天、流式及 JSON Schema 输出契约。Argon 是保留的思考例外：固定 `low`，这不是完全关闭，
 即使短句实测没有思考 token，也不能保证其他输入为零。
-免费目录只保留默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-argon`、`gemini-3.8-flash`、
+免费目录为 `gemini-4-argon`、`gemini-3.8-flash`（均限时）和默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-argon`、`gemini-3.8-flash`、
 `gpt-5-mini`、`gpt-5.6`、`deepseek-flash`、`deepseek-v4-pro`、`qwen/qwen3.7-flash`。
 `gpt-oss-120b`、`z-ai/glm-5.3-flash`、`gemini-3.1-pro-preview` 从目录移除；不改模型路由及
 会员校验，目录刷新前的已保存选择仍可请求，但这些旧选择不保证关闭思考。
