@@ -2478,7 +2478,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 个更多模型"
+            "value" : "另外 %lld 个模型"
           }
         },
         "zh-Hant" : {
