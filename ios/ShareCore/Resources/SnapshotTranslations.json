@@ -1,11 +1,11 @@
 {
   "version": 1,
   "sourceText": "TLingo is a translation app for iPhone, iPad, and Mac. It compares results from multiple AI models, supports on-device translation, and provides real-time bilingual voice captions.",
-  "writingPolishedText": "TLingo brings translation to iPhone, iPad, and Mac. Compare multiple AI models, translate on-device, and follow conversations with real-time bilingual voice captions.",
+  "writingPolishedText": "TLingo brings translation to iPhone, iPad, and Mac, with results from multiple AI models to compare.",
   "writingPolishedResults": {
-    "gpt-5.4": "TLingo brings translation to iPhone, iPad, and Mac. Compare multiple AI models, translate on-device, and follow conversations with real-time bilingual voice captions.",
-    "DeepSeek-V4-Pro": "TLingo delivers translation across iPhone, iPad, and Mac, combining multi-model comparisons, private on-device translation, and live bilingual voice captions.",
-    "Kimi-K2.6": "Use TLingo on iPhone, iPad, and Mac to compare AI translations, work offline on-device, and keep up with conversations through live bilingual captions."
+    "gpt-5.4": "TLingo brings translation to iPhone, iPad, and Mac, with results from multiple AI models to compare.",
+    "DeepSeek-V4-Pro": "TLingo is a translation app for iPhone, iPad, and Mac that lets you compare results from multiple AI models.",
+    "Kimi-K2.6": "Compare translations from multiple AI models with TLingo on iPhone, iPad, and Mac."
   },
   "realtimeSourceTexts": [
     "The meeting starts in five minutes.",
@@ -1971,7 +1971,7 @@
       "translations": {
         "apple-translate": "TLingo 是一款适用于 iPhone、iPad 和 Mac 的翻译应用。它可比较多个 AI 模型的翻译结果。",
         "microsoft-translate": "TLingo 是一款面向 iPhone、iPad 和 Mac 的翻译应用，可对比多个 AI 模型生成的翻译结果。",
-        "gpt-5.4": "TLingo 为 iPhone、iPad 与 Mac 提供翻译功能，可并排比较多种 AI 模型的翻译结果。",
+        "gpt-5.4": "TLingo 为 iPhone、iPad 与 Mac 提供翻译功能，可对比多种 AI 模型的翻译结果。",
         "DeepSeek-V4-Pro": "TLingo 是覆盖 iPhone、iPad 和 Mac 的翻译工具，能够比较多个 AI 模型输出的译文。",
         "Kimi-K2.6": "TLingo 可在 iPhone、iPad 和 Mac 上使用，支持多模型翻译结果对比。"
       },
@@ -2219,7 +2219,7 @@
       "translations": {
         "apple-translate": "TLingo es una app de traducción para iPhone, iPad y Mac. Compara las traducciones de varios modelos de IA.",
         "microsoft-translate": "TLingo es una aplicación de traducción para iPhone, iPad y Mac que permite comparar resultados de distintos modelos de IA.",
-        "gpt-5.4": "Con TLingo en iPhone, iPad y Mac puedes contrastar lado a lado las traducciones de varios modelos de IA.",
+        "gpt-5.4": "Con TLingo en iPhone, iPad y Mac puedes comparar las traducciones de varios modelos de IA.",
         "DeepSeek-V4-Pro": "TLingo es una herramienta de traducción para iPhone, iPad y Mac que compara traducciones generadas por múltiples modelos de IA.",
         "Kimi-K2.6": "TLingo reúne en iPhone, iPad y Mac la comparación de traducciones multimodelo."
       },

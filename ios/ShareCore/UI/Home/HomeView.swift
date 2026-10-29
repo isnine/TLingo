@@ -1473,7 +1473,10 @@ public struct HomeView: View {
     }
 
     private var selectedDisplayModels: [ModelConfig] {
-        viewModel.selectedDisplayModels(enabledIDs: preferences.enabledModelIDs, isPro: entitlement.isPro)
+        viewModel.selectedDisplayModels(
+            enabledIDs: preferences.enabledModelIDs,
+            isPro: entitlement.isPro || HomeViewModel.isSnapshotMode
+        )
     }
 
     private var inputSendButton: some View {

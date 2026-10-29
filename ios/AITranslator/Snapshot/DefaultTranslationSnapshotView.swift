@@ -10,6 +10,13 @@
             SnapshotLocaleCatalog.current()
         }
 
+        private var displayLocale: SnapshotLocaleConfiguration {
+            guard let id = SnapshotLaunchArguments.value(after: "-SNAPSHOT_DISPLAY_LOCALE") else {
+                return snapshotLocale
+            }
+            return SnapshotLocaleCatalog.configuration(for: id)
+        }
+
         private var colors: AppColorPalette {
             AppColors.palette(for: colorScheme)
         }
@@ -29,7 +36,7 @@
                 HStack {
                     Image(systemName: "doc.text")
                         .font(.system(size: 18, weight: .semibold))
-                    Text(snapshotLocale.documentTitle)
+                    Text(displayLocale.documentTitle)
                         .font(.system(size: 20, weight: .semibold))
                     Spacer()
                     Image(systemName: "ellipsis")
@@ -62,7 +69,7 @@
                     .padding(.bottom, 8)
 
                 HStack {
-                    Text(snapshotLocale.extensionTitle)
+                    Text(displayLocale.extensionTitle)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(colors.textPrimary)
                     Spacer()

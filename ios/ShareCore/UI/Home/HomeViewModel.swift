@@ -630,6 +630,7 @@ public final class HomeViewModel: ObservableObject {
         if wantsDiff {
             let polishedResults = SnapshotLocaleCatalog.writingPolishedResults
             let modelIDs = ["gpt-5.4", "DeepSeek-V4-Pro", "Kimi-K2.6"]
+            preferences.setEnabledModelIDs(Set(modelIDs))
             modelRuns = modelIDs.enumerated().compactMap { index, modelID in
                 guard let model = SnapshotFixtureData.cloudModels.first(where: { $0.id == modelID }),
                       let text = polishedResults[modelID]

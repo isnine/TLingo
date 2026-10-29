@@ -212,26 +212,51 @@ public enum SnapshotFixtureData {
         let locale = localeID.map(SnapshotLocaleCatalog.configuration(for:)) ?? SnapshotLocaleCatalog.current()
         var translations = locale.realtimeTranslations
         var sources = SnapshotLocaleCatalog.realtimeSourceTexts
-        if locale.id == "es-ES" {
+        if locale.id == "es-ES" || locale.id == "zh-Hans" {
             switch SnapshotLaunchArguments.value(after: "-SNAPSHOT_SCENE") {
             case "video":
-                sources = [
-                    "Wait for me by the old bridge.",
-                    "There's something I need to tell you.",
-                    "We'll find our way home.",
-                ]
-                translations = [
-                    "Espérame junto al viejo puente.",
-                    "Hay algo que necesito decirte.",
-                    "Encontraremos el camino a casa.",
-                ]
+                if SnapshotLaunchArguments.value(after: "-SNAPSHOT_VARIANT") == "video-followup" {
+                    sources = [
+                        "The trail follows the river.",
+                        "We'll reach the village before sunset.",
+                        "Let's take a closer look.",
+                    ]
+                    translations = locale.id == "zh-Hans" ? [
+                        "这条小路沿着河流延伸。",
+                        "我们会在日落前到达村庄。",
+                        "让我们走近看看。",
+                    ] : [
+                        "El sendero sigue el río.",
+                        "Llegaremos al pueblo antes del atardecer.",
+                        "Vamos a verlo más de cerca.",
+                    ]
+                } else {
+                    sources = [
+                        "Wait for me by the old bridge.",
+                        "There's something I need to tell you.",
+                        "We'll find our way home.",
+                    ]
+                    translations = locale.id == "zh-Hans" ? [
+                        "在那座老桥边等我。",
+                        "我有话要告诉你。",
+                        "我们会找到回家的路。",
+                    ] : [
+                        "Espérame junto al viejo puente.",
+                        "Hay algo que necesito decirte.",
+                        "Encontraremos el camino a casa.",
+                    ]
+                }
             case "travel":
                 sources = [
                     "Where is the nearest train station?",
                     "Does this train go to the city center?",
                     "Thank you for your help.",
                 ]
-                translations = [
+                translations = locale.id == "zh-Hans" ? [
+                    "最近的火车站在哪里？",
+                    "这趟火车到市中心吗？",
+                    "谢谢你的帮助。",
+                ] : [
                     "¿Dónde está la estación de tren más cercana?",
                     "¿Este tren va al centro de la ciudad?",
                     "Gracias por tu ayuda.",
