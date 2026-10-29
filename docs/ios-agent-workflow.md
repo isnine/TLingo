@@ -15,7 +15,7 @@ review_triggers:
 
 ## 工具分工
 
-- 优先使用可用的官方 Xcode 无界面接口处理工程与构建；能力不足时使用 XcodeBuildMCP 或仓库已验证的命令。
+- 构建和测试默认使用 `xcodebuild`（最小门槛见 [`verification.md`](./verification.md)）；仅在需要 IDE 专属能力或用户指定时使用 Xcode MCP 或 XcodeBuildMCP。
 - sim-use：UI 的 observe-act-verify、Accessibility 交互、进程消失检测和最终状态确认。
 - XcodeBuildMCP `snapshot_ui`：sim-use 暂时拿不到 Accessibility 树时的补充观察手段。
 
@@ -41,6 +41,14 @@ review_triggers:
 7. UI 操作遵循 `observe -> act -> verify`。优先使用 Accessibility label、identifier 或 sim-use alias；坐标仅作为
    最后手段。
 8. 完成后运行最小静态检查并查看最终 diff。报告未安装或未执行的检查，不得将其描述为通过。
+
+## 真机
+
+通用流程见 `~/.agents/TOOLS.md` 的 Real Device Verification。TLingo 专属信息：
+
+- project `ios/AITranslator.xcodeproj`，scheme `TLingo`，bundle id `com.zanderwang.AITranslator`。
+- Debug 构建会自动授予 Premium（`StoreManager.swift`），重装后 onboarding 默认不出现；启动参数 `-TLingoForceOnboarding` 可强制显示。
+- 已有 UI 测试位于 `TLingoUITests`。
 
 ## 已验证的故障恢复
 
