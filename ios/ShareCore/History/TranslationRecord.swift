@@ -8,6 +8,9 @@
 import Foundation
 import SwiftData
 
+private let recordJSONDecoder = JSONDecoder()
+private let recordJSONEncoder = JSONEncoder()
+
 public extension TimeInterval {
     var clockLabel: String {
         let totalSeconds = max(0, Int(rounded()))
@@ -771,12 +774,16 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
         "\(Self.relativeTimestamp(startedAt)) · \(durationLabel) · \(languageDirection)"
     }
 
-    private static func relativeTimestamp(_ date: Date) -> String {
+    private static let relativeTimestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         formatter.doesRelativeDateFormatting = true
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private static func relativeTimestamp(_ date: Date) -> String {
+        relativeTimestampFormatter.string(from: date)
     }
 }
 
@@ -939,36 +946,36 @@ public final class TranslationRecord {
 
     public var modelResults: [ModelResult] {
         get {
-            (try? JSONDecoder().decode([ModelResult].self, from: modelResultsData)) ?? []
+            (try? recordJSONDecoder.decode([ModelResult].self, from: modelResultsData)) ?? []
         }
         set {
-            modelResultsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+            modelResultsData = (try? recordJSONEncoder.encode(newValue)) ?? Data()
         }
     }
 
     public var realtimeSession: RealtimeHistorySession? {
         get {
-            realtimeSessionData.flatMap { try? JSONDecoder().decode(RealtimeHistorySession.self, from: $0) }
+            realtimeSessionData.flatMap { try? recordJSONDecoder.decode(RealtimeHistorySession.self, from: $0) }
         }
         set {
-            realtimeSessionData = newValue.flatMap { try? JSONEncoder().encode($0) }
+            realtimeSessionData = newValue.flatMap { try? recordJSONEncoder.encode($0) }
         }
     }
 
     /// Write paths merge into existing data, so a decode failure must not read as empty.
     func decodedModelResults() throws -> [ModelResult] {
         guard !modelResultsData.isEmpty else { return [] }
-        return try JSONDecoder().decode([ModelResult].self, from: modelResultsData)
+        return try recordJSONDecoder.decode([ModelResult].self, from: modelResultsData)
     }
 
     func decodedRealtimeSession() throws -> RealtimeHistorySession? {
-        try realtimeSessionData.map { try JSONDecoder().decode(RealtimeHistorySession.self, from: $0) }
+        try realtimeSessionData.map { try recordJSONDecoder.decode(RealtimeHistorySession.self, from: $0) }
     }
 
     public var conversationMessages: [ChatMessage] {
         get {
             guard let conversationMessagesData,
-                  let stored = try? JSONDecoder().decode([StoredConversationMessage].self, from: conversationMessagesData)
+                  let stored = try? recordJSONDecoder.decode([StoredConversationMessage].self, from: conversationMessagesData)
             else {
                 return []
             }
@@ -977,17 +984,17 @@ public final class TranslationRecord {
         set {
             conversationMessagesData = newValue.isEmpty
                 ? nil
-                : try? JSONEncoder().encode(newValue.map(StoredConversationMessage.init))
+                : try? recordJSONEncoder.encode(newValue.map(StoredConversationMessage.init))
         }
     }
 
     public var historyAnnotations: [String: String] {
         get {
             guard let historyAnnotationsData else { return [:] }
-            return (try? JSONDecoder().decode([String: String].self, from: historyAnnotationsData)) ?? [:]
+            return (try? recordJSONDecoder.decode([String: String].self, from: historyAnnotationsData)) ?? [:]
         }
         set {
-            historyAnnotationsData = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue)
+            historyAnnotationsData = newValue.isEmpty ? nil : try? recordJSONEncoder.encode(newValue)
         }
     }
 
@@ -1029,11 +1036,11 @@ public final class TranslationRecord {
         self.targetLanguage = targetLanguage
         self.timestamp = timestamp
         self.isConversation = isConversation
-        modelResultsData = (try? JSONEncoder().encode(modelResults)) ?? Data()
+        modelResultsData = (try? recordJSONEncoder.encode(modelResults)) ?? Data()
         realtimeSessionData = nil
         historyAnnotationsData = nil
         conversationMessagesData = conversationMessages.isEmpty
             ? nil
-            : try? JSONEncoder().encode(conversationMessages.map(StoredConversationMessage.init))
+            : try? recordJSONEncoder.encode(conversationMessages.map(StoredConversationMessage.init))
     }
 }

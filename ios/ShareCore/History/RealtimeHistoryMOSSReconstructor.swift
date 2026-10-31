@@ -376,13 +376,17 @@
             .sorted { $0.offset < $1.offset }
         }
 
+        private static let streamingSegmentRegex = try? NSRegularExpression(
+            pattern: #"\[(\d+(?:[\.,]\d+)?)\]\[(S\d+)\](.*?)\[(\d+(?:[\.,]\d+)?)\]"#,
+            options: [.dotMatchesLineSeparators]
+        )
+
         static func streamingTrackSegments(
             from text: String,
             source: RealtimeHistoryAudioSource,
             ids: inout [String: UUID]
         ) -> [RealtimeHistoryTrackSegment] {
-            let pattern = #"\[(\d+(?:[\.,]\d+)?)\]\[(S\d+)\](.*?)\[(\d+(?:[\.,]\d+)?)\]"#
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            guard let regex = streamingSegmentRegex else {
                 return []
             }
 

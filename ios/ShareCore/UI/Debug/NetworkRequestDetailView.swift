@@ -129,10 +129,14 @@ public struct NetworkRequestDetailView: View {
         #endif
     }
 
-    private func formatted(_ date: Date) -> String {
+    private static let timestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatted(_ date: Date) -> String {
+        Self.timestampFormatter.string(from: date)
     }
 }
 
