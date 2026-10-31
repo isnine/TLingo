@@ -311,13 +311,6 @@ public final class AppPreferences: ObservableObject {
     }
 
     #if os(macOS)
-        public func setTextSelectionTranslationEnabled(_ enabled: Bool) {
-            guard textSelectionTranslationEnabled != enabled else { return }
-
-            textSelectionTranslationEnabled = enabled
-            defaults.set(enabled, forKey: StorageKeys.textSelectionTranslationEnabled)
-        }
-
         public func setMenuBarPopoverHeight(_ height: CGFloat, persist: Bool = true) {
             let clamped = max(AppPreferences.menuBarPopoverMinHeight, height.rounded())
             if menuBarPopoverHeight != clamped {

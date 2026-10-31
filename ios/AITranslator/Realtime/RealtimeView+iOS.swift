@@ -63,10 +63,6 @@
             store.captionLines
         }
 
-        private var isIPhoneAudioInput: Bool {
-            store.inputSource == .iphoneAudio
-        }
-
         var body: some View {
             captionPane
                 .background {
@@ -971,11 +967,6 @@
                 return "Starting"
             }
             return store.isRunning ? "Stop" : "Start"
-        }
-
-        func canUseStartButton(store: RealtimeSessionStore, preferences: AppPreferences) -> Bool {
-            !isStartingRealtimeSession && !store.isStopping &&
-                (store.isRunning || canStartRealtimeSession(store: store, preferences: preferences))
         }
 
         func isPauseEnabled(for store: RealtimeSessionStore) -> Bool {

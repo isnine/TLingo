@@ -79,7 +79,6 @@ public struct HomeView: View {
     #if os(macOS)
         @State private var showDataConsent = false
     #endif
-    @Namespace private var chipNamespace
 
     private var usesConversationInspectorPresentation: Bool {
         #if os(macOS)

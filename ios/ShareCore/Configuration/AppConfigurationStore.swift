@@ -40,9 +40,6 @@ public final class AppConfigurationStore: ObservableObject {
     @Published public private(set) var customActions: [ActionConfig]
     @Published public private(set) var currentConfigurationName: String?
 
-    /// Publisher to notify UI that configuration was switched and UI should sync from preferences
-    public let configurationSwitchedPublisher = PassthroughSubject<Void, Never>()
-
     /// Last validation result from loading or saving
     @Published public private(set) var lastValidationResult: ConfigurationValidationResult?
 
@@ -139,14 +136,6 @@ public final class AppConfigurationStore: ObservableObject {
     }
 
     // MARK: - Public Methods
-
-    /// Update actions with validation
-    @discardableResult
-    public func updateActions(
-        _ actions: [ActionConfig]
-    ) -> Result<ConfigurationValidationResult?, ConfigurationError> {
-        updateCustomActions(Self.customActions(from: actions))
-    }
 
     @discardableResult
     public func updateCustomActions(

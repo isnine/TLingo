@@ -1514,10 +1514,6 @@ public final class HomeViewModel: ObservableObject {
         return run.showDiff
     }
 
-    public func openFeedbackEmail() {
-        FeedbackMail.openFallback(FeedbackMail.makeDraft())
-    }
-
     // MARK: - TTS Playback
 
     /// Speaks the result text for a specific run

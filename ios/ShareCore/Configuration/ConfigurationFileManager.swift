@@ -83,38 +83,6 @@ public final class ConfigurationFileManager: @unchecked Sendable {
         return configDir
     }
 
-    /// Returns the current storage location type
-    public var currentStorageLocation: StorageLocation {
-        if AppPreferences.shared.useICloudForConfig && AppPreferences.iCloudDocumentsURL != nil {
-            return .iCloud
-        }
-        return .local
-    }
-
-    /// Storage location types
-    public enum StorageLocation: String, CaseIterable {
-        case local = "Local"
-        case iCloud = "iCloud Drive"
-
-        public var description: String {
-            switch self {
-            case .local:
-                return String(localized: "Stored in app container")
-            case .iCloud:
-                return String(localized: "Synced across devices")
-            }
-        }
-
-        public var icon: String {
-            switch self {
-            case .local:
-                return "folder.fill"
-            case .iCloud:
-                return "icloud.fill"
-            }
-        }
-    }
-
     private func ensureDirectoryExists(_ url: URL) {
         let path = url.path
         guard !ensuredDirectories.contains(path) else { return }
@@ -172,27 +140,6 @@ public final class ConfigurationFileManager: @unchecked Sendable {
     ) {
         self.fileManager = fileManager
         configurationsDirectoryOverride = configurationsDirectory
-    }
-
-    /// List all saved configuration files
-    public func listConfigurations() -> [ConfigurationFileInfo] {
-        guard let files = try? fileManager.contentsOfDirectory(
-            at: configurationsDirectory,
-            includingPropertiesForKeys: [.creationDateKey, .contentModificationDateKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-
-        return files
-            .filter { $0.pathExtension == "json" }
-            .compactMap { url -> ConfigurationFileInfo? in
-                let name = url.deletingPathExtension().lastPathComponent
-                let attributes = try? fileManager.attributesOfItem(atPath: url.path)
-                let modifiedDate = attributes?[.modificationDate] as? Date ?? Date()
-                return ConfigurationFileInfo(name: name, url: url, modifiedDate: modifiedDate)
-            }
-            .sorted { $0.modifiedDate > $1.modifiedDate }
     }
 
     /// Save a configuration with the given name
@@ -257,16 +204,6 @@ public struct ConfigurationFileInfo: Identifiable, Sendable {
         self.name = name
         self.url = url
         self.modifiedDate = modifiedDate
-    }
-
-    private static let dateFormatter: RelativeDateTimeFormatter = {
-        let f = RelativeDateTimeFormatter()
-        f.unitsStyle = .abbreviated
-        return f
-    }()
-
-    public var formattedDate: String {
-        Self.dateFormatter.localizedString(for: modifiedDate, relativeTo: Date())
     }
 }
 

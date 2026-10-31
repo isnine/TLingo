@@ -60,7 +60,6 @@
             static let successSpacing: CGFloat = 20
             static let successSealSize: CGFloat = 88
             static let benefitsSpacing: CGFloat = 12
-            static let benefitsCardTopPadding: CGFloat = 4
             static let successTopPadding: CGFloat = 40
 
             static let primaryButtonHeight: CGFloat = 50
@@ -69,7 +68,6 @@
             static let setupStepSpacing: CGFloat = 10
             static let benefitRowSpacing: CGFloat = 12
             static let benefitIconSize: CGFloat = 26
-            static let benefitTextSpacing: CGFloat = 2
 
             static let dotSpacing: CGFloat = 8
             static let dotActiveWidth: CGFloat = 20
@@ -146,7 +144,6 @@
             static let rowVerticalPadding: CGFloat = 13
             static let rowHorizontalPadding: CGFloat = 16
             static let rowIconWidth: CGFloat = 24
-            static let ctaTopSpacing: CGFloat = 8
         }
     }
 
@@ -1310,27 +1307,6 @@
                     .font(.system(size: Constants.FontSize.caption, weight: .medium))
                     .foregroundColor(colors.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-
-                Spacer(minLength: 0)
-            }
-        }
-
-        private func benefitRow(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
-            HStack(alignment: .top, spacing: Constants.Layout.benefitRowSpacing) {
-                Image(systemName: icon)
-                    .font(.system(size: Constants.FontSize.benefitIcon, weight: .semibold))
-                    .foregroundColor(colors.accent)
-                    .frame(width: Constants.Layout.benefitIconSize, height: Constants.Layout.benefitIconSize)
-
-                VStack(alignment: .leading, spacing: Constants.Layout.benefitTextSpacing) {
-                    Text(title)
-                        .font(.system(size: Constants.FontSize.caption, weight: .semibold))
-                        .foregroundColor(colors.textPrimary)
-                    Text(subtitle)
-                        .font(.system(size: Constants.FontSize.small))
-                        .foregroundColor(colors.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
 
                 Spacer(minLength: 0)
             }
