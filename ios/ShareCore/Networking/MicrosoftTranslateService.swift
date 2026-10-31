@@ -62,7 +62,7 @@ public final class MicrosoftTranslateService: Sendable {
             timingTrace?.mark(.requestPrepared)
             let (data, response) = try await session.data(for: request)
             timingTrace?.mark(.streamFinished)
-            guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            let http = try response.asHTTP(or: URLError(.badServerResponse))
             guard http.statusCode == 200 else {
                 throw ModelsServiceError.httpError(statusCode: http.statusCode, body: nil)
             }
