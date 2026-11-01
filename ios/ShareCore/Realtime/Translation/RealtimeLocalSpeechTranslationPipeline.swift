@@ -8,6 +8,8 @@
         public var onFailure: ((Error) -> Void)?
 
         private static let audioLevelReportInterval = 8
+        /// Snapshots re-encode the whole transcript, so text-only changes are coalesced to this cadence.
+        private static let snapshotSaveInterval: TimeInterval = 0.5
 
         private let stateStore: RealtimeBroadcastStateStore
         private let transcriber = RealtimeLiveSpeechTranscriber()
@@ -31,6 +33,9 @@
         private var isPaused = false
         private var isStopping = false
         private var stopTask: Task<Void, Never>?
+        private var lastSnapshotSaveAt = Date.distantPast
+        private var isSnapshotSaveScheduled = false
+        private let snapshotSaveQueue = DispatchQueue(label: "TLingo.RealtimeLocalSpeechTranslationPipeline.snapshot")
 
         public init(
             stateStore: RealtimeBroadcastStateStore = RealtimeBroadcastStateStore() ??
@@ -219,7 +224,7 @@
             let finalTask = stateLock.withLock { finalTranslationTask }
             await finalTask?.value
 
-            updateState { state in
+            updateState(immediately: true) { state in
                 // The lifecycle owner publishes the terminal snapshot after this drain returns.
                 state.phase = .stopping
                 syncRealtimeHistorySession(into: &state, force: true)
@@ -592,28 +597,28 @@
             stateLock.lock()
             state.audioSampleCount += 1
             let count = state.audioSampleCount
-            // Persisting re-encodes the shared App Group state, so only the level
-            // cadence writes it; that still heartbeats far inside `staleTimeout`.
+            // Only the level cadence publishes; that still heartbeats far inside `staleTimeout`.
             guard count == 1 || count % Self.audioLevelReportInterval == 0 else {
                 stateLock.unlock()
                 return count
             }
             state.audioLevel = level
-            state.lastUpdatedAt = Date()
-            let snapshot = state
-            stateStore.save(snapshot)
+            let sessionID = state.sessionID
             stateLock.unlock()
 
-            onStateChange?(snapshot)
+            stateStore.markProducerAlive(sessionID: sessionID, audioSampleCount: count, audioLevel: level)
             return count
         }
 
-        private func updateState(_ update: (inout RealtimeBroadcastState) -> Void) {
+        private func updateState(immediately: Bool = false, _ update: (inout RealtimeBroadcastState) -> Void) {
             stateLock.lock()
+            let previous = (state.phase, state.isRecognitionReady, state.errorMessage)
             update(&state)
             state.lastUpdatedAt = Date()
+            // Lifecycle changes publish at once; the host and the stop drain wait on them.
+            let isLifecycleChange = previous != (state.phase, state.isRecognitionReady, state.errorMessage)
             let snapshot = state
-            stateStore.save(snapshot)
+            saveSnapshotLocked(immediately: immediately || isLifecycleChange)
             stateLock.unlock()
 
             onStateChange?(snapshot)
@@ -622,10 +627,30 @@
         private func saveCurrentState() {
             stateLock.lock()
             let snapshot = state
-            stateStore.save(snapshot)
+            saveSnapshotLocked(immediately: false)
             stateLock.unlock()
 
             onStateChange?(snapshot)
+        }
+
+        /// Call with `stateLock` held. A deferred save writes the state current when it fires.
+        private func saveSnapshotLocked(immediately: Bool) {
+            let delay = Self.snapshotSaveInterval - Date().timeIntervalSince(lastSnapshotSaveAt)
+            if immediately || delay <= 0 {
+                lastSnapshotSaveAt = Date()
+                stateStore.save(state)
+                return
+            }
+            guard !isSnapshotSaveScheduled else { return }
+            isSnapshotSaveScheduled = true
+            snapshotSaveQueue.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self else { return }
+                stateLock.withLock {
+                    self.isSnapshotSaveScheduled = false
+                    self.lastSnapshotSaveAt = Date()
+                    self.stateStore.save(self.state)
+                }
+            }
         }
 
         private static func describe(_ error: Error) -> String {

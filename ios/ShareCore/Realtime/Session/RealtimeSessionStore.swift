@@ -223,6 +223,8 @@
             private let broadcastStateStore: RealtimeBroadcastStateStore?
             private var broadcastStatePollingTask: Task<Void, Never>?
             private var sessionLifecycleObservers: [NSObjectProtocol] = []
+            /// Set when an audio interruption paused the microphone, so its end may resume it.
+            private var isPausedForAudioInterruption = false
             private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
             /// True for an iPhone Audio session whose relayed audio the host recognizes with a local
             /// model; the host then owns the transcript and history instead of the extension.
@@ -912,6 +914,19 @@
             #if os(iOS)
                 guard inputSource != .iphoneAudio else { return }
             #endif
+            #if os(iOS)
+                isPausedForAudioInterruption = false
+                // An interruption stops the engine; resuming must restart it before recognition continues.
+                if isPaused, inputSource == .microphone {
+                    do {
+                        try microphoneAudioCapture.restartIfStopped()
+                    } catch {
+                        logRealtime("microphone resume failed error=\(Self.describe(error))")
+                        errorMessage = Self.realtimeErrorDescription(for: error)
+                        return
+                    }
+                }
+            #endif
             let isTranslating = finalTranslationTask != nil || partialTranslationTask != nil
             isPaused.toggle()
             if usesRealtimeSessionHistory {
@@ -1089,39 +1104,48 @@
 
         #if os(iOS)
             private func registerSessionLifecycle() {
+                // Recording continues while the device is locked: History and audio files use the
+                // default protection class, which stays readable after the first unlock.
                 sessionLifecycleObservers = [
-                    NotificationCenter.default.addObserver(
-                        forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
-                        object: nil,
-                        queue: .main
-                    ) { [weak self] _ in
-                        Task { @MainActor in
-                            await self?.stopForSystemInterruption()
-                        }
-                    },
                     NotificationCenter.default.addObserver(
                         forName: AVAudioSession.interruptionNotification,
                         object: nil,
                         queue: .main
                     ) { [weak self] notification in
                         guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                              let type = AVAudioSession.InterruptionType(rawValue: typeValue),
-                              type == .began
+                              let type = AVAudioSession.InterruptionType(rawValue: typeValue)
                         else {
                             return
                         }
+                        let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+                        let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
                         Task { @MainActor in
-                            await self?.stopForSystemInterruption()
+                            self?.handleAudioSessionInterruption(type, shouldResume: shouldResume)
                         }
                     },
                 ]
             }
 
-            private func stopForSystemInterruption() async {
-                guard isRunning else { return }
-                guard inputSource != .iphoneAudio else { return }
-                await stop()
-                statusText = String(localized: "Stopped")
+            /// A call, Siri or alarm pauses a long session instead of ending it, and resumes it when
+            /// the system says so. Without that hint it stays paused until the user resumes.
+            private func handleAudioSessionInterruption(_ type: AVAudioSession.InterruptionType, shouldResume: Bool) {
+                guard isRunning, inputSource == .microphone else { return }
+                switch type {
+                case .began:
+                    guard !isPaused else { return }
+                    pause()
+                    isPausedForAudioInterruption = true
+                    logRealtime("audio interruption began; paused")
+                case .ended:
+                    guard isPausedForAudioInterruption, isPaused else { return }
+                    isPausedForAudioInterruption = false
+                    logRealtime("audio interruption ended shouldResume=\(shouldResume)")
+                    if shouldResume {
+                        togglePaused()
+                    }
+                @unknown default:
+                    break
+                }
             }
 
             private func startIPhoneAudioBroadcastSession() async {

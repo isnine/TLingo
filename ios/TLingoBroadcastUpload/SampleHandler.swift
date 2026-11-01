@@ -13,6 +13,8 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var _pipeline: RealtimeLocalSpeechTranslationPipeline?
     private var _relayWriter: RealtimeAudioRelayWriter?
     private var relayedBufferCount = 0
+    /// Set once the waiting phase has been advanced; later heartbeats only record liveness.
+    private var hasReportedBroadcasting = false
     private var lastHostAgeLogAt = Date.distantPast
     private var completion: RealtimeBroadcastCompletion?
 
@@ -38,6 +40,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
     override func broadcastStarted(withSetupInfo _: [String: NSObject]?) {
         resetFinishState()
         relayedBufferCount = 0
+        hasReportedBroadcasting = false
         let previous = stateStore.load()
         let sessionID: String
         if let previous, previous.phase != .stopped, previous.phase != .failed {
@@ -157,14 +160,13 @@ final class SampleHandler: RPBroadcastSampleHandler {
         relayedBufferCount += 1
         let count = relayedBufferCount
         guard count == 1 || count % Self.relayStateReportInterval == 0 else { return }
-        stateStore.update(sessionID: sessionID) { state in
-            state.audioSampleCount = count
-            state.audioLevel = level
-            if state.phase == .idle || state.phase == .waiting {
-                state.phase = .broadcasting
-            }
-        }
+        stateStore.markProducerAlive(sessionID: sessionID, audioSampleCount: count, audioLevel: level)
         if count == 1 {
+            stateStore.update(sessionID: sessionID) { state in
+                if state.phase == .idle || state.phase == .waiting {
+                    state.phase = .broadcasting
+                }
+            }
             RealtimeLog.log("broadcast", "relay first audio buffer session=\(sessionID)")
         }
     }
@@ -220,16 +222,22 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     private func handleHeartbeat() {
         guard let sessionID = completion?.sessionID else { return }
+        // Liveness goes to a small key; the transcript snapshot is only written when it changes.
         if finishLock.withLock({ didFinishBroadcast }) {
-            stateStore.update(sessionID: sessionID) { _ in }
+            stateStore.markProducerAlive(sessionID: sessionID)
             return
         }
         guard !finishIfStopRequested() else { return }
         checkHostRelay(sessionID: sessionID)
 
-        stateStore.update(sessionID: sessionID) { state in
-            if state.phase == .idle || state.phase == .waiting {
-                state.phase = .broadcasting
+        if hasReportedBroadcasting {
+            stateStore.markProducerAlive(sessionID: sessionID)
+        } else {
+            hasReportedBroadcasting = true
+            stateStore.update(sessionID: sessionID) { state in
+                if state.phase == .idle || state.phase == .waiting {
+                    state.phase = .broadcasting
+                }
             }
         }
         _ = finishIfStopRequested()
@@ -237,8 +245,8 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     @discardableResult
     private func finishIfStopRequested() -> Bool {
-        guard let state = stateStore.load(),
-              state.sessionID == completion?.sessionID, state.stopRequested
+        guard let sessionID = completion?.sessionID,
+              stateStore.isStopRequested(sessionID: sessionID)
         else { return false }
         finishBroadcast(RealtimeBroadcastError.stoppedByHost)
         return true

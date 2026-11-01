@@ -17,6 +17,7 @@
         private let store: RealtimeSessionStore
         private let preferences: AppPreferences
         private var activity: Activity<RealtimeActivityAttributes>?
+        private var activityStateTask: Task<Void, Never>?
         private var cancellables: Set<AnyCancellable> = []
 
         init(store: RealtimeSessionStore, preferences: AppPreferences = .shared) {
@@ -51,10 +52,12 @@
             let attributes = RealtimeActivityAttributes(languagePair: languagePair)
             let state = Self.contentState(lines: store.captionLines, isPaused: store.isPaused)
             do {
-                activity = try Activity.request(
+                let activity = try Activity.request(
                     attributes: attributes,
                     content: ActivityContent(state: state, staleDate: nil)
                 )
+                self.activity = activity
+                observeEnd(of: activity)
             } catch {
                 logger.error("Live Activity request failed: \(error.localizedDescription, privacy: .public)")
             }
@@ -67,7 +70,23 @@
             }
         }
 
+        /// The system ends an activity after eight hours, and people can dismiss it; stop updating it then.
+        /// A replacement can only be requested from the foreground, so a long session continues without one.
+        private func observeEnd(of activity: Activity<RealtimeActivityAttributes>) {
+            activityStateTask?.cancel()
+            activityStateTask = Task { [weak self] in
+                for await state in activity.activityStateUpdates where state == .ended || state == .dismissed {
+                    guard let self, self.activity?.id == activity.id else { return }
+                    logger.info("Live Activity ended by the system or user")
+                    self.activity = nil
+                    return
+                }
+            }
+        }
+
         private func end() {
+            activityStateTask?.cancel()
+            activityStateTask = nil
             guard let activity else { return }
             self.activity = nil
             let finalState = Self.contentState(lines: store.captionLines, isPaused: true)

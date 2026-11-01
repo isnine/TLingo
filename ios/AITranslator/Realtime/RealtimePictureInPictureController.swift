@@ -32,6 +32,12 @@
         /// iPhone Audio is captured by the broadcast extension, so the host plays nothing and would be suspended
         /// in the background, freezing the captions it polls. A silent, mixable engine keeps it running.
         private var backgroundKeepAliveEngine: AVAudioEngine?
+        private var keepAliveObservers: [NSObjectProtocol] = []
+        /// Frames are only seen in the PiP window, so while the app is active without PiP, renders are
+        /// deferred until the app resigns active (just before automatic PiP) or PiP starts.
+        private var hasRenderedFrame = false
+        private var pixelBufferPool: CVPixelBufferPool?
+        private var pixelBufferPoolSize: (width: Int, height: Int) = (0, 0)
 
         init(store: RealtimeSessionStore, preferences: AppPreferences = .shared) {
             self.store = store
@@ -64,8 +70,7 @@
                 .store(in: &cancellables)
 
             displayView.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (_: SampleBufferDisplayView, _) in
-                guard let self else { return }
-                render(lines: self.store.captionLines, isRunning: self.store.isRunning, inputSource: self.store.inputSource)
+                self?.renderCurrent(force: false)
             }
 
             // Keep AVKit's playback state and automatic-start eligibility in sync on both pause and resume.
@@ -78,7 +83,9 @@
                     let isAvailable = isEnabled && isRunning
                     pictureInPictureController?.canStartPictureInPictureAutomaticallyFromInline =
                         isAvailable && !isPaused
-                    setBackgroundKeepAliveActive(isAvailable && inputSource == .iphoneAudio)
+                    // Independent of the PiP setting: the host must keep polling (and recognizing relayed
+                    // audio) for captions, History and the Live Activity.
+                    setBackgroundKeepAliveActive(isRunning && inputSource == .iphoneAudio)
                     // Pausing from the PiP window keeps it open.
                     if !isAvailable {
                         stopPictureInPicture()
@@ -92,6 +99,12 @@
                     self?.stopPictureInPicture()
                 }
                 .store(in: &cancellables)
+
+            NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
+                .sink { [weak self] _ in
+                    self?.renderCurrent(force: true)
+                }
+                .store(in: &cancellables)
         }
 
         private func stopPictureInPicture() {
@@ -102,19 +115,10 @@
         private func setBackgroundKeepAliveActive(_ isActive: Bool) {
             if isActive {
                 guard backgroundKeepAliveEngine == nil else { return }
-                do {
-                    let audioSession = AVAudioSession.sharedInstance()
-                    // Mixing keeps the audio the broadcast is capturing playing.
-                    try audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-                    try audioSession.setActive(true)
-                    let engine = AVAudioEngine()
-                    _ = engine.mainMixerNode
-                    try engine.start()
-                    backgroundKeepAliveEngine = engine
-                } catch {
-                    logger.error("PiP keep-alive failed to start: \(error.localizedDescription, privacy: .public)")
-                }
+                startBackgroundKeepAlive()
+                observeKeepAliveInterruptions()
             } else {
+                removeKeepAliveObservers()
                 guard let engine = backgroundKeepAliveEngine else { return }
                 engine.stop()
                 backgroundKeepAliveEngine = nil
@@ -122,7 +126,80 @@
             }
         }
 
-        private func render(lines: [RealtimeCaptionLine], isRunning: Bool, inputSource: RealtimeAudioInputSource) {
+        private func startBackgroundKeepAlive() {
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                // Mixing keeps the audio the broadcast is capturing playing.
+                try audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try audioSession.setActive(true)
+                let engine = backgroundKeepAliveEngine ?? AVAudioEngine()
+                _ = engine.mainMixerNode
+                try engine.start()
+                backgroundKeepAliveEngine = engine
+            } catch {
+                logger.error("PiP keep-alive failed to start: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+
+        /// A call or a non-mixable app stops the silent engine, and the host would then be suspended
+        /// and hand recognition to the extension. Restart it whenever the system lets audio run again.
+        private func observeKeepAliveInterruptions() {
+            guard keepAliveObservers.isEmpty else { return }
+            let center = NotificationCenter.default
+            keepAliveObservers = [
+                center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
+                    let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt ?? 0
+                    guard AVAudioSession.InterruptionType(rawValue: typeValue) == .ended else { return }
+                    MainActor.assumeIsolated {
+                        self?.restartBackgroundKeepAliveIfNeeded(reason: "interruptionEnded")
+                    }
+                },
+                center.addObserver(forName: .AVAudioEngineConfigurationChange, object: nil, queue: .main) { [weak self] notification in
+                    MainActor.assumeIsolated {
+                        guard let self, notification.object as? AVAudioEngine === self.backgroundKeepAliveEngine else { return }
+                        self.restartBackgroundKeepAliveIfNeeded(reason: "configurationChange")
+                    }
+                },
+                center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        guard let self, self.backgroundKeepAliveEngine != nil else { return }
+                        // The reset invalidated the engine; build a new one.
+                        self.backgroundKeepAliveEngine = AVAudioEngine()
+                        logger.info("PiP keep-alive restarting reason=mediaServicesReset")
+                        self.startBackgroundKeepAlive()
+                    }
+                },
+            ]
+        }
+
+        private func restartBackgroundKeepAliveIfNeeded(reason: String) {
+            guard let engine = backgroundKeepAliveEngine, !engine.isRunning else { return }
+            logger.info("PiP keep-alive restarting reason=\(reason, privacy: .public)")
+            startBackgroundKeepAlive()
+        }
+
+        private func removeKeepAliveObservers() {
+            for observer in keepAliveObservers {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            keepAliveObservers.removeAll()
+        }
+
+        private func renderCurrent(force: Bool) {
+            render(lines: store.captionLines, isRunning: store.isRunning, inputSource: store.inputSource, force: force)
+        }
+
+        private func render(
+            lines: [RealtimeCaptionLine],
+            isRunning: Bool,
+            inputSource: RealtimeAudioInputSource,
+            force: Bool = false
+        ) {
+            let isPictureInPictureActive = pictureInPictureController?.isPictureInPictureActive == true
+            guard force || !hasRenderedFrame || isPictureInPictureActive
+                || UIApplication.shared.applicationState != .active
+            else { return }
+            hasRenderedFrame = true
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
             let style = RealtimeCaptionTextView.Style(
@@ -143,12 +220,38 @@
                     ? Self.placeholderText(Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource), style: style)
                     : nil
             )
-            guard let sampleBuffer = Self.makeSampleBuffer(frame: frame) else { return }
+            guard let pool = pixelBufferPool(for: frame.size),
+                  let sampleBuffer = Self.makeSampleBuffer(frame: frame, pool: pool)
+            else { return }
             let renderer = displayView.sampleBufferDisplayLayer.sampleBufferRenderer
             if renderer.status == .failed {
                 renderer.flush()
             }
             renderer.enqueue(sampleBuffer)
+        }
+
+        /// Reuses frame memory instead of allocating a multi-megabyte buffer for every caption update.
+        private func pixelBufferPool(for size: CGSize) -> CVPixelBufferPool? {
+            let width = Int(size.width * Self.renderScale)
+            let height = Int(size.height * Self.renderScale)
+            if let pixelBufferPool, pixelBufferPoolSize == (width, height) {
+                return pixelBufferPool
+            }
+            let attributes = [
+                kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferWidthKey: width,
+                kCVPixelBufferHeightKey: height,
+                kCVPixelBufferCGImageCompatibilityKey: true,
+                kCVPixelBufferCGBitmapContextCompatibilityKey: true,
+                kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary,
+            ] as CFDictionary
+            var pool: CVPixelBufferPool?
+            guard CVPixelBufferPoolCreate(kCFAllocatorDefault, nil, attributes, &pool) == kCVReturnSuccess else {
+                return nil
+            }
+            pixelBufferPool = pool
+            pixelBufferPoolSize = (width, height)
+            return pool
         }
 
         private struct Frame {
@@ -180,23 +283,13 @@
             ])
         }
 
-        private static func makeSampleBuffer(frame: Frame) -> CMSampleBuffer? {
+        private static func makeSampleBuffer(frame: Frame, pool: CVPixelBufferPool) -> CMSampleBuffer? {
             let pixelWidth = Int(frame.size.width * renderScale)
             let pixelHeight = Int(frame.size.height * renderScale)
-            let attributes = [
-                kCVPixelBufferCGImageCompatibilityKey: true,
-                kCVPixelBufferCGBitmapContextCompatibilityKey: true,
-                kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary,
-            ] as CFDictionary
             var pixelBuffer: CVPixelBuffer?
-            guard CVPixelBufferCreate(
-                kCFAllocatorDefault,
-                pixelWidth,
-                pixelHeight,
-                kCVPixelFormatType_32BGRA,
-                attributes,
-                &pixelBuffer
-            ) == kCVReturnSuccess, let pixelBuffer else {
+            guard CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &pixelBuffer) == kCVReturnSuccess,
+                  let pixelBuffer
+            else {
                 return nil
             }
 
@@ -295,6 +388,12 @@
     }
 
     extension RealtimePictureInPictureController: AVPictureInPictureControllerDelegate {
+        nonisolated func pictureInPictureControllerWillStartPictureInPicture(_: AVPictureInPictureController) {
+            MainActor.assumeIsolated {
+                renderCurrent(force: true)
+            }
+        }
+
         nonisolated func pictureInPictureController(
             _: AVPictureInPictureController,
             failedToStartPictureInPictureWithError error: Error

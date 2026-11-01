@@ -5,9 +5,9 @@
         #if os(macOS)
         case screenRecordingNotGranted
         case systemAudioCaptureStopped
-        case microphoneCaptureInterrupted
         case microphoneCaptureRuntimeError(String?)
         #endif
+        case microphoneCaptureInterrupted
         case microphoneNotGranted
         case microphoneUnavailable
         #if os(macOS)
@@ -24,8 +24,6 @@
                 return String(localized: "Screen and system audio recording access is required for Mac Audio.")
             case .systemAudioCaptureStopped:
                 return String(localized: "Mac Audio capture stopped unexpectedly. End Realtime and start realtime again.")
-            case .microphoneCaptureInterrupted:
-                return String(localized: "Microphone capture was interrupted. End Realtime and start realtime again.")
             case let .microphoneCaptureRuntimeError(reason):
                 let trimmedReason = reason?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 guard !trimmedReason.isEmpty else {
@@ -33,6 +31,8 @@
                 }
                 return String(localized: "Microphone capture stopped unexpectedly. \(trimmedReason) End Realtime and start realtime again.")
             #endif
+            case .microphoneCaptureInterrupted:
+                return String(localized: "Microphone capture was interrupted. End Realtime and start realtime again.")
             case .microphoneNotGranted:
                 return String(localized: "Microphone access is required for microphone input.")
             case .microphoneUnavailable:

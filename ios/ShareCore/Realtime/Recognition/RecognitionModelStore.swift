@@ -2,6 +2,7 @@
     import CryptoKit
     import Foundation
     #if os(iOS)
+        import BackgroundTasks
         import UIKit
     #endif
     #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
@@ -84,6 +85,9 @@
         private let downloader = RecognitionModelDownloader()
         private var downloadProgress: [String: Double] = [:]
         private var downloadTasks: [String: Task<URL, Error>] = [:]
+        #if os(iOS)
+            private var backgroundActivities: [String: BackgroundDownloadActivity] = [:]
+        #endif
         private var hasSelectedModelRegistry = false
 
         public init(
@@ -214,11 +218,6 @@
             }
 
             let task = Task {
-                #if os(iOS)
-                    // Buys time to finish (or reach a resumable point) when the user switches apps.
-                    let backgroundActivity = await BackgroundDownloadActivity(name: "RecognitionModelDownload")
-                    defer { Task { @MainActor in backgroundActivity.end() } }
-                #endif
                 switch download {
                 case let .directFile(directDownload):
                     return try await downloadDirectModel(model, download: directDownload)
@@ -229,13 +228,38 @@
                 }
             }
             downloadTasks[model.id] = task
+            #if os(iOS)
+                // Downloads start from a tap, so they can continue in the background until done.
+                let backgroundActivity = await BackgroundDownloadActivity(
+                    title: String(localized: "Downloading \(model.title)"),
+                    onExpire: { task.cancel() }
+                )
+                backgroundActivities[model.id] = backgroundActivity
+            #endif
             defer {
                 downloadTasks[model.id] = nil
             }
-            let url = try await task.value
-            try Task.checkCancellation()
-            return url
+            do {
+                let url = try await task.value
+                #if os(iOS)
+                    await finishBackgroundActivity(for: model.id, success: true)
+                #endif
+                try Task.checkCancellation()
+                return url
+            } catch {
+                #if os(iOS)
+                    await finishBackgroundActivity(for: model.id, success: false)
+                #endif
+                throw error
+            }
         }
+
+        #if os(iOS)
+            private func finishBackgroundActivity(for modelID: String, success: Bool) async {
+                guard let activity = backgroundActivities.removeValue(forKey: modelID) else { return }
+                await activity.end(success: success)
+            }
+        #endif
 
         public func cancelDownload(_ model: RecognitionModelDescriptor) {
             downloadTasks[model.id]?.cancel()
@@ -290,6 +314,11 @@
 
         private func setDownloadProgress(_ progress: Double, for modelID: String) {
             downloadProgress[modelID] = progress
+            #if os(iOS)
+                if let activity = backgroundActivities[modelID] {
+                    Task { @MainActor in activity.report(progress) }
+                }
+            #endif
         }
 
         private func sha256(for url: URL) throws -> String {
@@ -528,20 +557,82 @@
     #endif
 
     #if os(iOS)
+        /// Keeps a model download running in the background with a system progress Live Activity.
+        /// Falls back to a short background task when the system cannot run the continued task now.
         @MainActor
         private final class BackgroundDownloadActivity {
-            private var identifier: UIBackgroundTaskIdentifier = .invalid
+            /// Matches the `BGTaskSchedulerPermittedIdentifiers` wildcard in the app's Info.plist.
+            private static let identifierPrefix = (Bundle.main.bundleIdentifier ?? "") + ".recognitionModelDownload."
 
-            init(name: String) {
-                identifier = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
-                    self?.end()
+            private var continuedTask: BGContinuedProcessingTask?
+            private var fallbackIdentifier: UIBackgroundTaskIdentifier = .invalid
+            private var fractionCompleted = 0.0
+            /// Set when the download ends before the system launches the continued task.
+            private var completedSuccessfully: Bool?
+
+            init(title: String, onExpire: @escaping @Sendable () -> Void) {
+                let identifier = Self.identifierPrefix + UUID().uuidString
+                let isRegistered = BGTaskScheduler.shared.register(forTaskWithIdentifier: identifier, using: .main) { [weak self] task in
+                    guard let task = task as? BGContinuedProcessingTask else {
+                        task.setTaskCompleted(success: false)
+                        return
+                    }
+                    task.expirationHandler = onExpire
+                    MainActor.assumeIsolated {
+                        guard let self else {
+                            task.setTaskCompleted(success: false)
+                            return
+                        }
+                        self.start(task)
+                    }
+                }
+                let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: title, subtitle: "")
+                request.strategy = .fail
+                do {
+                    guard isRegistered else { throw CocoaError(.featureUnsupported) }
+                    try BGTaskScheduler.shared.submit(request)
+                } catch {
+                    RealtimeLog.warn("model", "continued download task unavailable error=\(error); using short background time")
+                    fallbackIdentifier = UIApplication.shared.beginBackgroundTask(withName: "RecognitionModelDownload") { [weak self] in
+                        onExpire()
+                        self?.endFallback()
+                    }
                 }
             }
 
-            func end() {
-                guard identifier != .invalid else { return }
-                UIApplication.shared.endBackgroundTask(identifier)
-                identifier = .invalid
+            func report(_ fraction: Double) {
+                fractionCompleted = fraction
+                guard let progress = continuedTask?.progress else { return }
+                progress.completedUnitCount = Int64((fraction * Double(progress.totalUnitCount)).rounded())
+            }
+
+            func end(success: Bool) {
+                endFallback()
+                guard let continuedTask else {
+                    completedSuccessfully = success
+                    return
+                }
+                self.continuedTask = nil
+                if success {
+                    continuedTask.progress.completedUnitCount = continuedTask.progress.totalUnitCount
+                }
+                continuedTask.setTaskCompleted(success: success)
+            }
+
+            private func start(_ task: BGContinuedProcessingTask) {
+                task.progress.totalUnitCount = 100
+                if let completedSuccessfully {
+                    task.setTaskCompleted(success: completedSuccessfully)
+                    return
+                }
+                continuedTask = task
+                report(fractionCompleted)
+            }
+
+            private func endFallback() {
+                guard fallbackIdentifier != .invalid else { return }
+                UIApplication.shared.endBackgroundTask(fallbackIdentifier)
+                fallbackIdentifier = .invalid
             }
         }
     #endif

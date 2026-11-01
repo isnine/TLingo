@@ -72,6 +72,9 @@ review_triggers:
 - Both ReplayKit stop routes drain before terminal publication. The synchronous system callback waits for a bounded drain; an unfinished drain remains stopping, and extension disappearance is reported as failure rather than fabricated success.
 - In a relayed iPhone Audio session the host owns the transcript and history and ignores the extension's transcript fields. Only the extension decides fallback: it switches to Apple Speech when the host heartbeat is older than 5 s, and the host treats a cleared `usesHostRecognition` as the hand-off signal. The host drains relayed audio and recognition before every stop, hand-off and terminal finish.
 - `stopped` and `failed` are terminal for a session token.
+- iPhone Audio producers publish liveness, sample count and level through a small session-scoped activity key, never by rewriting the transcript snapshot. The extension coalesces text-only snapshot writes to at most two per second; lifecycle changes (phase, readiness, error) and the final drain snapshot are written immediately.
+- iOS microphone sessions survive device lock. An audio session interruption pauses the session; its end resumes it only with `shouldResume`, otherwise it stays paused until the user resumes, which restarts the stopped engine. A media services reset ends the session.
+- The iPhone Audio host keep-alive runs whenever an iPhone Audio session runs, independent of the PiP setting, and restarts after interruptions, engine configuration changes and media services resets.
 - Clear-display and start-new-session are different commands.
 - Recognition and translation buffers have explicit memory and duration bounds.
 - Parakeet EOU 320/1280, English Nemotron 560/1120/2240, and Nemotron 3.5 Multilingual 2240 share one realtime adapter and must flush with `finish()` before a session becomes terminal.

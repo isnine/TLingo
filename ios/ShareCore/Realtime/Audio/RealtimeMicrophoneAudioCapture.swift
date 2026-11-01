@@ -46,10 +46,16 @@
                 }
             }
 
-            private let audioEngine = AVAudioEngine()
+            /// Replaced after a media services reset, which invalidates every audio object.
+            private var audioEngine = AVAudioEngine()
             private var targetFormat: AVAudioFormat?
             private var engineSampleRate = 16000
+            private var allowsPlayback = false
             private var configurationChangeObserver: NSObjectProtocol?
+            private var mediaServicesResetObserver: NSObjectProtocol?
+            private var interruptionObserver: NSObjectProtocol?
+            /// The engine cannot restart during an interruption; the session store resumes it afterwards.
+            private var isInterrupted = false
         #endif
 
         @MainActor
@@ -102,6 +108,7 @@
                 }
             #elseif os(iOS)
                 engineSampleRate = sampleRate
+                self.allowsPlayback = allowsPlayback
                 try startAudioEngine(sampleRate: sampleRate)
                 observeEngineConfigurationChanges()
             #endif
@@ -125,6 +132,15 @@
                     NotificationCenter.default.removeObserver(configurationChangeObserver)
                     self.configurationChangeObserver = nil
                 }
+                if let mediaServicesResetObserver {
+                    NotificationCenter.default.removeObserver(mediaServicesResetObserver)
+                    self.mediaServicesResetObserver = nil
+                }
+                if let interruptionObserver {
+                    NotificationCenter.default.removeObserver(interruptionObserver)
+                    self.interruptionObserver = nil
+                }
+                isInterrupted = false
                 audioEngine.stop()
                 audioEngine.inputNode.removeTap(onBus: 0)
                 targetFormat = nil
@@ -242,6 +258,16 @@
                 )
             }
 
+            /// Restarts capture an audio interruption stopped. Does nothing while the engine still runs.
+            @MainActor
+            func restartIfStopped() throws {
+                guard targetFormat != nil, !audioEngine.isRunning else { return }
+                RealtimeLog.log("audio", "microphone engine stopped; restarting")
+                audioEngine.inputNode.removeTap(onBus: 0)
+                try configureAudioSession(allowsPlayback: allowsPlayback)
+                try startAudioEngine(sampleRate: engineSampleRate)
+            }
+
             /// Route changes (AirPods, wired headset) stop the engine and leave the tap silent.
             private func observeEngineConfigurationChanges() {
                 configurationChangeObserver = NotificationCenter.default.addObserver(
@@ -253,11 +279,39 @@
                         self?.restartAudioEngineAfterConfigurationChange()
                     }
                 }
+                interruptionObserver = NotificationCenter.default.addObserver(
+                    forName: AVAudioSession.interruptionNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt ?? 0
+                    let isBegan = AVAudioSession.InterruptionType(rawValue: typeValue) == .began
+                    MainActor.assumeIsolated {
+                        self?.isInterrupted = isBegan
+                    }
+                }
+                // Apple asks apps to rebuild audio objects after a reset and to restart only on user action.
+                mediaServicesResetObserver = NotificationCenter.default.addObserver(
+                    forName: AVAudioSession.mediaServicesWereResetNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        guard let self, self.targetFormat != nil else { return }
+                        RealtimeLog.warn("audio", "media services were reset; ending microphone capture")
+                        self.stop()
+                        self.audioEngine = AVAudioEngine()
+                        self.delegate?.realtimeMicrophoneAudioCapture(
+                            self,
+                            didFail: RealtimeCaptureError.microphoneCaptureInterrupted
+                        )
+                    }
+                }
             }
 
             @MainActor
             private func restartAudioEngineAfterConfigurationChange() {
-                guard targetFormat != nil else { return }
+                guard targetFormat != nil, !isInterrupted else { return }
                 RealtimeLog.log("audio", "microphone engine configuration changed; restarting")
                 audioEngine.stop()
                 audioEngine.inputNode.removeTap(onBus: 0)

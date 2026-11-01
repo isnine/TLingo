@@ -187,6 +187,8 @@
         private let encoder = JSONEncoder()
         private let decoder = JSONDecoder()
         private let lock = NSLock()
+        /// Snapshots carry the whole transcript; reuse the last decode while the stored bytes are unchanged.
+        private var decodeCache: [String: (data: Data, state: RealtimeBroadcastState)] = [:]
 
         public convenience init?() {
             guard let defaults = UserDefaults(suiteName: AppPreferences.appGroupSuiteName) else {
@@ -215,6 +217,7 @@
                 state.stopRequested = false
                 return state
             }
+            applyProducerActivity(to: &state, prefix: prefix)
             if let command = defaults.string(forKey: prefix + "stop") {
                 state.stopRequested = command != defaults.string(forKey: prefix + "stopAcknowledged")
             }
@@ -225,8 +228,30 @@
         }
 
         private func decodeState(forKey key: String) -> RealtimeBroadcastState? {
-            guard let data = defaults.data(forKey: key) else { return nil }
-            return try? decoder.decode(RealtimeBroadcastState.self, from: data)
+            guard let data = defaults.data(forKey: key) else {
+                decodeCache[key] = nil
+                return nil
+            }
+            if let cached = decodeCache[key], cached.data == data {
+                return cached.state
+            }
+            guard let state = try? decoder.decode(RealtimeBroadcastState.self, from: data) else { return nil }
+            decodeCache[key] = (data, state)
+            return state
+        }
+
+        /// Liveness, sample count and level change several times a second; merging them from a small
+        /// key keeps those writes from re-encoding the transcript snapshot.
+        private func applyProducerActivity(to state: inout RealtimeBroadcastState, prefix: String) {
+            guard let activity = defaults.dictionary(forKey: prefix + "activity"),
+                  let timestamp = activity["at"] as? Double,
+                  timestamp > state.lastUpdatedAt.timeIntervalSince1970
+            else { return }
+            state.lastUpdatedAt = Date(timeIntervalSince1970: timestamp)
+            if let count = activity["count"] as? Int, count >= state.audioSampleCount {
+                state.audioSampleCount = count
+                state.audioLevel = activity["level"] as? Float
+            }
         }
 
         public func save(_ state: RealtimeBroadcastState, synchronize: Bool = false) {
@@ -300,6 +325,33 @@
             }
             state.stopRequested = false
             saveLocked(state, synchronize: true)
+        }
+
+        /// Records producer liveness, and the audio count and level when given, without touching the snapshot.
+        public func markProducerAlive(sessionID: String, audioSampleCount: Int? = nil, audioLevel: Float? = nil) {
+            lock.lock()
+            defer { lock.unlock() }
+            let key = Self.sessionPrefix + sessionID + ".activity"
+            guard defaults.object(forKey: Self.sessionPrefix + sessionID + ".terminal") == nil else { return }
+            var activity = defaults.dictionary(forKey: key) ?? [:]
+            activity["at"] = Date().timeIntervalSince1970
+            if let audioSampleCount {
+                activity["count"] = audioSampleCount
+                activity["level"] = audioLevel.map { NSNumber(value: $0) }
+            }
+            defaults.set(activity, forKey: key)
+        }
+
+        /// Reads only the stop command keys, so the extension can poll without decoding the snapshot.
+        public func isStopRequested(sessionID: String) -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            let prefix = Self.sessionPrefix + sessionID + "."
+            guard decodeState(forKey: Self.stateKey)?.sessionID == sessionID,
+                  defaults.object(forKey: prefix + "terminal") == nil,
+                  let command = defaults.string(forKey: prefix + "stop")
+            else { return false }
+            return command != defaults.string(forKey: prefix + "stopAcknowledged")
         }
 
         /// Written by the host while it recognizes relayed audio; kept out of the state blob so the

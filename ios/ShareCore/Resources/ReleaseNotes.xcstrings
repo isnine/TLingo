@@ -1376,6 +1376,131 @@
         }
       }
     },
+    "Continued local speech model downloads in the background with system progress." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استمر تنزيل نماذج الكلام المحلية في الخلفية مع مؤشر تقدم النظام."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsatte downloads af lokale talemodeller i baggrunden med systemets statusvisning."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale Sprachmodell-Downloads werden im Hintergrund mit Systemfortschritt fortgesetzt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continued local speech model downloads in the background with system progress."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se continúan las descargas de modelos de voz locales en segundo plano con el progreso del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poursuite des téléchargements des modèles vocaux locaux en arrière-plan avec la progression du système."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melanjutkan unduhan model ucapan lokal di latar belakang dengan progres sistem."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuati i download dei modelli vocali locali in background con l’avanzamento di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ローカル音声モデルのダウンロードを、システムの進行状況とともにバックグラウンドで継続するようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 음성 모델 다운로드를 시스템 진행률과 함께 백그라운드에서 계속하도록 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meneruskan muat turun model pertuturan setempat di latar belakang dengan kemajuan sistem."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsetter nedlasting av lokale talemodeller i bakgrunnen med systemets fremdrift."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doorgaan met downloaden van lokale spraakmodellen op de achtergrond met systeemvoortgang."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontynuowano pobieranie lokalnych modeli mowy w tle wraz z postępem systemowym."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuamos os downloads de modelos de fala locais em segundo plano com o progresso do sistema."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsatte nedladdningar av lokala talmodeller i bakgrunden med systemets förlopp."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yerel konuşma modellerinin indirilmesi, sistem ilerlemesiyle arka planda sürdürüldü."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繼續在背景中使用系統進度下載本機語音模型。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续在后台使用系统进度下载本地语音模型。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繼續在背景中使用系統進度下載本機語音模型。"
+          }
+        }
+      }
+    },
     "Enabled downloaded local speech recognition models for iPhone Audio, with automatic Apple Speech fallback." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1876,6 +2001,131 @@
         }
       }
     },
+    "Improved long-session performance for realtime captions and Picture in Picture." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين أداء الجلسات الطويلة للتعليقات التوضيحية الفورية وميزة صورة داخل صورة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret ydeevne ved lange sessioner for realtidsundertekster og Billede i billede."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbesserte Leistung bei langen Sitzungen für Echtzeit-Untertitel und Bild-in-Bild."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improved long-session performance for realtime captions and Picture in Picture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se mejoró el rendimiento en sesiones largas para subtítulos en tiempo real e Imagen en imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amélioration des performances des longues sessions pour les sous-titres en temps réel et Image dans l’image."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meningkatkan performa sesi panjang untuk takarir real-time dan Picture in Picture."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorate le prestazioni delle sessioni lunghe per i sottotitoli in tempo reale e Picture in Picture."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム字幕とピクチャ・イン・ピクチャの長時間セッションでのパフォーマンスを改善しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 자막 및 화면 속 화면의 장시간 세션 성능을 개선했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meningkatkan prestasi sesi panjang untuk sari kata masa nyata dan Picture in Picture."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret ytelse ved lange økter for sanntidsundertekster og Bilde i bilde."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbeterde prestaties bij lange sessies voor realtime ondertiteling en beeld-in-beeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprawiono wydajność długich sesji dla napisów w czasie rzeczywistym i Obrazu w obrazie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melhoramos o desempenho de sessões longas para legendas em tempo real e Picture in Picture."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förbättrade prestandan vid långa sessioner för realtidsundertexter och Bild i bild."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı altyazılar ve Resim içinde Resim için uzun oturum performansı iyileştirildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改善即時字幕與子母畫面在長時間工作階段中的效能。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改善实时字幕和画中画在长时间会话中的性能。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改善即時字幕與子母畫面在長時間工作階段中的效能。"
+          }
+        }
+      }
+    },
     "Improved microphone input reliability and realtime caption updates." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2001,6 +2251,131 @@
         }
       }
     },
+    "Kept iPhone Audio recognition and History running in the background even when Picture in Picture is off." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبقاء على تشغيل التعرّف على صوت iPhone والسجل في الخلفية حتى عند إيقاف ميزة صورة داخل صورة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt iPhone Audio-genkendelse og Historik kørende i baggrunden, selv når Billede i billede er slået fra."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio-Erkennung und Verlauf werden auch bei deaktiviertem Bild-in-Bild im Hintergrund weiter ausgeführt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept iPhone Audio recognition and History running in the background even when Picture in Picture is off."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se mantuvieron el reconocimiento de audio del iPhone y el historial en segundo plano incluso con Imagen en imagen desactivado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintien de la reconnaissance audio de l’iPhone et de l’historique en arrière-plan même lorsque Image dans l’image est désactivé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga pengenalan Audio iPhone dan Riwayat tetap berjalan di latar belakang meskipun Picture in Picture nonaktif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenuti riconoscimento Audio iPhone e Cronologia in esecuzione in background anche con Picture in Picture disattivato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ピクチャ・イン・ピクチャがオフの場合でも、iPhoneオーディオの認識と履歴をバックグラウンドで実行し続けるようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 속 화면이 꺼져 있어도 iPhone 오디오 인식 및 기록이 백그라운드에서 계속 실행되도록 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan pengecaman Audio iPhone dan Sejarah berjalan di latar belakang walaupun Picture in Picture dimatikan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt iPhone Audio-gjenkjenning og Historikk kjørende i bakgrunnen selv når Bilde i bilde er av."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio-herkenning en geschiedenis blijven op de achtergrond draaien, zelfs wanneer beeld-in-beeld uit staat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymano rozpoznawanie dźwięku iPhone i Historię działające w tle, nawet gdy Obraz w obrazie jest wyłączony."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos o reconhecimento de Áudio do iPhone e o Histórico em execução em segundo plano mesmo com o Picture in Picture desativado."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höll iPhone Audio-igenkänning och Historik igång i bakgrunden även när Bild i bild är av."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resim içinde Resim kapalıyken bile iPhone Ses tanıma ve Geçmiş arka planda çalıştırılmaya devam edildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使子母畫面已關閉，iPhone 音訊辨識與記錄仍會在背景中繼續執行。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使画中画已关闭，iPhone 音频识别和记录仍会在后台继续运行。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使子母畫面已關閉，iPhone 音訊辨識與記錄仍會在背景中繼續執行。"
+          }
+        }
+      }
+    },
     "Kept macOS global shortcuts separate per app and paused them while recording a new shortcut." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2122,6 +2497,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將 macOS 全域快捷鍵按 App 分開，並在錄製新快捷鍵時暫停它們。"
+          }
+        }
+      }
+    },
+    "Kept microphone and iPhone Audio sessions through screen lock and interruptions, resuming when iOS allows." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبقاء على جلسات الميكروفون وصوت iPhone خلال قفل الشاشة والمقاطعات، مع الاستئناف عندما يسمح iOS بذلك."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beholdt mikrofon- og iPhone Audio-sessioner gennem skærmlås og afbrydelser og genoptog, når iOS tillader det."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon- und iPhone Audio-Sitzungen bleiben bei Bildschirmsperre und Unterbrechungen erhalten und werden fortgesetzt, wenn iOS es zulässt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept microphone and iPhone Audio sessions through screen lock and interruptions, resuming when iOS allows."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se mantuvieron las sesiones de micrófono y audio del iPhone durante el bloqueo de pantalla y las interrupciones, reanudándose cuando iOS lo permite."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintien des sessions micro et audio de l’iPhone pendant le verrouillage de l’écran et les interruptions, avec reprise lorsque iOS le permet."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempertahankan sesi mikrofon dan Audio iPhone selama kunci layar dan gangguan, lalu melanjutkannya saat iOS mengizinkan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenute le sessioni microfono e Audio iPhone durante il blocco schermo e le interruzioni, riprendendole quando iOS lo consente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面ロックや中断が発生してもマイクとiPhoneオーディオのセッションを維持し、iOSが許可したときに再開するようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 잠금 및 중단이 발생해도 마이크와 iPhone 오디오 세션을 유지하고, iOS가 허용할 때 재개하도록 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan sesi mikrofon dan Audio iPhone melalui kunci skrin dan gangguan, serta menyambung semula apabila iOS membenarkan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beholdt mikrofon- og iPhone Audio-økter gjennom skjermlås og avbrudd, og gjenopptok når iOS tillater det."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microfoon- en iPhone Audio-sessies bleven behouden tijdens schermvergrendeling en onderbrekingen, en worden hervat wanneer iOS dit toestaat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymano sesje mikrofonu i dźwięku iPhone podczas blokady ekranu i przerw, wznawiając je, gdy iOS na to pozwala."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos as sessões de microfone e Áudio do iPhone durante o bloqueio de tela e interrupções, retomando quando o iOS permite."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behöll mikrofon- och iPhone Audio-sessioner genom skärmlås och avbrott och återupptog när iOS tillåter."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran kilidi ve kesintiler boyunca mikrofon ve iPhone Ses oturumları korundu ve iOS izin verdiğinde devam ettirildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在螢幕鎖定與中斷期間保留麥克風與 iPhone 音訊工作階段，並在 iOS 允許時繼續。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在屏幕锁定和中断期间保留麦克风和 iPhone 音频会话，并在 iOS 允许时恢复。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在螢幕鎖定與中斷期間保留麥克風與 iPhone 音訊工作階段，並在 iOS 允許時恢復。"
           }
         }
       }
@@ -2997,6 +3497,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保留輸入法組合和翻譯輸入，顯示手動 OAuth 重新整理失敗，並保持詞彙變更一致。"
+          }
+        }
+      }
+    },
+    "Preserved faint speech during realtime capture." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على الكلام الخافت أثناء الالتقاط الفوري."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarede svag tale under realtidsoptagelse."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leise Sprache bei Echtzeitaufnahmen bleibt erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preserved faint speech during realtime capture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservó el habla tenue durante la captura en tiempo real."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préservation des paroles faibles lors de la capture en temps réel."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempertahankan ucapan pelan selama pengambilan real-time."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preservato il parlato debole durante l’acquisizione in tempo reale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイムキャプチャ中にかすかな音声を保持するようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 캡처 중 희미한 음성을 보존하도록 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan pertuturan perlahan semasa tangkapan masa nyata."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarte svak tale under sanntidsopptak."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachte spraak bleef behouden tijdens realtime opname."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowano cichą mowę podczas przechwytywania w czasie rzeczywistym."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preservamos falas baixas durante a captura em tempo real."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarde svagt tal under realtidsinspelning."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı yakalama sırasında hafif konuşmalar korundu."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在即時擷取期間保留微弱的語音。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在实时采集期间保留微弱语音。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在即時擷取期間保留微弱的語音。"
           }
         }
       }

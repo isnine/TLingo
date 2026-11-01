@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.3] - 2026-11-01
+
+### Improved
+
+- [iOS] Kept iPhone Audio recognition and History running in the background even when Picture in Picture is off.
+- [iOS] Kept microphone and iPhone Audio sessions through screen lock and interruptions, resuming when iOS allows.
+- [iOS] Continued local speech model downloads in the background with system progress.
+- [iOS] Improved long-session performance for realtime captions and Picture in Picture.
+
+### Fixed
+
+- [iOS] Preserved faint speech during realtime capture.
+
 ## [5.7.2] - 2026-11-01
 
 ### Added

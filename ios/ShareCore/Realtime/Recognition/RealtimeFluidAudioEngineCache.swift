@@ -162,7 +162,10 @@
             let modelDirectory = await RecognitionModelStore.shared.cachedModelURL(for: descriptor)
             switch model {
             case .parakeetEOU320, .parakeetEOU1280:
+                // The bare default is `.all`, which can route int8 ops to the GPU; iOS denies the GPU in
+                // the background, where the host recognizes relayed iPhone Audio. Nemotron already defaults to this.
                 let manager = StreamingEouAsrManager(
+                    configuration: MLModelConfigurationUtils.defaultConfiguration(),
                     chunkSize: model == .parakeetEOU320 ? .ms320 : .ms1280
                 )
                 try await manager.loadModels(to: modelDirectory)
