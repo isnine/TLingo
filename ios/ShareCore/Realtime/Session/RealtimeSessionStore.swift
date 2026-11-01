@@ -1543,6 +1543,17 @@
                         target: target,
                         strategy: strategy
                     )
+                    // iOS keeps downloading after its prompt is dismissed and won't prompt again
+                    // meanwhile, so offering Download again would loop without visible effect.
+                    if status == .supported {
+                        let message = NSLocalizedString(
+                            "iOS is downloading this language pair in the background. Try again in a moment.",
+                            comment: "Shown when realtime Apple Translate is still waiting for a language pack download"
+                        )
+                        throw LocalProviderError.translationFailed(
+                            AppleTranslationErrorFormatter.withLanguagePair(message, languagePair: languagePair)
+                        )
+                    }
                 }
                 if let error = Self.appleTranslateLanguagePreflightFailure(
                     status: status,

@@ -313,6 +313,9 @@ extension RootTabView {
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
+            .whatsNewPresentation {
+                showActions || showModels || showSettings || showRealtime || showFeaturePaywall
+            }
             .tint(colors.accent)
             .onReceive(NotificationCenter.default.publisher(for: .deepLinkRealtimeRequested)) { notification in
                 showActions = false

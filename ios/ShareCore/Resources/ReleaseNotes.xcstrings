@@ -1,0 +1,4506 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا لوحة سريعة مركزية على macOS مع اختصار قابل للتخصيص وإجراءات مضمنة ونتائج تنتقل إلى النافذة الرئيسية."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet et centreret Quick Panel på macOS med en tilpasselig genvej, inline-handlinger og resultater, der overføres til hovedvinduet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein zentriertes Quick Panel auf macOS mit konfigurierbarem Kurzbefehl, Inline-Aktionen und Ergebnissen, die an das Hauptfenster übergeben werden, wurde hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió un Quick Panel centrado en macOS con un atajo configurable, acciones integradas y resultados que se transfieren a la ventana principal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout d’un Quick Panel centré sur macOS avec un raccourci configurable, des actions intégrées et des résultats transmis à la fenêtre principale."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan Quick Panel terpusat di macOS dengan pintasan yang dapat dikonfigurasi, tindakan inline, dan hasil yang diteruskan ke jendela utama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunto un Quick Panel centrato su macOS con scorciatoia configurabile, azioni inline e risultati trasferiti alla finestra principale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS に中央配置の Quick Panel を追加しました。ショートカットを設定でき、インラインアクションと、メインウインドウに引き継がれる結果を備えています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS에 중앙 배치된 Quick Panel을 추가했습니다. 구성 가능한 단축키, 인라인 작업, 메인 창으로 전달되는 결과를 지원합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah Quick Panel berpusat pada macOS dengan pintasan boleh dikonfigurasikan, tindakan sebaris dan hasil yang diserahkan kepada tetingkap utama."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til et sentrert Quick Panel på macOS med en konfigurerbar snarvei, innebygde handlinger og resultater som overføres til hovedvinduet."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een gecentreerd Quick Panel op macOS toegevoegd met een configureerbare sneltoets, inline-acties en resultaten die worden doorgegeven aan het hoofdvenster."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano wyśrodkowany Quick Panel w macOS z konfigurowalnym skrótem, akcjami wbudowanymi i wynikami przekazywanymi do okna głównego."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionado um Quick Panel centralizado no macOS com atalho configurável, ações integradas e resultados encaminhados para a janela principal."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till en centrerad Quick Panel på macOS med en konfigurerbar genväg, inline-åtgärder och resultat som överförs till huvudfönstret."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS’te yapılandırılabilir kısayol, satır içi eylemler ve ana pencereye aktarılan sonuçlarla ortalanmış bir Quick Panel eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 macOS 上新增居中的 Quick Panel，支持可配置快捷键、内联操作，结果可移交到主窗口。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 macOS 上新增置中的 Quick Panel，支援可設定快速鍵、內嵌操作，結果可交接至主視窗。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 macOS 上新增置中的 Quick Panel，支援可設定快速鍵、內嵌操作，結果可交接至主視窗。"
+          }
+        }
+      }
+    },
+    "Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا نموذجًا قابلًا للتشغيل إلى إعداد iPhone Audio الأولي، وجعلنا إعداد Realtime الافتراضي يستخدم لغة التطبيق."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet en afspillelig prøve til iPhone Audio-onboarding og gjort Realtime-opsætningen til appens sprog som standard."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein abspielbares Beispiel zum iPhone-Audio-Onboarding hinzugefügt und die Realtime-Einrichtung standardmäßig auf die App-Sprache gesetzt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió una muestra reproducible al onboarding de iPhone Audio y se estableció el idioma de la app como predeterminado para la configuración de Realtime."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout d’un exemple jouable à l’intégration d’iPhone Audio et configuration Realtime par défaut sur la langue de l’app."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan sampel yang dapat diputar ke onboarding iPhone Audio dan menjadikan bahasa aplikasi sebagai default untuk penyiapan Realtime."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunto un esempio riproducibile all’onboarding di iPhone Audio e impostata la lingua dell’app come predefinita per la configurazione Realtime."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio のオンボーディングに再生可能なサンプルを追加し、Realtime の設定をデフォルトでアプリの言語にしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio 온보딩에 재생 가능한 샘플을 추가하고 Realtime 설정 기본값을 앱 언어로 지정했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah sampel boleh dimainkan pada onboarding iPhone Audio dan menetapkan penyediaan Realtime kepada bahasa aplikasi secara lalai."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til en avspillbar prøve i iPhone Audio-onboarding og satte Realtime-oppsettet til appens språk som standard."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een afspeelbaar voorbeeld toegevoegd aan de iPhone Audio-onboarding en de Realtime-instelling standaard op de app-taal gezet."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano odtwarzalną próbkę do samouczka iPhone Audio i ustawiono język aplikacji jako domyślny dla konfiguracji Realtime."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionada uma amostra reproduzível ao onboarding do iPhone Audio e definido o idioma do app como padrão para a configuração do Realtime."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till ett uppspelningsbart exempel i iPhone Audio-onboarding och gjorde appens språk till standard för Realtime-konfigurationen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio ilk kullanım akışına oynatılabilir bir örnek eklendi ve Realtime kurulumu varsayılan olarak uygulama diline ayarlandı."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 引导流程中新增可播放示例，并将 Realtime 设置默认使用应用语言。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 引導流程中新增可播放範例，並將 Realtime 設定預設為使用 App 語言。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 導引流程中新增可播放範例，並將 Realtime 設定預設為使用 App 語言。"
+          }
+        }
+      }
+    },
+    "Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا Live Activity وتحكمًا فوريًا، بالإضافة إلى شريط أدوات إجراءات لاختيار Helper على macOS."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet en realtids-Live Activity og -kontrol samt en værktøjslinje til valg af Helper-handling på macOS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Echtzeit-Live-Activity und -Steuerung sowie eine Aktionssymbolleiste zur Helper-Auswahl unter macOS hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió una Live Activity y un control en tiempo real, además de una barra de herramientas de acciones para seleccionar Helper en macOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout d’une Live Activity et d’un contrôle en temps réel, ainsi qu’une barre d’outils d’actions de sélection Helper sur macOS."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan Live Activity dan kontrol realtime, serta toolbar tindakan pemilihan Helper di macOS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunte una Live Activity e un controllo in tempo reale, oltre a una barra degli strumenti delle azioni per la selezione Helper su macOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイムの Live Activity とコントロール、さらに macOS で Helper を選択するアクションツールバーを追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 Live Activity와 제어 기능, 그리고 macOS용 Helper 선택 작업 도구 막대를 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah Live Activity dan kawalan masa nyata, serta bar alat tindakan pemilihan Helper pada macOS."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til en sanntids-Live Activity og -kontroll, samt en verktøylinje for Helper-valghandlinger på macOS."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een realtime Live Activity en bediening toegevoegd, plus een werkbalk met Helper-selectieacties op macOS."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano w czasie rzeczywistym Live Activity i sterowanie oraz pasek narzędzi akcji wyboru Helper w macOS."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionada uma Live Activity e controle em tempo real, além de uma barra de ferramentas de ações de seleção do Helper no macOS."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till en realtids-Live Activity och -kontroll samt en verktygsrad för Helper-valåtgärder på macOS."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı bir Live Activity ve kontrol ile macOS’te Helper seçim eylemi araç çubuğu eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增实时 Live Activity 和控制，以及在 macOS 上的 Helper 选择操作工具栏。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增即時 Live Activity 與控制項，以及在 macOS 上的 Helper 選取操作工具列。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增即時 Live Activity 與控制項，以及在 macOS 上的 Helper 選取操作工具列。"
+          }
+        }
+      }
+    },
+    "Added an in-app summary of what's new after updates." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا ملخصًا داخل التطبيق لما الجديد بعد التحديثات."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet en oversigt i appen over nyheder efter opdateringer."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine In-App-Übersicht der Neuerungen nach Updates hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added an in-app summary of what's new after updates."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió un resumen en la app de las novedades tras las actualizaciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout d’un résumé des nouveautés dans l’app après les mises à jour."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan ringkasan dalam app tentang hal baru setelah pembaruan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunto un riepilogo in-app delle novità dopo gli aggiornamenti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデート後の新機能の概要をアプリ内に追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 후 새로운 기능 요약을 앱 내에 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan ringkasan dalam apl tentang perkara baharu selepas kemas kini."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagt til en oversikt i appen over nyheter etter oppdateringer."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een in-app-overzicht toegevoegd van wat er nieuw is na updates."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano w aplikacji podsumowanie nowości po aktualizacjach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionado um resumo no app do que há de novo após as atualizações."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till en sammanfattning i appen av nyheter efter uppdateringar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemelerden sonra yeniliklerin uygulama içi özeti eklendi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "喺 App 內加入更新後新功能嘅摘要。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 App 内添加了更新后新功能的摘要。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 App 內加入更新後新功能的摘要。"
+          }
+        }
+      }
+    },
+    "Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا خيارات سيناريوهات التشغيل الأول مع إعداد Realtime الموجّه، وإجراء في الإعدادات لإعادة تشغيل التعريف."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet valg af scenarier ved første kørsel med guidet Realtime-opsætning og en Indstillinger-handling til at afspille onboarding igen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szenarioauswahl beim ersten Start mit geführter Realtime-Einrichtung und eine Einstellungsaktion zum erneuten Abspielen des Onboardings hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadieron opciones de escenario en el primer inicio con configuración guiada de Realtime, y una acción en Ajustes para volver a reproducir el onboarding."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout de choix de scénarios au premier lancement avec configuration Realtime guidée, et d’une action Réglages pour relancer l’intégration."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan pilihan skenario saat pertama kali dijalankan dengan penyiapan Realtime terpandu, dan tindakan Pengaturan untuk memutar ulang onboarding."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunte scelte di scenario al primo avvio con configurazione Realtime guidata e un’azione Impostazioni per riprodurre di nuovo l’onboarding."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初回起動時のシナリオ選択とガイド付き Realtime 設定、オンボーディングを再生し直すための設定アクションを追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "안내형 Realtime 설정이 포함된 첫 실행 시나리오 선택지와 온보딩을 다시 재생하는 설정 작업을 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah pilihan senario semasa jalan pertama dengan penyediaan Realtime berpandu, dan tindakan Tetapan untuk memainkan semula onboarding."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til valg av scenario ved første kjøring med veiledet Realtime-oppsett, og en Innstillinger-handling for å spille av onboarding på nytt."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scenariokeuzes bij de eerste start met begeleide Realtime-instelling toegevoegd, en een Instellingen-actie om de onboarding opnieuw af te spelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano wybór scenariuszy przy pierwszym uruchomieniu z prowadzoną konfiguracją Realtime oraz akcję Ustawień do ponownego odtworzenia samouczka."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionadas opções de cenário na primeira execução com configuração guiada do Realtime e uma ação em Ajustes para reproduzir o onboarding novamente."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till scenarioval vid första start med guidad Realtime-konfiguration och en Inställningar-åtgärd för att spela upp onboarding igen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk çalıştırma senaryo seçenekleri, rehberli Realtime kurulumu ve ilk kullanım akışını yeniden oynatmak için bir Ayarlar eylemi eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增首次运行时的场景选择及引导式 Realtime 设置，并在设置中新增可重新播放引导流程的操作。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增首次執行時的場景選擇與引導式 Realtime 設定，並在設定中新增可重新播放引導流程的操作。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增首次啟動時的場景選擇與引導式 Realtime 設定，並在設定中新增可重新播放導引流程的操作。"
+          }
+        }
+      }
+    },
+    "Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا ترجمة نص الصور على iOS وقائمة مفردات مع مراجعة بالبطاقات التعليمية وتصدير كنص عادي."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet foto-tekstoversættelse på iOS og en ordliste med flashcard-gennemgang og eksport som almindelig tekst."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto-Textübersetzung unter iOS sowie eine Vokabelliste mit Karteikarten-Überprüfung und Klartext-Export hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió traducción de texto de fotos en iOS y una lista de vocabulario con repaso mediante tarjetas y exportación en texto sin formato."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout de la traduction de texte de photos sur iOS et d’une liste de vocabulaire avec révision par cartes mémoire et export en texte brut."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan terjemahan teks foto di iOS dan daftar kosakata dengan ulasan kartu kilat dan ekspor teks biasa."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunta la traduzione del testo delle foto su iOS e un elenco di vocaboli con ripasso tramite flashcard ed esportazione in testo semplice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS で写真のテキスト翻訳を追加し、フラッシュカード復習とプレーンテキスト書き出しに対応した単語リストを追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS에서 사진 텍스트 번역을 추가하고, 플래시카드 복습과 일반 텍스트 내보내기를 지원하는 어휘 목록을 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah terjemahan teks foto pada iOS dan senarai perbendaharaan kata dengan ulasan kad imbas dan eksport teks biasa."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til foto-tekstoversettelse på iOS og en ordliste med flashcard-gjennomgang og eksport som ren tekst."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fototekstvertaling op iOS toegevoegd en een woordenlijst met flashcard-oefening en export als platte tekst."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano tłumaczenie tekstu ze zdjęć w iOS oraz listę słówek z powtórkami na fiszkach i eksportem do zwykłego tekstu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionada tradução de texto de fotos no iOS e uma lista de vocabulário com revisão por flashcards e exportação em texto simples."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till fototextöversättning på iOS och en ordlista med flashcard-repetition och export som ren text."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS’te fotoğraf metni çevirisi ve bilgi kartı tekrarı ile düz metin dışa aktarma özellikli sözcük listesi eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上新增照片文字翻译，以及支持闪卡复习和纯文本导出的词汇表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上新增照片文字翻譯，以及支援快閃卡複習和純文字匯出的字彙表。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上新增照片文字翻譯，以及支援快閃卡複習和純文字匯出的字彙表。"
+          }
+        }
+      }
+    },
+    "Added transcription-only realtime history on iPhone Audio." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا سجلًا فوريًا للنسخ فقط على iPhone Audio."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjet realtidshistorik kun for transskription på iPhone Audio."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime-Verlauf nur für Transkription in iPhone Audio hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added transcription-only realtime history on iPhone Audio."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió historial en tiempo real solo de transcripción en iPhone Audio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout d’un historique en temps réel uniquement pour la transcription sur iPhone Audio."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan riwayat realtime khusus transkripsi di iPhone Audio."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunta la cronologia in tempo reale solo per la trascrizione su iPhone Audio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio に文字起こし専用のリアルタイム履歴を追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio에 전사 전용 실시간 기록을 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah sejarah masa nyata khusus transkripsi pada iPhone Audio."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til sanntidshistorikk kun for transkripsjon i iPhone Audio."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtimegeschiedenis alleen voor transcriptie toegevoegd in iPhone Audio."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano historię w czasie rzeczywistym tylko dla transkrypcji w iPhone Audio."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionado histórico em tempo real somente de transcrição no iPhone Audio."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till realtidshistorik endast för transkribering i iPhone Audio."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio’da yalnızca transkripsiyona özel gerçek zamanlı geçmiş eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 中新增仅转录的实时历史记录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 中新增僅轉錄的即時歷史記錄。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone Audio 中新增僅轉錄的即時歷史記錄。"
+          }
+        }
+      }
+    },
+    "Allowed more Apple Speech languages and repaired Apple Translate download routing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سمحنا بمزيد من لغات Apple Speech وأصلحنا توجيه تنزيل Apple Translate."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilladt flere Apple Speech-sprog og rettet downloadrouting for Apple Translate."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Apple Speech-Sprachen zugelassen und das Download-Routing von Apple Translate repariert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed more Apple Speech languages and repaired Apple Translate download routing."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se permitieron más idiomas de Apple Speech y se reparó el enrutamiento de descargas de Apple Translate."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autorisation de davantage de langues Apple Speech et correction du routage de téléchargement d’Apple Translate."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengizinkan lebih banyak bahasa Apple Speech dan memperbaiki perutean unduhan Apple Translate."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consentite più lingue Apple Speech e corretto il routing dei download di Apple Translate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Speech の対応言語を増やし、Apple Translate のダウンロードルーティングを修正しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Speech 언어를 더 허용하고 Apple Translate 다운로드 라우팅을 수정했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membenarkan lebih banyak bahasa Apple Speech dan membaiki penghalaan muat turun Apple Translate."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillot flere Apple Speech-språk og reparerte nedlastingsrutingen for Apple Translate."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer Apple Speech-talen toegestaan en de downloadroutering van Apple Translate gerepareerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zezwolono na więcej języków Apple Speech i naprawiono kierowanie pobierania Apple Translate."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitidos mais idiomas do Apple Speech e corrigido o roteamento de download do Apple Translate."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillät fler Apple Speech-språk och reparerade nedladdningsroutningen för Apple Translate."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha fazla Apple Speech diline izin verildi ve Apple Translate indirme yönlendirmesi düzeltildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许更多 Apple Speech 语言，并修复 Apple Translate 下载路由。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許更多 Apple Speech 語言，並修正 Apple Translate 下載路由。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許更多 Apple Speech 語言，並修正 Apple Translate 下載路由。"
+          }
+        }
+      }
+    },
+    "Clarified Apple Translate language downloads during setup." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أوضحنا تنزيلات اللغات في Apple Translate أثناء الإعداد."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjort det tydeligere, hvordan sprogdownloads i Apple Translate foregår under opsætning."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sprachdownloads in Apple Translate während der Einrichtung verdeutlicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clarified Apple Translate language downloads during setup."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se aclaró la descarga de idiomas de Apple Translate durante la configuración."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clarification du téléchargement des langues d’Apple Translate lors de la configuration."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperjelas unduhan bahasa Apple Translate selama penyiapan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiarito il download delle lingue di Apple Translate durante la configurazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "セットアップ中のApple Translateの言語ダウンロードについて明確にしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 중 Apple Translate의 언어 다운로드 과정을 명확히 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjelaskan muat turun bahasa Apple Translate semasa persediaan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tydeliggjort språknedlastinger i Apple Translate under oppsett."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verduidelijkt het downloaden van talen in Apple Translate tijdens de instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyjaśniono pobieranie języków w Apple Translate podczas konfiguracji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esclarecido o download de idiomas do Apple Translate durante a configuração."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förtydligat språknedladdningar i Apple Translate under inställningen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurulum sırasında Apple Translate dil indirmeleri netleştirildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釐清咗設定期間 Apple Translate 嘅語言下載安排。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明确了设置期间 Apple Translate 的语言下载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釐清了設定期間 Apple Translate 的語言下載。"
+          }
+        }
+      }
+    },
+    "Clarified recognition model loading status and kept untranslated sessions readable in History." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضّحنا حالة تحميل نموذج التعرف وأبقينا الجلسات غير المترجمة قابلة للقراءة في History."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tydeliggjort indlæsningsstatus for genkendelsesmodellen og gjort uoversatte sessioner læsbare i Historik."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ladestatus des Erkennungsmodells verdeutlicht und unübersetzte Sitzungen im Verlauf lesbar gehalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clarified recognition model loading status and kept untranslated sessions readable in History."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se aclaró el estado de carga del modelo de reconocimiento y se mantuvieron legibles las sesiones sin traducir en Historial."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clarification de l’état de chargement du modèle de reconnaissance et maintien de la lisibilité des sessions non traduites dans l’historique."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperjelas status pemuatan model pengenalan dan menjaga sesi yang belum diterjemahkan tetap terbaca di Riwayat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiarito lo stato di caricamento del modello di riconoscimento e mantenute leggibili le sessioni non tradotte nella Cronologia."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "認識モデルの読み込み状態を分かりやすくし、未翻訳のセッションを履歴で読めるようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인식 모델 로딩 상태를 명확히 하고 번역되지 않은 세션을 기록에서 읽을 수 있도록 유지했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjelaskan status pemuatan model pengecaman dan memastikan sesi tidak diterjemah kekal boleh dibaca dalam Sejarah."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tydeliggjorde lastestatus for gjenkjenningsmodellen og holdt uoversatte økter lesbare i Historikk."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De laadstatus van het herkenningsmodel verduidelijkt en niet-vertaalde sessies leesbaar gehouden in Geschiedenis."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doprecyzowano stan wczytywania modelu rozpoznawania i zachowano czytelność nieprzetłumaczonych sesji w Historii."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esclarecido o status de carregamento do modelo de reconhecimento e mantidas legíveis as sessões não traduzidas no Histórico."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förtydligade inläsningsstatus för igenkänningsmodellen och höll oöversatta sessioner läsbara i Historik."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanıma modeli yükleme durumu netleştirildi ve çevrilmemiş oturumlar Geçmiş’te okunabilir tutuldu."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明确识别模型加载状态，并让未翻译的会话在历史记录中保持可读。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釐清辨識模型載入狀態，並讓未翻譯的工作階段在歷史記錄中保持可讀。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "釐清辨識模型載入狀態，並讓未翻譯的工作階段在歷史記錄中保持可讀。"
+          }
+        }
+      }
+    },
+    "Fixed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم الإصلاح"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rettet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behoben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corregido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corrigé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diperbaiki"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corretto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修正済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수정됨"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibaiki"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rettet"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgelost"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naprawiono"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corrigido"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åtgärdat"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzeltildi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修复"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已修正"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已修正"
+          }
+        }
+      }
+    },
+    "Got It" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فهمت"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forstået"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstanden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got It"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entendido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compris"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengerti"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ho capito"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "わかりました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알겠습니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faham"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forstått"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begrepen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozumiem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entendi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppfattat"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anladım"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "知道了"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "了解"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明白"
+          }
+        }
+      }
+    },
+    "Improved" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محسّن"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbessert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improved"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mejorado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amélioré"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ditingkatkan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改善"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개선됨"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diperbaiki"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbeterd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulepszono"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melhorado"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förbättrat"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İyileştirildi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改进"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已改進"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已改進"
+          }
+        }
+      }
+    },
+    "Kept macOS global shortcuts separate per app and paused them while recording a new shortcut." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أبقينا اختصارات macOS العامة منفصلة لكل تطبيق وأوقفناها مؤقتًا أثناء تسجيل اختصار جديد."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt macOS-globale genveje adskilt pr. app og satte dem på pause, mens en ny genvej blev optaget."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS-globale Tastenkürzel pro App getrennt gehalten und während der Aufzeichnung eines neuen Tastenkürzels pausiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept macOS global shortcuts separate per app and paused them while recording a new shortcut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantuvimos los atajos globales de macOS separados por app y los pausamos mientras se graba un nuevo atajo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les raccourcis globaux macOS restent séparés par app et sont mis en pause pendant l’enregistrement d’un nouveau raccourci."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga pintasan global macOS tetap terpisah per app dan menjeda saat merekam pintasan baru."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenuti i tasti di scelta rapida globali di macOS separati per app e sospesi durante la registrazione di un nuovo tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOSのグローバルショートカットをアプリごとに分離し、新しいショートカットの録画中は一時停止するようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 전역 단축키를 앱별로 분리하고 새 단축키를 기록하는 동안 일시 중지했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan pintasan global macOS berasingan mengikut app dan menjedakannya semasa merakam pintasan baharu."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt macOS globale hurtigtaster adskilt per app og satte dem på pause mens en ny hurtigtast ble tatt opp."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS globale sneltoetsen per app gescheiden gehouden en gepauzeerd tijdens het opnemen van een nieuwe sneltoets."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowano osobne globalne skróty macOS dla każdej aplikacji i wstrzymywano je podczas nagrywania nowego skrótu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos os atalhos globais do macOS separados por app e os pausamos durante a gravação de um novo atalho."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höll macOS globala genvägar separerade per app och pausade dem när en ny genväg spelades in."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS global kısayollarını uygulama başına ayrı tuttu ve yeni bir kısayol kaydedilirken bunları duraklattı."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 macOS 全局快捷键按应用分开，并在录制新快捷键时暂停它们。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 macOS 全域快速鍵依 App 分開，並在錄製新快速鍵時暫停它們。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 macOS 全域快捷鍵按 App 分開，並在錄製新快捷鍵時暫停它們。"
+          }
+        }
+      }
+    },
+    "Kept realtime running in the background, synced Picture in Picture pause state, and improved long-session performance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أبقينا الترجمة الفورية تعمل في الخلفية، وزامنّا حالة الإيقاف المؤقت في الصورة داخل الصورة، وحسّنّا أداء الجلسات الطويلة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt realtid kørende i baggrunden, synkroniserede pausestatus for Picture in Picture og forbedrede ydeevnen ved lange sessioner."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echtzeit im Hintergrund weiterlaufen lassen, Pausenstatus von Bild-in-Bild synchronisiert und Leistung bei langen Sitzungen verbessert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept realtime running in the background, synced Picture in Picture pause state, and improved long-session performance."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantuvimos el tiempo real en segundo plano, sincronizamos el estado de pausa de Imagen en imagen y mejoramos el rendimiento en sesiones largas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintien du temps réel en arrière-plan, synchronisation de l’état de pause de Picture in Picture et amélioration des performances sur les longues sessions."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga realtime tetap berjalan di latar belakang, menyinkronkan status jeda Picture in Picture, dan meningkatkan performa sesi panjang."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenuto il tempo reale in esecuzione in background, sincronizzato lo stato di pausa di Picture in Picture e migliorato le prestazioni nelle sessioni lunghe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイムをバックグラウンドで実行し続け、ピクチャ・イン・ピクチャの一時停止状態を同期し、長時間セッションのパフォーマンスを改善しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 기능이 백그라운드에서 계속 실행되도록 하고, PIP 일시 정지 상태를 동기화했으며, 장시간 세션 성능을 개선했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan masa nyata berjalan di latar belakang, menyegerakkan keadaan jeda Picture in Picture dan meningkatkan prestasi sesi panjang."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt sanntid kjørende i bakgrunnen, synkroniserte pausestatus for bilde-i-bilde og forbedret ytelsen ved lange økter."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime op de achtergrond laten doorlopen, pauzestatus van Picture in Picture gesynchroniseerd en prestaties bij lange sessies verbeterd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymano działanie czasu rzeczywistego w tle, zsynchronizowano stan wstrzymania Obraz w obrazie i poprawiono wydajność długich sesji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos o tempo real em execução em segundo plano, sincronizamos o estado de pausa do Picture in Picture e melhoramos o desempenho em sessões longas."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höll realtid igång i bakgrunden, synkroniserade pausläget för bild-i-bild och förbättrade prestandan vid långa sessioner."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı özelliği arka planda çalışır durumda tuttu, Resim içinde Resim duraklatma durumunu eşitledi ve uzun oturum performansını iyileştirdi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让实时功能在后台继续运行，同步画中画暂停状态，并提升长时间会话的性能。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓即時功能在背景繼續執行，同步子母畫面暫停狀態，並提升長時間工作階段的效能。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓即時功能在背景繼續運行，同步畫中畫暫停狀態，並提升長時間工作階段的效能。"
+          }
+        }
+      }
+    },
+    "Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جعلنا خيارات الإدخال الفوري والتعرف على الكلام أسهل في العثور عليها، وفعّلنا وضع النسخ فقط لصوت iPhone."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjort indstillinger for realtidsinput og talegenkendelse lettere at finde og aktiveret en tilstand kun til transskription for iPhone-lyd."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Optionen für Echtzeiteingabe und Spracherkennung leichter auffindbar gemacht und einen Nur-Transkriptionsmodus für iPhone-Audio aktiviert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se han hecho más fáciles de encontrar las opciones de entrada en tiempo real y reconocimiento de voz, y se ha activado el modo solo transcripción para el audio del iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les options de saisie en temps réel et de reconnaissance vocale sont plus faciles à trouver, et un mode transcription seule pour l’audio de l’iPhone a été activé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membuat opsi input real-time dan pengenalan suara lebih mudah ditemukan, serta mengaktifkan mode hanya transkripsi untuk audio iPhone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rese più facili da trovare le opzioni di input in tempo reale e riconoscimento vocale, e attivata la modalità solo trascrizione per l’audio di iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム入力と音声認識のオプションを見つけやすくし、iPhoneのオーディオ向けに文字起こしのみのモードを有効にしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 입력 및 음성 인식 옵션을 더 쉽게 찾을 수 있도록 했으며, iPhone 오디오에 대해 전사 전용 모드를 활성화했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjadikan pilihan input masa nyata dan pengecaman pertuturan lebih mudah ditemui, dan mendayakan mod transkripsi sahaja untuk audio iPhone."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjort alternativer for sanntidsinndata og talegjenkjenning lettere å finne, og aktivert en modus kun for transkripsjon for iPhone-lyd."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opties voor realtime-invoer en spraakherkenning zijn makkelijker te vinden, en een modus voor alleen transcriptie voor iPhone-audio is ingeschakeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ułatwiono znajdowanie opcji wprowadzania w czasie rzeczywistym i rozpoznawania mowy oraz włączono tryb tylko transkrypcji dla dźwięku z iPhone’a."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As opções de entrada em tempo real e reconhecimento de fala ficaram mais fáceis de encontrar, e o modo somente transcrição para áudio do iPhone foi ativado."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjort alternativen för realtidsinmatning och taligenkänning lättare att hitta samt aktiverat ett läge endast för transkribering för iPhone-ljud."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı giriş ve konuşma tanıma seçeneklerini bulmayı kolaylaştırdık ve iPhone sesi için yalnızca transkripsiyon modunu etkinleştirdik."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "令實時輸入同語音辨識選項更容易搵到，並為 iPhone 音訊啟用咗只限轉錄模式。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让实时输入和语音识别选项更容易找到，并为 iPhone 音频启用了仅转写模式。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓即時輸入和語音辨識選項更容易找到，並為 iPhone 音訊啟用了僅轉寫模式。"
+          }
+        }
+      }
+    },
+    "Moved model reordering into the model picker sheet, with its own reset and done actions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نقلنا إعادة ترتيب النماذج إلى ورقة منتقي النماذج، مع إجراءي إعادة الضبط والانتهاء الخاصين بها."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyttede omarrangering af modeller ind i modelvælgerpanelet med egne nulstil- og færdig-handlinger."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellneuordnung in das Modellauswahlblatt verschoben, mit eigenen Zurücksetzen- und Fertig-Aktionen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved model reordering into the model picker sheet, with its own reset and done actions."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Movimos la reordenación de modelos al panel de selección de modelos, con sus propias acciones de restablecer y listo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacement de la réorganisation des modèles dans la feuille de sélection des modèles, avec ses propres actions Réinitialiser et Terminé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memindahkan pengurutan ulang model ke sheet pemilih model, dengan tindakan reset dan selesai tersendiri."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spostata la riorganizzazione dei modelli nel pannello di selezione dei modelli, con azioni di ripristino e fine dedicate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルの並べ替えをモデル選択シートに移動し、専用のリセットと完了のアクションを追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 재정렬을 모델 선택 시트로 옮기고 전용 초기화 및 완료 동작을 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memindahkan susunan semula model ke helaian pemilih model, dengan tindakan set semula dan selesai tersendiri."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyttet omorganisering av modeller inn i modellvelgerpanelet, med egne tilbakestill- og fullfør-handlinger."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herordenen van modellen verplaatst naar het modelkiezerblad, met eigen acties voor resetten en gereed."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeniesiono zmianę kolejności modeli do arkusza wyboru modeli, z osobnymi działaniami resetowania i gotowe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Movemos a reordenação de modelos para a folha de seleção de modelos, com ações próprias de redefinir e concluir."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyttade omordning av modeller till modellväljarens ark, med egna återställ- och klar-åtgärder."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model sıralamasını model seçici sayfasına taşıdı; kendine ait sıfırlama ve bitti işlemleriyle."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将模型重新排序移入模型选择器面板，并提供独立的重置和完成操作。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將模型重新排序移入模型選擇器面板，並提供獨立的重新設定和完成操作。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將模型重新排序移入模型選擇器面板，並提供獨立的重新設定和完成操作。"
+          }
+        }
+      }
+    },
+    "New" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جديد"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baru"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新機能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로운 기능"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baharu"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ny"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowość"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nytt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
+          }
+        }
+      }
+    },
+    "New installs start with Microsoft Translate and the first free AI model enabled, and results default to model list order." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبدأ عمليات التثبيت الجديدة مع تمكين Microsoft Translate وأول نموذج ذكاء اصطناعي مجاني، وتكون النتائج افتراضيًا حسب ترتيب قائمة النماذج."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nye installationer starter med Microsoft Translate og den første gratis AI-model aktiveret, og resultater følger som standard modellistens rækkefølge."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Installationen starten mit aktiviertem Microsoft Translate und dem ersten kostenlosen KI-Modell; Ergebnisse folgen standardmäßig der Reihenfolge der Modellliste."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New installs start with Microsoft Translate and the first free AI model enabled, and results default to model list order."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las instalaciones nuevas comienzan con Microsoft Translate y el primer modelo de IA gratuito activados, y los resultados se ordenan de forma predeterminada según la lista de modelos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les nouvelles installations démarrent avec Microsoft Translate et le premier modèle d’IA gratuit activés, et les résultats suivent par défaut l’ordre de la liste des modèles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalasi baru dimulai dengan Microsoft Translate dan model AI gratis pertama diaktifkan, serta hasil secara default mengikuti urutan daftar model."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nuove installazioni iniziano con Microsoft Translate e il primo modello AI gratuito abilitati, e i risultati seguono per impostazione predefinita l’ordine dell’elenco dei modelli."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規インストールでは Microsoft Translate と最初の無料 AI モデルが有効になり、結果はデフォルトでモデルリストの順序に従います。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로 설치하면 Microsoft Translate와 첫 번째 무료 AI 모델이 활성화된 상태로 시작되며, 결과는 기본적으로 모델 목록 순서를 따릅니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemasangan baharu bermula dengan Microsoft Translate dan model AI percuma pertama didayakan, serta hasil lalai mengikut susunan senarai model."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nye installasjoner starter med Microsoft Translate og den første gratis AI-modellen aktivert, og resultater følger som standard modellistens rekkefølge."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe installaties starten met Microsoft Translate en het eerste gratis AI-model ingeschakeld, en resultaten volgen standaard de volgorde van de modellenlijst."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowe instalacje rozpoczynają się z włączonym Microsoft Translate i pierwszym darmowym modelem AI, a wyniki domyślnie są uporządkowane według listy modeli."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novas instalações começam com o Microsoft Translate e o primeiro modelo de IA gratuito ativados, e os resultados seguem por padrão a ordem da lista de modelos."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyinstallationer startar med Microsoft Translate och den första kostnadsfria AI-modellen aktiverade, och resultat följer som standard modellistans ordning."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni kurulumlar Microsoft Translate ve ilk ücretsiz AI modeli etkin olarak başlar; sonuçlar varsayılan olarak model listesi sırasını izler."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全新安装默认启用 Microsoft Translate 和第一个免费 AI 模型，结果默认按模型列表顺序排列。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全新安裝預設啟用 Microsoft Translate 和第一個免費 AI 模型，結果預設依模型清單順序排列。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全新安裝預設啟用 Microsoft Translate 和第一個免費 AI 模型，結果預設按模型清單順序排列。"
+          }
+        }
+      }
+    },
+    "Preserved IME composition and translation input, surfaced manual OAuth refresh failures, and kept vocabulary changes consistent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حافظنا على تكوين IME وإدخال الترجمة، وأظهرنا إخفاقات تحديث OAuth اليدوي، وأبقينا تغييرات المفردات متسقة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarede IME-sammensætning og oversættelsesinput, synliggjorde manuelle OAuth-opdateringsfejl og holdt ordforrådsændringer konsistente."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IME-Komposition und Übersetzungseingabe beibehalten, manuelle OAuth-Aktualisierungsfehler sichtbar gemacht und Vokabularänderungen konsistent gehalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preserved IME composition and translation input, surfaced manual OAuth refresh failures, and kept vocabulary changes consistent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservaron la composición del IME y la entrada de traducción, se mostraron los fallos de actualización manual de OAuth y se mantuvieron coherentes los cambios de vocabulario."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préservation de la composition IME et de la saisie de traduction, affichage des échecs d’actualisation manuelle OAuth et cohérence des modifications du vocabulaire."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempertahankan komposisi IME dan input terjemahan, menampilkan kegagalan penyegaran OAuth manual, dan menjaga perubahan kosakata tetap konsisten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenute la composizione IME e l’input di traduzione, resi visibili gli errori di aggiornamento manuale OAuth e mantenute coerenti le modifiche al vocabolario."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IME の変換入力と翻訳入力を保持し、手動 OAuth 更新の失敗を表示し、語彙の変更を一貫して保持しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IME 조합 및 번역 입력을 유지하고, 수동 OAuth 새로 고침 실패를 표시하며, 어휘 변경 사항을 일관되게 유지했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan komposisi IME dan input terjemahan, mendedahkan kegagalan muat semula OAuth manual, dan mengekalkan perubahan perbendaharaan kata secara konsisten."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarte IME-sammensetting og oversettelsesinndata, synliggjorde manuelle OAuth-oppdateringsfeil og holdt ordforrådsendringer konsistente."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IME-samenstelling en vertaalinvoer behouden, handmatige OAuth-vernieuwingsfouten zichtbaar gemaakt en wijzigingen in woordenschat consistent gehouden."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowano kompozycję IME i wprowadzanie tłumaczenia, ujawniono błędy ręcznego odświeżania OAuth i utrzymano spójność zmian słownictwa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos a composição do IME e a entrada de tradução, expusemos falhas de atualização manual do OAuth e mantivemos as alterações de vocabulário consistentes."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarde IME-sammansättning och översättningsinmatning, synliggjorde manuella OAuth-uppdateringsfel och höll ordförrådsändringar konsekventa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IME birleştirmesini ve çeviri girişini korudu, manuel OAuth yenileme hatalarını gösterdi ve kelime dağarcığı değişikliklerini tutarlı tuttu."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留输入法组合和翻译输入，显示手动 OAuth 刷新失败，并保持词汇更改一致。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留輸入法組合和翻譯輸入，顯示手動 OAuth 重新整理失敗，並保持詞彙變更一致。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留輸入法組合和翻譯輸入，顯示手動 OAuth 重新整理失敗，並保持詞彙變更一致。"
+          }
+        }
+      }
+    },
+    "Preserved valid Premium access when StoreKit temporarily returns no entitlements." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حافظنا على وصول Premium الصالح عندما لا يعيد StoreKit أي استحقاقات مؤقتًا."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarede gyldig Premium-adgang, når StoreKit midlertidigt ikke returnerer nogen rettigheder."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültigen Premium-Zugriff beibehalten, wenn StoreKit vorübergehend keine Berechtigungen zurückgibt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preserved valid Premium access when StoreKit temporarily returns no entitlements."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservó el acceso Premium válido cuando StoreKit no devuelve derechos temporalmente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préservation de l’accès Premium valide lorsque StoreKit ne renvoie temporairement aucune autorisation."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempertahankan akses Premium yang valid saat StoreKit untuk sementara tidak mengembalikan entitlement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenuto l’accesso Premium valido quando StoreKit non restituisce temporaneamente alcun diritto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StoreKit が一時的に権利を返さない場合でも、有効な Premium アクセスを保持しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StoreKit이 일시적으로 권한을 반환하지 않을 때도 유효한 Premium 액세스를 유지했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengekalkan akses Premium yang sah apabila StoreKit sementara tidak mengembalikan sebarang kelayakan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarte gyldig Premium-tilgang når StoreKit midlertidig ikke returnerer noen rettigheter."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geldige Premium-toegang behouden wanneer StoreKit tijdelijk geen rechten retourneert."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowano ważny dostęp Premium, gdy StoreKit tymczasowo nie zwraca uprawnień."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantivemos o acesso Premium válido quando o StoreKit temporariamente não retorna direitos."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevarde giltig Premium-åtkomst när StoreKit tillfälligt inte returnerar några rättigheter."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StoreKit geçici olarak hiçbir yetki döndürmediğinde geçerli Premium erişimini korudu."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当 StoreKit 暂时未返回权益时，保留有效的 Premium 访问权限。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當 StoreKit 暫時未傳回權益時，保留有效的 Premium 存取權限。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當 StoreKit 暫時未回傳權益時，保留有效的 Premium 存取權限。"
+          }
+        }
+      }
+    },
+    "Put AI Models first in the model picker, with premium models first for members until the user sets a custom order." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضعنا نماذج AI أولًا في منتقي النماذج، مع عرض النماذج المميزة أولًا للأعضاء إلى أن يضبط المستخدم ترتيبًا مخصصًا."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satte AI-modeller først i modelvælgeren, med premiummodeller først for medlemmer, indtil brugeren angiver en brugerdefineret rækkefølge."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KI-Modelle im Modellauswähler an die erste Stelle gesetzt, Premium-Modelle für Mitglieder zuerst, bis der Benutzer eine benutzerdefinierte Reihenfolge festlegt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put AI Models first in the model picker, with premium models first for members until the user sets a custom order."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colocamos los modelos de IA primero en el selector de modelos, con los modelos premium primero para los miembros hasta que el usuario establezca un orden personalizado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modèles d’IA apparaissent en premier dans le sélecteur de modèles, les modèles premium étant affichés en premier pour les membres jusqu’à ce que l’utilisateur définisse un ordre personnalisé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menempatkan Model AI terlebih dahulu di pemilih model, dengan model premium lebih dahulu untuk anggota hingga pengguna menetapkan urutan khusus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messo i modelli AI per primi nel selettore dei modelli, con i modelli premium per primi per i membri finché l’utente non imposta un ordine personalizzato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデル選択で AI モデルを先頭に配置し、ユーザーがカスタム順序を設定するまではメンバー向けにプレミアムモデルを先頭に表示するようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 선택기에서 AI 모델을 맨 앞에 배치하고, 사용자가 사용자 지정 순서를 설정할 때까지 멤버에게는 프리미엄 모델을 먼저 표시했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meletakkan Model AI dahulu dalam pemilih model, dengan model premium dahulu untuk ahli sehingga pengguna menetapkan susunan tersuai."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satte AI-modeller først i modellvelgeren, med premiummodeller først for medlemmer til brukeren angir en egendefinert rekkefølge."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI-modellen vooraan in de modelkiezer geplaatst, met premiummodellen eerst voor leden totdat de gebruiker een aangepaste volgorde instelt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umieszczono modele AI na początku selektora modeli, a modele premium jako pierwsze dla członków, dopóki użytkownik nie ustawi własnej kolejności."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colocamos os Modelos de IA primeiro no seletor de modelos, com os modelos premium primeiro para membros até que o usuário defina uma ordem personalizada."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Placerade AI-modeller först i modellväljaren, med premiummodeller först för medlemmar tills användaren anger en anpassad ordning."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model seçicide AI Modellerini en başa koydu; kullanıcı özel bir sıra belirleyene kadar üyeler için premium modeller önce gösterilir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 AI 模型放在模型选择器的首位，会员的 Premium 模型优先显示，直到用户设置自定义顺序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 AI 模型放在模型選擇器的首位，會員的 Premium 模型優先顯示，直到使用者設定自訂順序。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 AI 模型放在模型選擇器的首位，會員的 Premium 模型優先顯示，直到使用者設定自訂順序。"
+          }
+        }
+      }
+    },
+    "Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعيد تفعيل إدخال صوت iPhone في الوقت الفعلي على iOS، مع التسميات التوضيحية المباشرة في وضع صورة داخل صورة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genaktiverede iPhone-lyd i realtid på iOS med liveundertekster i billede-i-billede."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone-Audio-Echtzeiteingabe unter iOS wieder aktiviert, mit Live-Untertiteln in Bild-in-Bild."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha vuelto a habilitar la entrada de audio en tiempo real del iPhone en iOS, con subtítulos en vivo en imagen en imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réactivation de l’entrée audio en temps réel de l’iPhone sur iOS, avec sous-titres en direct en image dans l’image."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengaktifkan kembali input audio real-time iPhone di iOS, dengan teks langsung dalam Picture in Picture."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riattivato l'input audio in tempo reale dell'iPhone su iOS, con sottotitoli in tempo reale in Picture in Picture."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOSでiPhoneオーディオのリアルタイム入力を再有効化し、ピクチャーインピクチャーでライブキャプションを表示。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS에서 iPhone 오디오 실시간 입력을 다시 활성화하고, 화면 속 화면에서 실시간 자막을 표시합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengaktifkan semula input audio masa nyata iPhone pada iOS, dengan kapsyen langsung dalam Picture in Picture."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjenaktiverte iPhone-lyd i sanntid på iOS, med direkteteksting i bilde-i-bilde."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone-audio in realtime opnieuw ingeschakeld op iOS, met live ondertitels in beeld-in-beeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponownie włączono wejście audio iPhone'a w czasie rzeczywistym w systemie iOS, z napisami na żywo w trybie obraz w obrazie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reativada a entrada de áudio em tempo real do iPhone no iOS, com legendas ao vivo em Picture in Picture."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Återaktiverade iPhone-ljud i realtid på iOS, med liveundertexter i bild-i-bild."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS'ta iPhone ses gerçek zamanlı girişi yeniden etkinleştirildi; Picture in Picture'ta canlı altyazılar eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上重新启用了 iPhone 音频实时输入，并支持画中画实时字幕。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上重新啟用了 iPhone 音訊即時輸入，並支援子母畫面即時字幕。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iOS 上重新啟用 iPhone 音訊即時輸入，並支援畫中畫即時字幕。"
+          }
+        }
+      }
+    },
+    "Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حسّنّا تشغيل صوت السجل مع مخطط زمني لموجة الصوت، وتمييز الكلمات المنطوقة، والانتقال على مستوى الكلمة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret lydafspilning i historik med en bølgeformtidslinje, fremhævning af talte ord og søgning på ordniveau."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfeinerte Audio-Wiedergabe im Verlauf mit einer Wellenform-Zeitleiste, Hervorhebung gesprochener Wörter und Navigation auf Wortebene."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha mejorado la reproducción de audio del historial con una línea de tiempo de forma de onda, resaltado de palabras habladas y búsqueda a nivel de palabra."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture audio de l’historique améliorée avec une chronologie en forme d’onde, la mise en surbrillance des mots prononcés et la navigation au niveau du mot."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyempurnakan pemutaran audio Riwayat dengan linimasa bentuk gelombang, sorotan kata yang diucapkan, dan pencarian per kata."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorata la riproduzione audio della cronologia con una timeline a forma d'onda, evidenziazione delle parole pronunciate e ricerca a livello di parola."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "履歴の音声再生を改善し、波形タイムライン、発話単語のハイライト、単語単位のシークに対応。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 오디오 재생을 개선하여 파형 타임라인, 발화 단어 강조, 단어 단위 탐색을 지원합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperhalus main balik audio Sejarah dengan garis masa bentuk gelombang, sorotan perkataan yang dituturkan dan carian pada peringkat perkataan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret lydavspilling i loggen med en bølgeformtidslinje, utheving av talte ord og søk på ordnivå."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioafspelen in Geschiedenis verfijnd met een golfvormtijdlijn, markering van gesproken woorden en zoeken op woordniveau."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulepszono odtwarzanie dźwięku w historii: oś czasu przebiegu fali, podświetlanie wypowiedzianych słów i wyszukiwanie na poziomie słów."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprodução de áudio do histórico aprimorada com linha do tempo de forma de onda, destaque de palavras faladas e busca no nível da palavra."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förfinade ljuduppspelningen i historiken med en vågformstidslinje, markering av talade ord och sökning på ordnivå."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçmiş ses oynatımı; dalga formu zaman çizelgesi, konuşulan sözcük vurgulaması ve sözcük düzeyinde arama ile geliştirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改进了历史记录音频播放，支持波形时间线、口语单词高亮和单词级跳转。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改進了歷史記錄音訊播放，支援波形時間軸、口語單字醒目提示和單字層級跳轉。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改良歷史記錄音訊播放，支援波形時間軸、口語詞彙醒目提示及詞彙層級跳轉。"
+          }
+        }
+      }
+    },
+    "Refined Quick Panel controls and the realtime entry with a waveform." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حسّنّا عناصر التحكم في اللوحة السريعة وإدخال الوقت الفعلي باستخدام موجة صوتية."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedrede Quick Panel-kontrolelementer og realtidsindtastningen med en bølgeform."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfeinerte Quick-Panel-Steuerelemente und die Echtzeiteingabe mit einer Wellenform."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refined Quick Panel controls and the realtime entry with a waveform."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se han mejorado los controles del panel rápido y la entrada en tiempo real con una forma de onda."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôles du panneau rapide et saisie en temps réel améliorés avec une forme d’onde."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyempurnakan kontrol Panel Cepat dan entri waktu nyata dengan bentuk gelombang."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorati i controlli del pannello rapido e l'inserimento in tempo reale con una forma d'onda."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クイックパネルのコントロールと波形付きリアルタイム入力の操作性を改善。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "빠른 패널 컨트롤과 파형이 표시되는 실시간 입력을 개선했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperhalus kawalan Panel Pantas dan entri masa nyata dengan bentuk gelombang."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret Quick Panel-kontrollene og sanntidsregistreringen med en bølgeform."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bediening van het snelle paneel en realtime-invoer met een golfvorm verfijnd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulepszono elementy sterowania panelu szybkiego i wprowadzanie w czasie rzeczywistym z przebiegiem fali."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controles do painel rápido e entrada em tempo real com forma de onda aprimorados."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förfinade kontrollerna i snabbpanelen och realtidsinmatningen med en vågform."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hızlı Panel kontrolleri ve dalga formlu gerçek zamanlı giriş geliştirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改进了快速面板控件以及带波形显示的实时输入。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改進了快速面板控制項以及帶波形顯示的即時輸入。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改良快速面板控制項及帶波形顯示的即時輸入。"
+          }
+        }
+      }
+    },
+    "Stabilized realtime captions during translation updates and added pause-based sentence breaks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ثبّتنا التسميات التوضيحية في الوقت الفعلي أثناء تحديثات الترجمة، وأضفنا فواصل الجمل بناءً على التوقف."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserede realtidsundertekster under oversættelsesopdateringer og tilføjede sætningsopdelinger baseret på pauser."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echtzeit-Untertitel bei Übersetzungsaktualisierungen stabilisiert und pausenbasierte Satzumbrüche hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilized realtime captions during translation updates and added pause-based sentence breaks."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se estabilizaron los subtítulos en tiempo real durante las actualizaciones de traducción y se añadieron cortes de frase basados en pausas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilisation des sous-titres en temps réel lors des mises à jour de traduction et ajout de coupures de phrase basées sur les pauses."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menstabilkan teks waktu nyata selama pembaruan terjemahan dan menambahkan pemisah kalimat berbasis jeda."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilizzati i sottotitoli in tempo reale durante gli aggiornamenti della traduzione e aggiunte interruzioni di frase basate sulle pause."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻訳更新中のリアルタイムキャプションを安定化し、ポーズに基づく文の区切りを追加。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "번역 업데이트 중 실시간 자막을 안정화하고 일시정지 기반 문장 구분을 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menstabilkan kapsyen masa nyata semasa kemas kini terjemahan dan menambah pemisah ayat berdasarkan jeda."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserte direkteteksting under oversettelsesoppdateringer og la til pausebaserte setningsskiller."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime ondertitels gestabiliseerd tijdens vertaalupdates en op pauzes gebaseerde zinsafbrekingen toegevoegd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilizowano napisy w czasie rzeczywistym podczas aktualizacji tłumaczeń i dodano podziały zdań oparte na pauzach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estabilizadas as legendas em tempo real durante atualizações de tradução e adicionadas quebras de frase baseadas em pausas."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserade realtidsundertexter under översättningsuppdateringar och lade till pausbaserade meningsbrytningar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çeviri güncellemeleri sırasında gerçek zamanlı altyazılar kararlı hâle getirildi ve duraklamaya dayalı cümle bölmeleri eklendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稳定了翻译更新期间的实时字幕，并新增基于停顿的句子断句。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "穩定了翻譯更新期間的即時字幕，並新增基於停頓的句子斷句。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "穩定了翻譯更新期間的即時字幕，並新增基於停頓的句子斷句。"
+          }
+        }
+      }
+    },
+    "Stabilized realtime captions, stop timing, caption alignment, macOS caption scrolling, and speech model downloads." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ثبّتنا التسميات التوضيحية في الوقت الفعلي، وتوقيت الإيقاف، ومحاذاة التسميات التوضيحية، وتمرير التسميات التوضيحية في macOS، وتنزيلات نماذج الكلام."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserede realtidsundertekster, stoptiming, undertekstjustering, undertekstrulning i macOS og download af talemodeller."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echtzeit-Untertitel, Stoppzeitpunkt, Untertitelausrichtung, Untertitel-Scrollen unter macOS und Sprachmodell-Downloads stabilisiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilized realtime captions, stop timing, caption alignment, macOS caption scrolling, and speech model downloads."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se estabilizaron los subtítulos en tiempo real, el tiempo de detención, la alineación de subtítulos, el desplazamiento de subtítulos en macOS y las descargas de modelos de voz."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilisation des sous-titres en temps réel, du minutage d’arrêt, de l’alignement des sous-titres, du défilement des sous-titres sur macOS et des téléchargements de modèles vocaux."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menstabilkan teks waktu nyata, waktu berhenti, penyelarasan teks, penggulungan teks macOS, dan unduhan model ucapan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilizzati sottotitoli in tempo reale, temporizzazione di arresto, allineamento dei sottotitoli, scorrimento dei sottotitoli su macOS e download dei modelli vocali."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイムキャプション、停止タイミング、キャプションの位置合わせ、macOSでのキャプションのスクロール、音声モデルのダウンロードを安定化。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 자막, 중지 타이밍, 자막 정렬, macOS 자막 스크롤, 음성 모델 다운로드를 안정화했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menstabilkan kapsyen masa nyata, pemasaan berhenti, penjajaran kapsyen, tatal kapsyen macOS dan muat turun model pertuturan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserte direkteteksting, stopptidspunkt, tekstjustering, teksting som ruller på macOS og nedlasting av talemodeller."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime ondertitels, stoptiming, ondertiteluitlijning, ondertitelscrollen in macOS en downloads van spraakmodellen gestabiliseerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilizowano napisy w czasie rzeczywistym, synchronizację zatrzymania, wyrównanie napisów, przewijanie napisów w macOS i pobieranie modeli mowy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estabilizadas as legendas em tempo real, o tempo de parada, o alinhamento das legendas, a rolagem de legendas no macOS e os downloads de modelos de fala."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliserade realtidsundertexter, stopptid, undertextjustering, undertextrullning i macOS och nedladdning av talmodeller."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı altyazılar, durdurma zamanlaması, altyazı hizalaması, macOS altyazı kaydırması ve konuşma modeli indirmeleri kararlı hâle getirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稳定了实时字幕、停止计时、字幕对齐、macOS 字幕滚动和语音模型下载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "穩定了即時字幕、停止計時、字幕對齊、macOS 字幕捲動和語音模型下載。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "穩定了即時字幕、停止計時、字幕對齊、macOS 字幕捲動及語音模型下載。"
+          }
+        }
+      }
+    },
+    "TLingo Has Been Updated" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تحديث TLingo"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo er blevet opdateret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo wurde aktualisiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo Has Been Updated"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo se ha actualizado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo a été mis à jour"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo Telah Diperbarui"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo è stato aggiornato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingoが更新されました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo가 업데이트되었습니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo Telah Dikemas Kini"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo er oppdatert"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo is bijgewerkt"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo zostało zaktualizowane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O TLingo foi atualizado"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo har uppdaterats"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo Güncellendi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 已更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 已更新"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo 已更新"
+          }
+        }
+      }
+    },
+    "TLingo got %lld updates while you were away" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تلقّى TLingo %lld من التحديثات أثناء غيابك"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo modtog %lld opdateringer, mens du var væk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo hat %lld Aktualisierungen erhalten, während du weg warst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo got %lld updates while you were away"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo recibió %lld actualizaciones mientras no estabas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo a reçu %lld mises à jour pendant votre absence"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo mendapat %lld pembaruan selama Anda pergi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo ha ricevuto %lld aggiornamenti mentre eri via"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo は不在中に %lld 件の更新を受け取りました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo는 자리를 비운 동안 %lld개의 업데이트를 받았습니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo menerima %lld kemas kini semasa anda tiada"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo fikk %lld oppdateringer mens du var borte"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo heeft %lld updates ontvangen terwijl je weg was"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo otrzymało %lld aktualizacji, gdy Cię nie było"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O TLingo recebeu %lld atualizações enquanto você estava fora"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo fick %lld uppdateringar medan du var borta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TLingo siz yokken %lld güncelleme aldı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你不在的这段时间，TLingo 更新了 %lld 个版本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在你離開期間，TLingo 收到了 %lld 則更新"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你唔喺度期間，TLingo 收到咗 %lld 個更新"
+          }
+        }
+      }
+    },
+    "The model button leads with the first selected model in list order, shown as \"<model> +N\" on every platform." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض زر الطراز أول طراز محدد وفق ترتيب القائمة، ويظهر بالشكل \"<model> +N\" على كل منصة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelknappen viser den første valgte model i listrækkefølge som \"<model> +N\" på alle platforme."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Modellschaltfläche zeigt das erste ausgewählte Modell in Listenreihenfolge als \"<model> +N\" auf jeder Plattform an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model button leads with the first selected model in list order, shown as \"<model> +N\" on every platform."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El botón de modelo muestra primero el primer modelo seleccionado según el orden de la lista, como \"<model> +N\" en todas las plataformas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le bouton de modèle affiche en premier le premier modèle sélectionné dans l’ordre de la liste, sous la forme \"<model> +N\" sur toutes les plateformes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tombol model menampilkan model pertama yang dipilih sesuai urutan daftar, ditampilkan sebagai \"<model> +N\" di setiap platform."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pulsante del modello mostra per primo il primo modello selezionato nell'ordine dell'elenco, visualizzato come \"<model> +N\" su ogni piattaforma."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルボタンには、リスト順で最初に選択されたモデルが先頭に表示され、すべてのプラットフォームで「<model> +N」と表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 버튼에는 목록 순서에서 처음 선택된 모델이 맨 앞에 표시되며, 모든 플랫폼에서 \"<model> +N\"으로 표시됩니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butang model mendahului model pertama yang dipilih mengikut susunan senarai, dipaparkan sebagai \"<model> +N\" pada setiap platform."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellknappen viser den første valgte modellen i listrekkefølge, vist som \"<model> +N\" på alle plattformer."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De modelknop toont het eerst geselecteerde model in lijstvolgorde, weergegeven als \"<model> +N\" op elk platform."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przycisk modelu pokazuje jako pierwszy pierwszy wybrany model w kolejności listy, wyświetlany jako \"<model> +N\" na każdej platformie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O botão de modelo mostra primeiro o primeiro modelo selecionado na ordem da lista, exibido como \"<model> +N\" em todas as plataformas."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellknappen visar den första valda modellen i listordning, som \"<model> +N\" på alla plattformar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model düğmesi, liste sırasına göre ilk seçilen modeli önde gösterir ve her platformda \"<model> +N\" olarak görünür."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型按钮会按列表顺序优先显示第一个选中的模型，并在所有平台上显示为 \"<model> +N\"。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型按鈕會依清單順序優先顯示第一個選取的模型，並在所有平台上顯示為 \"<model> +N\"。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型按鈕會按清單順序優先顯示第一個選取的模型，並在所有平台上顯示為 \"<model> +N\"。"
+          }
+        }
+      }
+    },
+    "Unified the language catalog with a searchable picker and refined translation results, settings, and macOS navigation." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وحّدنا كتالوج اللغات باستخدام منتقي قابل للبحث، وحسّنّا نتائج الترجمة والإعدادات والتنقل في macOS."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samlede sprogkataloget med en søgbar vælger og forbedrede oversættelsesresultater, indstillinger og macOS-navigation."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den Sprachkatalog mit einer durchsuchbaren Auswahl vereinheitlicht und Übersetzungsergebnisse, Einstellungen und macOS-Navigation verfeinert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unified the language catalog with a searchable picker and refined translation results, settings, and macOS navigation."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se unificó el catálogo de idiomas con un selector con búsqueda y se mejoraron los resultados de traducción, los ajustes y la navegación en macOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unification du catalogue de langues avec un sélecteur avec recherche, et amélioration des résultats de traduction, des réglages et de la navigation sur macOS."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyatukan katalog bahasa dengan pemilih yang dapat dicari dan menyempurnakan hasil terjemahan, pengaturan, serta navigasi macOS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unificato il catalogo delle lingue con un selettore ricercabile e migliorati i risultati di traduzione, le impostazioni e la navigazione di macOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検索可能な選択ツールで言語カタログを統合し、翻訳結果、設定、macOSのナビゲーションを改善。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "검색 가능한 선택기를 사용해 언어 카탈로그를 통합하고 번역 결과, 설정 및 macOS 탐색을 개선했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyatukan katalog bahasa dengan pemilih boleh cari dan memperhalus hasil terjemahan, tetapan dan navigasi macOS."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samlet språkkatalogen med en søkbar velger og forbedret oversettelsesresultater, innstillinger og macOS-navigasjon."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De taalcatalogus samengevoegd met een doorzoekbare kiezer en vertaalresultaten, instellingen en macOS-navigatie verfijnd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ujednolicono katalog języków z wyszukiwalnym selektorem i ulepszono wyniki tłumaczeń, ustawienia oraz nawigację w macOS."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catálogo de idiomas unificado com um seletor pesquisável e resultados de tradução, ajustes e navegação do macOS aprimorados."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enhetligade språkkatalogen med en sökbar väljare och förfinade översättningsresultat, inställningar och macOS-navigering."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dil kataloğu aranabilir bir seçiciyle birleştirildi; çeviri sonuçları, ayarlar ve macOS gezinmesi geliştirildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "统一了语言目录并加入可搜索的选择器，同时改进了翻译结果、设置和 macOS 导航。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "統一了語言目錄並加入可搜尋的選擇器，同時改進了翻譯結果、設定和 macOS 導覽。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "統一了語言目錄並加入可搜尋的選擇器，同時改良了翻譯結果、設定及 macOS 導覽。"
+          }
+        }
+      }
+    },
+    "Updated localized strings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تحديث السلاسل المترجمة."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdaterede lokaliserede strenge."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalisierte Zeichenfolgen aktualisiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated localized strings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se han actualizado las cadenas localizadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaînes localisées mises à jour."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperbarui string yang dilokalkan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornate le stringhe localizzate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ローカライズされた文字列を更新。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현지화된 문자열을 업데이트했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengemas kini rentetan penyetempatan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oppdaterte lokaliserte strenger."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelokaliseerde strings bijgewerkt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaktualizowano zlokalizowane ciągi."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strings localizadas atualizadas."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdaterade lokaliserade strängar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yerelleştirilmiş dizeler güncellendi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了本地化字符串。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了本地化字串。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了本地化字串。"
+          }
+        }
+      }
+    },
+    "Updated realtime translation provider options." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حدّثنا خيارات موفري الترجمة الفورية."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdateret indstillinger for realtidsoversættelsesudbydere."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Optionen für Echtzeit-Übersetzungsanbieter aktualisiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated realtime translation provider options."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se actualizaron las opciones de proveedores de traducción en tiempo real."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour des options de fournisseurs de traduction en temps réel."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperbarui opsi penyedia terjemahan real-time."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornate le opzioni dei fornitori di traduzione in tempo reale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム翻訳プロバイダーのオプションを更新しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 번역 제공업체 옵션을 업데이트했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengemas kini pilihan penyedia terjemahan masa nyata."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oppdatert alternativer for sanntidsoversettelsesleverandører."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opties voor realtime-vertaalaanbieders bijgewerkt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaktualizowano opcje dostawców tłumaczeń w czasie rzeczywistym."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizadas as opções de provedores de tradução em tempo real."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdaterat alternativen för realtidsöversättningsleverantörer."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı çeviri sağlayıcısı seçenekleri güncellendi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新咗實時翻譯供應商選項。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了实时翻译提供商选项。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了即時翻譯供應商選項。"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإصدار %@"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versi %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バージョン %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버전 %@"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versi %@"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versjon %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versie %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wersja %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürüm %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@"
+          }
+        }
+      }
+    },
+    "Welcome Back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مرحبًا بعودتك"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velkommen tilbage"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen zurück"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome Back"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenido de nuevo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon retour"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selamat datang kembali"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bentornato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "おかえりなさい"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 오신 것을 환영합니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selamat kembali"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velkommen tilbake"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welkom terug"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Witamy ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bem-vindo de volta"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Välkommen tillbaka"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar hoş geldiniz"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎回来"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歡迎回來"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歡迎回來"
+          }
+        }
+      }
+    },
+    "Wish for a Feature" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اطلب ميزة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ønsk en funktion"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktion wünschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wish for a Feature"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitar una función"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Souhaiter une fonctionnalité"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajukan Fitur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiedi una funzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "機能をリクエスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기능 요청하기"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mohon Ciri"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ønsk en funksjon"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Functie aanvragen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaproponuj funkcję"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitar um recurso"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önska en funktion"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özellik Talep Et"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "许愿新功能"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許願新功能"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許願新功能"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -39,6 +39,9 @@
             case ready
             case needsDownload
             case downloading
+            /// iOS keeps downloading after its prompt is dismissed, but `LanguageAvailability` still
+            /// reports `.supported` and `prepareTranslation()` returns without prompting again.
+            case downloadingInBackground
             case unsupported
         }
 
@@ -240,6 +243,16 @@
             }
             .task(id: languagePairKey) {
                 await refreshPackStatus()
+            }
+            .task(id: "\(step.rawValue)-\(packState)") {
+                // The system can keep downloading after the prompt is dismissed, so poll for completion.
+                let pollingStates: [PackState] = [.needsDownload, .unknown, .downloadingInBackground]
+                guard step == .download, pollingStates.contains(packState) else { return }
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(3))
+                    guard !Task.isCancelled else { return }
+                    await refreshPackStatus(keepsBackgroundDownload: true)
+                }
             }
             .task(id: "\(step.rawValue)-\(inputIndex)") {
                 guard step == .tryIt else { return }
@@ -573,6 +586,11 @@
                         Text("Approve the download"),
                         Text("iOS is asking to download these languages for Apple Translate. Tap Download in the prompt.")
                     )
+                case .downloadingInBackground:
+                    pageHeader(
+                        Text("Downloading languages"),
+                        Text("iOS is downloading these languages in the background. This page updates when they are ready.")
+                    )
                 default:
                     pageHeader(
                         Text("The download did not finish"),
@@ -595,6 +613,8 @@
                         Text("Downloaded")
                     case .downloading:
                         Text("Waiting for approval")
+                    case .downloadingInBackground:
+                        Text("Downloading…")
                     default:
                         Text("Not downloaded")
                     }
@@ -609,7 +629,7 @@
                         .font(.system(size: 22))
                         .foregroundStyle(colors.success)
                         .accessibilityLabel(Text("Downloaded"))
-                case .downloading:
+                case .downloading, .downloadingInBackground:
                     ProgressView()
                 default:
                     Image(systemName: "exclamationmark.circle")
@@ -1349,7 +1369,7 @@
             }
         }
 
-        private func refreshPackStatus() async {
+        private func refreshPackStatus(keepsBackgroundDownload: Bool = false) async {
             guard !isSameLanguage, let source = sourceLanguage.localeLanguage else {
                 packState = .unknown
                 return
@@ -1360,9 +1380,14 @@
                     target: targetLanguage.localeLanguage,
                     strategy: availabilityStrategy
                 )
+                // A stale poll must not overwrite a newer state such as .downloading.
+                guard !Task.isCancelled else { return }
                 switch status {
                 case .installed: packState = .ready
-                case .supported: packState = .needsDownload
+                case .supported:
+                    if !(keepsBackgroundDownload && packState == .downloadingInBackground) {
+                        packState = .needsDownload
+                    }
                 case .unsupported: packState = .unsupported
                 @unknown default: packState = .unknown
                 }
@@ -1403,7 +1428,7 @@
             }
             await refreshPackStatus()
             if packState != .ready, packState != .unsupported {
-                packState = .needsDownload
+                packState = .downloadingInBackground
             }
         }
 

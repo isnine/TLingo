@@ -296,7 +296,7 @@ struct SettingsView: View {
         }
     }
 
-    private static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6754217103?action=write-review")!
+    static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6754217103?action=write-review")!
     private static let privacyPolicyURL = URL(string: "https://tlingo.zanderwang.com/privacy/")!
 
     private var versionLabel: some View {

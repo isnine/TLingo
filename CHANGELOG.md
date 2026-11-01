@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.2] - 2026-10-31
+
+### Added
+
+- Added an in-app summary of what's new after updates.
+
+### Improved
+
+- [iOS] Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio.
+- [iOS] Clarified Apple Translate language downloads during setup.
+- Updated realtime translation provider options.
+
 ## [5.7.1] - 2026-10-30
 
 ### Changed
@@ -25,8 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding.
-- Added transcription-only realtime history on iPhone Audio.
+- [iOS] Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding.
+- [iOS] Added transcription-only realtime history on iPhone Audio.
 
 ### Fixed
 
@@ -34,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improved
 
-- Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language.
+- [iOS] Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language.
 - Stabilized realtime captions during translation updates and added pause-based sentence breaks.
 - Clarified recognition model loading status and kept untranslated sessions readable in History.
 
@@ -46,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture.
+- [iOS] Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture.
 
 ### Improved
 
@@ -57,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Kept macOS global shortcuts separate per app and paused them while recording a new shortcut.
+- [Mac] Kept macOS global shortcuts separate per app and paused them while recording a new shortcut.
 
 ## [5.5.9] - 2026-10-16
 
@@ -65,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export.
 - Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS.
-- Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window.
+- [Mac] Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window.
 
 ### Improved
 

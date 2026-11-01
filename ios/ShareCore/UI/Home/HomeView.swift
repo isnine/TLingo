@@ -45,6 +45,8 @@ public struct HomeView: View {
     @ObservedObject private var preferences = AppPreferences.shared
     @ObservedObject private var entitlement = Entitlement.shared
     @State private var hasTriggeredAutoRequest = false
+    /// The waveform alone reads as voice input, so it carries a label until first use.
+    @AppStorage("home.hasUsedRealtimeButton") private var hasUsedRealtimeButton = false
     @State private var recentTextRecords: [HomeRecentRecord] = []
     @State private var isInputExpanded: Bool
     @State private var showingProviderInfo: String?
@@ -1697,11 +1699,20 @@ public struct HomeView: View {
             let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
             if !hasText, let onRealtimeTap {
-                Button(action: onRealtimeTap) {
-                    phonePrimaryInputButtonIcon("waveform")
+                Button {
+                    hasUsedRealtimeButton = true
+                    onRealtimeTap()
+                } label: {
+                    if hasUsedRealtimeButton {
+                        phonePrimaryInputButtonIcon("waveform")
+                    } else {
+                        Label("Live Translate", systemImage: "waveform")
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(height: 22)
+                    }
                 }
                 .buttonStyle(.glassProminent)
-                .buttonBorderShape(.circle)
+                .buttonBorderShape(hasUsedRealtimeButton ? .circle : .capsule)
                 .tint(colors.accent)
                 .accessibilityLabel("Realtime Translation")
                 .accessibilityIdentifier("home_realtime_button")

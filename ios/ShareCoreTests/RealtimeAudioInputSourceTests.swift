@@ -29,7 +29,7 @@
                     RealtimeAudioInputSource.microphone.supportedTranslationProviders == RealtimeTranslationProvider
                         .availableCases
                 )
-                #expect(RealtimeAudioInputSource.microphone.supportedRecognitionModels == [.appleSpeech])
+                #expect(RealtimeAudioInputSource.microphone.supportedRecognitionModels == RecognitionModelStore.availableModels)
                 #expect(RealtimeAudioInputSource.iphoneAudio.supportedTranslationProviders == [.appleTranslator, .transcriptionOnly])
                 #expect(RealtimeAudioInputSource.iphoneAudio.supportedRecognitionModels == [.appleSpeech])
             #elseif os(macOS)

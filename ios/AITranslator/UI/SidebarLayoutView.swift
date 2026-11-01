@@ -302,6 +302,9 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             .sheet(isPresented: $showFeaturePaywall) {
                 PaywallView(context: .featureLocked)
             }
+            .whatsNewPresentation {
+                showActions || showFeaturePaywall
+            }
         }
 
         @ViewBuilder
@@ -524,6 +527,9 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             }
             .sheet(isPresented: $showFeaturePaywall) {
                 PaywallView(context: .featureLocked)
+            }
+            .whatsNewPresentation {
+                showActions || showFeaturePaywall
             }
         }
 

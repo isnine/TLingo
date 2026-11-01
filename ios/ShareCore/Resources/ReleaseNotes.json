@@ -1,0 +1,448 @@
+{
+  "releases": [
+    {
+      "version": "5.7.2",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Added an in-app summary of what's new after updates."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Clarified Apple Translate language downloads during setup."
+        },
+        {
+          "kind": "improved",
+          "text": "Updated realtime translation provider options."
+        }
+      ]
+    },
+    {
+      "version": "5.7.1",
+      "items": []
+    },
+    {
+      "version": "5.7.0",
+      "items": []
+    },
+    {
+      "version": "5.6.1",
+      "items": [
+        {
+          "kind": "added",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Added first-run scenario choices with guided Realtime setup, and a Settings action to replay onboarding."
+        },
+        {
+          "kind": "added",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Added transcription-only realtime history on iPhone Audio."
+        },
+        {
+          "kind": "fixed",
+          "text": "Preserved valid Premium access when StoreKit temporarily returns no entitlements."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Added a playable sample to iPhone Audio onboarding and defaulted Realtime setup to the app language."
+        },
+        {
+          "kind": "improved",
+          "text": "Stabilized realtime captions during translation updates and added pause-based sentence breaks."
+        },
+        {
+          "kind": "improved",
+          "text": "Clarified recognition model loading status and kept untranslated sessions readable in History."
+        }
+      ]
+    },
+    {
+      "version": "5.6.0",
+      "items": [
+        {
+          "kind": "added",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Re-enabled iPhone Audio realtime input on iOS, with live captions in Picture in Picture."
+        },
+        {
+          "kind": "improved",
+          "text": "New installs start with Microsoft Translate and the first free AI model enabled, and results default to model list order."
+        },
+        {
+          "kind": "improved",
+          "text": "The model button leads with the first selected model in list order, shown as \"<model> +N\" on every platform."
+        },
+        {
+          "kind": "improved",
+          "text": "Refined Quick Panel controls and the realtime entry with a waveform."
+        },
+        {
+          "kind": "improved",
+          "text": "Updated localized strings."
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Kept macOS global shortcuts separate per app and paused them while recording a new shortcut."
+        }
+      ]
+    },
+    {
+      "version": "5.5.9",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Added photo text translation on iOS and a vocabulary list with flashcard review and plain-text export."
+        },
+        {
+          "kind": "added",
+          "text": "Added a realtime Live Activity and control, plus a Helper selection action toolbar on macOS."
+        },
+        {
+          "kind": "added",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window."
+        },
+        {
+          "kind": "improved",
+          "text": "Put AI Models first in the model picker, with premium models first for members until the user sets a custom order."
+        },
+        {
+          "kind": "improved",
+          "text": "Moved model reordering into the model picker sheet, with its own reset and done actions."
+        },
+        {
+          "kind": "improved",
+          "text": "Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking."
+        },
+        {
+          "kind": "improved",
+          "text": "Unified the language catalog with a searchable picker and refined translation results, settings, and macOS navigation."
+        },
+        {
+          "kind": "improved",
+          "text": "Kept realtime running in the background, synced Picture in Picture pause state, and improved long-session performance."
+        },
+        {
+          "kind": "fixed",
+          "text": "Stabilized realtime captions, stop timing, caption alignment, macOS caption scrolling, and speech model downloads."
+        },
+        {
+          "kind": "fixed",
+          "text": "Allowed more Apple Speech languages and repaired Apple Translate download routing."
+        },
+        {
+          "kind": "fixed",
+          "text": "Preserved IME composition and translation input, surfaced manual OAuth refresh failures, and kept vocabulary changes consistent."
+        }
+      ]
+    },
+    {
+      "version": "3.8.6",
+      "items": []
+    },
+    {
+      "version": "3.8.5",
+      "items": []
+    },
+    {
+      "version": "3.8.4",
+      "items": []
+    },
+    {
+      "version": "3.8.3",
+      "items": []
+    },
+    {
+      "version": "3.8.2",
+      "items": []
+    },
+    {
+      "version": "3.8.1",
+      "items": []
+    },
+    {
+      "version": "3.8.0",
+      "items": []
+    },
+    {
+      "version": "3.7.9",
+      "items": []
+    },
+    {
+      "version": "3.7.8",
+      "items": []
+    },
+    {
+      "version": "3.7.7",
+      "items": []
+    },
+    {
+      "version": "3.7.6",
+      "items": []
+    },
+    {
+      "version": "3.7.5",
+      "items": []
+    },
+    {
+      "version": "3.7.4",
+      "items": []
+    },
+    {
+      "version": "3.7.3",
+      "items": []
+    },
+    {
+      "version": "3.7.2",
+      "items": []
+    },
+    {
+      "version": "3.7.1",
+      "items": []
+    },
+    {
+      "version": "3.7.0",
+      "items": []
+    },
+    {
+      "version": "3.6.0",
+      "items": []
+    },
+    {
+      "version": "3.5.4",
+      "items": []
+    },
+    {
+      "version": "3.5.3",
+      "items": []
+    },
+    {
+      "version": "3.5.2",
+      "items": []
+    },
+    {
+      "version": "3.5.1",
+      "items": []
+    },
+    {
+      "version": "3.5.0",
+      "items": []
+    },
+    {
+      "version": "3.4.35",
+      "items": []
+    },
+    {
+      "version": "3.4.34",
+      "items": []
+    },
+    {
+      "version": "3.4.33",
+      "items": []
+    },
+    {
+      "version": "3.4.32",
+      "items": []
+    },
+    {
+      "version": "3.4.31",
+      "items": []
+    },
+    {
+      "version": "3.4.30",
+      "items": []
+    },
+    {
+      "version": "3.4.29",
+      "items": []
+    },
+    {
+      "version": "3.4.28",
+      "items": []
+    },
+    {
+      "version": "3.4.27",
+      "items": []
+    },
+    {
+      "version": "3.4.26",
+      "items": []
+    },
+    {
+      "version": "3.4.25",
+      "items": []
+    },
+    {
+      "version": "3.4.24",
+      "items": []
+    },
+    {
+      "version": "3.4.23",
+      "items": []
+    },
+    {
+      "version": "3.4.22",
+      "items": []
+    },
+    {
+      "version": "3.4.21",
+      "items": []
+    },
+    {
+      "version": "3.4.20",
+      "items": []
+    },
+    {
+      "version": "3.4.19",
+      "items": []
+    },
+    {
+      "version": "3.4.18",
+      "items": []
+    },
+    {
+      "version": "3.4.17",
+      "items": []
+    },
+    {
+      "version": "3.4.16",
+      "items": []
+    },
+    {
+      "version": "3.4.15",
+      "items": []
+    },
+    {
+      "version": "3.4.14",
+      "items": []
+    },
+    {
+      "version": "3.4.13",
+      "items": []
+    },
+    {
+      "version": "3.4.12",
+      "items": []
+    },
+    {
+      "version": "3.4.11",
+      "items": []
+    },
+    {
+      "version": "3.4.10",
+      "items": []
+    },
+    {
+      "version": "3.4.9",
+      "items": []
+    },
+    {
+      "version": "3.4.8",
+      "items": []
+    },
+    {
+      "version": "3.4.7",
+      "items": []
+    },
+    {
+      "version": "3.4.6",
+      "items": []
+    },
+    {
+      "version": "3.4.5",
+      "items": []
+    },
+    {
+      "version": "3.4.4",
+      "items": []
+    },
+    {
+      "version": "3.4.3",
+      "items": []
+    },
+    {
+      "version": "3.4.2",
+      "items": []
+    },
+    {
+      "version": "3.4.1",
+      "items": []
+    },
+    {
+      "version": "3.4.0",
+      "items": []
+    },
+    {
+      "version": "3.3.5",
+      "items": []
+    },
+    {
+      "version": "3.3.3",
+      "items": []
+    },
+    {
+      "version": "3.3.2",
+      "items": []
+    },
+    {
+      "version": "3.3.1",
+      "items": []
+    },
+    {
+      "version": "3.3.0",
+      "items": []
+    },
+    {
+      "version": "3.2.9",
+      "items": []
+    },
+    {
+      "version": "3.2.8",
+      "items": []
+    },
+    {
+      "version": "3.2.7",
+      "items": []
+    },
+    {
+      "version": "3.2.6",
+      "items": []
+    },
+    {
+      "version": "3.2.5",
+      "items": []
+    },
+    {
+      "version": "3.2.4",
+      "items": []
+    },
+    {
+      "version": "3.2.0",
+      "items": []
+    }
+  ]
+}

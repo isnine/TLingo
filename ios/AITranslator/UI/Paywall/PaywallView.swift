@@ -342,8 +342,6 @@ struct CelebrationOverlay: View {
     let subtitle: LocalizedStringKey
     let toastTopInset: CGFloat?
 
-    private static let pieces: [ConfettiPiece] = (0 ..< 70).map { _ in ConfettiPiece.random() }
-
     @State private var animate = false
 
     init(
@@ -362,25 +360,7 @@ struct CelebrationOverlay: View {
         ZStack {
             Color.black.opacity(0.001) // capture layout, no visual
 
-            GeometryReader { geo in
-                ZStack {
-                    ForEach(Self.pieces) { piece in
-                        Rectangle()
-                            .fill(piece.color)
-                            .frame(width: piece.size.width, height: piece.size.height)
-                            .rotationEffect(.degrees(animate ? piece.endRotation : piece.startRotation))
-                            .position(
-                                x: geo.size.width * piece.startX,
-                                y: animate ? geo.size.height + 40 : -40
-                            )
-                            .opacity(animate ? 0 : 1)
-                            .animation(
-                                .easeIn(duration: piece.duration).delay(piece.delay),
-                                value: animate
-                            )
-                    }
-                }
-            }
+            ConfettiBurst()
 
             VStack(spacing: 12) {
                 Image(systemName: "checkmark.seal.fill")
@@ -421,6 +401,37 @@ struct CelebrationOverlay: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: toastTopInset == nil ? .center : .top)
         }
         .ignoresSafeArea()
+        .onAppear { animate = true }
+    }
+}
+
+/// Confetti falling once from the top edge, shared by celebrations and What's New.
+struct ConfettiBurst: View {
+    private static let pieces: [ConfettiPiece] = (0 ..< 70).map { _ in ConfettiPiece.random() }
+
+    @State private var animate = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                ForEach(Self.pieces) { piece in
+                    Rectangle()
+                        .fill(piece.color)
+                        .frame(width: piece.size.width, height: piece.size.height)
+                        .rotationEffect(.degrees(animate ? piece.endRotation : piece.startRotation))
+                        .position(
+                            x: geo.size.width * piece.startX,
+                            y: animate ? geo.size.height + 40 : -40
+                        )
+                        .opacity(animate ? 0 : 1)
+                        .animation(
+                            .easeIn(duration: piece.duration).delay(piece.delay),
+                            value: animate
+                        )
+                }
+            }
+        }
+        .allowsHitTesting(false)
         .onAppear { animate = true }
     }
 }
