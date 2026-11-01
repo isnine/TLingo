@@ -1,8 +1,19 @@
 {
   "releases": [
     {
-      "version": "5.7.3",
+      "version": "5.7.2",
       "items": [
+        {
+          "kind": "added",
+          "text": "Added an in-app summary of what's new after updates."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio."
+        },
         {
           "kind": "improved",
           "platforms": [
@@ -22,7 +33,7 @@
           "platforms": [
             "ios"
           ],
-          "text": "Checked and downloaded Apple Translate language packs before Realtime starts."
+          "text": "Checked and downloaded Apple Translate language packs before Realtime starts, with clearer setup guidance."
         },
         {
           "kind": "improved",
@@ -37,29 +48,6 @@
             "ios"
           ],
           "text": "Improved microphone input reliability and realtime caption updates."
-        }
-      ]
-    },
-    {
-      "version": "5.7.2",
-      "items": [
-        {
-          "kind": "added",
-          "text": "Added an in-app summary of what's new after updates."
-        },
-        {
-          "kind": "improved",
-          "platforms": [
-            "ios"
-          ],
-          "text": "Made realtime input and speech recognition options easier to find, and enabled transcription-only mode for iPhone audio."
-        },
-        {
-          "kind": "improved",
-          "platforms": [
-            "ios"
-          ],
-          "text": "Clarified Apple Translate language downloads during setup."
         },
         {
           "kind": "improved",

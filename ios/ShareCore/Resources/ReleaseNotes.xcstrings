@@ -1126,252 +1126,127 @@
         }
       }
     },
-    "Checked and downloaded Apple Translate language packs before Realtime starts." : {
+    "Checked and downloaded Apple Translate language packs before Realtime starts, with clearer setup guidance." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتم التحقق من حزم لغات Apple Translate وتنزيلها قبل بدء Realtime."
+            "value" : "تم التحقق من حزم اللغات في Apple Translate وتنزيلها قبل بدء Realtime، مع إرشادات إعداد أوضح."
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tjekker og downloader sprogpakker til Apple Translate, før Realtime starter."
+            "value" : "Apple Translate-sprogpakker tjekkes og downloades før Realtime starter, med klarere opsætningsvejledning."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sprachpakete für Apple Translate werden vor dem Start von Realtime geprüft und heruntergeladen."
+            "value" : "Apple Translate-Sprachpakete werden vor dem Start von Realtime geprüft und heruntergeladen – mit klareren Einrichtungshinweisen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Checked and downloaded Apple Translate language packs before Realtime starts."
+            "value" : "Checked and downloaded Apple Translate language packs before Realtime starts, with clearer setup guidance."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se comprueban y descargan los paquetes de idiomas de Apple Translate antes de que se inicie Realtime."
+            "value" : "Se comprueban y descargan los paquetes de idiomas de Apple Translate antes de que Realtime se inicie, con instrucciones de configuración más claras."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vérification et téléchargement des modules de langue Apple Translate avant le démarrage de Realtime."
+            "value" : "Les packs de langues d’Apple Translate sont vérifiés et téléchargés avant le démarrage de Realtime, avec des instructions de configuration plus claires."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Memeriksa dan mengunduh paket bahasa Apple Translate sebelum Realtime dimulai."
+            "value" : "Paket bahasa Apple Translate diperiksa dan diunduh sebelum Realtime dimulai, dengan panduan penyiapan yang lebih jelas."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verifica e scarica i pacchetti lingua di Apple Translate prima dell'avvio di Realtime."
+            "value" : "I pacchetti linguistici di Apple Translate vengono verificati e scaricati prima dell'avvio di Realtime, con indicazioni di configurazione più chiare."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Realtimeの開始前にApple Translateの言語パックを確認してダウンロードします。"
+            "value" : "Realtime の開始前に Apple Translate の言語パックを確認してダウンロードするようにし、セットアップの案内をより分かりやすくしました。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Realtime가 시작되기 전에 Apple Translate 언어 팩을 확인하고 다운로드합니다."
+            "value" : "Realtime이 시작되기 전에 Apple Translate 언어 팩을 확인하고 다운로드하며, 더 명확한 설정 안내를 제공합니다."
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menyemak dan memuat turun pek bahasa Apple Translate sebelum Realtime bermula."
+            "value" : "Pek bahasa Apple Translate disemak dan dimuat turun sebelum Realtime bermula, dengan panduan persediaan yang lebih jelas."
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sjekker og laster ned språkpakker for Apple Translate før Realtime starter."
+            "value" : "Apple Translate-språkpakker kontrolleres og lastes ned før Realtime starter, med tydeligere oppsettveiledning."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Controleert en downloadt Apple Translate-taalpakketten voordat Realtime start."
+            "value" : "Apple Translate-taalpakketten worden gecontroleerd en gedownload voordat Realtime start, met duidelijkere installatie-instructies."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sprawdza i pobiera pakiety językowe Apple Translate przed uruchomieniem Realtime."
+            "value" : "Pakiety językowe Apple Translate są sprawdzane i pobierane przed uruchomieniem Realtime, z wyraźniejszymi wskazówkami konfiguracji."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verifica e baixa os pacotes de idiomas do Apple Translate antes de o Realtime começar."
+            "value" : "Os pacotes de idiomas do Apple Translate são verificados e baixados antes do Realtime começar, com instruções de configuração mais claras."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kontrollerar och hämtar språkpaket för Apple Translate innan Realtime startar."
+            "value" : "Apple Translate-språkpaket kontrolleras och laddas ned innan Realtime startar, med tydligare installationsvägledning."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Realtime başlamadan önce Apple Translate dil paketlerini denetler ve indirir."
+            "value" : "Apple Translate dil paketleri Realtime başlamadan önce denetlenir ve indirilir; kurulum yönergeleri daha nettir."
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件。"
+            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件，並提供更清晰的設定指引。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 Realtime 开始前检查并下载 Apple Translate 语言包。"
+            "value" : "在 Realtime 开始前检查并下载 Apple Translate 语言包，并提供更清晰的设置指引。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件。"
-          }
-        }
-      }
-    },
-    "Clarified Apple Translate language downloads during setup." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أوضحنا تنزيلات اللغات في Apple Translate أثناء الإعداد."
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gjort det tydeligere, hvordan sprogdownloads i Apple Translate foregår under opsætning."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Sprachdownloads in Apple Translate während der Einrichtung verdeutlicht."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clarified Apple Translate language downloads during setup."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se aclaró la descarga de idiomas de Apple Translate durante la configuración."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clarification du téléchargement des langues d’Apple Translate lors de la configuration."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memperjelas unduhan bahasa Apple Translate selama penyiapan."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiarito il download delle lingue di Apple Translate durante la configurazione."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "セットアップ中のApple Translateの言語ダウンロードについて明確にしました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "설정 중 Apple Translate의 언어 다운로드 과정을 명확히 했습니다."
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menjelaskan muat turun bahasa Apple Translate semasa persediaan."
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tydeliggjort språknedlastinger i Apple Translate under oppsett."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verduidelijkt het downloaden van talen in Apple Translate tijdens de instellingen."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyjaśniono pobieranie języków w Apple Translate podczas konfiguracji."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esclarecido o download de idiomas do Apple Translate durante a configuração."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Förtydligat språknedladdningar i Apple Translate under inställningen."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kurulum sırasında Apple Translate dil indirmeleri netleştirildi."
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "釐清咗設定期間 Apple Translate 嘅語言下載安排。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "明确了设置期间 Apple Translate 的语言下载。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "釐清了設定期間 Apple Translate 的語言下載。"
+            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件，並提供更清晰的設定指引。"
           }
         }
       }
