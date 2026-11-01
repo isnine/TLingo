@@ -11,60 +11,170 @@
     /// updates only rewrite the changed tail of the text storage, and the bottom pin is applied
     /// synchronously after each layout pass, so the visible text never leaves the viewport.
     struct RealtimeCaptionTextView: UIViewRepresentable {
+        /// Shared by the in-app list and the Picture in Picture frame, so both surfaces stay in sync.
         struct Style: Equatable {
             var sourceColor: UIColor
             var translationColor: UIColor
-            var pendingColor: UIColor
+            /// Older captions recede so the latest sentence stands out, like the Podcasts transcript.
+            var dimmedSourceColor: UIColor
+            var dimmedTranslationColor: UIColor
+            var sourceFont: UIFont
+            var translationFont: UIFont
+            var sourceLineSpacing: CGFloat
+            var translationLineSpacing: CGFloat
+            /// Space between a source line and its translation.
+            var pairGap: CGFloat
+            /// Space between paragraphs, or between translation pairs in bilingual mode.
+            var paragraphGap: CGFloat
+            /// Single-language captions flow into paragraphs instead of one line per segment.
+            var flowsIntoParagraphs: Bool
 
-            init(palette: AppColorPalette) {
-                sourceColor = UIColor(palette.textSecondary)
-                translationColor = UIColor(palette.textPrimary)
-                pendingColor = UIColor(palette.accent)
+            /// The default appearance follows Apple Podcasts transcripts: New York serif, about 1.2x line height.
+            /// CJK text falls back to the system cascade (PingFang).
+            init(palette: AppColorPalette, appearance: RealtimeCaptionAppearance, mode: RealtimeCaptionDisplayMode) {
+                let primary = UIColor(palette.textPrimary)
+                let secondary = UIColor(palette.textSecondary)
+                translationColor = primary
+                dimmedTranslationColor = secondary
+                flowsIntoParagraphs = mode != .bilingual
+
+                let design: UIFontDescriptor.SystemDesign = switch appearance.fontDesign {
+                case .serif: .serif
+                case .system: .default
+                case .rounded: .rounded
+                }
+                let translationSize = CGFloat(appearance.textSize)
+                translationFont = RealtimeCaptionTextView.font(design: design, size: translationSize, weight: .regular)
+
+                let spacingScale: CGFloat = switch appearance.spacing {
+                case .compact: 0.5
+                case .standard: 1
+                case .relaxed: 1.6
+                }
+                translationLineSpacing = 2 * spacingScale
+                pairGap = 6 * spacingScale
+                paragraphGap = 18 * spacingScale
+
+                if flowsIntoParagraphs {
+                    // Source is the only text on screen, so it reads as the main transcript.
+                    sourceColor = primary
+                    dimmedSourceColor = secondary
+                    sourceFont = translationFont
+                    sourceLineSpacing = translationLineSpacing
+                } else {
+                    sourceColor = secondary
+                    dimmedSourceColor = secondary.withAlphaComponent(0.6)
+                    // Keeps the default 17pt source under 22pt translation ratio at every size.
+                    let sourceSize = (translationSize * 17 / 22).rounded()
+                    sourceFont = RealtimeCaptionTextView.font(design: design, size: sourceSize, weight: .regular)
+                    sourceLineSpacing = 2 * spacingScale
+                }
             }
         }
 
-        static let horizontalPadding: CGFloat = 22
+        /// How one caption line is drawn: the text before it and its attributes.
+        struct LineLayout {
+            var separator: String
+            var attributes: [NSAttributedString.Key: Any]
+        }
+
+        static let horizontalPadding: CGFloat = 28
         static let topPadding: CGFloat = 12
         static let bottomPadding: CGFloat = 16
-        private static let lineGap: CGFloat = 18
+        /// A flowing paragraph breaks before the next segment once it reaches this many characters.
+        private static let paragraphCharacterLimit = 200
+        private static let pendingAlpha: CGFloat = 0.85
 
         /// Caption text exactly as the in-app list lays it out; the Picture in Picture frame draws the same string.
-        static func attributedText(for lines: [RealtimeCaptionLine], style: Style) -> NSAttributedString {
+        /// Layout is computed over all `lines` so paragraphs and emphasis match the in-app list, then only
+        /// the last `visibleCount` lines are drawn.
+        static func attributedText(
+            for lines: [RealtimeCaptionLine],
+            style: Style,
+            visibleCount: Int = .max
+        ) -> NSAttributedString {
+            let layouts = layouts(for: lines, style: style)
+            let first = max(0, lines.count - visibleCount)
             let text = NSMutableAttributedString()
-            for (index, line) in lines.enumerated() {
-                let attributes = attributes(for: line, style: style)
-                if index > 0 {
-                    text.append(NSAttributedString(string: "\n", attributes: attributes))
+            for index in first ..< lines.count {
+                let layout = layouts[index]
+                if index > first {
+                    text.append(NSAttributedString(string: layout.separator, attributes: layout.attributes))
                 }
-                text.append(NSAttributedString(string: line.text, attributes: attributes))
+                text.append(NSAttributedString(string: lines[index].text, attributes: layout.attributes))
             }
             return text
         }
 
-        static func attributes(for line: RealtimeCaptionLine, style: Style) -> [NSAttributedString.Key: Any] {
+        /// The first line drawn at full strength: the latest finished segment, so its translation and the
+        /// segment still being recognized stay bright together.
+        static func emphasisStart(in lines: [RealtimeCaptionLine]) -> Int {
+            let anchorKind: RealtimeCaptionLine.Kind = lines.contains { $0.kind == .source } ? .source : .translation
+            return lines.lastIndex { $0.kind == anchorKind && !$0.isPending }
+                ?? lines.lastIndex { $0.kind == anchorKind }
+                ?? 0
+        }
+
+        static func layouts(for lines: [RealtimeCaptionLine], style: Style) -> [LineLayout] {
+            let emphasisStart = emphasisStart(in: lines)
+            var paragraphLength = 0
+            return lines.enumerated().map { index, line in
+                var separator = "\n"
+                if index > 0 {
+                    let previous = lines[index - 1]
+                    if style.flowsIntoParagraphs, previous.kind == line.kind, paragraphLength < paragraphCharacterLimit {
+                        separator = previous.text.last.map(isCJK) == true ? "" : " "
+                    }
+                }
+                paragraphLength = separator == "\n" ? line.text.count : paragraphLength + line.text.count
+                return LineLayout(
+                    separator: separator,
+                    attributes: attributes(for: line, isEmphasized: index >= emphasisStart, style: style)
+                )
+            }
+        }
+
+        private static func attributes(
+            for line: RealtimeCaptionLine,
+            isEmphasized: Bool,
+            style: Style
+        ) -> [NSAttributedString.Key: Any] {
             let paragraph = NSMutableParagraphStyle()
-            paragraph.lineSpacing = line.kind == .source ? 3 : 6
-            paragraph.paragraphSpacing = lineGap
-            let color: UIColor = line.isPending
-                ? style.pendingColor
-                : (line.kind == .source ? style.sourceColor : style.translationColor)
+            let isSource = line.kind == .source
+            paragraph.lineSpacing = isSource ? style.sourceLineSpacing : style.translationLineSpacing
+            paragraph.paragraphSpacing = isSource && !style.flowsIntoParagraphs ? style.pairGap : style.paragraphGap
+            var color: UIColor = switch (isSource, isEmphasized) {
+            case (true, true): style.sourceColor
+            case (true, false): style.dimmedSourceColor
+            case (false, true): style.translationColor
+            case (false, false): style.dimmedTranslationColor
+            }
+            if line.isPending {
+                color = color.withAlphaComponent(pendingAlpha)
+            }
             return [
-                .font: font(for: line.kind),
+                .font: isSource ? style.sourceFont : style.translationFont,
                 .foregroundColor: color,
                 .paragraphStyle: paragraph,
             ]
         }
 
-        private static let sourceFont = roundedFont(size: 17, weight: .medium)
-        private static let translationFont = roundedFont(size: 24, weight: .semibold)
-
-        private static func font(for kind: RealtimeCaptionLine.Kind) -> UIFont {
-            kind == .source ? sourceFont : translationFont
+        /// CJK text joins without a space.
+        private static func isCJK(_ character: Character) -> Bool {
+            character.unicodeScalars.contains { scalar in
+                switch scalar.value {
+                case 0x3000 ... 0x303F, 0x3040 ... 0x30FF, 0x3400 ... 0x4DBF, 0x4E00 ... 0x9FFF,
+                     0xAC00 ... 0xD7AF, 0xFF00 ... 0xFFEF:
+                    true
+                default:
+                    false
+                }
+            }
         }
 
-        private static func roundedFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
+        private static func font(design: UIFontDescriptor.SystemDesign, size: CGFloat, weight: UIFont.Weight) -> UIFont {
             let base = UIFont.systemFont(ofSize: size, weight: weight)
-            guard let descriptor = base.fontDescriptor.withDesign(.rounded) else { return base }
+            guard let descriptor = base.fontDescriptor.withDesign(design) else { return base }
             return UIFont(descriptor: descriptor, size: size)
         }
 
@@ -161,9 +271,9 @@
                 if styleChanged {
                     replaceLines(from: 0, with: lines)
                     lastReplaced = "0..<\(lines.count)/\(previousCount)"
-                } else if let firstChange = firstChangedIndex(in: lines) {
-                    replaceLines(from: firstChange, with: lines)
-                    lastReplaced = "\(firstChange)..<\(lines.count)/\(previousCount)"
+                } else if let start = firstRewrittenIndex(in: lines) {
+                    replaceLines(from: start, with: lines)
+                    lastReplaced = "\(start)..<\(lines.count)/\(previousCount)"
                 } else if !insetsChanged {
                     return
                 }
@@ -171,6 +281,14 @@
                     bottomSlack = 0
                 }
                 applyLayout(reason: styleChanged ? "style" : (insetsChanged ? "insets" : "content"))
+            }
+
+            /// The view extends under the control dock; without this its text selection interaction
+            /// claims taps meant for the dock's buttons.
+            override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+                let dockTop = bounds.maxY - safeAreaInsets.bottom - bottomAccessoryHeight
+                guard point.y < dockTop else { return false }
+                return super.point(inside: point, with: event)
             }
 
             override func layoutSubviews() {
@@ -206,6 +324,17 @@
 
             // MARK: Text storage
 
+            /// Earliest line whose text or color changes. Emphasis follows the latest segment, so lines that
+            /// were bright in the last render are rewritten when they dim.
+            private func firstRewrittenIndex(in lines: [RealtimeCaptionLine]) -> Int? {
+                let emphasisStart = min(
+                    RealtimeCaptionTextView.emphasisStart(in: lines),
+                    RealtimeCaptionTextView.emphasisStart(in: renderedLines)
+                )
+                guard let firstChange = firstChangedIndex(in: lines) else { return nil }
+                return min(firstChange, emphasisStart)
+            }
+
             private func firstChangedIndex(in lines: [RealtimeCaptionLine]) -> Int? {
                 let common = min(lines.count, renderedLines.count)
                 for index in 0 ..< common where lines[index] != renderedLines[index] {
@@ -220,15 +349,17 @@
                 let replaceLocation = start == 0 ? 0 : NSMaxRange(lineRanges[start - 1])
                 let replaceRange = NSRange(location: replaceLocation, length: textStorage.length - replaceLocation)
 
+                let layouts = RealtimeCaptionTextView.layouts(for: lines, style: style)
                 let tail = NSMutableAttributedString()
                 var ranges = Array(lineRanges.prefix(start))
                 var cursor = replaceLocation
                 for index in start ..< lines.count {
                     if index > 0 {
-                        tail.append(NSAttributedString(string: "\n", attributes: RealtimeCaptionTextView.attributes(for: lines[index], style: style)))
-                        cursor += 1
+                        let separator = NSAttributedString(string: layouts[index].separator, attributes: layouts[index].attributes)
+                        tail.append(separator)
+                        cursor += separator.length
                     }
-                    let text = NSAttributedString(string: lines[index].text, attributes: RealtimeCaptionTextView.attributes(for: lines[index], style: style))
+                    let text = NSAttributedString(string: lines[index].text, attributes: layouts[index].attributes)
                     tail.append(text)
                     ranges.append(NSRange(location: cursor, length: text.length))
                     cursor += text.length

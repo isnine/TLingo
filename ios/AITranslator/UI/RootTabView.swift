@@ -205,6 +205,7 @@ extension RootTabView {
     private struct CompactNavigationView: View {
         @Environment(\.colorScheme) private var colorScheme
         @State private var showHistory = false
+        @State private var historyOpeningRequestID: UUID?
         @State private var showRealtime: Bool
         @State private var showActions = false
         @State private var showModels: Bool
@@ -238,6 +239,7 @@ extension RootTabView {
         var body: some View {
             NavigationStack {
                 HomeView(context: nil, usesNativeNavigationHeader: true, onHistoryTap: {
+                    historyOpeningRequestID = nil
                     showHistory = true
                 }, onManageActionsTap: {
                     showActions = true
@@ -249,7 +251,10 @@ extension RootTabView {
                     showFeaturePaywall = true
                 }, viewModel: homeViewModel)
                 .navigationDestination(isPresented: $showHistory) {
-                    HistoryView()
+                    HistoryView(
+                        initialFilter: historyOpeningRequestID == nil ? .text : .realtime,
+                        openingRequestID: historyOpeningRequestID
+                    )
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
                                 NavigationLink {
@@ -263,10 +268,7 @@ extension RootTabView {
                         }
                 }
             }
-            .realtimeSavedNotice(store: realtimeStore) { _ in
-                showRealtime = false
-                showHistory = true
-            }
+            .realtimeSavedNotice(store: realtimeStore, onOpenHistory: openSavedRealtimeHistory)
             .fullScreenCover(isPresented: $showRealtime, onDismiss: stopRealtimeAfterDismiss) {
                 NavigationStack {
                     RealtimeView(
@@ -276,10 +278,7 @@ extension RootTabView {
                             showRealtime = false
                         }
                     )
-                    .realtimeSavedNotice(store: realtimeStore) { _ in
-                        showRealtime = false
-                        showHistory = true
-                    }
+                    .realtimeSavedNotice(store: realtimeStore, onOpenHistory: openSavedRealtimeHistory)
                 }
                 .tint(colors.accent)
             }
@@ -333,6 +332,12 @@ extension RootTabView {
                 showRealtime = false
                 showFeaturePaywall = false
             }
+        }
+
+        private func openSavedRealtimeHistory(requestID: UUID) {
+            historyOpeningRequestID = requestID
+            showRealtime = false
+            showHistory = true
         }
 
         /// Closing the realtime screen ends the session; `stop()` saves it to History.

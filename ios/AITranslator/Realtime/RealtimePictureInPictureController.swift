@@ -52,7 +52,10 @@
                 .combineLatest(
                     store.$isRunning,
                     store.$inputSource,
-                    preferences.$accentTheme.combineLatest(preferences.$realtimePictureInPictureSize)
+                    preferences.$accentTheme.combineLatest(
+                        preferences.$realtimePictureInPictureSize,
+                        preferences.$realtimeCaptionAppearance
+                    )
                 )
                 .receive(on: RunLoop.main)
                 .sink { [weak self] lines, isRunning, inputSource, _ in
@@ -122,17 +125,21 @@
         private func render(lines: [RealtimeCaptionLine], isRunning: Bool, inputSource: RealtimeAudioInputSource) {
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
-            let style = RealtimeCaptionTextView.Style(palette: palette)
+            let style = RealtimeCaptionTextView.Style(
+                palette: palette,
+                appearance: preferences.realtimeCaptionAppearance,
+                mode: store.resolvedCaptionDisplayMode
+            )
             let isCompact = preferences.realtimePictureInPictureSize == .compact
-            let visibleLines = Array(lines.suffix(isCompact ? Self.compactCaptionLineLimit : Self.captionLineLimit))
+            let visibleCount = isCompact ? Self.compactCaptionLineLimit : Self.captionLineLimit
             let width = min(displayView.window?.bounds.width ?? 393, Self.maxRenderWidth)
             // PiP sizes its window from the frame's aspect ratio.
             let height = isCompact ? width / 4 : width / 2
             let frame = Frame(
                 size: CGSize(width: width, height: height.rounded()),
                 background: UIColor(palette.background),
-                captions: RealtimeCaptionTextView.attributedText(for: visibleLines, style: style),
-                placeholder: visibleLines.isEmpty
+                captions: RealtimeCaptionTextView.attributedText(for: lines, style: style, visibleCount: visibleCount),
+                placeholder: lines.isEmpty
                     ? Self.placeholderText(Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource), style: style)
                     : nil
             )

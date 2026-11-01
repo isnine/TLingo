@@ -70,6 +70,7 @@ review_triggers:
 - Stop order is: reject new input, stop and drain producers, finalize recognition, drain translation, finish recordings, persist, publish terminal state.
 - iPhone Audio stop commands and producer snapshots have separate session-scoped ownership. A stale producer cannot clear a newer stop command or replace the active session; published terminal snapshots cannot be overwritten by later callbacks.
 - Both ReplayKit stop routes drain before terminal publication. The synchronous system callback waits for a bounded drain; an unfinished drain remains stopping, and extension disappearance is reported as failure rather than fabricated success.
+- In a relayed iPhone Audio session the host owns the transcript and history and ignores the extension's transcript fields. Only the extension decides fallback: it switches to Apple Speech when the host heartbeat is older than 5 s, and the host treats a cleared `usesHostRecognition` as the hand-off signal. The host drains relayed audio and recognition before every stop, hand-off and terminal finish.
 - `stopped` and `failed` are terminal for a session token.
 - Clear-display and start-new-session are different commands.
 - Recognition and translation buffers have explicit memory and duration bounds.

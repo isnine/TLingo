@@ -217,6 +217,10 @@
                     // Raw input still works, only quieter; do not fail the session.
                     RealtimeLog.warn("audio", "voice processing unavailable error=\(String(describing: error))")
                 }
+                // The voice processing unit is full duplex: with nothing connected to the output it fails
+                // every render (`vpio render err: -1`) and the input tap receives near-silence.
+                // Touching the main mixer connects it to the output node, which then renders silence.
+                _ = audioEngine.mainMixerNode
                 // Read the format after enabling voice processing, which changes it.
                 guard let inputFormat = validInputFormat(for: inputNode) else {
                     throw RealtimeCaptureError.microphoneUnavailable

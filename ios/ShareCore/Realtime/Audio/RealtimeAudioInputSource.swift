@@ -73,7 +73,10 @@
             switch self {
             #if os(iOS)
                 case .iphoneAudio:
-                    return [.appleSpeech]
+                    // The extension recognizes with Apple Speech; local models run in the host on relayed audio.
+                    return RecognitionModelStore.availableModels.filter {
+                        $0.runtime == .appleSpeech || $0.runtime == .fluidAudio
+                    }
             #endif
             default:
                 return RecognitionModelStore.availableModels

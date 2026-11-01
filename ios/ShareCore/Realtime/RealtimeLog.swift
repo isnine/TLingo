@@ -5,15 +5,15 @@
     /// Realtime conversation diagnostics. Every line starts with `[RT][<stage>]` so Console and
     /// Xcode can filter the whole pipeline with `[RT]`, or one stage such as `[RT][tx]`.
     ///
-    /// Stages: session, audio, asr, fluid, src, tx, align, caption, broadcast.
-    enum RealtimeLog {
+    /// Stages: session, audio, asr, fluid, src, tx, align, caption, broadcast, relay.
+    public enum RealtimeLog {
         private static let logger = Logger(subsystem: "com.zanderwang.AITranslator", category: "Realtime")
 
-        static func log(_ stage: String, _ message: String) {
+        public static func log(_ stage: String, _ message: String) {
             logger.notice("[RT][\(stage, privacy: .public)] \(message, privacy: .public)")
         }
 
-        static func warn(_ stage: String, _ message: String) {
+        public static func warn(_ stage: String, _ message: String) {
             logger.warning("[RT][\(stage, privacy: .public)] WARN \(message, privacy: .public)")
         }
 

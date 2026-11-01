@@ -32,6 +32,9 @@
         public var stopRequested: Bool
         /// Set by the extension once speech recognition has started and app audio is being used.
         public var isRecognitionReady: Bool
+        /// Set by the host when it recognizes relayed audio itself; the extension's local
+        /// pipeline never sets it, so it reads false once the extension falls back.
+        public var usesHostRecognition: Bool
         public var realtimeHistorySession: RealtimeHistorySession?
 
         public init(
@@ -50,6 +53,7 @@
             lastUpdatedAt: Date = Date(),
             stopRequested: Bool = false,
             isRecognitionReady: Bool = false,
+            usesHostRecognition: Bool = false,
             realtimeHistorySession: RealtimeHistorySession? = nil
         ) {
             self.sessionID = sessionID
@@ -67,6 +71,7 @@
             self.lastUpdatedAt = lastUpdatedAt
             self.stopRequested = stopRequested
             self.isRecognitionReady = isRecognitionReady
+            self.usesHostRecognition = usesHostRecognition
             self.realtimeHistorySession = realtimeHistorySession
         }
 
@@ -86,6 +91,7 @@
             case lastUpdatedAt
             case stopRequested
             case isRecognitionReady
+            case usesHostRecognition
             case realtimeHistorySession
         }
 
@@ -106,6 +112,7 @@
             lastUpdatedAt = try container.decodeIfPresent(Date.self, forKey: .lastUpdatedAt) ?? Date()
             stopRequested = try container.decodeIfPresent(Bool.self, forKey: .stopRequested) ?? false
             isRecognitionReady = try container.decodeIfPresent(Bool.self, forKey: .isRecognitionReady) ?? false
+            usesHostRecognition = try container.decodeIfPresent(Bool.self, forKey: .usesHostRecognition) ?? false
             realtimeHistorySession = try container.decodeIfPresent(
                 RealtimeHistorySession.self,
                 forKey: .realtimeHistorySession
@@ -293,6 +300,19 @@
             }
             state.stopRequested = false
             saveLocked(state, synchronize: true)
+        }
+
+        /// Written by the host while it recognizes relayed audio; kept out of the state blob so the
+        /// heartbeat never races the extension's snapshot writes.
+        public func markHostAlive(sessionID: String) {
+            defaults.set(Date().timeIntervalSince1970, forKey: Self.sessionPrefix + sessionID + ".hostHeartbeat")
+        }
+
+        /// Seconds since the host last marked itself alive for this session; nil if it never did.
+        public func hostHeartbeatAge(sessionID: String) -> TimeInterval? {
+            let timestamp = defaults.double(forKey: Self.sessionPrefix + sessionID + ".hostHeartbeat")
+            guard timestamp > 0 else { return nil }
+            return Date().timeIntervalSince1970 - timestamp
         }
 
         fileprivate func beginStopping(sessionID: String) {

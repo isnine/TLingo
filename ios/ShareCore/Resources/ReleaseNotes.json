@@ -1,6 +1,46 @@
 {
   "releases": [
     {
+      "version": "5.7.3",
+      "items": [
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Added adjustable caption font, text size, and line spacing for Realtime and Picture in Picture."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Enabled downloaded local speech recognition models for iPhone Audio, with automatic Apple Speech fallback."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Checked and downloaded Apple Translate language packs before Realtime starts."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Opened the saved Realtime session directly from the History notice."
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Improved microphone input reliability and realtime caption updates."
+        }
+      ]
+    },
+    {
       "version": "5.7.2",
       "items": [
         {

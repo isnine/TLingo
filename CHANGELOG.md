@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.3] - 2026-11-01
+
+### Improved
+
+- [iOS] Added adjustable caption font, text size, and line spacing for Realtime and Picture in Picture.
+- [iOS] Enabled downloaded local speech recognition models for iPhone Audio, with automatic Apple Speech fallback.
+- [iOS] Checked and downloaded Apple Translate language packs before Realtime starts.
+- [iOS] Opened the saved Realtime session directly from the History notice.
+- [iOS] Improved microphone input reliability and realtime caption updates.
+
 ## [5.7.2] - 2026-10-31
 
 ### Added

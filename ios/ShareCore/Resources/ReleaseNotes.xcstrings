@@ -376,6 +376,131 @@
         }
       }
     },
+    "Added adjustable caption font, text size, and line spacing for Realtime and Picture in Picture." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضفنا إعدادات قابلة للتعديل لخط التعليقات التوضيحية وحجم النص وتباعد الأسطر في Realtime وPicture in Picture."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjede justerbar undertekstskrift, tekststørrelse og linjeafstand til Realtime og Picture in Picture."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anpassbare Untertitel-Schriftart, Textgröße und Zeilenabstand für Realtime und Picture in Picture hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added adjustable caption font, text size, and line spacing for Realtime and Picture in Picture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadió la posibilidad de ajustar la fuente, el tamaño del texto y el interlineado de los subtítulos en Realtime y Picture in Picture."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout de la police, de la taille du texte et de l’interligne réglables pour les sous-titres dans Realtime et Picture in Picture."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan font takarir, ukuran teks, dan spasi baris yang dapat disesuaikan untuk Realtime dan Picture in Picture."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunta della possibilità di regolare il carattere, la dimensione del testo e l'interlinea dei sottotitoli per Realtime e Picture in Picture."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RealtimeおよびPicture in Pictureのキャプションのフォント、テキストサイズ、行間を調整できるようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime 및 Picture in Picture의 캡션 글꼴, 텍스트 크기, 줄 간격을 조정할 수 있도록 추가했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambah fon kapsyen, saiz teks dan jarak baris yang boleh laras untuk Realtime dan Picture in Picture."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til justerbar skrift for bildetekster, tekststørrelse og linjeavstand for Realtime og Picture in Picture."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instelbaar lettertype, tekstgrootte en regelafstand voor ondertitels toegevoegd voor Realtime en Picture in Picture."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano możliwość dostosowania czcionki napisów, rozmiaru tekstu i odstępu między wierszami w Realtime i Picture in Picture."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionada a possibilidade de ajustar a fonte, o tamanho do texto e o espaçamento entre linhas das legendas no Realtime e no Picture in Picture."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till justerbart teckensnitt, textstorlek och radavstånd för bildtexter i Realtime och Picture in Picture."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime ve Picture in Picture için ayarlanabilir altyazı yazı tipi, metin boyutu ve satır aralığı eklendi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為 Realtime 和 Picture in Picture 加入了可調整的字幕字體、文字大小及行距。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为 Realtime 和画中画添加了可调整的字幕字体、文字大小和行距。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為 Realtime 和子母畫面新增了可調整的字幕字型、文字大小與行距。"
+          }
+        }
+      }
+    },
     "Added an in-app summary of what's new after updates." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1001,6 +1126,131 @@
         }
       }
     },
+    "Checked and downloaded Apple Translate language packs before Realtime starts." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم التحقق من حزم لغات Apple Translate وتنزيلها قبل بدء Realtime."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tjekker og downloader sprogpakker til Apple Translate, før Realtime starter."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprachpakete für Apple Translate werden vor dem Start von Realtime geprüft und heruntergeladen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked and downloaded Apple Translate language packs before Realtime starts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se comprueban y descargan los paquetes de idiomas de Apple Translate antes de que se inicie Realtime."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification et téléchargement des modules de langue Apple Translate avant le démarrage de Realtime."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memeriksa dan mengunduh paket bahasa Apple Translate sebelum Realtime dimulai."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica e scarica i pacchetti lingua di Apple Translate prima dell'avvio di Realtime."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtimeの開始前にApple Translateの言語パックを確認してダウンロードします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime가 시작되기 전에 Apple Translate 언어 팩을 확인하고 다운로드합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyemak dan memuat turun pek bahasa Apple Translate sebelum Realtime bermula."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sjekker og laster ned språkpakker for Apple Translate før Realtime starter."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleert en downloadt Apple Translate-taalpakketten voordat Realtime start."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdza i pobiera pakiety językowe Apple Translate przed uruchomieniem Realtime."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica e baixa os pacotes de idiomas do Apple Translate antes de o Realtime começar."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollerar och hämtar språkpaket för Apple Translate innan Realtime startar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Realtime başlamadan önce Apple Translate dil paketlerini denetler ve indirir."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Realtime 开始前检查并下载 Apple Translate 语言包。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Realtime 開始前檢查並下載 Apple Translate 語言套件。"
+          }
+        }
+      }
+    },
     "Clarified Apple Translate language downloads during setup." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1247,6 +1497,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "釐清辨識模型載入狀態，並讓未翻譯的工作階段在歷史記錄中保持可讀。"
+          }
+        }
+      }
+    },
+    "Enabled downloaded local speech recognition models for iPhone Audio, with automatic Apple Speech fallback." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تفعيل نماذج التعرف على الكلام المحلية التي تم تنزيلها لـ iPhone Audio، مع الرجوع تلقائيًا إلى Apple Speech."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiverede downloadede lokale talegenkendelsesmodeller til iPhone Audio med automatisk Apple Speech-fallback."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heruntergeladene lokale Spracherkennungsmodelle für iPhone Audio aktiviert, mit automatischem Fallback auf Apple Speech."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled downloaded local speech recognition models for iPhone Audio, with automatic Apple Speech fallback."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se activaron los modelos locales de reconocimiento de voz descargados para iPhone Audio, con uso automático de Apple Speech como alternativa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activation des modèles de reconnaissance vocale locaux téléchargés pour iPhone Audio, avec repli automatique sur Apple Speech."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengaktifkan model pengenalan suara lokal yang diunduh untuk iPhone Audio, dengan fallback otomatis ke Apple Speech."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abilitati i modelli locali di riconoscimento vocale scaricati per iPhone Audio, con fallback automatico su Apple Speech."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio用にダウンロードしたローカル音声認識モデルを有効にし、Apple Speechへの自動フォールバックを追加しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio용으로 다운로드한 로컬 음성 인식 모델을 활성화했으며, Apple Speech로 자동 대체됩니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengaktifkan model pengecaman pertuturan setempat yang dimuat turun untuk iPhone Audio, dengan sandaran automatik kepada Apple Speech."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiverte nedlastede lokale talegjenkjenningsmodeller for iPhone Audio, med automatisk Apple Speech-fallback."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedownloade lokale spraakherkenningsmodellen voor iPhone Audio ingeschakeld, met automatische terugval op Apple Speech."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włączono pobrane lokalne modele rozpoznawania mowy dla iPhone Audio z automatycznym przełączaniem na Apple Speech."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativados os modelos locais de reconhecimento de fala baixados para o iPhone Audio, com fallback automático para o Apple Speech."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiverade nedladdade lokala taligenkänningsmodeller för iPhone Audio, med automatiskt Apple Speech-fallback."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Audio için indirilen yerel konuşma tanıma modelleri etkinleştirildi; Apple Speech'e otomatik geri dönüş sağlanır."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為 iPhone Audio 啟用了已下載的本機語音辨識模型，並自動改用 Apple Speech 作為後備。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为 iPhone Audio 启用了已下载的本地语音识别模型，并可自动回退到 Apple Speech。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為 iPhone Audio 啟用了已下載的本機語音辨識模型，並自動改用 Apple Speech 作為後備。"
           }
         }
       }
@@ -1622,6 +1997,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已改進"
+          }
+        }
+      }
+    },
+    "Improved microphone input reliability and realtime caption updates." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حسّنا موثوقية إدخال الميكروفون وتحديثات التسميات التوضيحية الفورية."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedrede mikrofoninputtets pålidelighed og opdateringer af realtidsundertekster."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuverlässigkeit der Mikrofoneingabe und Aktualisierungen von Echtzeit-Untertiteln verbessert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improved microphone input reliability and realtime caption updates."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se mejoró la fiabilidad de la entrada del micrófono y las actualizaciones de subtítulos en tiempo real."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amélioration de la fiabilité de l’entrée microphone et des mises à jour des sous-titres en temps réel."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meningkatkan keandalan input mikrofon dan pembaruan takarir real-time."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorata l'affidabilità dell'input del microfono e gli aggiornamenti dei sottotitoli in tempo reale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイク入力の信頼性とリアルタイムキャプションの更新を改善しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마이크 입력 안정성과 실시간 캡션 업데이트를 개선했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meningkatkan kebolehpercayaan input mikrofon dan kemas kini kapsyen masa nyata."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret påliteligheten til mikrofoninndata og oppdateringer av sanntidsbildetekster."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrouwbaarheid van microfooninvoer en updates van realtime-ondertitels verbeterd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprawiono niezawodność wejścia mikrofonu i aktualizacje napisów w czasie rzeczywistym."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melhorada a confiabilidade da entrada do microfone e as atualizações das legendas em tempo real."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förbättrade tillförlitligheten för mikrofoninmatning och uppdateringar av realtidsbildtexter."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon girişi güvenilirliği ve gerçek zamanlı altyazı güncellemeleri iyileştirildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提升了麥克風輸入的可靠性及即時字幕更新。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提升了麦克风输入的可靠性和实时字幕更新。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提升了麥克風輸入的可靠性及即時字幕更新。"
           }
         }
       }
@@ -2372,6 +2872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全新安裝預設啟用 Microsoft Translate 和第一個免費 AI 模型，結果預設按模型清單順序排列。"
+          }
+        }
+      }
+    },
+    "Opened the saved Realtime session directly from the History notice." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح جلسة Realtime المحفوظة مباشرةً من إشعار السجل."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbnede den gemte Realtime-session direkte fra historikmeddelelsen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte Realtime-Sitzung direkt über die Verlaufsbenachrichtigung geöffnet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opened the saved Realtime session directly from the History notice."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se abrió la sesión de Realtime guardada directamente desde el aviso del historial."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouverture de la session Realtime enregistrée directement depuis la notification de l’historique."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membuka sesi Realtime yang disimpan langsung dari pemberitahuan Riwayat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperta la sessione Realtime salvata direttamente dalla notifica della cronologia."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "履歴の通知から保存済みのRealtimeセッションを直接開けるようにしました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 알림에서 저장된 Realtime 세션을 바로 열 수 있도록 했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membuka sesi Realtime yang disimpan terus daripada pemberitahuan Sejarah."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpnet den lagrede Realtime-økten direkte fra varslet i historikken."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen Realtime-sessie rechtstreeks geopend vanuit de geschiedenis melding."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano możliwość otwierania zapisanej sesji Realtime bezpośrednio z powiadomienia Historia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sessão do Realtime salva agora é aberta diretamente pelo aviso do Histórico."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppnade den sparade Realtime-sessionen direkt från historikaviseringen."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydedilen Realtime oturumu artık Geçmiş bildiriminden doğrudan açılır."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可直接從「歷史記錄」通知開啟已儲存的 Realtime 工作階段。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可直接从“历史记录”通知中打开已保存的 Realtime 会话。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可直接從「歷史記錄」通知開啟已儲存的 Realtime 工作階段。"
           }
         }
       }

@@ -51,16 +51,22 @@ struct HistoryView: View {
     @State private var showDeleteAllConfirmation = false
     @State private var showFeaturePaywall = false
     @State private var isVisible = false
+    @State private var openedRecord: TranslationRecord?
+    @State private var didOpenRequestedRecord = false
     private let locksFilter: Bool
+    /// Record to push once on appear, e.g. the session a "saved to History" notice points at.
+    private let openingRequestID: UUID?
     private let onConversationSelected: ((TranslationRecord) -> Void)?
 
     init(
         initialFilter: HistoryFilter = .text,
         locksFilter: Bool = false,
+        openingRequestID: UUID? = nil,
         onConversationSelected: ((TranslationRecord) -> Void)? = nil
     ) {
         _filter = State(initialValue: initialFilter)
         self.locksFilter = locksFilter
+        self.openingRequestID = openingRequestID
         self.onConversationSelected = onConversationSelected
     }
 
@@ -135,6 +141,9 @@ struct HistoryView: View {
                     }
                 }
             }
+            .navigationDestination(item: $openedRecord) { record in
+                HistoryRecordDetailView(record: record)
+            }
         #else
             .safeAreaInset(edge: .top, spacing: 0) {
                 headerSection(visibleCount: visibleRecords.count)
@@ -143,6 +152,12 @@ struct HistoryView: View {
             .onAppear {
                 isVisible = true
                 refreshRecords()
+            }
+            .task {
+                // Popping back from the detail re-runs this task; open the requested record only once.
+                guard let openingRequestID, !didOpenRequestedRecord else { return }
+                didOpenRequestedRecord = true
+                openedRecord = records.first { $0.requestID == openingRequestID }
             }
             .onDisappear {
                 isVisible = false

@@ -88,6 +88,7 @@ public final class AppPreferences: ObservableObject {
     #if os(iOS)
         @Published public private(set) var realtimePictureInPictureEnabled: Bool
         @Published public private(set) var realtimePictureInPictureSize: RealtimePictureInPictureSize
+        @Published public private(set) var realtimeCaptionAppearance: RealtimeCaptionAppearance
     #endif
 
     private let defaults: UserDefaults
@@ -158,6 +159,7 @@ public final class AppPreferences: ObservableObject {
             realtimePictureInPictureEnabled = defaults.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
             realtimePictureInPictureSize = defaults.string(forKey: StorageKeys.realtimePictureInPictureSize)
                 .flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
+            realtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
         #endif
 
         notificationObserver = NotificationCenter.default.addObserver(
@@ -462,6 +464,21 @@ public final class AppPreferences: ObservableObject {
             realtimePictureInPictureSize = size
             defaults.set(size.rawValue, forKey: StorageKeys.realtimePictureInPictureSize)
         }
+
+        public func setRealtimeCaptionAppearance(_ appearance: RealtimeCaptionAppearance) {
+            guard realtimeCaptionAppearance != appearance,
+                  let data = try? JSONEncoder().encode(appearance) else { return }
+
+            realtimeCaptionAppearance = appearance
+            defaults.set(data, forKey: StorageKeys.realtimeCaptionAppearance)
+        }
+
+        private static func readRealtimeCaptionAppearance(from defaults: UserDefaults) -> RealtimeCaptionAppearance {
+            guard let data = defaults.data(forKey: StorageKeys.realtimeCaptionAppearance),
+                  let appearance = try? JSONDecoder().decode(RealtimeCaptionAppearance.self, from: data)
+            else { return RealtimeCaptionAppearance() }
+            return appearance
+        }
     #endif
 
     // MARK: - Enabled Models (flat model architecture)
@@ -738,6 +755,10 @@ public final class AppPreferences: ObservableObject {
                 if realtimePictureInPictureSize != storedRealtimePictureInPictureSize {
                     realtimePictureInPictureSize = storedRealtimePictureInPictureSize
                 }
+                let storedRealtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
+                if realtimeCaptionAppearance != storedRealtimeCaptionAppearance {
+                    realtimeCaptionAppearance = storedRealtimeCaptionAppearance
+                }
             #endif
         #endif
 
@@ -1008,6 +1029,7 @@ private enum StorageKeys {
     #if os(iOS)
         static let realtimePictureInPictureEnabled = "realtime_picture_in_picture_enabled"
         static let realtimePictureInPictureSize = "realtime_picture_in_picture_size"
+        static let realtimeCaptionAppearance = "realtime_caption_appearance"
     #endif
     static let satisfactionPromptLastResponseDate = "satisfaction_prompt_last_response_date"
     static let systemReviewSuccessStreak = "system_review_success_streak"
@@ -1021,5 +1043,33 @@ private enum StorageKeys {
         case compact
 
         public var id: String { rawValue }
+    }
+
+    /// Caption typography shared by the in-app list and the Picture in Picture window.
+    public struct RealtimeCaptionAppearance: Codable, Equatable, Sendable {
+        public enum FontDesign: String, Codable, CaseIterable, Identifiable, Sendable {
+            case serif
+            case system
+            case rounded
+
+            public var id: String { rawValue }
+        }
+
+        public enum Spacing: String, Codable, CaseIterable, Identifiable, Sendable {
+            case compact
+            case standard
+            case relaxed
+
+            public var id: String { rawValue }
+        }
+
+        public static let textSizeRange: ClosedRange<Double> = 16 ... 32
+
+        public var fontDesign: FontDesign = .serif
+        /// Point size of translation text; source text scales with it.
+        public var textSize: Double = 22
+        public var spacing: Spacing = .standard
+
+        public init() {}
     }
 #endif

@@ -224,6 +224,15 @@
             private var broadcastStatePollingTask: Task<Void, Never>?
             private var sessionLifecycleObservers: [NSObjectProtocol] = []
             private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
+            /// True for an iPhone Audio session whose relayed audio the host recognizes with a local
+            /// model; the host then owns the transcript and history instead of the extension.
+            private var usesHostRecognitionRelay = false
+            private var hostRecognitionRelayTask: Task<Void, Never>?
+            private var hostRecognitionRelayReader: RealtimeAudioRelayReader?
+            private var isDrainingHostRecognitionRelay = false
+            nonisolated static let hostRecognitionRelayPollInterval: Duration = .milliseconds(50)
+            /// Audio older than this after a stall is dropped instead of overflowing the recognizer backlog.
+            nonisolated static let hostRecognitionRelayMaximumChunkDuration: TimeInterval = 10
         #endif
 
         public init(preferences: AppPreferences = .shared) {
@@ -777,6 +786,7 @@
             )
             #if os(iOS)
                 if inputSource == .iphoneAudio {
+                    await drainHostRecognitionRelay()
                     saveRealtimeHistoryIfPossible()
                     guard let broadcastStateStore else {
                         finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
@@ -930,6 +940,23 @@
             guard isRunning, !isPaused else { return }
             togglePaused()
         }
+
+        #if os(iOS)
+            /// True while the upload extension is broadcasting for this session. A stop the extension
+            /// initiates always shows a ReplayKit alert, so the UI ends a live broadcast through the
+            /// system picker instead.
+            public var isIPhoneAudioBroadcastLive: Bool {
+                guard inputSource == .iphoneAudio, isRunning, !isStopping,
+                      let phase = broadcastStateStore?.load()?.phase
+                else { return false }
+                switch phase {
+                case .broadcasting, .recognizing, .translating, .paused:
+                    return true
+                case .idle, .waiting, .stopping, .stopped, .failed:
+                    return false
+                }
+            }
+        #endif
 
         public func resetTranscript() {
             logRealtime(
@@ -1133,6 +1160,39 @@
 
                 let sessionID = UUID().uuidString
                 broadcastStateStore?.reset(sessionID: sessionID, phase: .waiting)
+                RealtimeAudioRelay.removeStaleSessions(keeping: nil)
+                usesHostRecognitionRelay = false
+                if let relayModel = await hostRelayRecognitionModel() {
+                    let recognitionSessionID = activeSessionID
+                    logRealtime("host recognition loading model=\(relayModel.id) session=\(sessionID)", stage: "relay")
+                    do {
+                        _ = try await startRecognition(sessionID: recognitionSessionID)
+                    } catch {
+                        logRealtime("host recognition load failed error=\(Self.describe(error))", stage: "relay")
+                        handleStartFailure(error)
+                        return
+                    }
+                    guard shouldAcceptRealtimeCallback(sessionID: recognitionSessionID) else {
+                        logRealtime("host recognition abandoned reason=sessionChanged", stage: "relay")
+                        await activeRecognizer.stop()
+                        return
+                    }
+                    if let reader = RealtimeAudioRelayReader(sessionID: sessionID) {
+                        usesHostRecognitionRelay = true
+                        broadcastStateStore?.update(sessionID: sessionID, synchronize: true) { state in
+                            state.usesHostRecognition = true
+                        }
+                        broadcastStateStore?.markHostAlive(sessionID: sessionID)
+                        startRealtimeHistorySessionIfNeeded()
+                        startHostRecognitionRelay(reader: reader)
+                        logRealtime("host recognition ready model=\(relayModel.id) session=\(sessionID)", stage: "relay")
+                    } else {
+                        logRealtime("host recognition unavailable reason=noRelayReader; extension recognizes", stage: "relay")
+                        await activeRecognizer.stop()
+                    }
+                } else {
+                    logRealtime("host recognition off model=\(preferences.realtimeRecognitionModelID)", stage: "relay")
+                }
                 isRunning = true
                 statusText = String(localized: "Waiting for iPhone Audio broadcast")
                 lastBroadcastStateLogSignature = nil
@@ -1181,6 +1241,10 @@
                     stopBroadcastStatePolling()
                     return
                 }
+                guard !isDrainingHostRecognitionRelay else { return }
+                if usesHostRecognitionRelay {
+                    broadcastStateStore?.markHostAlive(sessionID: sessionID)
+                }
 
                 guard let state = broadcastStateStore?.load(),
                       state.sessionID == sessionID
@@ -1202,7 +1266,7 @@
                        state.sessionID == sessionID,
                        state.phase == .stopped
                     {
-                        finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+                        endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
                     }
                     return
                 }
@@ -1211,16 +1275,24 @@
             }
 
             private func applyBroadcastState(_ state: RealtimeBroadcastState) {
+                if usesHostRecognitionRelay, !state.usesHostRecognition, hostRecognitionRelayTask != nil {
+                    handOffHostRecognitionToExtension(state: state)
+                    return
+                }
                 // Polling mostly delivers heartbeats; skip transcript work and
-                // `@Published` writes when the text did not move.
-                let transcriptChanged = sourceText != state.sourceText
-                    || translationSourceText != state.translationSourceText
-                    || pendingSourceText != state.pendingSourceText
-                    || translatedText != state.translatedText
-                    || pendingTranslatedText != state.pendingTranslatedText
-                    || sentencePairs != state.sentencePairs
-                    || lastAppliedBroadcastSourceSegments != state.sourceSegments
-                assignIfChanged(&sourceText, state.sourceText)
+                // `@Published` writes when the text did not move. Relayed sessions keep the host transcript.
+                let transcriptChanged = !usesHostRecognitionRelay && (
+                    sourceText != state.sourceText
+                        || translationSourceText != state.translationSourceText
+                        || pendingSourceText != state.pendingSourceText
+                        || translatedText != state.translatedText
+                        || pendingTranslatedText != state.pendingTranslatedText
+                        || sentencePairs != state.sentencePairs
+                        || lastAppliedBroadcastSourceSegments != state.sourceSegments
+                )
+                if !usesHostRecognitionRelay {
+                    assignIfChanged(&sourceText, state.sourceText)
+                }
                 if transcriptChanged {
                     lastAppliedBroadcastSourceSegments = state.sourceSegments
                     assignIfChanged(&translationSourceText, state.translationSourceText)
@@ -1239,7 +1311,9 @@
                 assignIfChanged(&audioLevel, state.audioLevel)
                 assignIfChanged(&errorMessage, state.errorMessage)
                 assignIfChanged(&isIPhoneAudioCaptureReady, state.isRecognitionReady)
-                latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
+                if !usesHostRecognitionRelay {
+                    latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
+                }
                 autosaveRealtimeHistoryIfNeeded()
                 if transcriptChanged {
                     refreshCaptionLines(event: "broadcastState")
@@ -1249,9 +1323,7 @@
                 if state.isStale(), state.phase != .stopped, state.phase != .failed {
                     if Self.isStaleActiveIPhoneAudioBroadcast(state) {
                         let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
-                        finishIPhoneAudioBroadcastSession(status: String(localized: "Error"))
-                        handleErrorMessage(alert.message)
-                        startFailureAlert = alert
+                        endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
                     } else {
                         statusText = String(localized: "Waiting for iPhone Audio broadcast")
                     }
@@ -1274,17 +1346,135 @@
                 case .stopping:
                     statusText = String(localized: "Stopping iPhone Audio")
                 case .stopped:
-                    finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+                    endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
                 case .failed:
                     let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
-                    finishIPhoneAudioBroadcastSession(status: String(localized: "Error"))
-                    handleErrorMessage(alert.message)
-                    startFailureAlert = alert
+                    endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
+                }
+            }
+
+            private func hostRelayRecognitionModel() async -> RecognitionModelDescriptor? {
+                let model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
+                guard model.runtime == .fluidAudio else { return nil }
+                guard await RecognitionModelStore.shared.isModelCached(model) else {
+                    logRealtime("host recognition off reason=modelNotCached model=\(model.id)", stage: "relay")
+                    return nil
+                }
+                return model
+            }
+
+            /// Feeds relayed extension audio to the local recognizer off the main actor.
+            private func startHostRecognitionRelay(reader: RealtimeAudioRelayReader) {
+                hostRecognitionRelayReader = reader
+                let recognizer = activeRecognizer
+                hostRecognitionRelayTask = Task.detached(priority: .userInitiated) {
+                    var bufferCount = 0
+                    func deliver(_ buffer: AVAudioPCMBuffer) {
+                        let duration = Double(buffer.frameLength) / RealtimeAudioRelay.sampleRate
+                        guard duration <= RealtimeSessionStore.hostRecognitionRelayMaximumChunkDuration else {
+                            RealtimeLog.warn("relay", "host dropped stalled chunk seconds=\(String(format: "%.1f", duration))")
+                            return
+                        }
+                        bufferCount += 1
+                        if bufferCount == 1 {
+                            RealtimeLog.log("relay", "host first audio chunk seconds=\(String(format: "%.2f", duration))")
+                        }
+                        recognizer.append(buffer)
+                    }
+                    RealtimeLog.log("relay", "host reader started")
+                    while !Task.isCancelled {
+                        if let buffer = reader.readAvailable() {
+                            deliver(buffer)
+                        }
+                        try? await Task.sleep(for: RealtimeSessionStore.hostRecognitionRelayPollInterval)
+                    }
+                    // Audio written before the stop still reaches the recognizer.
+                    if let buffer = reader.readAvailable() {
+                        deliver(buffer)
+                    }
+                    RealtimeLog.log(
+                        "relay",
+                        "host reader stopped chunks=\(bufferCount) totalSeconds=\(String(format: "%.1f", Double(reader.totalSampleCount) / RealtimeAudioRelay.sampleRate))"
+                    )
+                }
+            }
+
+            /// Stops reading relayed audio, then finishes recognition and translation like a microphone stop.
+            private func drainHostRecognitionRelay() async {
+                guard let task = hostRecognitionRelayTask else { return }
+                hostRecognitionRelayTask = nil
+                logRealtime("host drain begin sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+                task.cancel()
+                await task.value
+                await activeRecognizer.stop()
+                await callbackDrain.wait()
+                finalizePendingRecognition()
+                let partialTask = partialTranslationTask
+                cancelPartialTranslationWork()
+                await partialTask?.value
+                let finalTask = finalTranslationTask
+                await finalTask?.value
+                audioHistoryRecorder.finish()
+                hostRecognitionRelayReader?.removeAll()
+                hostRecognitionRelayReader = nil
+                logRealtime("host drain end sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+            }
+
+            /// The extension stopped seeing host heartbeats and recognizes locally now. Save what the host
+            /// recognized as its own history entry, then show the extension's transcript.
+            private func handOffHostRecognitionToExtension(state: RealtimeBroadcastState) {
+                guard !isDrainingHostRecognitionRelay else { return }
+                logRealtime(
+                    "host lost ownership phase=\(state.phase.rawValue) extensionSourceLen=\(state.sourceText.count); draining",
+                    stage: "relay"
+                )
+                isDrainingHostRecognitionRelay = true
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    await drainHostRecognitionRelay()
+                    saveRealtimeHistoryIfPossible(generateTitle: true)
+                    usesHostRecognitionRelay = false
+                    isDrainingHostRecognitionRelay = false
+                    logRealtime("host handed off to extension", stage: "relay")
+                }
+            }
+
+            /// Ends the session, first draining host recognition when relayed audio was in use.
+            private func endIPhoneAudioBroadcastSession(status: String, alert: RealtimeStartFailureAlert? = nil) {
+                let finish = { [self] in
+                    finishIPhoneAudioBroadcastSession(status: status)
+                    if let alert {
+                        handleErrorMessage(alert.message)
+                        startFailureAlert = alert
+                    }
+                }
+                guard hostRecognitionRelayTask != nil else {
+                    finish()
+                    return
+                }
+                guard !isDrainingHostRecognitionRelay else { return }
+                isDrainingHostRecognitionRelay = true
+                stopBroadcastStatePolling()
+                logRealtime("session ending status=\(status); draining host recognition", stage: "relay")
+                Task { @MainActor [weak self] in
+                    await self?.drainHostRecognitionRelay()
+                    self?.isDrainingHostRecognitionRelay = false
+                    finish()
                 }
             }
 
             private func finishIPhoneAudioBroadcastSession(status: String) {
+                if let task = hostRecognitionRelayTask {
+                    logRealtime("finish without drain; stopping host recognition", stage: "relay")
+                    task.cancel()
+                    hostRecognitionRelayTask = nil
+                    hostRecognitionRelayReader?.removeAll()
+                    hostRecognitionRelayReader = nil
+                    let recognizer = activeRecognizer
+                    Task { await recognizer.stop() }
+                }
                 saveRealtimeHistoryIfPossible(generateTitle: true)
+                usesHostRecognitionRelay = false
                 stopBroadcastStatePolling()
                 isRunning = false
                 isStopping = false
@@ -2008,7 +2198,7 @@
 
         private func currentRealtimeHistorySession() -> RealtimeHistorySession? {
             #if os(iOS)
-                if inputSource == .iphoneAudio {
+                if inputSource == .iphoneAudio, !usesHostRecognitionRelay {
                     guard [.appleTranslator, .transcriptionOnly].contains(preferences.realtimeTranslationProvider) else {
                         return nil
                     }
@@ -2430,6 +2620,17 @@
         }
     }
 
+    public extension RealtimeSessionStore {
+        /// The mode `captionLines` were built for; transcription-only sessions always show source captions.
+        var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
+            let provider = preferences.realtimeTranslationProvider
+            if !provider.performsTranslation {
+                return .sourceOnly
+            }
+            return captionDisplayMode
+        }
+    }
+
     private extension RealtimeSessionStore {
         func logRealtime(_ message: String, stage: String = "session") {
             RealtimeLog.log(stage, message)
@@ -2439,14 +2640,6 @@
             if value != newValue {
                 value = newValue
             }
-        }
-
-        var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
-            let provider = preferences.realtimeTranslationProvider
-            if !provider.performsTranslation {
-                return .sourceOnly
-            }
-            return captionDisplayMode
         }
 
         func refreshCaptionLines(event: String) {

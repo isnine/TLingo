@@ -29,6 +29,22 @@
         @State private var isSourceLanguagePickerPresented = false
         @State private var isTargetLanguagePickerPresented = false
         @State private var controlDockHeight: CGFloat = 0
+        @State private var translationPack: TranslationPackState = .ready
+        @State private var translationPackDownloadConfiguration: TranslationSession.Configuration?
+
+        /// Apple Translate language pack readiness, checked before Start so a missing pack is
+        /// downloaded up front instead of failing the start and offering a download afterwards.
+        private enum TranslationPackState: Equatable {
+            /// Installed, or no Apple Translate pack is needed for the current settings.
+            case ready
+            case needsDownload
+            /// Waiting on the system download prompt.
+            case downloading
+            /// iOS keeps downloading after its prompt is dismissed while `LanguageAvailability`
+            /// still reports `.supported`, so this state polls until the pack is installed.
+            case downloadingInBackground
+            case unsupported
+        }
 
         private enum RealtimeSettingsRoute: Hashable {
             case recognitionModels
@@ -75,6 +91,21 @@
                 .translationTask(store.appleTranslationDownloadConfiguration) { session in
                     await store.prepareAppleTranslationLanguageDownload(using: session)
                 }
+                .translationTask(translationPackDownloadConfiguration) { session in
+                    await downloadTranslationPack(using: session)
+                }
+                .task(id: translationPackKey) {
+                    await refreshTranslationPack()
+                }
+                .task(id: translationPack) {
+                    // Catches a download that finishes in the background or from Settings.
+                    guard translationPack == .needsDownload || translationPack == .downloadingInBackground else { return }
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(3))
+                        guard !Task.isCancelled else { return }
+                        await refreshTranslationPack()
+                    }
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     controlDock
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { controlDockHeight = $0 }
@@ -113,7 +144,7 @@
                         Button("Download") {
                             store.dismissStartFailureAlert()
                             store.allowAppleTranslationDownloadOnNextStart()
-                            Task { await controlModel.handleStartButtonTapped(store: store, preferences: preferences) }
+                            controlModel.sessionButtonTapped(store: store, preferences: preferences)
                         }
                     }
                     Button("OK", role: .cancel) {
@@ -181,7 +212,7 @@
         }
 
         private var isSessionTransitioning: Bool {
-            controlModel.isStartingRealtimeSession || store.isStopping
+            controlModel.isHandlingSessionTap || controlModel.isStartingRealtimeSession || store.isStopping
         }
 
         /// Bottom dock within thumb reach: one capsule on the left, the session control on the right.
@@ -193,6 +224,14 @@
                     Label(languageSelectionStatusText, systemImage: "exclamationmark.circle.fill")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
+                        .transition(.opacity)
+                } else if let hint = translationPackHint, !isSessionActive {
+                    Label(hint, systemImage: translationPackHintSystemImage)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(translationPack == .unsupported ? .orange : colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 10)
@@ -211,6 +250,7 @@
             .padding(.bottom, 10)
             .frame(maxWidth: .infinity)
             .animation(.snappy, value: shouldShowSetupHint)
+            .animation(.snappy, value: translationPack)
             .animation(.smooth(duration: 0.35), value: isSessionActive)
             .animation(.snappy, value: store.isPaused)
             .sensoryFeedback(trigger: store.isRunning) { _, isRunning in
@@ -335,6 +375,10 @@
 
         private var pauseButton: some View {
             Button {
+                RealtimeLog.log(
+                    "session",
+                    "pause button tapped running=\(store.isRunning) paused=\(store.isPaused) stopping=\(store.isStopping)"
+                )
                 store.togglePaused()
             } label: {
                 Image(systemName: store.isPaused ? "play.fill" : "pause.fill")
@@ -356,12 +400,21 @@
         /// starts or saves, instead of dimming the whole screen.
         private var sessionControlButton: some View {
             Button {
-                Task {
-                    await controlModel.handleStartButtonTapped(store: store, preferences: preferences)
+                RealtimeLog.log(
+                    "session",
+                    """
+                    session button tapped running=\(store.isRunning) starting=\(controlModel.isStartingRealtimeSession) \
+                    stopping=\(store.isStopping) pending=\(controlModel.isHandlingSessionTap) pack=\(translationPack)
+                    """
+                )
+                if !store.isRunning, translationPack == .needsDownload {
+                    requestTranslationPackDownload()
+                    return
                 }
+                controlModel.sessionButtonTapped(store: store, preferences: preferences)
             } label: {
                 ZStack {
-                    if isSessionTransitioning {
+                    if isSessionTransitioning || isTranslationPackDownloading {
                         ProgressView()
                             .tint(.white)
                     } else {
@@ -380,8 +433,8 @@
                 )
             }
             .buttonStyle(.plain)
-            .disabled(isSessionTransitioning)
-            .accessibilityLabel(controlModel.startButtonTitle(for: store))
+            .disabled(isSessionTransitioning || (!store.isRunning && !canStartWithTranslationPack))
+            .accessibilityLabel(sessionControlAccessibilityLabel)
             .accessibilityIdentifier("realtime_session_control_button")
         }
 
@@ -389,12 +442,145 @@
             if store.isRunning {
                 return "stop.fill"
             }
+            if translationPack == .needsDownload {
+                return "arrow.down"
+            }
             return store.inputSource == .microphone ? "mic.fill" : "play.fill"
+        }
+
+        private var sessionControlAccessibilityLabel: LocalizedStringKey {
+            if !store.isRunning, translationPack == .needsDownload {
+                return "Download Languages"
+            }
+            return controlModel.startButtonTitle(for: store)
         }
 
         private var sessionControlTint: Color {
             let tint = store.isRunning || store.isStopping ? colors.error : colors.accent
-            return isSessionTransitioning ? tint.opacity(0.7) : tint
+            let isDimmed = isSessionTransitioning || (!store.isRunning && !canStartWithTranslationPack)
+            return isDimmed ? tint.opacity(0.7) : tint
+        }
+
+        // MARK: - Apple Translate Language Pack
+
+        private var translationPackKey: String {
+            [
+                preferences.realtimeSourceLanguage.rawValue,
+                preferences.realtimeTargetLanguage.rawValue,
+                preferences.realtimeTranslationProvider.rawValue,
+                "\(scenePhase == .active)",
+            ].joined(separator: "|")
+        }
+
+        private var translationPackStrategy: AppleTranslationAvailabilityStrategy {
+            preferences.realtimeTranslationProvider == .appleTranslationRealtime ? .lowLatency : .automatic
+        }
+
+        private var isTranslationPackDownloading: Bool {
+            !store.isRunning && (translationPack == .downloading || translationPack == .downloadingInBackground)
+        }
+
+        /// Start stays enabled for a missing pack because that tap downloads it.
+        private var canStartWithTranslationPack: Bool {
+            translationPack == .ready || translationPack == .needsDownload
+        }
+
+        private var translationPackHint: String? {
+            switch translationPack {
+            case .ready:
+                nil
+            case .needsDownload:
+                String(localized: "Download \(sourceLanguageDisplayName) and \(targetLanguageDisplayName) for Apple Translate to start.")
+            case .downloading:
+                String(localized: "Tap Download in the iOS prompt.")
+            case .downloadingInBackground:
+                String(localized: "iOS is downloading these languages. Realtime starts when they are ready.")
+            case .unsupported:
+                String(localized: "Apple Translate does not support \(sourceLanguageDisplayName) to \(targetLanguageDisplayName). Pick another pair.")
+            }
+        }
+
+        private var translationPackHintSystemImage: String {
+            switch translationPack {
+            case .unsupported: "exclamationmark.circle.fill"
+            case .downloading, .downloadingInBackground: "arrow.down.circle"
+            default: "arrow.down.circle.fill"
+            }
+        }
+
+        private func refreshTranslationPack() async {
+            guard scenePhase == .active, !store.isRunning,
+                  preferences.realtimeTranslationProvider.usesAppleTextTranslation,
+                  !LanguageDirectionSwap.isSameLanguage(
+                      source: preferences.realtimeSourceLanguage,
+                      target: preferences.realtimeTargetLanguage
+                  ),
+                  let source = preferences.realtimeSourceLanguage.localeLanguage,
+                  AppleTranslationService.shared.isAvailable
+            else {
+                translationPack = .ready
+                return
+            }
+            // Unknown statuses fall back to the start preflight, which reports its own errors.
+            let status = try? await AppleTranslationService.shared.languageAvailabilityStatus(
+                source: source,
+                target: preferences.realtimeTargetLanguage.localeLanguage,
+                strategy: translationPackStrategy
+            )
+            guard !Task.isCancelled else { return }
+            switch status {
+            case .supported:
+                // Keep showing the download while iOS finishes it, and never interrupt a prompt.
+                if translationPack != .downloadingInBackground, translationPack != .downloading {
+                    translationPack = .needsDownload
+                }
+            case .unsupported:
+                translationPack = .unsupported
+            default:
+                translationPack = .ready
+            }
+        }
+
+        private func requestTranslationPackDownload() {
+            guard let source = preferences.realtimeSourceLanguage.localeLanguage else { return }
+            let target = preferences.realtimeTargetLanguage.localeLanguage
+            var configuration: TranslationSession.Configuration = if #available(iOS 26.4, *),
+                                                                     translationPackStrategy == .lowLatency
+            {
+                .init(source: source, target: target, preferredStrategy: .lowLatency)
+            } else {
+                .init(source: source, target: target)
+            }
+            // An unchanged configuration does not re-run the task; invalidate it to show the prompt again.
+            if var previous = translationPackDownloadConfiguration,
+               previous.source == configuration.source,
+               previous.target == configuration.target
+            {
+                previous.invalidate()
+                configuration = previous
+            }
+            RealtimeLog.log("session", "apple translate pack download requested strategy=\(translationPackStrategy)")
+            translationPack = .downloading
+            translationPackDownloadConfiguration = configuration
+        }
+
+        private func downloadTranslationPack(using session: TranslationSession) async {
+            guard translationPack == .downloading else { return }
+            do {
+                try await session.prepareTranslation()
+                RealtimeLog.log("session", "apple translate pack download prepared")
+            } catch {
+                // Includes a cancelled prompt; leave Download available to try again.
+                RealtimeLog.log("session", "apple translate pack download failed error=\(error)")
+                translationPack = .needsDownload
+                await refreshTranslationPack()
+                return
+            }
+            translationPack = .downloadingInBackground
+            await refreshTranslationPack()
+            if translationPack == .downloadingInBackground {
+                RealtimeLog.log("session", "apple translate pack still downloading in background")
+            }
         }
 
         private var sourceLanguageMenu: some View {
@@ -705,19 +891,19 @@
 
         private var emptyStateOptions: some View {
             VStack(spacing: 0) {
-                LabeledContent("Input") {
+                // A menu-style Picker swallows the next tap after a selection (the play button
+                // ignored its first tap), and its chevron can't match the row below.
+                Menu {
                     Picker("Input", selection: inputSourceBinding) {
                         ForEach(RealtimeAudioInputSource.allCases) { source in
                             Text(source.title)
                                 .tag(source)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    .tint(colors.textSecondary)
-                    .fixedSize()
+                } label: {
+                    emptyStateOptionRow("Input", value: store.inputSource.title)
                 }
-                .frame(minHeight: 44)
+                .buttonStyle(.plain)
 
                 Divider()
 
@@ -727,17 +913,7 @@
                     settingsDetent = .large
                     isSettingsPresented = true
                 } label: {
-                    LabeledContent("Speech Recognition") {
-                        HStack(spacing: TLingoSpacing.xxs) {
-                            Text(selectedRecognitionModel.title)
-                            Image(systemName: "chevron.right")
-                                .font(.footnote.weight(.semibold))
-                        }
-                        .foregroundStyle(colors.textSecondary)
-                    }
-                    .foregroundStyle(colors.textPrimary)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
+                    emptyStateOptionRow("Speech Recognition", value: selectedRecognitionModel.title)
                 }
                 .buttonStyle(.plain)
             }
@@ -749,8 +925,28 @@
             .frame(maxWidth: 320)
         }
 
+        private func emptyStateOptionRow(_ title: LocalizedStringKey, value: String) -> some View {
+            LabeledContent(title) {
+                HStack(spacing: TLingoSpacing.xxs) {
+                    Text(value)
+                        .multilineTextAlignment(.trailing)
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                }
+                .foregroundStyle(colors.textSecondary)
+            }
+            .foregroundStyle(colors.textPrimary)
+            .padding(.vertical, TLingoSpacing.sm)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+
         private var captionStyle: RealtimeCaptionTextView.Style {
-            RealtimeCaptionTextView.Style(palette: colors)
+            RealtimeCaptionTextView.Style(
+                palette: colors,
+                appearance: preferences.realtimeCaptionAppearance,
+                mode: store.resolvedCaptionDisplayMode
+            )
         }
 
         private var settingsSheet: some View {
@@ -787,6 +983,39 @@
                             }
                         }
                         .disabled(store.isRunning)
+                    }
+
+                    Section {
+                        Picker("Font", selection: captionAppearanceBinding(\.fontDesign)) {
+                            Text("Serif").tag(RealtimeCaptionAppearance.FontDesign.serif)
+                            Text("System").tag(RealtimeCaptionAppearance.FontDesign.system)
+                            Text("Rounded").tag(RealtimeCaptionAppearance.FontDesign.rounded)
+                        }
+                        LabeledContent("Text Size", value: "\(Int(preferences.realtimeCaptionAppearance.textSize)) pt")
+                        Slider(
+                            value: captionAppearanceBinding(\.textSize),
+                            in: RealtimeCaptionAppearance.textSizeRange,
+                            step: 1
+                        ) {
+                            Text("Text Size")
+                        } minimumValueLabel: {
+                            Image(systemName: "textformat.size.smaller")
+                        } maximumValueLabel: {
+                            Image(systemName: "textformat.size.larger")
+                        }
+                        Picker("Line Spacing", selection: captionAppearanceBinding(\.spacing)) {
+                            Text("Compact").tag(RealtimeCaptionAppearance.Spacing.compact)
+                            Text("Standard").tag(RealtimeCaptionAppearance.Spacing.standard)
+                            Text("Relaxed").tag(RealtimeCaptionAppearance.Spacing.relaxed)
+                        }
+                        Button("Reset to Default") {
+                            preferences.setRealtimeCaptionAppearance(RealtimeCaptionAppearance())
+                        }
+                        .disabled(preferences.realtimeCaptionAppearance == RealtimeCaptionAppearance())
+                    } header: {
+                        Text("Caption Style")
+                    } footer: {
+                        Text("Applies to captions here and in Picture in Picture.")
                     }
 
                     if AVPictureInPictureController.isPictureInPictureSupported() {
@@ -854,6 +1083,19 @@
             Binding(
                 get: { preferences.realtimePictureInPictureSize },
                 set: { preferences.setRealtimePictureInPictureSize($0) }
+            )
+        }
+
+        private func captionAppearanceBinding<Value>(
+            _ keyPath: WritableKeyPath<RealtimeCaptionAppearance, Value>
+        ) -> Binding<Value> {
+            Binding(
+                get: { preferences.realtimeCaptionAppearance[keyPath: keyPath] },
+                set: { value in
+                    var appearance = preferences.realtimeCaptionAppearance
+                    appearance[keyPath: keyPath] = value
+                    preferences.setRealtimeCaptionAppearance(appearance)
+                }
             )
         }
 
@@ -994,6 +1236,8 @@
     @MainActor
     final class RealtimeControlModel: ObservableObject {
         @Published var isStartingRealtimeSession = false
+        /// Set synchronously on tap so the button turns into a spinner before the async work begins.
+        @Published private(set) var isHandlingSessionTap = false
         @Published var broadcastPickerTrigger: UUID?
         @Published var startBlockedAlert: StartBlockedAlert?
         /// Set by a `tlingo://realtime/models` deep link; consumed by `RealtimeView`.
@@ -1030,9 +1274,34 @@
             return String(localized: "Choose source and target languages to start.")
         }
 
+        func sessionButtonTapped(store: RealtimeSessionStore, preferences: AppPreferences) {
+            guard !isHandlingSessionTap else {
+                RealtimeLog.log("session", "session tap ignored reason=pending")
+                return
+            }
+            isHandlingSessionTap = true
+            let tappedAt = Date()
+            Task {
+                RealtimeLog.log("session", "session tap handling delayMs=\(Int(Date().timeIntervalSince(tappedAt) * 1000))")
+                await handleStartButtonTapped(store: store, preferences: preferences)
+                isHandlingSessionTap = false
+                RealtimeLog.log(
+                    "session",
+                    """
+                    session tap finished totalMs=\(Int(Date().timeIntervalSince(tappedAt) * 1000)) \
+                    running=\(store.isRunning)
+                    """
+                )
+            }
+        }
+
         func handleStartButtonTapped(store: RealtimeSessionStore, preferences: AppPreferences) async {
-            guard !store.isStopping else { return }
+            guard !store.isStopping else {
+                RealtimeLog.log("session", "session tap ignored reason=stopping")
+                return
+            }
             if let alert = startBlockedAlertForCurrentState(store: store, preferences: preferences) {
+                RealtimeLog.log("session", "session tap blocked alert=\(alert.title)")
                 startBlockedAlert = alert
                 return
             }
@@ -1178,6 +1447,13 @@
 
         private func toggleRealtimeSession(store: RealtimeSessionStore) async {
             guard !store.isStopping else { return }
+            if store.isIPhoneAudioBroadcastLive {
+                // The picker's Stop Broadcast ends ReplayKit cleanly; the host finishes once it
+                // polls the extension's stopped state.
+                RealtimeLog.log("session", "stop via broadcast picker")
+                broadcastPickerTrigger = UUID()
+                return
+            }
             if store.isRunning {
                 await store.toggleRunning()
                 return
@@ -1225,7 +1501,10 @@
             if preferences.realtimeRecognitionEngine != .appleSpeech {
                 preferences.setRealtimeRecognitionEngine(.appleSpeech)
             }
-            preferences.setRealtimeRecognitionModelID(RecognitionModelDescriptor.appleSpeech.id)
+            let model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
+            if model.runtime != .fluidAudio {
+                preferences.setRealtimeRecognitionModelID(RecognitionModelDescriptor.appleSpeech.id)
+            }
         }
     }
 
