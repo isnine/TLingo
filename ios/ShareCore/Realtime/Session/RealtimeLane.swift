@@ -155,6 +155,9 @@
                         stored.recognitionModelID == RecognitionModelDescriptor.mossTranscribeDiarize.id
                             ? RecognitionModelDescriptor.appleSpeech.id
                             : RecognitionModelStore.selectableDescriptor(forModelID: stored.recognitionModelID).id
+                    if !stored.translationProvider.isAvailableOnCurrentOS {
+                        migrated.translationProvider = .default
+                    }
                     let key = "\(migrated.recognitionModelID)|\(migrated.translationProvider.rawValue)"
                     return combinations.insert(key).inserted ? migrated : nil
                 }

@@ -18527,6 +18527,254 @@
         }
       }
     },
+    "Captures audio from your microphone. Great for travel." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将从你的麦克风收音，适合旅游场景。"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يسجل الصوت من الميكروفون الخاص بك. رائع للسفر."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optager lyd fra din mikrofon. Fantastisk til rejser."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimmt Audio von deinem Mikrofon auf. Ideal für Reisen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captures audio from your microphone. Great for travel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura audio de tu micrófono. Ideal para viajar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture l’audio de votre microphone. Idéal en voyage."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merekam audio dari mikrofon Anda. Cocok untuk bepergian."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cattura l’audio dal tuo microfono. Perfetto per i viaggi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイクから音声を録音します。旅行に最適です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마이크에서 오디오를 캡처합니다. 여행에 적합합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menangkap audio daripada mikrofon anda. Bagus untuk perjalanan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tar opp lyd fra mikrofonen din. Flott for reiser."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neemt audio op van je microfoon. Ideaal voor onderweg."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przechwytuje dźwięk z mikrofonu. Idealne w podróży."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura áudio do seu microfone. Ótimo para viagens."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spelar in ljud från din mikrofon. Perfekt för resor."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofonunuzdan ses yakalar. Seyahat için harika."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從你的麥克風擷取音訊。非常適合旅行。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從你的麥克風擷取音訊。非常適合旅行。"
+          }
+        }
+      }
+    },
+    "Captures sound playing on your iPhone. Great for videos and podcasts." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将收录 iPhone 正在播放的声音，适合看视频、听播客。"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يسجل الصوت الذي يتم تشغيله على iPhone. رائع لمقاطع الفيديو والبودكاست."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optager lyd, der afspilles på din iPhone. Fantastisk til videoer og podcasts."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimmt Ton auf, der auf deinem iPhone abgespielt wird. Ideal für Videos und Podcasts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captures sound playing on your iPhone. Great for videos and podcasts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura el sonido que se reproduce en tu iPhone. Ideal para videos y pódcasts."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture le son lu sur votre iPhone. Idéal pour les vidéos et les podcasts."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merekam suara yang diputar di iPhone Anda. Cocok untuk video dan podcast."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cattura l’audio riprodotto sul tuo iPhone. Perfetto per video e podcast."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneで再生中の音を録音します。ビデオやポッドキャストに最適です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone에서 재생되는 소리를 캡처합니다. 비디오와 팟캐스트에 적합합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menangkap bunyi yang dimainkan pada iPhone anda. Bagus untuk video dan podcast."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tar opp lyd som spilles av på iPhone. Flott for videoer og podkaster."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neemt geluid op dat op je iPhone wordt afgespeeld. Ideaal voor video's en podcasts."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przechwytuje dźwięk odtwarzany na iPhonie. Idealne do filmów i podcastów."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura o som reproduzido no seu iPhone. Ótimo para vídeos e podcasts."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spelar in ljud som spelas upp på din iPhone. Perfekt för videor och poddar."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone'unuzda çalan sesi yakalar. Videolar ve podcast'ler için harika."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取 iPhone 上播放的聲音。非常適合影片和 Podcast。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取 iPhone 上播放的聲音。非常適合影片和 Podcast。"
+          }
+        }
+      }
+    },
     "Change" : {
       "localizations" : {
         "ar" : {
@@ -102811,130 +103059,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選來源語言無法使用語音辨識。"
-          }
-        }
-      }
-    },
-    "Speech you hear turns into bilingual captions here." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يتحول الكلام الذي تسمعه إلى ترجمة مزدوجة اللغة هنا."
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tale, du hører, bliver til tosprogede undertekster her."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gesprochenes erscheint hier als zweisprachige Untertitel."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speech you hear turns into bilingual captions here."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lo que escuchas se convierte aquí en subtítulos bilingües."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce que vous entendez s’affiche ici en sous-titres bilingues."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ucapan yang Anda dengar menjadi teks dua bahasa di sini."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il parlato che ascolti diventa qui sottotitoli bilingui."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "聞こえた音声が、ここに2か国語の字幕で表示されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "들리는 음성이 여기에 이중 언어 자막으로 표시됩니다."
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pertuturan yang anda dengar menjadi sari kata dwibahasa di sini."
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tale du hører, blir til tospråklige undertekster her."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wat je hoort verschijnt hier als tweetalige ondertitels."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Słyszana mowa pojawi się tutaj jako dwujęzyczne napisy."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A fala que você ouve vira legendas bilíngues aqui."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tal du hör blir tvåspråkiga undertexter här."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duyduğunuz konuşma burada iki dilli altyazıya dönüşür."
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "聽到的語音會在這裡顯示為雙語字幕。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "听到的语音会在这里显示为双语字幕。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "聽到的語音會在這裡顯示為雙語字幕。"
           }
         }
       }

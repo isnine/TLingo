@@ -51,9 +51,7 @@
         public var isAvailableOnCurrentOS: Bool {
             switch self {
             case .appleTranslationRealtime:
-                if #available(iOS 26.4, macOS 26.4, *) {
-                    return true
-                }
+                // Retired from selection; the case stays so stored lanes and history still decode.
                 return false
             case .appleTranslator, .transcriptionOnly:
                 return true

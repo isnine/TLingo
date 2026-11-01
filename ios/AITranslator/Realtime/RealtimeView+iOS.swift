@@ -683,24 +683,70 @@
                         ContentUnavailableView {
                             Label("Start Realtime Translation", systemImage: "captions.bubble")
                         } description: {
-                            Text("Speech you hear turns into bilingual captions here.")
+                            Text(emptyStateDescription)
                         } actions: {
-                            if RealtimeAudioInputSource.allCases.count > 1 {
-                                Picker("Input", selection: inputSourceBinding) {
-                                    ForEach(RealtimeAudioInputSource.allCases) { source in
-                                        Label(source.title, systemImage: source.systemImage)
-                                            .tag(source)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .fixedSize()
-                            }
+                            emptyStateOptions
                         }
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(colors.background)
+        }
+
+        private var emptyStateDescription: LocalizedStringKey {
+            switch store.inputSource {
+            case .iphoneAudio:
+                "Captures sound playing on your iPhone. Great for videos and podcasts."
+            case .microphone:
+                "Captures audio from your microphone. Great for travel."
+            }
+        }
+
+        private var emptyStateOptions: some View {
+            VStack(spacing: 0) {
+                LabeledContent("Input") {
+                    Picker("Input", selection: inputSourceBinding) {
+                        ForEach(RealtimeAudioInputSource.allCases) { source in
+                            Text(source.title)
+                                .tag(source)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .tint(colors.textSecondary)
+                    .fixedSize()
+                }
+                .frame(minHeight: 44)
+
+                Divider()
+
+                // Model choice needs download and language checks, so it opens the model list.
+                Button {
+                    settingsPath = [.recognitionModels]
+                    settingsDetent = .large
+                    isSettingsPresented = true
+                } label: {
+                    LabeledContent("Speech Recognition") {
+                        HStack(spacing: TLingoSpacing.xxs) {
+                            Text(selectedRecognitionModel.title)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .foregroundStyle(colors.textSecondary)
+                    }
+                    .foregroundStyle(colors.textPrimary)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, TLingoSpacing.md)
+            .background(
+                colors.cardBackground,
+                in: .rect(cornerRadius: TLingoRadius.medium, style: .continuous)
+            )
+            .frame(maxWidth: 320)
         }
 
         private var captionStyle: RealtimeCaptionTextView.Style {
@@ -1180,11 +1226,6 @@
                 preferences.setRealtimeRecognitionEngine(.appleSpeech)
             }
             preferences.setRealtimeRecognitionModelID(RecognitionModelDescriptor.appleSpeech.id)
-            // The broadcast extension translates only with Apple Translator; transcription only is kept.
-            if preferences.realtimeTranslationProvider == .appleTranslationRealtime {
-                preferences.setRealtimeTranslationProvider(.appleTranslator)
-                store.languageSelectionDidChange()
-            }
         }
     }
 

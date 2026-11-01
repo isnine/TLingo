@@ -62,7 +62,7 @@
             switch self {
             #if os(iOS)
                 case .iphoneAudio:
-                    return [.appleTranslator]
+                    return [.appleTranslator, .transcriptionOnly]
             #endif
             default:
                 return RealtimeTranslationProvider.availableCases

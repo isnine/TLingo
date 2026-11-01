@@ -426,7 +426,7 @@ import Testing
 
         @Test("Rejects more than three lanes")
         func rejectsMoreThanThreeLanes() {
-            let lanes = RealtimeTranslationProvider.availableCases.map {
+            let lanes = RealtimeTranslationProvider.allCases.map {
                 RealtimeLaneConfiguration(
                     recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
                     translationProvider: $0
@@ -454,7 +454,7 @@ import Testing
                 recognitionModelID: "unsupported-model",
                 translationProvider: .appleTranslator
             )
-            let tooManyLanes = RealtimeTranslationProvider.availableCases.map {
+            let tooManyLanes = RealtimeTranslationProvider.allCases.map {
                 RealtimeLaneConfiguration(
                     recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
                     translationProvider: $0
