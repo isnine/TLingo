@@ -127,9 +127,6 @@
                 }
                 audioEngine.stop()
                 audioEngine.inputNode.removeTap(onBus: 0)
-                if audioEngine.inputNode.isVoiceProcessingEnabled {
-                    try? audioEngine.inputNode.setVoiceProcessingEnabled(false)
-                }
                 targetFormat = nil
             #endif
             #if os(iOS)
@@ -192,9 +189,8 @@
 
         #if os(iOS)
             // `.measurement` disables the system's gain control, so distant speech arrived far too quiet.
-            // Voice processing (enabled on the input node) supplies AGC, noise suppression and
-            // beamforming, the same pipeline system dictation uses. It needs `.playAndRecord`
-            // even without playback, because the voice processing unit also drives the output.
+            // Voice processing is left off: its noise suppression erased faint or distant speech
+            // entirely, and capture never plays audio, so its echo cancellation is not needed.
             private func configureAudioSession(allowsPlayback: Bool) throws {
                 let audioSession = AVAudioSession.sharedInstance()
                 let options: AVAudioSession.CategoryOptions = allowsPlayback
@@ -208,20 +204,6 @@
 
             private func startAudioEngine(sampleRate: Int) throws {
                 let inputNode = audioEngine.inputNode
-                do {
-                    // Re-enabling during a configuration-change restart would trigger another change.
-                    if !inputNode.isVoiceProcessingEnabled {
-                        try inputNode.setVoiceProcessingEnabled(true)
-                    }
-                } catch {
-                    // Raw input still works, only quieter; do not fail the session.
-                    RealtimeLog.warn("audio", "voice processing unavailable error=\(String(describing: error))")
-                }
-                // The voice processing unit is full duplex: with nothing connected to the output it fails
-                // every render (`vpio render err: -1`) and the input tap receives near-silence.
-                // Touching the main mixer connects it to the output node, which then renders silence.
-                _ = audioEngine.mainMixerNode
-                // Read the format after enabling voice processing, which changes it.
                 guard let inputFormat = validInputFormat(for: inputNode) else {
                     throw RealtimeCaptureError.microphoneUnavailable
                 }
@@ -255,7 +237,7 @@
                     "audio",
                     """
                     microphone started input=\(inputFormat.sampleRate)Hz/\(inputFormat.channelCount)ch \
-                    target=\(sampleRate)Hz voiceProcessing=\(inputNode.isVoiceProcessingEnabled) route=\(AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue))
+                    target=\(sampleRate)Hz route=\(AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue))
                     """
                 )
             }
