@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose scenarios</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #f6f6fa; color: #1c1c22; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 20px;">
+  <div style="height: 62px; flex-shrink: 0"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 44px">
+    <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.3px">What will you translate?</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.45; color: rgba(0, 0, 0, 0.6)">Pick everything that applies. TLingo sets up each one with you.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 28px">
+    <button type="button" aria-pressed="false" style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; min-height: 92px; padding: 16px; background: #ffffff; border: 2px solid rgba(0, 0, 0, 0.06); border-radius: 12px; text-align: left; color: inherit">
+      <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #3c68f7">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M9 9h5M9 13h5"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600; color: #1c1c22">Words and selected text</span>
+        <span style="font-size: 14px; line-height: 1.35; color: rgba(0, 0, 0, 0.6)">Select text in any app and translate it from the text menu.</span>
+      </span>
+      <span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid rgba(0, 0, 0, 0.45); flex-shrink: 0"></span>
+    </button>
+
+    <button type="button" aria-pressed="true" style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; min-height: 92px; padding: 16px; background: #ffffff; border: 2px solid #3c68f7; border-radius: 12px; text-align: left; color: inherit">
+      <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #3c68f7">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600; color: #1c1c22">Live conversations</span>
+        <span style="font-size: 14px; line-height: 1.35; color: rgba(0, 0, 0, 0.6)">Speak or listen and read bilingual captions as they happen.</span>
+      </span>
+      <span style="width: 24px; height: 24px; border-radius: 50%; background: #3c68f7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </span>
+    </button>
+
+    <button type="button" aria-pressed="false" style="display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; min-height: 92px; padding: 16px; background: #ffffff; border: 2px solid rgba(0, 0, 0, 0.06); border-radius: 12px; text-align: left; color: inherit">
+      <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #3c68f7">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M10 9l5 3-5 3z"/><path d="M8 21h8"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600; color: #1c1c22">Shows and videos</span>
+        <span style="font-size: 14px; line-height: 1.35; color: rgba(0, 0, 0, 0.6)">Get captions for audio playing on your iPhone.</span>
+      </span>
+      <span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid rgba(0, 0, 0, 0.45); flex-shrink: 0"></span>
+    </button>
+  </div>
+
+  <div style="flex-grow: 1"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 34px">
+    <button type="button" style="height: 52px; border: 0; border-radius: 9999px; background: #3c68f7; color: #ffffff; font-size: 17px; font-weight: 600">Continue</button>
+    <button type="button" style="height: 44px; border: 0; background: transparent; color: rgba(0, 0, 0, 0.6); font-size: 15px; font-weight: 500">Skip for now</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

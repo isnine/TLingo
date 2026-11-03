@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Capture iPhone audio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #f6f6fa; color: #1c1c22; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 20px;">
+  <div style="height: 62px; flex-shrink: 0"></div>
+
+  <div style="display: flex; justify-content: center; align-items: center; gap: 6px; height: 44px; flex-shrink: 0" role="img" aria-label="Step 5 of 6">
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 18px; height: 6px; border-radius: 9999px; background: #3c68f7"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 24px">
+    <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.2px">Caption what you watch</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.45; color: rgba(0, 0, 0, 0.6)">TLingo listens to audio playing on your iPhone, so it does not need the microphone.</p>
+  </div>
+
+  <div style="position: relative; margin-top: 24px; height: 197px; border-radius: 12px; background: #1c1c22; overflow: hidden">
+    <span style="position: absolute; left: 50%; top: 42%; margin: -24px 0 0 -24px; width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; color: #ffffff">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+    </span>
+    <div style="position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5)">
+      <span style="font-size: 12px; color: rgba(255, 255, 255, 0.78)">Where were you last night?</span>
+      <span style="font-size: 16px; font-weight: 600; color: #ffffff">你昨晚去哪儿了？</span>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px; background: #ffffff; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="width: 24px; height: 24px; border-radius: 50%; background: #3c68f7; color: #ffffff; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0">1</span>
+      <span style="font-size: 15px; line-height: 1.35; color: #1c1c22">Tap Start capture, then choose TLingo.</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="width: 24px; height: 24px; border-radius: 50%; background: #3c68f7; color: #ffffff; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0">2</span>
+      <span style="font-size: 15px; line-height: 1.35; color: #1c1c22">Tap Start Broadcast.</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="width: 24px; height: 24px; border-radius: 50%; background: #3c68f7; color: #ffffff; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0">3</span>
+      <span style="font-size: 15px; line-height: 1.35; color: #1c1c22">Open a video and press play.</span>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1"></div>
+
+  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 500; color: rgba(0, 0, 0, 0.6)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    Waiting for audio…
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 34px">
+    <button type="button" style="height: 52px; border: 0; border-radius: 9999px; background: #3c68f7; color: #ffffff; font-size: 17px; font-weight: 600">Start capture</button>
+    <button type="button" style="height: 44px; border: 0; background: transparent; color: rgba(0, 0, 0, 0.6); font-size: 15px; font-weight: 500">Back</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

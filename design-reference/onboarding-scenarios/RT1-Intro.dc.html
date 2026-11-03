@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Realtime intro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #f6f6fa; color: #1c1c22; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 20px;">
+  <div style="height: 62px; flex-shrink: 0"></div>
+
+  <div style="display: flex; justify-content: center; align-items: center; gap: 6px; height: 44px; flex-shrink: 0" role="img" aria-label="Step 1 of 6">
+    <span style="width: 18px; height: 6px; border-radius: 9999px; background: #3c68f7"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+  </div>
+
+  <div style="margin-top: 16px; background: #ffffff; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 18px; height: 330px; box-sizing: border-box; overflow: hidden">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; background: rgba(0, 0, 0, 0.05); font-size: 13px; font-weight: 500; color: rgba(0, 0, 0, 0.7)">
+        English
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3c68f7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        简体中文
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 3px; height: 20px" aria-hidden="true">
+        <span style="width: 3px; height: 8px; border-radius: 2px; background: #3c68f7"></span>
+        <span style="width: 3px; height: 16px; border-radius: 2px; background: #3c68f7"></span>
+        <span style="width: 3px; height: 11px; border-radius: 2px; background: #3c68f7"></span>
+        <span style="width: 3px; height: 18px; border-radius: 2px; background: #3c68f7"></span>
+        <span style="width: 3px; height: 6px; border-radius: 2px; background: #3c68f7"></span>
+      </span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 13px; line-height: 1.4; color: rgba(0, 0, 0, 0.6)">Excuse me, is this seat taken?</span>
+      <span style="font-size: 17px; line-height: 1.35; font-weight: 600; color: #1c1c22">打扰一下，这个座位有人吗？</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 13px; line-height: 1.4; color: rgba(0, 0, 0, 0.6)">No, please go ahead.</span>
+      <span style="font-size: 17px; line-height: 1.35; font-weight: 600; color: #1c1c22">没有，请坐。</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; line-height: 1.4; color: rgba(0, 0, 0, 0.6)">Are you heading downtown<span style="display: inline-block; width: 2px; height: 13px; margin-left: 2px; vertical-align: -2px; background: #3c68f7"></span></span>
+      <span style="display: block; width: 72%; height: 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.08)"></span>
+      <span style="display: block; width: 44%; height: 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.08)"></span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 28px">
+    <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.3px">Read what you hear, as it happens</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.45; color: rgba(0, 0, 0, 0.6)">Realtime shows bilingual captions while people speak. Apple Translate does the translating on your iPhone.</p>
+  </div>
+
+  <div style="flex-grow: 1"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 34px">
+    <button type="button" style="height: 52px; border: 0; border-radius: 9999px; background: #3c68f7; color: #ffffff; font-size: 17px; font-weight: 600">Set up Realtime</button>
+    <button type="button" style="height: 44px; border: 0; background: transparent; color: rgba(0, 0, 0, 0.6); font-size: 15px; font-weight: 500">Back</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

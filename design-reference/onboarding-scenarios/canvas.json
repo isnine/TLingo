@@ -1,0 +1,53 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-25T04:01:18Z" },
+  "title": "TLingo Onboarding: Scenarios and Realtime",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 680, "w": 390, "h": 844, "title": "1 · Choose scenarios" },
+    "Flow.dc.html": { "x": 0, "y": 0, "w": 1200, "h": 560, "title": "Flow by selection" },
+    "FlowShows.dc.html": { "x": 1280, "y": 0, "w": 990, "h": 440, "title": "Shows and videos vs Live conversations" },
+    "RT1-Intro.dc.html": { "x": 470, "y": 680, "w": 390, "h": 844, "title": "R1 · Realtime intro" },
+    "RT2-Languages.dc.html": { "x": 940, "y": 680, "w": 390, "h": 844, "title": "R2 · Languages" },
+    "RT3a-Downloading.dc.html": { "x": 1410, "y": 680, "w": 390, "h": 844, "title": "R3a · System download prompt" },
+    "RT3b-Ready.dc.html": { "x": 1880, "y": 680, "w": 390, "h": 844, "title": "R3b · Languages ready" },
+    "RT4-Permissions.dc.html": { "x": 0, "y": 1644, "w": 390, "h": 844, "title": "R4 · Permissions" },
+    "RT5-Speak.dc.html": { "x": 470, "y": 1644, "w": 390, "h": 844, "title": "R5 · Speak (Live conversations)" },
+    "RT6-Done.dc.html": { "x": 940, "y": 1644, "w": 390, "h": 844, "title": "R6 · Realtime ready" },
+    "RT5w-Watch.dc.html": { "x": 1410, "y": 1644, "w": 390, "h": 844, "title": "R5 · Capture (Shows and videos)" },
+    "RT-Denied.dc.html": { "x": 1880, "y": 1644, "w": 390, "h": 844, "title": "Permission denied" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Flow.dc.html",
+    "FlowShows.dc.html",
+    "RT1-Intro.dc.html",
+    "RT2-Languages.dc.html",
+    "RT3a-Downloading.dc.html",
+    "RT3b-Ready.dc.html",
+    "RT4-Permissions.dc.html",
+    "RT5-Speak.dc.html",
+    "RT6-Done.dc.html",
+    "RT5w-Watch.dc.html",
+    "RT-Denied.dc.html"
+  ],
+  "notes": {
+    "title": {
+      "x": 0,
+      "y": -260,
+      "text": "Onboarding: scenario picker and Realtime setup",
+      "kind": "title1",
+      "maxW": 2270
+    }
+  },
+  "designSystems": [
+    {
+      "title": "TLingo",
+      "namespace": "tlingo",
+      "artifact": "https://claude.ai/code/artifact/6a4c0c1e-b8bc-4baf-8a0e-74f84dbaae7e",
+      "version": "1791604132-9751",
+      "copiedAt": "2026-10-25T04:01:18Z"
+    }
+  ]
+}

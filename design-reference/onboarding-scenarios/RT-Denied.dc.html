@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Permission denied</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #f6f6fa; color: #1c1c22; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; display: flex; flex-direction: column; padding: 0 20px;">
+  <div style="height: 62px; flex-shrink: 0"></div>
+
+  <div style="display: flex; justify-content: center; align-items: center; gap: 6px; height: 44px; flex-shrink: 0" role="img" aria-label="Step 4 of 6">
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 18px; height: 6px; border-radius: 9999px; background: #3c68f7"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+    <span style="width: 6px; height: 6px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25)"></span>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px">
+    <span style="width: 96px; height: 96px; border-radius: 50%; box-sizing: border-box; background: rgba(207, 74, 74, 0.1); border: 1px solid rgba(207, 74, 74, 0.3); display: flex; align-items: center; justify-content: center; color: #cf4a4a">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Warning"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>
+    </span>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+      <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.2px">Microphone access is off</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.45; color: rgba(0, 0, 0, 0.6)">Realtime cannot hear anything until you turn it on for TLingo in Settings.</p>
+    </div>
+
+    <div style="width: 100%; box-sizing: border-box; background: #ffffff; border-radius: 12px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px">
+        <span style="font-size: 15px; font-weight: 500; color: #1c1c22">Microphone</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: #1c1c22">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cf4a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+          Off
+        </span>
+      </div>
+      <div style="height: 1px; margin: 0 16px; background: rgba(0, 0, 0, 0.06)"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px">
+        <span style="font-size: 15px; font-weight: 500; color: #1c1c22">Speech Recognition</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: #1c1c22">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2aa05a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>
+          On
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 34px">
+    <button type="button" style="height: 52px; border: 0; border-radius: 9999px; background: #3c68f7; color: #ffffff; font-size: 17px; font-weight: 600">Open Settings</button>
+    <button type="button" style="height: 44px; border: 0; background: transparent; color: rgba(0, 0, 0, 0.6); font-size: 15px; font-weight: 500">Skip Realtime for now</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

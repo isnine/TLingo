@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow by selection</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 560px; box-sizing: border-box; background: #f6f6fa; color: #1c1c22; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; padding: 40px; display: flex; flex-direction: column; gap: 20px">
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <h1 style="margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600">Flow by selection</h1>
+    <div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: rgba(0, 0, 0, 0.6)">
+      <span style="display: inline-flex; align-items: center; gap: 8px">
+        <span style="padding: 4px 12px; border-radius: 9999px; background: #3c68f7; color: #ffffff; font-size: 13px; font-weight: 500">New</span>
+        New screen
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 8px">
+        <span style="padding: 4px 12px; border-radius: 9999px; background: rgba(0, 0, 0, 0.05); color: rgba(0, 0, 0, 0.7); font-size: 13px; font-weight: 500">Existing</span>
+        Already in the app
+      </span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="4">
+      <div style="background: #ffffff; border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; gap: 24px">
+        <div style="width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 16px; font-weight: 600">{{row.label}}</span>
+          <span style="font-size: 13px; color: rgba(0, 0, 0, 0.6)">{{row.sub}}</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 8px; flex-grow: 1; min-width: 0">
+          <sc-for list="{{row.steps}}" as="s" hint-placeholder-count="6">
+            <span style="display: inline-flex; align-items: center; gap: 8px">
+              <span style="padding: 6px 12px; border-radius: 9999px; font-size: 13px; font-weight: 500; white-space: nowrap; background: {{s.bg}}; color: {{s.fg}}">{{s.t}}</span>
+              <sc-if value="{{s.arrow}}" hint-placeholder-val="{{true}}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </sc-if>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="margin: 0; font-size: 13px; line-height: 1.4; color: rgba(0, 0, 0, 0.6)">Picking both Live conversations and Shows and videos runs Speak first, then Capture. Skip for now on the picker goes to the existing Words flow.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const N = (t) => ({ t, n: true });
+    const E = (t) => ({ t, n: false });
+    const rows = [
+      { label: 'Words and selected text', sub: 'Existing flow after the picker', steps: [N('Scenarios'), E('Intro'), E('Settings'), E('Try it'), E('Success'), E('Grammar Check'), E('Trial offer')] },
+      { label: 'Live conversations', sub: 'New path', steps: [N('Scenarios'), N('Realtime intro'), N('Languages'), N('Download'), N('Permissions'), N('Speak'), N('Ready'), E('First-run paywall')] },
+      { label: 'Shows and videos', sub: 'New path', steps: [N('Scenarios'), N('Realtime intro'), N('Languages'), N('Download'), N('Permissions (Speech only)'), N('Capture'), N('Ready'), E('First-run paywall')] },
+      { label: 'Words, then Realtime', sub: 'Both picked', steps: [N('Scenarios'), E('Intro'), E('Settings'), E('Try it'), N('Realtime intro'), N('Languages'), N('Download'), N('Permissions'), N('Speak or Capture'), N('Ready'), E('Grammar Check'), E('Trial offer')] }
+    ];
+    return {
+      rows: rows.map((r) => ({
+        label: r.label,
+        sub: r.sub,
+        steps: r.steps.map((s, i) => ({
+          t: s.t,
+          bg: s.n ? '#3c68f7' : 'rgba(0, 0, 0, 0.05)',
+          fg: s.n ? '#ffffff' : 'rgba(0, 0, 0, 0.7)',
+          arrow: i < r.steps.length - 1
+        }))
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
