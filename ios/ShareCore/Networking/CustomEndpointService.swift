@@ -23,7 +23,7 @@ public enum CustomEndpointError: Error, LocalizedError {
     case notConfigured
     /// One "URL + what it returned" description for each discovery request made.
     case discoveryFailed(attempts: [String])
-    case tokenStorageFailed(OSStatus)
+    case storageFailed(OSStatus)
 
     public var errorDescription: String? {
         switch self {
@@ -33,21 +33,21 @@ public enum CustomEndpointError: Error, LocalizedError {
             return String(localized: "The custom endpoint is no longer configured.")
         case let .discoveryFailed(attempts):
             return attempts.joined(separator: "\n\n")
-        case let .tokenStorageFailed(status):
-            return String(localized: "Could not save the token (\(status)).")
+        case let .storageFailed(status):
+            return String(localized: "Could not save the endpoint (\(status)).")
         }
     }
 }
 
 /// Stores a user-provided OpenAI-compatible endpoint and builds requests for it.
 ///
-/// The app and its extensions share the configuration through the App Group.
+/// Everything lives in one iCloud Keychain item, so it survives reinstalls and follows the
+/// user's iCloud account; the App Group access group shares it with the extensions.
 public final class CustomEndpointService: Sendable {
     public static let shared = CustomEndpointService()
 
-    private static let configurationKey = "custom_endpoint_configuration"
     private static let keychainService = "com.zanderwang.TLingo.custom-endpoint"
-    private static let keychainAccount = "token"
+    private static let keychainAccount = "endpoint"
     /// Catalogs such as OpenAI's list non-chat models without declaring their modalities.
     private static let nonChatModelMarkers = ["embed", "rerank", "whisper", "tts", "dall-e", "moderation"]
 
@@ -59,9 +59,13 @@ public final class CustomEndpointService: Sendable {
 
     // MARK: - Stored Configuration
 
+    private struct StoredEndpoint: Codable {
+        let configuration: CustomEndpointConfiguration
+        let token: String
+    }
+
     public var configuration: CustomEndpointConfiguration? {
-        guard let data = AppPreferences.sharedDefaults.data(forKey: Self.configurationKey) else { return nil }
-        return try? JSONDecoder().decode(CustomEndpointConfiguration.self, from: data)
+        stored?.configuration
     }
 
     public var modelConfigs: [ModelConfig] {
@@ -75,6 +79,10 @@ public final class CustomEndpointService: Sendable {
     }
 
     public var token: String? {
+        stored?.token
+    }
+
+    private var stored: StoredEndpoint? {
         var query = Self.keychainQuery
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -84,24 +92,27 @@ public final class CustomEndpointService: Sendable {
         else {
             return nil
         }
-        return String(data: data, encoding: .utf8)
+        return try? JSONDecoder().decode(StoredEndpoint.self, from: data)
     }
 
     public func save(_ configuration: CustomEndpointConfiguration, token: String) throws {
-        SecItemDelete(Self.keychainQuery as CFDictionary)
-        if !token.isEmpty {
+        let data = try JSONEncoder().encode(StoredEndpoint(configuration: configuration, token: token))
+        var status = SecItemUpdate(
+            Self.keychainQuery as CFDictionary,
+            [kSecValueData as String: data] as CFDictionary
+        )
+        if status == errSecItemNotFound {
             var add = Self.keychainQuery
-            add[kSecValueData as String] = Data(token.utf8)
-            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            let status = SecItemAdd(add as CFDictionary, nil)
-            guard status == errSecSuccess else { throw CustomEndpointError.tokenStorageFailed(status) }
+            add[kSecValueData as String] = data
+            // iCloud Keychain rejects the ThisDeviceOnly accessibility classes.
+            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            status = SecItemAdd(add as CFDictionary, nil)
         }
-        AppPreferences.sharedDefaults.set(try JSONEncoder().encode(configuration), forKey: Self.configurationKey)
+        guard status == errSecSuccess else { throw CustomEndpointError.storageFailed(status) }
     }
 
     public func remove() {
         SecItemDelete(Self.keychainQuery as CFDictionary)
-        AppPreferences.sharedDefaults.removeObject(forKey: Self.configurationKey)
     }
 
     private static var keychainQuery: [String: Any] {
@@ -110,6 +121,7 @@ public final class CustomEndpointService: Sendable {
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: keychainAccount,
             kSecAttrAccessGroup as String: AppPreferences.appGroupSuiteName,
+            kSecAttrSynchronizable as String: true,
         ]
         #if os(macOS)
             query[kSecUseDataProtectionKeychain as String] = true
