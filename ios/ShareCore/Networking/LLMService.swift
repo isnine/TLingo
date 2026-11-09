@@ -225,34 +225,40 @@ public final class LLMService {
     ) async throws -> ModelExecutionResult {
         let start = Date()
 
-        let requestURL = CloudServiceConstants.endpoint
-            .appendingPathComponent(model.id)
-            .appendingPathComponent("chat/completions")
+        var request: URLRequest
+        if model.isCustomEndpoint {
+            request = try CustomEndpointService.shared.makeChatRequest()
+            request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
+        } else {
+            let requestURL = CloudServiceConstants.endpoint
+                .appendingPathComponent(model.id)
+                .appendingPathComponent("chat/completions")
 
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
-        // Custom action IDs are user-defined, so only built-in IDs are reported.
-        request.setValue(
-            BuiltInActionCatalog.isBuiltInAction(action) ? action.id : "custom",
-            forHTTPHeaderField: "X-TLingo-Action"
-        )
+            request = URLRequest(url: requestURL)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(timingTrace.requestID, forHTTPHeaderField: "X-Request-ID")
+            // Custom action IDs are user-defined, so only built-in IDs are reported.
+            request.setValue(
+                BuiltInActionCatalog.isBuiltInAction(action) ? action.id : "custom",
+                forHTTPHeaderField: "X-TLingo-Action"
+            )
 
-        let path = "/\(model.id)/chat/completions"
-        CloudAuthHelper.applyAuth(to: &request, path: path)
-        if onboardingTrial {
-            // The Worker spends this device's trial quota instead of checking
-            // premium. Skip premium proof so the trial path is unambiguous in logs.
-            let deviceID = try await trialDeviceID(urlSession)
-            request.setValue(deviceID, forHTTPHeaderField: "X-Onboarding-Device")
-        } else if await hasPremiumEntitlement(
-            refresh: refreshEntitlement,
-            cachedIsPremium: cachedIsPremium
-        ) {
-            CloudAuthHelper.applyPremiumProof(to: &request)
+            let path = "/\(model.id)/chat/completions"
+            CloudAuthHelper.applyAuth(to: &request, path: path)
+            if onboardingTrial {
+                // The Worker spends this device's trial quota instead of checking
+                // premium. Skip premium proof so the trial path is unambiguous in logs.
+                let deviceID = try await trialDeviceID(urlSession)
+                request.setValue(deviceID, forHTTPHeaderField: "X-Onboarding-Device")
+            } else if await hasPremiumEntitlement(
+                refresh: refreshEntitlement,
+                cachedIsPremium: cachedIsPremium
+            ) {
+                CloudAuthHelper.applyPremiumProof(to: &request)
+            }
+            await applyUsageSubjectHeaders(to: &request)
         }
-        await applyUsageSubjectHeaders(to: &request)
 
         let structuredOutputConfig = action.structuredOutput
         let enableStreaming = partialHandler != nil
@@ -311,13 +317,13 @@ public final class LLMService {
                 payloadData = try encoder.encode(payload)
             }
 
-            request.httpBody = payloadData
+            request.httpBody = try CustomEndpointService.requestBody(payloadData, for: model)
             DebugNetworkProtocol.preserveBodyForDebug(in: &request)
 
             logger.debug(
                 """
                 Request: model=\(model.displayName, privacy: .public) \
-                url=\(requestURL.path, privacy: .public) \
+                url=\(request.url?.path ?? "", privacy: .public) \
                 action=\(action.name, privacy: .public) \
                 bytes=\(payloadData.count, privacy: .public)
                 """
@@ -591,11 +597,11 @@ public final class LLMService {
             )
         }
 
-        var request = await makeContinuationRequest(model: model, acceptsSSE: true)
+        var request = try await makeContinuationRequest(model: model, acceptsSSE: true)
         let payload = LLMRequestPayload(messages: messages, stream: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = []
-        request.httpBody = try encoder.encode(payload)
+        request.httpBody = try CustomEndpointService.requestBody(encoder.encode(payload), for: model)
         DebugNetworkProtocol.preserveBodyForDebug(in: &request)
 
         logger
@@ -669,8 +675,11 @@ public final class LLMService {
         messages: [LLMRequestPayload.Message],
         model: ModelConfig
     ) async throws -> String {
-        var request = await makeContinuationRequest(model: model, acceptsSSE: false)
-        request.httpBody = try JSONEncoder().encode(LLMRequestPayload(messages: messages, stream: false))
+        var request = try await makeContinuationRequest(model: model, acceptsSSE: false)
+        request.httpBody = try CustomEndpointService.requestBody(
+            JSONEncoder().encode(LLMRequestPayload(messages: messages, stream: false)),
+            for: model
+        )
         DebugNetworkProtocol.preserveBodyForDebug(in: &request)
         let (data, response) = try await urlSession.data(for: request)
         let httpResponse = try response.asHTTP(or: URLError(.badServerResponse))
@@ -681,7 +690,15 @@ public final class LLMService {
         return try decodeConversationResponse(data).content
     }
 
-    private func makeContinuationRequest(model: ModelConfig, acceptsSSE: Bool) async -> URLRequest {
+    private func makeContinuationRequest(model: ModelConfig, acceptsSSE: Bool) async throws -> URLRequest {
+        if model.isCustomEndpoint {
+            var request = try CustomEndpointService.shared.makeChatRequest()
+            if acceptsSSE {
+                request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            }
+            return request
+        }
+
         let requestURL = CloudServiceConstants.endpoint
             .appendingPathComponent(model.id)
             .appendingPathComponent("chat/completions")
@@ -763,8 +780,11 @@ public final class LLMService {
     ) async throws -> StreamingContinuationResult {
         var streamingBody = body
         streamingBody["stream"] = true
-        var request = await makeContinuationRequest(model: model, acceptsSSE: true)
-        request.httpBody = try JSONSerialization.data(withJSONObject: streamingBody, options: [])
+        var request = try await makeContinuationRequest(model: model, acceptsSSE: true)
+        request.httpBody = try CustomEndpointService.requestBody(
+            JSONSerialization.data(withJSONObject: streamingBody, options: []),
+            for: model
+        )
         DebugNetworkProtocol.preserveBodyForDebug(in: &request)
         let (bytes, response) = try await urlSession.bytes(for: request)
         let httpResponse = try response.asHTTP(or: URLError(.badServerResponse))

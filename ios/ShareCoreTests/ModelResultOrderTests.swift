@@ -64,7 +64,7 @@ struct ModelResultOrderTests {
         var order = ModelListOrder()
         order.sections = [.ai, .ai]
         order.modelIDsBySection[ModelListSection.ai.rawValue] = ["removed", free.id, free.id]
-        #expect(order.orderedSections == [.ai, .translation, .appleIntelligence])
+        #expect(order.orderedSections == [.ai, .translation, .appleIntelligence, .customEndpoint])
         #expect(order.models(in: .ai, cloudModels: [newModel, premium, free], isPro: false).map(\.id)
             == [free.id, newModel.id, premium.id])
     }

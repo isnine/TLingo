@@ -154,7 +154,22 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     public var isPrivateCloudModel: Bool { id == Self.privateCloudModelID }
 
     /// Whether this model is executed through the cloud Worker.
-    public var isCloudModel: Bool { !isDirectTranslation && !isFoundationModel }
+    public var isCloudModel: Bool { !isDirectTranslation && !isFoundationModel && !isCustomEndpoint }
+
+    /// Namespaces discovered models so they cannot collide with cloud catalog IDs.
+    static let customEndpointIDPrefix = "custom-endpoint:"
+
+    public static func isCustomEndpointID(_ id: String) -> Bool {
+        id.hasPrefix(customEndpointIDPrefix)
+    }
+
+    /// Whether this model is served by the user's own endpoint.
+    public var isCustomEndpoint: Bool { Self.isCustomEndpointID(id) }
+
+    /// The identifier the serving endpoint knows this model by.
+    public var upstreamID: String {
+        isCustomEndpoint ? String(id.dropFirst(Self.customEndpointIDPrefix.count)) : id
+    }
 
     /// The first free cloud model in catalog order, preferring models the AI section shows
     /// instead of collapsed ones.

@@ -62,6 +62,14 @@ public final class ModelsService: Sendable {
 
     /// Returns the cached models list if available (memory-first, then disk).
     public func getCachedModels() -> [ModelConfig]? {
+        let customModels = CustomEndpointService.shared.modelConfigs
+        guard let cloudModels = getCachedCloudModels() else {
+            return customModels.isEmpty ? nil : customModels
+        }
+        return cloudModels + customModels
+    }
+
+    private func getCachedCloudModels() -> [ModelConfig]? {
         lock.lock()
         let inMemory = cachedModels
         lock.unlock()
@@ -108,8 +116,8 @@ public final class ModelsService: Sendable {
     ///   - forceRefresh: If `false`, returns cached models when available and skips the network request.
     public func fetchModels(forceRefresh: Bool) async throws -> [ModelConfig] {
         // If we don't want to refresh, return the cache immediately when available.
-        if !forceRefresh, let cached = getCachedModels(), !cached.isEmpty {
-            return cached
+        if !forceRefresh, let cached = getCachedCloudModels(), !cached.isEmpty {
+            return cached + CustomEndpointService.shared.modelConfigs
         }
 
         // Check and register under one lock so concurrent callers coalesce onto one request.
@@ -128,7 +136,7 @@ public final class ModelsService: Sendable {
                 }
             }
         }
-        return try await task.value
+        return try await task.value + CustomEndpointService.shared.modelConfigs
     }
 
     private func makeFetchTask() -> Task<[ModelConfig], Error> {

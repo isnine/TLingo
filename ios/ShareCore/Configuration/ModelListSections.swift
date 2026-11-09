@@ -9,6 +9,7 @@ public enum ModelListSection: String, CaseIterable, Codable, Identifiable, Senda
     case ai
     case translation
     case appleIntelligence
+    case customEndpoint
 
     public var id: String {
         rawValue
@@ -61,8 +62,10 @@ public struct ModelListOrder: Codable, Equatable, Sendable {
         case .appleIntelligence:
             models = ModelConfig.appleIntelligenceModels
         case .ai:
-            let aiModels = cloudModels.filter { !$0.isDirectTranslation && !$0.isFoundationModel }
+            let aiModels = cloudModels.filter(\.isCloudModel)
             models = aiModels.filter { $0.isPremium == isPro } + aiModels.filter { $0.isPremium != isPro }
+        case .customEndpoint:
+            models = cloudModels.filter(\.isCustomEndpoint)
         }
         let ranks = Dictionary(
             (modelIDsBySection[section.rawValue] ?? []).enumerated().map { ($0.element, $0.offset) },

@@ -48,5 +48,12 @@
 	</array>
 	<key>com.apple.developer.translation-ui-provider.network-access</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>TLingo connects to the AI server you configure on your local network.</string>
 </dict>
 </plist>

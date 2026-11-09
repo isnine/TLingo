@@ -33,6 +33,7 @@ public struct ModelSelectionList: View {
     @State private var showInstalledLanguages = false
     @State private var showDownloadLanguagesGuide = false
     @State private var showModelOrder = false
+    @State private var showCustomEndpoint = false
 
     private let mode: Mode
     private let showsReorderButton: Bool
@@ -89,6 +90,10 @@ public struct ModelSelectionList: View {
         offered(preferences.modelListOrder.models(
             in: .appleIntelligence, cloudModels: cloudModels, isPro: entitlement.isPro
         ))
+    }
+
+    private var customEndpointModels: [ModelConfig] {
+        preferences.modelListOrder.models(in: .customEndpoint, cloudModels: cloudModels, isPro: entitlement.isPro)
     }
 
     private var displayedCloudModels: [ModelConfig] {
@@ -176,6 +181,11 @@ public struct ModelSelectionList: View {
         .sheet(isPresented: $showDownloadLanguagesGuide) {
             DownloadLanguagesGuideView()
         }
+        .sheet(isPresented: $showCustomEndpoint) {
+            cloudModels = ModelsService.shared.getCachedModels() ?? []
+        } content: {
+            CustomEndpointSheet()
+        }
     }
 
     @ViewBuilder
@@ -205,6 +215,28 @@ public struct ModelSelectionList: View {
                     if !entitlement.isPro, onRequiresPro != nil {
                         Spacer()
                         upgradeButton
+                    }
+                }
+            }
+        case .customEndpoint:
+            if !isSingleSelection || !customEndpointModels.isEmpty {
+                ModelSectionCard(
+                    title: section.title,
+                    icon: section.icon,
+                    models: customEndpointModels,
+                    dividerLeadingPadding: Self.dividerLeadingPadding,
+                    cornerRadius: Self.cornerRadius
+                ) { model in
+                    row(for: model)
+                } headerAccessory: {
+                    if !isSingleSelection {
+                        Spacer()
+                        Button(customEndpointModels.isEmpty ? "Add" : "Edit") {
+                            showCustomEndpoint = true
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .buttonStyle(.borderless)
+                        .accessibilityIdentifier("models.customEndpoint.configure")
                     }
                 }
             }
@@ -285,8 +317,8 @@ public struct ModelSelectionList: View {
                 model: model,
                 isSelected: isSelected,
                 isLocked: isLocked,
-                isDimmed: hasReachedFreeLimit && !isSelected && !isLocked,
-                subtitle: model.id
+                isDimmed: hasReachedFreeLimit && !isSelected && !isLocked && model.isCloudModel,
+                subtitle: model.upstreamID
             ) {
                 select(model)
             }
@@ -531,6 +563,7 @@ private extension ModelListSection {
         case .translation: "TRANSLATION"
         case .appleIntelligence: "APPLE INTELLIGENCE"
         case .ai: "AI MODELS"
+        case .customEndpoint: "CUSTOM ENDPOINT"
         }
     }
 
@@ -539,6 +572,7 @@ private extension ModelListSection {
         case .translation: "globe"
         case .appleIntelligence: "apple.intelligence"
         case .ai: "cpu"
+        case .customEndpoint: "server.rack"
         }
     }
 }
@@ -682,7 +716,7 @@ struct ModelListOrderList: View {
                 Text(model.displayName)
                     .foregroundStyle(isUnavailable ? .secondary : .primary)
                 if !model.isDirectTranslation, !model.isFoundationModel {
-                    Text(model.id)
+                    Text(model.upstreamID)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -755,6 +789,7 @@ private extension ModelListSection {
         case .translation: "Translation"
         case .appleIntelligence: "Apple Intelligence"
         case .ai: "AI Models"
+        case .customEndpoint: "Custom Endpoint"
         }
     }
 }

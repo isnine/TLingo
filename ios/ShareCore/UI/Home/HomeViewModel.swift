@@ -533,7 +533,12 @@ public final class HomeViewModel: ObservableObject {
             preferences.$enabledModelIDs
                 .receive(on: RunLoop.main)
                 .sink { [weak self] _ in
-                    self?.updateEnabledModels()
+                    guard let self else { return }
+                    // The endpoint can be configured after this catalog was loaded, and
+                    // updateEnabledModels drops selections the catalog does not contain.
+                    self.models = self.models.filter { !$0.isCustomEndpoint }
+                        + CustomEndpointService.shared.modelConfigs
+                    self.updateEnabledModels()
                 }
                 .store(in: &cancellables)
         }
