@@ -4501,6 +4501,131 @@
         }
       }
     },
+    "Support custom OpenAI-compatible endpoints" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعم نقاط النهاية المخصصة المتوافقة مع OpenAI"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Understøt brugerdefinerede OpenAI-kompatible endpoints"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterstützung für benutzerdefinierte OpenAI-kompatible Endpunkte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support custom OpenAI-compatible endpoints"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compatibilidad con endpoints personalizados compatibles con OpenAI"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prend en charge les points de terminaison personnalisés compatibles OpenAI"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dukung endpoint khusus yang kompatibel dengan OpenAI"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supporta endpoint personalizzati compatibili con OpenAI"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カスタムのOpenAI互換エンドポイントをサポート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 지정 OpenAI 호환 엔드포인트 지원"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sokong endpoint tersuai yang serasi dengan OpenAI"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Støtt tilpassede OpenAI-kompatible endepunkter"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondersteuning voor aangepaste OpenAI-compatibele endpoints"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obsługa niestandardowych punktów końcowych zgodnych z OpenAI"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suporte a endpoints personalizados compatíveis com OpenAI"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stöd för anpassade OpenAI-kompatibla slutpunkter"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel OpenAI uyumlu uç noktaları destekleyin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援自訂 OpenAI 相容端點"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持自定义 OpenAI 兼容端点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援自訂 OpenAI 相容端點"
+          }
+        }
+      }
+    },
     "TLingo Has Been Updated" : {
       "extractionState" : "stale",
       "localizations" : {

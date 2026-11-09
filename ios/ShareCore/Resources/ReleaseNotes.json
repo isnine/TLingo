@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "5.7.4",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Support custom OpenAI-compatible endpoints"
+        }
+      ]
+    },
+    {
       "version": "5.7.3",
       "items": [
         {
