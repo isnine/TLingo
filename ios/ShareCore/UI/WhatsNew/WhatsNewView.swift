@@ -169,17 +169,25 @@ public struct WhatsNewView: View {
         }
     }
 
+    private var wishTitle: Text {
+        Text("Wish for a Feature", tableName: WhatsNew.table, bundle: WhatsNew.bundle)
+    }
+
     private var actions: some View {
         HStack(spacing: 12) {
             Button(action: onWish) {
-                Label {
-                    Text("Wish for a Feature", tableName: WhatsNew.table, bundle: WhatsNew.bundle)
-                } icon: {
-                    Image(systemName: "wand.and.sparkles")
+                // Long translations drop the icon rather than truncate.
+                ViewThatFits(in: .horizontal) {
+                    Label {
+                        wishTitle
+                    } icon: {
+                        Image(systemName: "wand.and.sparkles")
+                    }
+                    wishTitle
+                        .minimumScaleFactor(0.8)
                 }
                 .font(.headline)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -190,11 +198,10 @@ public struct WhatsNewView: View {
                 Text("Got It", tableName: WhatsNew.table, bundle: WhatsNew.bundle)
                     .font(.headline)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .tint(colors.accentFill)
+            .fixedSize(horizontal: true, vertical: false)
             .keyboardShortcut(.defaultAction)
             .accessibilityIdentifier("whats_new_done_button")
         }

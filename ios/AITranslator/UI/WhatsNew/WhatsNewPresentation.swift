@@ -25,6 +25,9 @@ private struct WhatsNewPresentation: ViewModifier {
     @State private var summary: WhatsNewSummary?
     @State private var presentedVersion: String?
     @State private var showsConfetti = false
+    #if os(iOS)
+        @State private var detent: PresentationDetent = .medium
+    #endif
 
     func body(content: Content) -> some View {
         content
@@ -57,7 +60,7 @@ private struct WhatsNewPresentation: ViewModifier {
                         showsConfetti = !reduceMotion
                     }
                     #if os(iOS)
-                        .presentationDetents([.fraction(0.7), .large])
+                        .presentationDetents([.medium, .large], selection: $detent)
                         .presentationDragIndicator(.visible)
                     #endif
                 }
