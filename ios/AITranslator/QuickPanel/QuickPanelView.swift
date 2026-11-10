@@ -171,12 +171,9 @@
         // MARK: - Actions
 
         private var actionRow: some View {
-            HStack(spacing: 12) {
-                actionChips
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                modelButton
-            }
-            .padding(.horizontal, 20)
+            actionChips
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
                 .padding(.bottom, 16)
         }
 
@@ -206,6 +203,8 @@
                     Button("") { select(action) }
                         .keyboardShortcut(KeyEquivalent(Character(String(index + 1))), modifiers: .command)
                 }
+                Button("", action: openInMainApp)
+                    .keyboardShortcut("o", modifiers: .command)
             }
             .opacity(0)
             .frame(width: 0, height: 0)
@@ -246,11 +245,7 @@
 
                 HStack(spacing: 16) {
                     shortcutHint("Run", keys: ["↩"], isPrimary: true)
-                    Button(action: openInMainApp) {
-                        shortcutHint("Open in App", keys: ["⌘", "O"], isPrimary: false)
-                    }
-                    .buttonStyle(.plain)
-                    .keyboardShortcut("o", modifiers: .command)
+                    modelButton
                 }
             }
             .padding(.horizontal, 16)
