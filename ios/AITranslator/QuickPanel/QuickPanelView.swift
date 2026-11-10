@@ -117,12 +117,17 @@
                 .frame(minWidth: 180)
                 .overlay(alignment: .topLeading) {
                     if viewModel.inputText.isEmpty {
-                        Text("Type or paste text")
-                            .font(.system(size: 20))
-                            .foregroundStyle(colors.textSecondary)
-                            .padding(.leading, 4)
-                            .padding(.top, 4)
-                            .allowsHitTesting(false)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Type or paste text")
+                                .font(.system(size: 20))
+                            Text("Press Return to run")
+                                .font(.system(size: 12))
+                                .opacity(0.7)
+                        }
+                        .foregroundStyle(colors.textSecondary)
+                        .padding(.leading, 4)
+                        .padding(.top, 4)
+                        .allowsHitTesting(false)
                     }
                 }
 
@@ -243,32 +248,10 @@
 
                 Spacer(minLength: 0)
 
-                HStack(spacing: 16) {
-                    shortcutHint("Run", keys: ["↩"], isPrimary: true)
-                    modelButton
-                }
+                modelButton
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-        }
-
-        private func shortcutHint(_ title: LocalizedStringKey, keys: [String], isPrimary: Bool) -> some View {
-            HStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 12, weight: isPrimary ? .semibold : .medium))
-                    .foregroundStyle(isPrimary ? colors.textPrimary : colors.textSecondary)
-                ForEach(keys, id: \.self) { key in
-                    Text(verbatim: key)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(colors.textSecondary)
-                        .frame(minWidth: 20, minHeight: 20)
-                        .padding(.horizontal, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(colors.chipSecondaryBackground)
-                        )
-                }
-            }
         }
 
         /// Hands the input, action and results to the main window's HomeView.
