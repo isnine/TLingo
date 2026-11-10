@@ -136,16 +136,18 @@ struct ModelResultOrderTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = AppPreferences(defaults: defaults)
-        #expect(preferences.modelResultOrder == .modelList)
+        #expect(preferences.modelResultOrder == .firstCompletedFirst)
         for order in ModelResultOrder.allCases {
             preferences.setModelResultOrder(order)
             #expect(AppPreferences(defaults: defaults).modelResultOrder == order)
         }
+        preferences.setModelResultOrder(.modelList)
         defaults.set("lastCompletedFirst", forKey: "model_result_order")
         preferences.refreshFromDefaults()
         #expect(preferences.modelResultOrder == .firstCompletedFirst)
+        preferences.setModelResultOrder(.modelList)
         defaults.set("invalid", forKey: "model_result_order")
         preferences.refreshFromDefaults()
-        #expect(preferences.modelResultOrder == .modelList)
+        #expect(preferences.modelResultOrder == .firstCompletedFirst)
     }
 }

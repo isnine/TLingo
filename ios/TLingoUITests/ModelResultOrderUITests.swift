@@ -10,7 +10,7 @@ final class ModelResultOrderUITests: XCTestCase {
         XCTAssertTrue(modelButton.waitForExistence(timeout: 10))
         let picker = app.buttons["home_result_order"]
         XCTAssertTrue(picker.waitForExistence(timeout: 10))
-        let choices = ["First Result First", "Model List Order"]
+        let choices = ["Model List Order", "First Result First"]
         let initial = choices.first { picker.value as? String == $0 } ?? choices[0]
         picker.tap()
         XCTAssertFalse(app.buttons["Last Completed First"].waitForExistence(timeout: 1))
@@ -29,7 +29,7 @@ final class ModelResultOrderUITests: XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(picker.waitForExistence(timeout: 10))
-        XCTAssertEqual(picker.value as? String, "Model List Order")
+        XCTAssertEqual(picker.value as? String, "First Result First")
         picker.tap()
         app.buttons[initial].tap()
         XCTAssertEqual(picker.value as? String, initial)
