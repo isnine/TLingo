@@ -10,6 +10,21 @@ import Testing
 
 @Suite("RealtimeCaptionDisplay")
 struct RealtimeCaptionDisplayTests {
+    @Test("Compact captions retain the latest bilingual pair")
+    func compactCaptionsRetainPair() {
+        let lines = [
+            RealtimeCaptionLine(id: "old-source", kind: .source, text: "Old source"),
+            RealtimeCaptionLine(id: "old-translation", kind: .translation, text: "Old translation"),
+            RealtimeCaptionLine(id: "source", kind: .source, text: "Source"),
+            RealtimeCaptionLine(id: "translation", kind: .translation, text: "Translation"),
+        ]
+        #expect(RealtimeCaptionDisplay.latestCaptionGroup(lines).map(\.id) == ["source", "translation"])
+        #expect(RealtimeCaptionDisplay.latestCaptionGroup(Array(lines.prefix(3))).map(\.id) == ["old-source", "old-translation"])
+        #expect(RealtimeCaptionDisplay.latestCaptionGroup(lines.filter { $0.kind == .source }).map(\.id) == ["source"])
+        #expect(RealtimeCaptionDisplay.latestCaptionGroup(lines.filter { $0.kind == .translation }).map(\.id) == ["translation"])
+        #expect(RealtimeCaptionDisplay.latestCaptionGroup([]).isEmpty)
+    }
+
     @Test("Cycles through source, translation, and bilingual modes")
     func cyclesThroughCaptionModes() {
         #expect(RealtimeCaptionDisplayMode.sourceOnly.next == .translationOnly)

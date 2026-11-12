@@ -32,14 +32,15 @@
             /// The default appearance follows Apple Podcasts transcripts: New York serif, about 1.2x line height.
             /// CJK text falls back to the system cascade (PingFang).
             init(palette: AppColorPalette, appearance: RealtimeCaptionAppearance, mode: RealtimeCaptionDisplayMode) {
-                let primary = UIColor(palette.textPrimary)
                 let secondary = UIColor(palette.textSecondary)
-                translationColor = primary
-                dimmedTranslationColor = secondary
+                translationColor = UIColor(appearance.translationTextColor(fallback: palette.textPrimary))
+                dimmedTranslationColor = appearance.translationColor == nil
+                    ? secondary
+                    : translationColor.withAlphaComponent(0.6)
                 flowsIntoParagraphs = mode != .bilingual
 
                 let design: UIFontDescriptor.SystemDesign = switch appearance.fontDesign {
-                case .serif: .serif
+                case .platformDefault, .serif: .serif
                 case .system: .default
                 case .rounded: .rounded
                 }
@@ -57,13 +58,15 @@
 
                 if flowsIntoParagraphs {
                     // Source is the only text on screen, so it reads as the main transcript.
-                    sourceColor = primary
-                    dimmedSourceColor = secondary
+                    sourceColor = UIColor(appearance.sourceTextColor(fallback: palette.textPrimary))
+                    dimmedSourceColor = appearance.sourceColor == nil
+                        ? secondary
+                        : sourceColor.withAlphaComponent(0.6)
                     sourceFont = translationFont
                     sourceLineSpacing = translationLineSpacing
                 } else {
-                    sourceColor = secondary
-                    dimmedSourceColor = secondary.withAlphaComponent(0.6)
+                    sourceColor = UIColor(appearance.sourceTextColor(fallback: palette.textSecondary))
+                    dimmedSourceColor = sourceColor.withAlphaComponent(0.6)
                     // Keeps the default 17pt source under 22pt translation ratio at every size.
                     let sourceSize = (translationSize * 17 / 22).rounded()
                     sourceFont = RealtimeCaptionTextView.font(design: design, size: sourceSize, weight: .regular)
@@ -260,6 +263,9 @@
             func update(lines: [RealtimeCaptionLine], style: Style, bottomAccessoryHeight: CGFloat, revision: Int) {
                 self.revision = revision
                 let styleChanged = self.style != style
+                let readingAnchor = styleChanged && !isFollowingBottom && !isTracking && !isDecelerating
+                    ? captureReadingAnchor()
+                    : nil
                 self.style = style
                 let insetsChanged = self.bottomAccessoryHeight != bottomAccessoryHeight
                 self.bottomAccessoryHeight = bottomAccessoryHeight
@@ -281,6 +287,9 @@
                     bottomSlack = 0
                 }
                 applyLayout(reason: styleChanged ? "style" : (insetsChanged ? "insets" : "content"))
+                if let readingAnchor {
+                    restoreReadingAnchor(readingAnchor)
+                }
             }
 
             /// The view extends under the control dock; without this its text selection interaction
@@ -379,6 +388,45 @@
             }
 
             // MARK: Scroll position
+
+            private func captureReadingAnchor() -> (lineID: String, characterOffset: Int, offsetY: CGFloat)? {
+                guard bounds.height > 0, !renderedLines.isEmpty else { return nil }
+                layoutManager.ensureLayout(for: textContainer)
+                guard layoutManager.numberOfGlyphs > 0 else { return nil }
+
+                let visibleTop = contentOffset.y + effectiveObscuredInsets.top
+                let point = CGPoint(x: 0, y: max(0, visibleTop - textContainerInset.top))
+                let glyphIndex = layoutManager.glyphIndex(for: point, in: textContainer)
+                guard glyphIndex < layoutManager.numberOfGlyphs else { return nil }
+                let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
+                guard let lineIndex = lineRanges.firstIndex(where: { NSMaxRange($0) > characterIndex }) else { return nil }
+                let rect = layoutManager.boundingRect(
+                    forGlyphRange: NSRange(location: glyphIndex, length: 1),
+                    in: textContainer
+                )
+                return (
+                    renderedLines[lineIndex].id,
+                    max(0, characterIndex - lineRanges[lineIndex].location),
+                    visibleTop - rect.minY - textContainerInset.top
+                )
+            }
+
+            private func restoreReadingAnchor(_ anchor: (lineID: String, characterOffset: Int, offsetY: CGFloat)) {
+                guard !isFollowingBottom, !isTracking, !isDecelerating,
+                      let lineIndex = renderedLines.firstIndex(where: { $0.id == anchor.lineID }) else { return }
+                let range = lineRanges[lineIndex]
+                guard range.length > 0 else { return }
+                layoutIfNeeded()
+                let characterIndex = range.location + min(anchor.characterOffset, range.length - 1)
+                let glyphIndex = layoutManager.glyphIndexForCharacter(at: characterIndex)
+                guard glyphIndex < layoutManager.numberOfGlyphs else { return }
+                let rect = layoutManager.boundingRect(
+                    forGlyphRange: NSRange(location: glyphIndex, length: 1),
+                    in: textContainer
+                )
+                let offsetY = rect.minY + textContainerInset.top + anchor.offsetY - effectiveObscuredInsets.top
+                contentOffset = CGPoint(x: contentOffset.x, y: min(max(-contentInset.top, offsetY), maxOffsetY))
+            }
 
             private var contentHeight: CGFloat {
                 layoutManager.ensureLayout(for: textContainer)

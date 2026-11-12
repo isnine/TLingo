@@ -71,6 +71,14 @@ flowchart LR
 - `AppConfigurationStore` owns the active configuration and its persistence.
 - SwiftUI views issue commands and render state; they must not persist whole stale domain snapshots.
 
+## Realtime Caption Presentation
+
+- `AppPreferences` persists the display mode and shared caption appearance locally. Existing iOS typography data decodes without the new color fields; automatic appearance preserves each platform's defaults.
+- Changing presentation does not restart recognition or translation and does not change History or exports. Transcription-only input resolves to source captions without overwriting the selected translation display mode.
+- Source and translation colors, typography, and display mode apply to the in-app transcript and floating captions. Background color affects only the caption region; background opacity is exclusive to the macOS floating window. Notch captions retain their black background, and iOS Picture in Picture remains opaque.
+- Compact Picture in Picture retains the newest source/translation pair in bilingual mode. Live Activities follow the display mode while retaining system typography and colors.
+- On iOS, the Picture in Picture source renders when it joins the window and stays current during an enabled, running session, including in the foreground, so automatic background entry does not depend on rendering its first attached frame during the app transition. Returning to the foreground refreshes the source after stopping Picture in Picture.
+
 ## Current Hotspots
 
 - `HomeViewModel`: request generation, provider aggregation and History writes.

@@ -66,8 +66,12 @@
         @Published public var captionDisplayMode: RealtimeCaptionDisplayMode = .bilingual {
             didSet {
                 guard captionDisplayMode != oldValue else { return }
+                if !isApplyingCaptionModePreference {
+                    preferences.setRealtimeCaptionDisplayMode(captionDisplayMode)
+                }
                 #if os(macOS)
                     realtimePipelineCoordinator.updateCaptionDisplayMode(captionDisplayMode)
+                    refreshInactiveLaneCaptionPresentation()
                 #endif
                 refreshCaptionLines(event: "captionDisplayModeChanged")
             }
@@ -180,6 +184,8 @@
         private nonisolated let secondaryAudioHistoryRecorder = RealtimeAudioHistoryRecorder()
 
         private let preferences: AppPreferences
+        private var captionModeObservation: AnyCancellable?
+        private var isApplyingCaptionModePreference = false
         private var transcriptAccumulator = RealtimeTranscriptAccumulator()
         private var translationState = RealtimeIncrementalTranslationState()
         private var presentationSourceSegments: [String] = []
@@ -245,10 +251,19 @@
             #endif
             self.preferences = preferences
             showCaptions = preferences.realtimeShowCaptions
+            captionDisplayMode = preferences.realtimeCaptionDisplayMode
             #if os(iOS)
                 broadcastStateStore = RealtimeBroadcastStateStore()
             #endif
             transcriber.delegate = self
+            captionModeObservation = preferences.$realtimeCaptionDisplayMode
+                .dropFirst()
+                .sink { [weak self] mode in
+                    guard let self, captionDisplayMode != mode else { return }
+                    isApplyingCaptionModePreference = true
+                    captionDisplayMode = mode
+                    isApplyingCaptionModePreference = false
+                }
             #if os(macOS)
                 systemAudioCapture.delegate = self
                 secondarySystemAudioCapture.delegate = self
@@ -646,7 +661,30 @@
                 laneConfigurations = snapshots.map(\.configuration)
                 laneSnapshots = snapshots
                 self.primaryLaneID = primaryLaneID
+                refreshInactiveLaneCaptionPresentation()
                 projectPrimaryLane()
+            }
+
+            private func refreshInactiveLaneCaptionPresentation() {
+                let activeLaneIDs = Set(realtimePipelineCoordinator.snapshots.map(\.id))
+                laneSnapshots = laneSnapshots.map { snapshot in
+                    guard !activeLaneIDs.contains(snapshot.id) else { return snapshot }
+                    var updated = snapshot
+                    updated.captionLines = RealtimeCaptionDisplay.displayWindow(
+                        RealtimeCaptionDisplay.resolvedLines(
+                            pairs: snapshot.sentencePairs,
+                            translatedSource: snapshot.sentencePairs.map(\.original).joined(separator: "\n\n"),
+                            translatedText: snapshot.translatedText,
+                            pendingSource: snapshot.pendingSourceText,
+                            pendingTranslation: snapshot.pendingTranslatedText,
+                            sourceText: snapshot.sourceText,
+                            mode: snapshot.configuration.translationProvider.performsTranslation
+                                ? captionDisplayMode : .sourceOnly
+                        ),
+                        limit: Self.captionLineDisplayLimit
+                    )
+                    return updated
+                }
             }
         #endif
 
@@ -2645,10 +2683,18 @@
     }
 
     public extension RealtimeSessionStore {
+        var captionTranslationAvailable: Bool {
+            #if os(macOS)
+                primaryLaneConfiguration?.translationProvider.performsTranslation
+                    ?? preferences.realtimeTranslationProvider.performsTranslation
+            #else
+                preferences.realtimeTranslationProvider.performsTranslation
+            #endif
+        }
+
         /// The mode `captionLines` were built for; transcription-only sessions always show source captions.
         var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
-            let provider = preferences.realtimeTranslationProvider
-            if !provider.performsTranslation {
+            if !captionTranslationAvailable {
                 return .sourceOnly
             }
             return captionDisplayMode

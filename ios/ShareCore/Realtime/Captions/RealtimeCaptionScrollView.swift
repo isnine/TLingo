@@ -15,6 +15,8 @@
             public var sourceColor: NSColor
             public var translationColor: NSColor
             public var pendingColor: NSColor
+            public var sourcePendingColor: NSColor?
+            public var translationPendingColor: NSColor?
             public var sourceLineSpacing: CGFloat
             public var translationLineSpacing: CGFloat
             public var lineGap: CGFloat
@@ -37,13 +39,17 @@
                 horizontalPadding: CGFloat,
                 verticalPadding: CGFloat,
                 alignsShortContentToBottom: Bool,
-                isSelectable: Bool
+                isSelectable: Bool,
+                sourcePendingColor: NSColor? = nil,
+                translationPendingColor: NSColor? = nil
             ) {
                 self.sourceFont = sourceFont
                 self.translationFont = translationFont
                 self.sourceColor = sourceColor
                 self.translationColor = translationColor
                 self.pendingColor = pendingColor
+                self.sourcePendingColor = sourcePendingColor
+                self.translationPendingColor = translationPendingColor
                 self.sourceLineSpacing = sourceLineSpacing
                 self.translationLineSpacing = translationLineSpacing
                 self.lineGap = lineGap
@@ -54,8 +60,23 @@
             }
 
             public static func roundedFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
+                font(size: size, weight: weight, design: .rounded)
+            }
+
+            public static func font(
+                size: CGFloat,
+                weight: NSFont.Weight,
+                design: RealtimeCaptionAppearance.FontDesign,
+                defaultDesign: NSFontDescriptor.SystemDesign = .default
+            ) -> NSFont {
                 let base = NSFont.systemFont(ofSize: size, weight: weight)
-                guard let descriptor = base.fontDescriptor.withDesign(.rounded) else { return base }
+                let resolvedDesign: NSFontDescriptor.SystemDesign = switch design {
+                case .platformDefault: defaultDesign
+                case .serif: .serif
+                case .system: .default
+                case .rounded: .rounded
+                }
+                guard let descriptor = base.fontDescriptor.withDesign(resolvedDesign) else { return base }
                 return NSFont(descriptor: descriptor, size: size) ?? base
             }
         }
@@ -132,6 +153,7 @@
 
             func update(lines: [RealtimeCaptionLine], style: Style) {
                 let styleChanged = self.style != style
+                let readingAnchor = styleChanged && !isFollowingBottom && !isUserScrolling ? captureReadingAnchor() : nil
                 self.style = style
                 if styleChanged {
                     textView.isSelectable = style.isSelectable
@@ -143,6 +165,9 @@
                     return
                 }
                 applyLayout()
+                if let readingAnchor {
+                    restoreReadingAnchor(readingAnchor)
+                }
             }
 
             override public func layout() {
@@ -219,8 +244,11 @@
                 let paragraph = NSMutableParagraphStyle()
                 paragraph.lineSpacing = line.kind == .source ? style.sourceLineSpacing : style.translationLineSpacing
                 paragraph.paragraphSpacing = style.lineGap
+                let pendingColor = line.kind == .source
+                    ? style.sourcePendingColor ?? style.pendingColor
+                    : style.translationPendingColor ?? style.pendingColor
                 let color: NSColor = line.isPending
-                    ? style.pendingColor
+                    ? pendingColor
                     : (line.kind == .source ? style.sourceColor : style.translationColor)
                 return [
                     .font: line.kind == .source ? style.sourceFont : style.translationFont,
@@ -230,6 +258,40 @@
             }
 
             // MARK: Scroll position
+
+            private func captureReadingAnchor() -> (lineID: String, characterOffset: Int, offsetY: CGFloat)? {
+                guard let layoutManager = textView.layoutManager,
+                      let container = textView.textContainer,
+                      !renderedLines.isEmpty else { return nil }
+                layoutManager.ensureLayout(for: container)
+                guard layoutManager.numberOfGlyphs > 0 else { return nil }
+
+                let point = NSPoint(x: 0, y: max(0, contentView.bounds.minY - textView.textContainerInset.height))
+                let glyphIndex = layoutManager.glyphIndex(for: point, in: container)
+                guard glyphIndex < layoutManager.numberOfGlyphs else { return nil }
+                let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
+                guard let lineIndex = lineRanges.firstIndex(where: { NSMaxRange($0) > characterIndex }) else { return nil }
+                let rect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1), in: container)
+                return (
+                    lineID: renderedLines[lineIndex].id,
+                    characterOffset: max(0, characterIndex - lineRanges[lineIndex].location),
+                    offsetY: contentView.bounds.minY - rect.minY - textView.textContainerInset.height
+                )
+            }
+
+            private func restoreReadingAnchor(_ anchor: (lineID: String, characterOffset: Int, offsetY: CGFloat)) {
+                guard let lineIndex = renderedLines.firstIndex(where: { $0.id == anchor.lineID }),
+                      let layoutManager = textView.layoutManager,
+                      let container = textView.textContainer else { return }
+                let range = lineRanges[lineIndex]
+                guard range.length > 0 else { return }
+                let characterIndex = range.location + min(anchor.characterOffset, range.length - 1)
+                let glyphIndex = layoutManager.glyphIndexForCharacter(at: characterIndex)
+                let rect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1), in: container)
+                let offsetY = rect.minY + textView.textContainerInset.height + anchor.offsetY
+                contentView.scroll(to: NSPoint(x: 0, y: min(max(-contentInsets.top, offsetY), maxOffsetY)))
+                reflectScrolledClipView(contentView)
+            }
 
             /// Sizes the document to its text, aligns short content, then pins to the bottom if following.
             private func applyLayout() {

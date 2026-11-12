@@ -48,6 +48,7 @@
 
         private enum RealtimeSettingsRoute: Hashable {
             case recognitionModels
+            case captionAppearance
         }
 
         private enum RealtimeTargetSelection: Hashable {
@@ -194,7 +195,14 @@
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
+                RealtimeCaptionModeMenu(store: store) {
+                    settingsPath = [.captionAppearance]
+                    settingsDetent = .large
+                    isSettingsPresented = true
+                }
+                .tint(.primary)
                 Button("Realtime Options", systemImage: "slider.horizontal.3") {
+                    settingsPath = []
                     settingsDetent = .medium
                     isSettingsPresented = true
                 }
@@ -877,7 +885,7 @@
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(colors.background)
+            .background(preferences.realtimeCaptionAppearance.captionBackgroundColor(fallback: colors.background))
         }
 
         private var emptyStateDescription: LocalizedStringKey {
@@ -952,6 +960,11 @@
         private var settingsSheet: some View {
             NavigationStack(path: $settingsPath) {
                 Form {
+                    Section("Captions") {
+                        RealtimeCaptionModePicker(store: store)
+                        NavigationLink("Appearance", value: RealtimeSettingsRoute.captionAppearance)
+                    }
+
                     if RealtimeAudioInputSource.allCases.count > 1 {
                         Section("Input") {
                             Picker("Input", selection: inputSourceBinding) {
@@ -985,39 +998,6 @@
                         .disabled(store.isRunning)
                     }
 
-                    Section {
-                        Picker("Font", selection: captionAppearanceBinding(\.fontDesign)) {
-                            Text("Serif").tag(RealtimeCaptionAppearance.FontDesign.serif)
-                            Text("System").tag(RealtimeCaptionAppearance.FontDesign.system)
-                            Text("Rounded").tag(RealtimeCaptionAppearance.FontDesign.rounded)
-                        }
-                        LabeledContent("Text Size", value: "\(Int(preferences.realtimeCaptionAppearance.textSize)) pt")
-                        Slider(
-                            value: captionAppearanceBinding(\.textSize),
-                            in: RealtimeCaptionAppearance.textSizeRange,
-                            step: 1
-                        ) {
-                            Text("Text Size")
-                        } minimumValueLabel: {
-                            Image(systemName: "textformat.size.smaller")
-                        } maximumValueLabel: {
-                            Image(systemName: "textformat.size.larger")
-                        }
-                        Picker("Line Spacing", selection: captionAppearanceBinding(\.spacing)) {
-                            Text("Compact").tag(RealtimeCaptionAppearance.Spacing.compact)
-                            Text("Standard").tag(RealtimeCaptionAppearance.Spacing.standard)
-                            Text("Relaxed").tag(RealtimeCaptionAppearance.Spacing.relaxed)
-                        }
-                        Button("Reset to Default") {
-                            preferences.setRealtimeCaptionAppearance(RealtimeCaptionAppearance())
-                        }
-                        .disabled(preferences.realtimeCaptionAppearance == RealtimeCaptionAppearance())
-                    } header: {
-                        Text("Caption Style")
-                    } footer: {
-                        Text("Applies to captions here and in Picture in Picture.")
-                    }
-
                     if AVPictureInPictureController.isPictureInPictureSupported() {
                         Section {
                             Toggle("Picture in Picture", isOn: pictureInPictureBinding)
@@ -1043,6 +1023,19 @@
                             isDisabled: store.isRunning || store.isStopping
                         )
                         .navigationBarTitleDisplayMode(.inline)
+                    case .captionAppearance:
+                        RealtimeCaptionAppearanceEditor(
+                            preferences: preferences,
+                            mode: store.resolvedCaptionDisplayMode
+                        )
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    isSettingsPresented = false
+                                }
+                            }
+                        }
                     }
                 }
                 .toolbar {
@@ -1083,19 +1076,6 @@
             Binding(
                 get: { preferences.realtimePictureInPictureSize },
                 set: { preferences.setRealtimePictureInPictureSize($0) }
-            )
-        }
-
-        private func captionAppearanceBinding<Value>(
-            _ keyPath: WritableKeyPath<RealtimeCaptionAppearance, Value>
-        ) -> Binding<Value> {
-            Binding(
-                get: { preferences.realtimeCaptionAppearance[keyPath: keyPath] },
-                set: { value in
-                    var appearance = preferences.realtimeCaptionAppearance
-                    appearance[keyPath: keyPath] = value
-                    preferences.setRealtimeCaptionAppearance(appearance)
-                }
             )
         }
 

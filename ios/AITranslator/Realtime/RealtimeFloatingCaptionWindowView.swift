@@ -12,6 +12,11 @@
         @State private var isHoveringCaptionWindow = false
         @State private var captionClearAnchor = RealtimeCaptionDisplayClearAnchor.empty
         @State private var targetScreenHasBuiltInNotch = false
+        @State private var isCaptionAppearancePresented = false
+
+        private var appearance: RealtimeCaptionAppearance {
+            preferences.realtimeCaptionAppearance
+        }
 
         private var resolvedCaptionLines: [RealtimeCaptionLine] {
             store.captionLines
@@ -82,9 +87,9 @@
                 }
                 .overlay(alignment: .topTrailing) {
                     captionControls
-                        .opacity(isHoveringCaptionWindow ? 1 : 0)
-                        .allowsHitTesting(isHoveringCaptionWindow)
-                        .accessibilityHidden(!isHoveringCaptionWindow)
+                        .opacity(isHoveringCaptionWindow || isCaptionAppearancePresented ? 1 : 0)
+                        .allowsHitTesting(isHoveringCaptionWindow || isCaptionAppearancePresented)
+                        .accessibilityHidden(!isHoveringCaptionWindow && !isCaptionAppearancePresented)
                         .padding(.top, 24)
                         .padding(.trailing, 28)
                 }
@@ -107,7 +112,6 @@
             RealtimeNotchCaptionWindowContent(
                 store: store,
                 captionLines: captionLines,
-                captionDisplayModeButtonTitle: captionDisplayModeButtonTitle,
                 targetScreenHasBuiltInNotch: targetScreenHasBuiltInNotch,
                 onToggleRecognition: toggleRecognition,
                 onEndRecognition: endRecognition,
@@ -121,7 +125,7 @@
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.black.opacity(0.48))
+                        .fill(appearance.captionBackgroundColor(fallback: .black).opacity(appearance.floatingBackgroundOpacity))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -131,12 +135,12 @@
 
         private var captionContent: some View {
             ZStack(alignment: .topLeading) {
-                RealtimeCaptionScrollView(lines: captionLines, style: Self.captionStyle)
+                RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
 
                 if shouldShowCaptionPlaceholder {
                     Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .font(Font(captionStyle.sourceFont))
+                        .foregroundStyle(appearance.sourceTextColor(fallback: .white))
                         .opacity(0.72)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, Self.contentHorizontalMargin)
@@ -146,25 +150,39 @@
             }
         }
 
-        /// Captions are not selectable so dragging anywhere still moves the floating window.
-        private static let captionStyle = RealtimeCaptionScrollView.Style(
-            sourceFont: .systemFont(ofSize: 19, weight: .semibold),
-            translationFont: .systemFont(ofSize: 25, weight: .bold),
-            sourceColor: NSColor.white.withAlphaComponent(0.82),
-            translationColor: .white,
-            pendingColor: .white,
-            sourceLineSpacing: 0,
-            translationLineSpacing: 0,
-            lineGap: 8,
-            horizontalPadding: contentHorizontalMargin,
-            verticalPadding: contentVerticalMargin,
-            alignsShortContentToBottom: false,
-            isSelectable: false
-        )
+        private var captionStyle: RealtimeCaptionScrollView.Style {
+            let sizeScale = CGFloat(appearance.textSize / 22)
+            let spacingScale = CGFloat(appearance.spacing.scale)
+
+            return RealtimeCaptionScrollView.Style(
+                sourceFont: RealtimeCaptionScrollView.Style.font(
+                    size: 19 * sizeScale,
+                    weight: .semibold,
+                    design: appearance.fontDesign
+                ),
+                translationFont: RealtimeCaptionScrollView.Style.font(
+                    size: 25 * sizeScale,
+                    weight: .bold,
+                    design: appearance.fontDesign
+                ),
+                sourceColor: NSColor(appearance.sourceTextColor(fallback: .white.opacity(0.82))),
+                translationColor: NSColor(appearance.translationTextColor(fallback: .white)),
+                pendingColor: .white,
+                sourceLineSpacing: 0,
+                translationLineSpacing: 0,
+                lineGap: 8 * spacingScale,
+                horizontalPadding: Self.contentHorizontalMargin,
+                verticalPadding: Self.contentVerticalMargin,
+                alignsShortContentToBottom: false,
+                isSelectable: false,
+                sourcePendingColor: appearance.sourceColor.map { NSColor($0.color).withAlphaComponent(0.85) },
+                translationPendingColor: appearance.translationColor.map { NSColor($0.color).withAlphaComponent(0.85) }
+            )
+        }
 
         private var captionControls: some View {
             HStack(spacing: 8) {
-                captionDisplayModeButton
+                captionDisplayModeMenu
                 recognitionControlButton
                 if store.isPaused {
                     endRecognitionButton
@@ -173,19 +191,34 @@
             }
         }
 
-        private var captionDisplayModeButton: some View {
-            Button {
-                store.cycleCaptionDisplayMode()
-            } label: {
-                if let title = captionDisplayModeButtonTitle {
-                    captionControlLabel(systemName: store.captionDisplayMode.systemImageName, title: title)
-                } else {
-                    captionControlIcon(systemName: store.captionDisplayMode.systemImageName)
-                }
+        private var captionDisplayModeMenu: some View {
+            RealtimeCaptionModeMenu(store: store) {
+                isCaptionAppearancePresented = true
             }
-            .buttonStyle(.plain)
-            .help(store.captionDisplayMode.accessibilityLabel)
-            .accessibilityLabel(Text(store.captionDisplayMode.accessibilityLabel))
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.visible)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .tint(.white)
+            .fixedSize()
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background {
+                Capsule()
+                    .fill(Color.black.opacity(0.42))
+            }
+            .overlay {
+                Capsule()
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
+            .popover(isPresented: $isCaptionAppearancePresented) {
+                RealtimeCaptionAppearanceEditor(
+                    preferences: preferences,
+                    mode: store.resolvedCaptionDisplayMode
+                )
+                .frame(width: 380, height: 560)
+            }
         }
 
         private var closeCaptionButton: some View {
@@ -197,13 +230,6 @@
             .buttonStyle(.plain)
             .help("Close captions")
             .accessibilityLabel(Text("Close captions"))
-        }
-
-        private var captionDisplayModeButtonTitle: String? {
-            store.captionDisplayMode.buttonTitle(
-                sourceLanguageName: preferences.realtimeSourceLanguage.primaryLabel,
-                targetLanguageName: preferences.realtimeTargetLanguage.primaryLabel
-            )
         }
 
         private var recognitionControlButton: some View {
@@ -260,29 +286,6 @@
                         .stroke(Color.white.opacity(0.22), lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
-        }
-
-        private func captionControlLabel(systemName: String, title: String) -> some View {
-            HStack(spacing: 6) {
-                Image(systemName: systemName)
-                    .font(.system(size: 12, weight: .bold))
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 9)
-            .frame(height: 28)
-            .fixedSize(horizontal: true, vertical: false)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.42))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
         }
 
         private var recognitionControlSystemImage: String {

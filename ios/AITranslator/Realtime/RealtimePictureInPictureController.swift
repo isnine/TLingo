@@ -17,8 +17,6 @@
     final class RealtimePictureInPictureController: NSObject, ObservableObject {
         /// Lines beyond what fits are clipped at the top, matching the bottom-pinned in-app list.
         private static let captionLineLimit = 12
-        /// The compact strip keeps only the latest caption pair, like a subtitle bar.
-        private static let compactCaptionLineLimit = 1
         private static let renderScale: CGFloat = 3
         /// Caps the canvas on iPad so captions stay legible in the small PiP window.
         private static let maxRenderWidth: CGFloat = 430
@@ -33,9 +31,6 @@
         /// in the background, freezing the captions it polls. A silent, mixable engine keeps it running.
         private var backgroundKeepAliveEngine: AVAudioEngine?
         private var keepAliveObservers: [NSObjectProtocol] = []
-        /// Frames are only seen in the PiP window, so while the app is active without PiP, renders are
-        /// deferred until the app resigns active (just before automatic PiP) or PiP starts.
-        private var hasRenderedFrame = false
         private var pixelBufferPool: CVPixelBufferPool?
         private var pixelBufferPoolSize: (width: Int, height: Int) = (0, 0)
 
@@ -53,6 +48,12 @@
             controller.delegate = self
             controller.requiresLinearPlayback = true
             pictureInPictureController = controller
+
+            displayView.onAttachedToWindow = { [weak self] in
+                guard let self else { return }
+                renderCurrent(force: true)
+                pictureInPictureController?.invalidatePlaybackState()
+            }
 
             store.$captionLines
                 .combineLatest(
@@ -96,13 +97,21 @@
             // Returning to the app by any route other than the PiP restore button leaves PiP open.
             NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
                 .sink { [weak self] _ in
-                    self?.stopPictureInPicture()
+                    guard let self else { return }
+                    stopPictureInPicture()
+                    renderCurrent(force: true)
                 }
                 .store(in: &cancellables)
 
             NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
                 .sink { [weak self] _ in
-                    self?.renderCurrent(force: true)
+                    guard let self else { return }
+                    renderCurrent(force: true)
+                    let layer = displayView.sampleBufferDisplayLayer
+                    logger.info("""
+                    PiP background attached=\(displayView.window != nil) ready=\(layer.isReadyForDisplay) \
+                    possible=\(pictureInPictureController?.isPictureInPicturePossible == true)
+                    """)
                 }
                 .store(in: &cancellables)
         }
@@ -195,11 +204,10 @@
             inputSource: RealtimeAudioInputSource,
             force: Bool = false
         ) {
+            guard displayView.window != nil else { return }
             let isPictureInPictureActive = pictureInPictureController?.isPictureInPictureActive == true
-            guard force || !hasRenderedFrame || isPictureInPictureActive
-                || UIApplication.shared.applicationState != .active
+            guard force || (isRunning && preferences.realtimePictureInPictureEnabled) || isPictureInPictureActive
             else { return }
-            hasRenderedFrame = true
             let colorScheme: ColorScheme = displayView.traitCollection.userInterfaceStyle == .dark ? .dark : .light
             let palette = AppColors.palette(for: colorScheme)
             let style = RealtimeCaptionTextView.Style(
@@ -208,15 +216,31 @@
                 mode: store.resolvedCaptionDisplayMode
             )
             let isCompact = preferences.realtimePictureInPictureSize == .compact
-            let visibleCount = isCompact ? Self.compactCaptionLineLimit : Self.captionLineLimit
+            let visibleLines = isCompact ? RealtimeCaptionDisplay.latestCaptionGroup(lines) : lines
+            let visibleCount = isCompact ? visibleLines.count : Self.captionLineLimit
+            let captions = RealtimeCaptionTextView.attributedText(for: visibleLines, style: style, visibleCount: visibleCount)
             let width = min(displayView.window?.bounds.width ?? 393, Self.maxRenderWidth)
             // PiP sizes its window from the frame's aspect ratio.
-            let height = isCompact ? width / 4 : width / 2
+            var height = isCompact ? width / 4 : width / 2
+            if isCompact, !style.flowsIntoParagraphs, visibleLines.count > 1 {
+                let textHeight = captions.boundingRect(
+                    with: CGSize(
+                        width: max(1, width - 2 * RealtimeCaptionTextView.horizontalPadding),
+                        height: .greatestFiniteMagnitude
+                    ),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    context: nil
+                ).height.rounded(.up)
+                height = min(width, max(
+                    height,
+                    textHeight + RealtimeCaptionTextView.topPadding + RealtimeCaptionTextView.bottomPadding
+                ))
+            }
             let frame = Frame(
                 size: CGSize(width: width, height: height.rounded()),
-                background: UIColor(palette.background),
-                captions: RealtimeCaptionTextView.attributedText(for: lines, style: style, visibleCount: visibleCount),
-                placeholder: lines.isEmpty
+                background: UIColor(preferences.realtimeCaptionAppearance.captionBackgroundColor(fallback: palette.background)),
+                captions: captions,
+                placeholder: visibleLines.isEmpty
                     ? Self.placeholderText(Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource), style: style)
                     : nil
             )
@@ -446,12 +470,20 @@
     }
 
     final class SampleBufferDisplayView: UIView {
+        var onAttachedToWindow: (() -> Void)?
+
         override class var layerClass: AnyClass {
             AVSampleBufferDisplayLayer.self
         }
 
         var sampleBufferDisplayLayer: AVSampleBufferDisplayLayer {
             layer as! AVSampleBufferDisplayLayer
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard window != nil else { return }
+            onAttachedToWindow?()
         }
     }
 

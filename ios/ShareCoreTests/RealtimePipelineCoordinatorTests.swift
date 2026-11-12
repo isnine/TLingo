@@ -7,6 +7,89 @@ import Testing
 #if os(macOS)
     @Suite("Realtime pipeline coordinator")
     struct RealtimePipelineCoordinatorTests {
+        @MainActor
+        @Test("Switching live caption modes preserves text and avoids translation work")
+        func switchesLiveCaptionModesWithoutRetranslation() async {
+            var mode = RealtimeCaptionDisplayMode.bilingual
+            var requestCount = 0
+            let configuration = RealtimeLaneConfiguration(
+                recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
+                translationProvider: .appleTranslator
+            )
+            let runtime = RealtimeLaneRuntime(
+                configuration: configuration,
+                sourceLanguage: .english,
+                targetLanguage: .simplifiedChinese,
+                startedOffset: 0,
+                displayMode: { mode },
+                elapsed: { 2 },
+                translationExecutor: { request in
+                    requestCount += 1
+                    return ModelExecutionResult(
+                        modelID: request.provider.modelID,
+                        duration: 0.1,
+                        response: .success("你好。"),
+                        sentencePairs: [SentencePair(original: request.translationText, translation: "你好。")]
+                    )
+                }
+            )
+            runtime.receiveRecognition(RealtimeRecognitionResult(
+                text: "Hello.",
+                confidence: 0.9,
+                state: .final,
+                audioOffset: 1
+            ))
+            for _ in 0 ..< 50 {
+                guard runtime.snapshot.translatedText.isEmpty else { break }
+                await Task.yield()
+            }
+            #expect(runtime.snapshot.captionLines.map(\.kind) == [.source, .translation])
+            let originalText = runtime.snapshot.sourceText
+            let translatedText = runtime.snapshot.translatedText
+            let requestsBeforeSwitch = requestCount
+            mode = .translationOnly
+            runtime.refreshPresentation()
+            #expect(runtime.snapshot.captionLines.map(\.kind) == [.translation])
+            mode = .sourceOnly
+            runtime.refreshPresentation()
+            #expect(runtime.snapshot.captionLines.map(\.kind) == [.source])
+            mode = .bilingual
+            runtime.refreshPresentation()
+            #expect(runtime.snapshot.captionLines.map(\.kind) == [.source, .translation])
+            #expect(runtime.snapshot.sourceText == originalText)
+            #expect(runtime.snapshot.translatedText == translatedText)
+            #expect(requestCount == requestsBeforeSwitch)
+            await runtime.stop()
+        }
+
+        @MainActor
+        @Test("Changing caption mode updates every lane without restarting translation")
+        func changesPresentationAcrossLanes() async throws {
+            let coordinator = RealtimePipelineCoordinator()
+            let first = RealtimeLaneConfiguration(
+                recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
+                translationProvider: .appleTranslator
+            )
+            let second = RealtimeLaneConfiguration(
+                recognitionModelID: RecognitionModelDescriptor.parakeetEOU320.id,
+                translationProvider: .appleTranslator
+            )
+            try await coordinator.addLane(first)
+            try await coordinator.addLane(second)
+            let primary = coordinator.primaryLaneID
+            let configurations = coordinator.configurations
+            coordinator.updateCaptionDisplayMode(.translationOnly)
+            #expect(coordinator.captionDisplayMode == .translationOnly)
+            #expect(coordinator.snapshots.count == 2)
+            #expect(coordinator.primaryLaneID == primary)
+            #expect(coordinator.configurations == configurations)
+            #expect(!coordinator.isRunning)
+            coordinator.updateCaptionDisplayMode(.bilingual)
+            #expect(coordinator.captionDisplayMode == .bilingual)
+            #expect(coordinator.configurations == configurations)
+            await coordinator.stop()
+        }
+
         @Test("Bounds startup audio buffering")
         func boundsStartupAudioBuffering() throws {
             let fanout = RealtimePipelineAudioFanout()

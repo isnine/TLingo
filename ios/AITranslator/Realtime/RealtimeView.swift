@@ -22,6 +22,7 @@
         @State private var isAudioImporterPresented = false
         @State private var audioImportError: String?
         @State private var isLatencyBubbleDismissed = false
+        @State private var isCaptionAppearancePresented = false
 
         init(store: RealtimeSessionStore) {
             self.store = store
@@ -101,6 +102,19 @@
                 .animation(.easeInOut(duration: 0.16), value: isInspectorPresented)
                 .toolbar {
                     ToolbarSpacer(.flexible)
+
+                    ToolbarItem {
+                        RealtimeCaptionModeMenu(store: store) {
+                            isCaptionAppearancePresented = true
+                        }
+                        .popover(isPresented: $isCaptionAppearancePresented) {
+                            RealtimeCaptionAppearanceEditor(
+                                preferences: preferences,
+                                mode: store.resolvedCaptionDisplayMode
+                            )
+                            .frame(width: 380, height: 560)
+                        }
+                    }
 
                     ToolbarItem {
                         Button {
@@ -287,6 +301,7 @@
 
         private var realtimeInspector: some View {
             RealtimeInspectorView(
+                store: store,
                 preferences: preferences,
                 isFloatingCaptionVisible: $isFloatingCaptionVisible,
                 isAdvancedSettingsExpanded: $isAdvancedSettingsExpanded,

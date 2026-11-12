@@ -61,9 +61,9 @@
     struct RealtimeNotchCaptionWindowContent: View {
         private static let maximumVisibleCaptionLineCount = 6
 
+        @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject var store: RealtimeSessionStore
         let captionLines: [RealtimeCaptionLine]
-        let captionDisplayModeButtonTitle: String?
         let targetScreenHasBuiltInNotch: Bool
         let onToggleRecognition: () async -> Void
         let onEndRecognition: () async -> Void
@@ -72,6 +72,15 @@
 
         @State private var isHovering = false
         @State private var captionScrollOffset = 0
+        @State private var isCaptionAppearancePresented = false
+
+        private var appearance: RealtimeCaptionAppearance {
+            preferences.realtimeCaptionAppearance
+        }
+
+        private var spacingScale: CGFloat {
+            CGFloat(appearance.spacing.scale)
+        }
 
         var body: some View {
             let shape = RealtimeNotchCaptionShape()
@@ -94,9 +103,9 @@
 
                 if !isCompact {
                     controls
-                        .opacity(isHovering ? 1 : 0)
-                        .allowsHitTesting(isHovering)
-                        .accessibilityHidden(!isHovering)
+                        .opacity(isHovering || isCaptionAppearancePresented ? 1 : 0)
+                        .allowsHitTesting(isHovering || isCaptionAppearancePresented)
+                        .accessibilityHidden(!isHovering && !isCaptionAppearancePresented)
                         .padding(.top, 8)
                         .padding(.trailing, 12)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -164,8 +173,8 @@
                     Spacer(minLength: 0)
                 } else {
                     Text(compactCaptionText)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.78))
+                        .font(appearanceFont(size: 13, weight: .semibold))
+                        .foregroundStyle(compactCaptionColor)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -179,24 +188,30 @@
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
 
-        private var compactCaptionText: String {
-            guard let group = visibleCaptionGroups.last else {
-                return RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning)
-            }
+        private var compactCaptionLine: RealtimeCaptionLine? {
+            guard let group = visibleCaptionGroups.last else { return nil }
+            return group.last(where: { $0.kind == .translation }) ?? group.last(where: { $0.kind == .source })
+        }
 
-            return group.last(where: { $0.kind == .translation })?.text ??
-                group.last(where: { $0.kind == .source })?.text ??
-                RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning)
+        private var compactCaptionText: String {
+            compactCaptionLine?.text ?? RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning)
+        }
+
+        private var compactCaptionColor: Color {
+            let fallback = Color.white.opacity(0.78)
+            return compactCaptionLine?.kind == .translation
+                ? appearance.translationTextColor(fallback: fallback)
+                : appearance.sourceTextColor(fallback: fallback)
         }
 
         private var captionContent: some View {
             let groups = visibleCaptionGroups
 
-            return VStack(alignment: .leading, spacing: 4) {
+            return VStack(alignment: .leading, spacing: 4 * spacingScale) {
                 if groups.isEmpty {
                     Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.78))
+                        .font(appearanceFont(size: 15, weight: .semibold))
+                        .foregroundStyle(appearance.sourceTextColor(fallback: .white.opacity(0.78)))
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                         .truncationMode(.tail)
@@ -346,7 +361,7 @@
         private func captionGroup(_ group: [RealtimeCaptionLine], isCurrent: Bool) -> some View {
             let isBilingual = isBilingualCaptionGroup(group)
 
-            return VStack(alignment: .leading, spacing: 1) {
+            return VStack(alignment: .leading, spacing: spacingScale) {
                 if let source = group.last(where: { $0.kind == .source }) {
                     captionLine(source, isCurrent: isCurrent, isBilingual: isBilingual)
                 }
@@ -361,6 +376,7 @@
             Text(line.text)
                 .font(captionFont(for: line.kind, isCurrent: isCurrent))
                 .foregroundStyle(captionForegroundStyle(for: line, isCurrent: isCurrent))
+                .lineSpacing(max(0, 3 * (spacingScale - 1)))
                 .lineLimit(captionLineLimit(for: line.kind, isCurrent: isCurrent, isBilingual: isBilingual))
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.leading)
@@ -391,39 +407,64 @@
         private func captionFont(for kind: RealtimeCaptionLine.Kind, isCurrent: Bool) -> Font {
             switch kind {
             case .source:
-                return .system(size: isCurrent ? 16 : 12, weight: .semibold)
+                return appearanceFont(size: isCurrent ? 16 : 12, weight: .semibold)
             case .translation:
-                return .system(size: isCurrent ? 16 : 12, weight: .bold)
+                return appearanceFont(size: isCurrent ? 16 : 12, weight: .bold)
             }
+        }
+
+        private func appearanceFont(size: CGFloat, weight: NSFont.Weight) -> Font {
+            Font(RealtimeCaptionScrollView.Style.font(
+                size: size * CGFloat(appearance.textSize / 22),
+                weight: weight,
+                design: appearance.fontDesign
+            ))
         }
 
         private func captionForegroundStyle(for line: RealtimeCaptionLine, isCurrent: Bool) -> Color {
             let opacity = line.kind == .source ? (isCurrent ? 0.7 : 0.48) : (isCurrent ? 1 : 0.62)
-            return .white.opacity(opacity)
+            let selectedColor = line.kind == .source ? appearance.sourceColor : appearance.translationColor
+            guard let selectedColor else { return .white.opacity(opacity) }
+            return selectedColor.color.opacity(opacity * (line.isPending ? 0.85 : 1))
         }
 
         private var controls: some View {
             HStack(spacing: 8) {
-                captionDisplayModeButton
+                captionDisplayModeMenu
                 recognitionControlButton
                 clearCaptionButton
                 closeButton
             }
         }
 
-        private var captionDisplayModeButton: some View {
-            Button {
-                store.cycleCaptionDisplayMode()
-            } label: {
-                if let captionDisplayModeButtonTitle {
-                    controlLabel(systemName: store.captionDisplayMode.systemImageName, title: captionDisplayModeButtonTitle)
-                } else {
-                    controlIcon(systemName: store.captionDisplayMode.systemImageName)
-                }
+        private var captionDisplayModeMenu: some View {
+            RealtimeCaptionModeMenu(store: store) {
+                isCaptionAppearancePresented = true
             }
-            .buttonStyle(.plain)
-            .help(store.captionDisplayMode.accessibilityLabel)
-            .accessibilityLabel(Text(store.captionDisplayMode.accessibilityLabel))
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.visible)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .tint(.white)
+            .fixedSize()
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background {
+                Capsule()
+                    .fill(Color.black.opacity(0.42))
+            }
+            .overlay {
+                Capsule()
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
+            .popover(isPresented: $isCaptionAppearancePresented) {
+                RealtimeCaptionAppearanceEditor(
+                    preferences: preferences,
+                    mode: store.resolvedCaptionDisplayMode
+                )
+                .frame(width: 380, height: 560)
+            }
         }
 
         private var recognitionControlButton: some View {
@@ -513,29 +554,6 @@
                         .stroke(Color.white.opacity(0.22), lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
-        }
-
-        private func controlLabel(systemName: String, title: String) -> some View {
-            HStack(spacing: 6) {
-                Image(systemName: systemName)
-                    .font(.system(size: 12, weight: .bold))
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 9)
-            .frame(height: 28)
-            .fixedSize(horizontal: true, vertical: false)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.42))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
         }
     }
 #endif

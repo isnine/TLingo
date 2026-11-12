@@ -45,6 +45,14 @@ public enum RealtimeCaptionDisplayMode: String, CaseIterable, Identifiable, Send
 
     public var id: String { rawValue }
 
+    public var title: String {
+        switch self {
+        case .sourceOnly: String(localized: "Source Only")
+        case .translationOnly: String(localized: "Translation Only")
+        case .bilingual: String(localized: "Bilingual")
+        }
+    }
+
     public var next: RealtimeCaptionDisplayMode {
         let modes = Self.allCases
         guard let index = modes.firstIndex(of: self) else { return .bilingual }
@@ -97,6 +105,15 @@ public enum RealtimeCaptionDisplayMode: String, CaseIterable, Identifiable, Send
 }
 
 public enum RealtimeCaptionDisplay {
+    public static func latestCaptionGroup(_ lines: [RealtimeCaptionLine]) -> [RealtimeCaptionLine] {
+        guard let last = lines.last else { return [] }
+        guard let translationIndex = lines.lastIndex(where: { $0.kind == .translation }),
+              translationIndex > 0, lines[translationIndex - 1].kind == .source else {
+            return [last]
+        }
+        return Array(lines[(translationIndex - 1) ... translationIndex])
+    }
+
     public static func emptyPlaceholderText(isRunning: Bool) -> String {
         isRunning ? String(localized: "Listening...") : String(localized: "Live captions will appear here.")
     }

@@ -4,7 +4,9 @@
 
     struct RealtimeInspectorView: View {
         @Environment(\.colorScheme) private var colorScheme
+        @ObservedObject var store: RealtimeSessionStore
         @ObservedObject var preferences: AppPreferences
+        @State private var isCaptionAppearancePresented = false
 
         @Binding var isFloatingCaptionVisible: Bool
         @Binding var isAdvancedSettingsExpanded: Bool
@@ -21,6 +23,21 @@
 
         var body: some View {
             Form {
+                Section("Captions") {
+                    RealtimeCaptionModePicker(store: store)
+
+                    Button("Caption Appearance…", systemImage: "textformat.size") {
+                        isCaptionAppearancePresented = true
+                    }
+                    .popover(isPresented: $isCaptionAppearancePresented) {
+                        RealtimeCaptionAppearanceEditor(
+                            preferences: preferences,
+                            mode: store.resolvedCaptionDisplayMode
+                        )
+                        .frame(width: 380, height: 560)
+                    }
+                }
+
                 Section {
                     Toggle("Live Captions", isOn: floatingCaptionBinding)
                         .help("Show live captions on screen")
