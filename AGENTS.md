@@ -49,7 +49,7 @@ For small changes, compile-check with a single Debug build of the most relevant 
 
 - App Store iOS and macOS releases are built and distributed only by Xcode Cloud, which owns App Store build numbers.
 - Routine version bumps update `MARKETING_VERSION`. Update `CHANGELOG.md` before creating a `v*` tag.
-- Commit subjects start with `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by `[iOS]` or `[Mac]` (no platform tag means both). Only the first three reach users.
+- Commit subjects start with `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by `[iOS]`, `[Mac]`, or `[Both]`. Platform tags only filter release notes and are never shown to users. Only the first three reach users. From `5.7.5` onward every CHANGELOG item must carry an explicit platform tag; older sections keep the implicit both behavior.
 - Before bumping, draft the release section with `scripts/release_notes.py draft` (commits since the last `MARKETING_VERSION` change), shorten it into `CHANGELOG.md`, then run `scripts/release_notes.py build` to refresh the in-app What's New data and translate new keys in `ios/ShareCore/Resources/ReleaseNotes.xcstrings`.
 - Every release (a `MARKETING_VERSION` bump, `v*` tag, or release push) runs two steps first, in order: translate the app catalogs (`ios/Localizable.xcstrings`, `ios/TLingoHelper/Localizable.xcstrings`, `ios/TLingoWidgets/Localizable.xcstrings`) with `xcstrings-translate` until no untranslated entries remain, then the CHANGELOG workflow above. Routine pushes skip both.
 - Stage explicit paths and verify `git diff --cached --name-only` before committing.

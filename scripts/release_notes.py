@@ -6,9 +6,11 @@ Usage:
   scripts/release_notes.py build   Write ReleaseNotes.json and sync ReleaseNotes.xcstrings from CHANGELOG.md.
 
 Commit subjects use `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by a
-platform tag `[iOS]` or `[Mac]` (no tag means both). CHANGELOG items keep the platform tag as a
-prefix, e.g. `- [Mac] Kept global shortcuts separate per app.` Only the Added, Improved, and Fixed
-sections ship in the app.
+platform tag `[iOS]`, `[Mac]`, or `[Both]` (no tag means both). CHANGELOG items keep the platform
+tag as a prefix, e.g. `- [Mac] Kept global shortcuts separate per app.` Platform tags only filter
+the generated data and are never shown in the app. Every user-facing item from
+`REQUIRE_EXPLICIT_PLATFORM_FROM` onward must carry an explicit tag so iOS and macOS notes stay
+separate. Only the Added, Improved, and Fixed sections ship in the app.
 """
 
 import json
@@ -26,10 +28,12 @@ CATALOG = RESOURCES / "ReleaseNotes.xcstrings"
 
 # Older sections predate platform tags; they still count as missed versions but show no items.
 FIRST_ITEMIZED_VERSION = "5.5.9"
+# Require an explicit [iOS]/[Mac]/[Both] tag from this version onward.
+REQUIRE_EXPLICIT_PLATFORM_FROM = "5.7.5"
 KINDS = {"Added": "added", "Improved": "improved", "Fixed": "fixed"}
 PLATFORMS = {"iOS": "ios", "Mac": "macos"}
 SECTION = re.compile(r"^## \[(\d+(?:\.\d+)*)\]")
-COMMIT = re.compile(r"^\[(\w+)\](?:\s*\[(iOS|Mac)\])?\s*(.+)$")
+COMMIT = re.compile(r"^\[(\w+)\](?:\s*\[(iOS|Mac|Both)\])?\s*(.+)$")
 
 
 def version_key(version):
@@ -73,7 +77,7 @@ def draft():
             if not (match and match.group(1) == "Chore"):
                 skipped.append(subject)
             continue
-        tag = f"[{match.group(2)}] " if match.group(2) else ""
+        tag = f"[{match.group(2) or 'Both'}] "
         sections[match.group(1)].append(f"- {tag}{match.group(3)}")
     print(f"<!-- since {git('log', '-1', '--format=%h %s', base).strip()} -->")
     for name, lines in sections.items():
@@ -105,9 +109,13 @@ def parse_changelog():
             if version_key(current["version"]) < version_key(FIRST_ITEMIZED_VERSION):
                 continue
             text = line[2:].strip()
-            item = {"kind": kind}
+            item = {"kind": kind, "_explicit": False}
             if tag := re.match(r"^\[(iOS|Mac)\]\s*", text):
                 item["platforms"] = [PLATFORMS[tag.group(1)]]
+                item["_explicit"] = True
+                text = text[tag.end():]
+            elif tag := re.match(r"^\[Both\]\s*", text):
+                item["_explicit"] = True
                 text = text[tag.end():]
             item["text"] = text
             current["items"].append(item)
@@ -116,6 +124,21 @@ def parse_changelog():
 
 def build():
     releases = parse_changelog()
+    missing = [
+        f"{release['version']}: {item['text']}"
+        for release in releases
+        if version_key(release["version"]) >= version_key(REQUIRE_EXPLICIT_PLATFORM_FROM)
+        for item in release["items"]
+        if not item["_explicit"]
+    ]
+    if missing:
+        sys.exit(
+            f"Missing explicit [iOS]/[Mac]/[Both] tag (required from {REQUIRE_EXPLICIT_PLATFORM_FROM}):\n"
+            + "\n".join(f"- {line}" for line in missing)
+        )
+    for release in releases:
+        for item in release["items"]:
+            del item["_explicit"]
     NOTES_JSON.write_text(json.dumps({"releases": releases}, indent=2, ensure_ascii=False) + "\n")
 
     texts = [item["text"] for release in releases for item in release["items"]]
