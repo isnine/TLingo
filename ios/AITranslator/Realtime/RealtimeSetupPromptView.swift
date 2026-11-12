@@ -6,6 +6,7 @@
         @ObservedObject var store: RealtimeSessionStore
         @ObservedObject var preferences: AppPreferences
         @ObservedObject var permissionManager: RealtimePermissionManager
+        @State private var downloadStatuses: [String: RecognitionModelDownloadStatus] = [:]
 
         let inspectorTrailingPadding: CGFloat
         let startBlocker: RealtimeStartBlocker?
@@ -22,6 +23,17 @@
                 .padding(.trailing, inspectorTrailingPadding)
                 .padding(.top, 16)
                 .padding(.bottom, 8)
+                .task(id: store.modelDownloads.map(\.id)) {
+                    while !Task.isCancelled, !store.modelDownloads.isEmpty {
+                        var statuses: [String: RecognitionModelDownloadStatus] = [:]
+                        for download in store.modelDownloads {
+                            guard let model = RecognitionModelStore.descriptor(forModelID: download.id) else { continue }
+                            statuses[download.id] = await RecognitionModelStore.shared.downloadStatus(for: model)
+                        }
+                        downloadStatuses = statuses
+                        try? await Task.sleep(for: .seconds(1))
+                    }
+                }
             }
         }
 
@@ -31,7 +43,7 @@
                     id: "model-download-\($0.id)",
                     systemImage: "arrow.down.circle.fill",
                     title: Text(verbatim: $0.title),
-                    message: Text("Downloading model"),
+                    message: Text(verbatim: downloadMessage(for: $0.id)),
                     progress: $0.progress,
                     action: nil
                 )
@@ -40,6 +52,14 @@
                 notices.insert(setupNotice, at: 0)
             }
             return notices
+        }
+
+        private func downloadMessage(for modelID: String) -> String {
+            guard let status = downloadStatuses[modelID] else { return String(localized: "Downloading model") }
+            return [status.phaseDescription, status.transferDescription, status.remainingDescription]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: " · ")
         }
 
         private var setupNotice: RealtimeNotice? {

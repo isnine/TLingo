@@ -8,9 +8,10 @@
         private let isDisabled: Bool
 
         @State private var cachedModelIDs: Set<String> = []
-        @State private var downloadProgress: [String: Double] = [:]
+        @State private var downloadStatuses: [String: RecognitionModelDownloadStatus] = [:]
         @State private var downloadErrors: [String: String] = [:]
         @State private var downloadTasks: [String: Task<Void, Never>] = [:]
+        @State private var pendingDownload: RecognitionModelDescriptor?
         @State private var unsupportedLanguageMessage = ""
         @State private var isUnsupportedLanguageAlertPresented = false
 
@@ -38,11 +39,11 @@
                 modelSection("Unavailable", models: models.filter { !isAvailable($0) })
             }
             .navigationTitle("Recognition Model")
-            // Downloads outlive this page, so poll the store whenever any download is in flight.
-            .task(id: hasActiveDownloads) {
+            .task {
                 await refreshModelState()
-                while !Task.isCancelled, hasActiveDownloads {
-                    try? await Task.sleep(for: .milliseconds(250))
+                while !Task.isCancelled {
+                    let isDownloading = downloadStatuses.values.contains(where: \.isActive) || !downloadTasks.isEmpty
+                    try? await Task.sleep(for: isDownloading ? .milliseconds(250) : .seconds(1))
                     await refreshModelState()
                 }
             }
@@ -51,14 +52,50 @@
             } message: {
                 Text(unsupportedLanguageMessage)
             }
+            .alert("Download model?", isPresented: Binding(
+                get: { pendingDownload != nil },
+                set: {
+                    if !$0 {
+                        pendingDownload = nil
+                    }
+                }
+            )) {
+                if let model = pendingDownload {
+                    Button("Download") {
+                        download(model)
+                        pendingDownload = nil
+                    }
+                }
+                Button("Cancel", role: .cancel) { pendingDownload = nil }
+            } message: {
+                if let model = pendingDownload {
+                    Text(verbatim: "\(model.title) · \(model.sizeDisplayName)\n\n" + String(
+                        localized: "Use Wi-Fi for large downloads. Interrupted downloads can be retried without losing saved files."
+                    ))
+                }
+            }
         }
 
         @ViewBuilder
         private func modelSection(_ title: LocalizedStringKey, models: [RecognitionModelDescriptor]) -> some View {
             if !models.isEmpty {
-                Section(title) {
+                Section {
                     ForEach(models) { model in
                         modelRow(model)
+                    }
+                } header: {
+                    Text(title)
+                } footer: {
+                    if models.contains(where: isDownloading) {
+                        #if os(iOS)
+                            if models.contains(where: { downloadStatuses[$0.id]?.requiresForeground == true }) {
+                                Text("Keep TLingo open until this download finishes.")
+                            } else {
+                                Text(
+                                    "You can leave this page. Follow download progress in the Dynamic Island or on the Lock Screen."
+                                )
+                            }
+                        #endif
                     }
                 }
             }
@@ -88,12 +125,16 @@
                                 .foregroundStyle(Color.secondary)
                         }
 
-                        if let error = downloadErrors[model.id] {
-                            Text(error)
+                        if let status = downloadStatuses[model.id], status.isActive {
+                            RecognitionModelDownloadProgressView(status: status)
+                                .padding(.top, 6)
+                        }
+
+                        if let error = downloadErrors[model.id] ?? downloadStatuses[model.id]?.errorMessage {
+                            Text(verbatim: error)
                                 .font(.footnote)
                                 .foregroundStyle(.red)
                         }
-
                     }
 
                     Spacer(minLength: 8)
@@ -123,21 +164,24 @@
         @ViewBuilder
         private func accessory(for model: RecognitionModelDescriptor) -> some View {
             if isDownloading(model) {
-                downloadProgressRing(progress: downloadProgress[model.id])
+                downloadProgressRing(progress: downloadStatuses[model.id]?.fractionCompleted)
             } else if isSelected(model) {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
                     .foregroundStyle(.tint)
             } else if isAvailable(model), !isCached(model) {
-                Label("Download", systemImage: "arrow.down")
-                    .labelStyle(.titleAndIcon)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                    .foregroundStyle(.tint)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.tint.opacity(0.15), in: Capsule())
-                    .opacity(isDisabled ? 0.5 : 1)
+                Label(
+                    hasDownloadError(model) ? "Retry" : "Download",
+                    systemImage: hasDownloadError(model) ? "arrow.clockwise" : "arrow.down"
+                )
+                .labelStyle(.titleAndIcon)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .foregroundStyle(.tint)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.tint.opacity(0.15), in: Capsule())
+                .opacity(isDisabled ? 0.5 : 1)
             }
         }
 
@@ -172,7 +216,11 @@
             if isDownloading(model) {
                 cancelDownload(model)
             } else if !isCached(model) {
-                download(model)
+                if hasDownloadError(model) {
+                    download(model)
+                } else {
+                    pendingDownload = model
+                }
             } else {
                 use(model)
             }
@@ -190,8 +238,8 @@
             return nil
         }
 
-        private var hasActiveDownloads: Bool {
-            !downloadTasks.isEmpty || !downloadProgress.isEmpty
+        private func hasDownloadError(_ model: RecognitionModelDescriptor) -> Bool {
+            downloadErrors[model.id] != nil || downloadStatuses[model.id]?.phase == .failed
         }
 
         private func isAvailable(_ model: RecognitionModelDescriptor) -> Bool {
@@ -209,7 +257,7 @@
         }
 
         private func isDownloading(_ model: RecognitionModelDescriptor) -> Bool {
-            downloadTasks[model.id] != nil || downloadProgress[model.id] != nil
+            downloadTasks[model.id] != nil || downloadStatuses[model.id]?.isActive == true
         }
 
         private func canDelete(_ model: RecognitionModelDescriptor) -> Bool {
@@ -230,27 +278,28 @@
 
         private func refreshModelState() async {
             var cachedIDs = Set<String>()
-            var progress: [String: Double] = [:]
+            var statuses: [String: RecognitionModelDownloadStatus] = [:]
             for model in models {
                 if await RecognitionModelStore.shared.isModelCached(model) {
                     cachedIDs.insert(model.id)
                 }
-                if let value = await RecognitionModelStore.shared.downloadProgress(for: model) {
-                    progress[model.id] = value
+                if let value = await RecognitionModelStore.shared.downloadStatus(for: model) {
+                    statuses[model.id] = value
                 }
             }
             cachedModelIDs = cachedIDs
-            downloadProgress = progress
+            downloadStatuses = statuses
         }
 
         private func download(_ model: RecognitionModelDescriptor) {
             downloadErrors[model.id] = nil
+            downloadStatuses[model.id] = RecognitionModelDownloadStatus()
             downloadTasks[model.id] = Task {
                 do {
                     try await RecognitionModelStore.shared.downloadModel(model)
                 } catch {
                     if !RealtimeSessionStore.isCancellationError(error) {
-                        downloadErrors[model.id] = Self.shortErrorDescription(error)
+                        downloadErrors[model.id] = RecognitionModelDownloadStatus.failureMessage(for: error)
                     }
                 }
                 downloadTasks[model.id] = nil

@@ -5,9 +5,8 @@
 
 #if os(macOS) || os(iOS)
     import Foundation
-    import Testing
-
     @testable import ShareCore
+    import Testing
 
     @Suite("RecognitionModelStore")
     struct RecognitionModelStoreTests {
@@ -206,6 +205,11 @@
                 Issue.record("Unexpected error: \(error)")
             }
 
+            let status = await store.downloadStatus(for: model)
+            #expect(status?.phase == .failed)
+            #expect(status?.errorMessage?.isEmpty == false)
+            #expect(await store.downloadProgress(for: model) == nil)
+
             try? FileManager.default.removeItem(at: cacheURL)
             try? FileManager.default.removeItem(at: sourceURL)
         }
@@ -227,6 +231,8 @@
 
             #expect(urls[0] == urls[1])
             #expect(await store.isModelCached(model))
+            #expect(await store.downloadStatus(for: model)?.phase == .completed)
+            #expect(await store.downloadProgress(for: model) == nil)
 
             try? FileManager.default.removeItem(at: cacheURL)
             try? FileManager.default.removeItem(at: sourceURL)

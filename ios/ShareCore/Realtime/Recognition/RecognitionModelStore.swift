@@ -83,7 +83,8 @@
         private let fileManager: FileManager
         private let cacheDirectory: URL
         private let downloader = RecognitionModelDownloader()
-        private var downloadProgress: [String: Double] = [:]
+        private var downloadStatuses: [String: RecognitionModelDownloadStatus] = [:]
+        private var downloadMetrics: [String: RecognitionModelDownloadMetrics] = [:]
         private var downloadTasks: [String: Task<URL, Error>] = [:]
         #if os(iOS)
             private var backgroundActivities: [String: BackgroundDownloadActivity] = [:]
@@ -184,7 +185,12 @@
         }
 
         public func downloadProgress(for model: RecognitionModelDescriptor) -> Double? {
-            downloadProgress[model.id]
+            guard let status = downloadStatuses[model.id], status.isActive else { return nil }
+            return status.fractionCompleted
+        }
+
+        public func downloadStatus(for model: RecognitionModelDescriptor) -> RecognitionModelDownloadStatus? {
+            downloadStatuses[model.id]
         }
 
         public func cachedModels(
@@ -217,7 +223,25 @@
                 return try await task.value
             }
 
+            downloadStatuses[model.id] = RecognitionModelDownloadStatus()
+            downloadMetrics[model.id] = RecognitionModelDownloadMetrics()
             let task = Task {
+                #if os(iOS)
+                    let activity = await BackgroundDownloadActivity(
+                        title: model.title,
+                        onExpire: { Task { await self.cancelDownload(model) } }
+                    )
+                    backgroundActivities[model.id] = activity
+                    downloadStatuses[model.id]?.requiresForeground = await activity.requiresForeground
+                #endif
+                let monitor = Task {
+                    while !Task.isCancelled {
+                        sampleDownloadMetrics(for: model)
+                        try? await Task.sleep(for: .seconds(1))
+                    }
+                }
+                defer { monitor.cancel() }
+                try Task.checkCancellation()
                 switch download {
                 case let .directFile(directDownload):
                     return try await downloadDirectModel(model, download: directDownload)
@@ -228,25 +252,23 @@
                 }
             }
             downloadTasks[model.id] = task
-            #if os(iOS)
-                // Downloads start from a tap, so they can continue in the background until done.
-                let backgroundActivity = await BackgroundDownloadActivity(
-                    title: String(localized: "Downloading \(model.title)"),
-                    onExpire: { task.cancel() }
-                )
-                backgroundActivities[model.id] = backgroundActivity
-            #endif
             defer {
                 downloadTasks[model.id] = nil
+                downloadMetrics[model.id] = nil
             }
             do {
                 let url = try await task.value
+                downloadStatuses[model.id]?.phase = .completed
+                downloadStatuses[model.id]?.fractionCompleted = 1
                 #if os(iOS)
                     await finishBackgroundActivity(for: model.id, success: true)
                 #endif
-                try Task.checkCancellation()
                 return url
             } catch {
+                let cancelled = RealtimeSessionStore.isCancellationError(error)
+                downloadStatuses[model.id]?.phase = cancelled ? .cancelled : .failed
+                downloadStatuses[model.id]?.errorMessage = cancelled ? nil : RecognitionModelDownloadStatus
+                    .failureMessage(for: error)
                 #if os(iOS)
                     await finishBackgroundActivity(for: model.id, success: false)
                 #endif
@@ -257,7 +279,7 @@
         #if os(iOS)
             private func finishBackgroundActivity(for modelID: String, success: Bool) async {
                 guard let activity = backgroundActivities.removeValue(forKey: modelID) else { return }
-                await activity.end(success: success)
+                await activity.end(success: success, status: downloadStatuses[modelID])
             }
         #endif
 
@@ -279,32 +301,29 @@
             try fileManager.createDirectory(at: modelDirectory, withIntermediateDirectories: true)
             let destination = artifactURL(for: model)
 
-            downloadProgress[model.id] = 0
             do {
                 if download.url.isFileURL {
                     if fileManager.fileExists(atPath: destination.path) {
                         try fileManager.removeItem(at: destination)
                     }
                     try fileManager.copyItem(at: download.url, to: destination)
-                    downloadProgress[model.id] = 1
+                    setDownloadProgress(1, for: model.id, phase: .installing)
                 } else {
-                    try await downloader.download(from: download.url, to: destination) { [weak self] progress in
-                        Task { await self?.setDownloadProgress(progress, for: model.id) }
+                    try await downloader.download(from: download.url, to: destination) { [weak self] fraction, bytes, total in
+                        Task { await self?.setDownloadProgress(fraction, for: model.id, bytes: bytes, totalBytes: total) }
                     }
                 }
             } catch {
-                downloadProgress[model.id] = nil
                 throw error
             }
 
+            setDownloadProgress(1, for: model.id, phase: .installing)
             let actualChecksum = try sha256(for: destination)
             guard actualChecksum == download.sha256.lowercased() else {
                 try? fileManager.removeItem(at: destination)
-                downloadProgress[model.id] = nil
                 throw RecognitionModelStoreError.checksumMismatch(expected: download.sha256, actual: actualChecksum)
             }
 
-            downloadProgress[model.id] = nil
             return modelDirectory
         }
 
@@ -312,11 +331,57 @@
             cachedModelURL(for: model).appendingPathComponent("artifact", isDirectory: false)
         }
 
-        private func setDownloadProgress(_ progress: Double, for modelID: String) {
-            downloadProgress[modelID] = progress
+        private func setDownloadProgress(
+            _ progress: Double,
+            for modelID: String,
+            phase: RecognitionModelDownloadStatus.Phase = .downloading,
+            bytes: Int64? = nil,
+            totalBytes: Int64? = nil
+        ) {
+            guard var status = downloadStatuses[modelID], status.isActive else { return }
+            if status.phase == .installing, phase != .installing {
+                return
+            }
+            status.fractionCompleted = max(status.fractionCompleted, min(max(progress.isFinite ? progress : 0, 0), 1))
+            status.phase = phase
+            if let bytes {
+                status.downloadedBytes = bytes
+            }
+            if let totalBytes, totalBytes > 0 {
+                status.totalBytes = totalBytes
+            }
+            if phase != .downloading {
+                status.bytesPerSecond = nil
+                status.remainingSeconds = nil
+            }
+            downloadStatuses[modelID] = status
+        }
+
+        private func sampleDownloadMetrics(for model: RecognitionModelDescriptor) {
+            guard var status = downloadStatuses[model.id], status.isActive else { return }
+            let bytes: Int64
+            if case .directFile = model.download {
+                bytes = status.downloadedBytes
+            } else {
+                let keys: [URLResourceKey] = [.fileSizeKey, .isRegularFileKey]
+                let files = fileManager.enumerator(
+                    at: cachedModelURL(for: model),
+                    includingPropertiesForKeys: keys,
+                    options: [.skipsHiddenFiles]
+                )
+                bytes = files?.reduce(Int64(0)) { total, item in
+                    guard let url = item as? URL, url.pathExtension != "etag",
+                          let values = try? url.resourceValues(forKeys: Set(keys)),
+                          values.isRegularFile == true
+                    else { return total }
+                    return total + Int64(values.fileSize ?? 0)
+                } ?? 0
+            }
+            downloadMetrics[model.id]?.sample(&status, bytes: bytes, at: ProcessInfo.processInfo.systemUptime)
+            downloadStatuses[model.id] = status
             #if os(iOS)
-                if let activity = backgroundActivities[modelID] {
-                    Task { @MainActor in activity.report(progress) }
+                if let activity = backgroundActivities[model.id] {
+                    Task { @MainActor in activity.report(status) }
                 }
             #endif
         }
@@ -435,7 +500,6 @@
                 let modelDirectory = cachedModelURL(for: descriptor)
                 try fileManager.createDirectory(at: modelDirectory, withIntermediateDirectories: true)
 
-                downloadProgress[descriptor.id] = 0
                 await selectModelRegistryIfNeeded()
                 let config = DownloadConfig(timeout: Self.downloadIdleTimeout)
                 do {
@@ -451,15 +515,11 @@
                             config: config,
                             progressHandler: { [weak self] progress in
                                 Task {
-                                    await self?.setDownloadProgress(
-                                        progress.fractionCompleted,
-                                        for: descriptor.id
-                                    )
+                                    await self?.setFluidAudioProgress(progress, for: descriptor.id, downloadWeight: 1)
                                 }
                             },
                             shouldSkip: { $0.contains(".mlpackage") }
                         )
-                        downloadProgress[descriptor.id] = nil
                         return repoDirectory.appendingPathComponent("multilingual/2240ms", isDirectory: true)
                     }
 
@@ -482,21 +542,34 @@
                         to: modelDirectory,
                         config: config,
                         progressHandler: { [weak self] progress in
-                            Task { await self?.setDownloadProgress(progress.fractionCompleted, for: descriptor.id) }
+                            Task { await self?.setFluidAudioProgress(progress, for: descriptor.id, downloadWeight: 0.5) }
                         }
                     )
                 } catch {
-                    downloadProgress[descriptor.id] = nil
                     throw error
                 }
 
-                downloadProgress[descriptor.id] = nil
                 return modelDirectory
             #else
                 throw RecognitionModelStoreError.unsupportedRuntime(descriptor.id)
             #endif
         }
     }
+
+    #if arch(arm64) && canImport(FluidAudio)
+        private extension RecognitionModelStore {
+            func setFluidAudioProgress(_ progress: DownloadProgress, for modelID: String, downloadWeight: Double) {
+                switch progress.phase {
+                case .listing:
+                    setDownloadProgress(0, for: modelID, phase: .preparing)
+                case .downloading:
+                    setDownloadProgress(progress.fractionCompleted / downloadWeight, for: modelID)
+                case .compiling:
+                    setDownloadProgress(1, for: modelID, phase: .installing)
+                }
+            }
+        }
+    #endif
 
     private extension RecognitionModelStore {
         func isHuggingFaceSnapshotCached(at directory: URL) -> Bool {
@@ -517,8 +590,6 @@
         ) async throws -> URL {
             #if os(macOS) && arch(arm64) && canImport(MLXAudioSTT)
                 let modelDirectory = cachedModelURL(for: descriptor)
-                downloadProgress[descriptor.id] = 0
-                defer { downloadProgress[descriptor.id] = nil }
                 try await RealtimeR2T2Recognizer.downloadSnapshot(repoID: repoID, to: modelDirectory) {
                     [weak self] fraction in
                     Task { await self?.setDownloadProgress(fraction, for: descriptor.id) }
@@ -566,67 +637,93 @@
 
             private var continuedTask: BGContinuedProcessingTask?
             private var fallbackIdentifier: UIBackgroundTaskIdentifier = .invalid
-            private var fractionCompleted = 0.0
+            var requiresForeground: Bool {
+                fallbackIdentifier != .invalid
+            }
+
+            private let modelTitle: String
+            private var status = RecognitionModelDownloadStatus()
             /// Set when the download ends before the system launches the continued task.
             private var completedSuccessfully: Bool?
 
             init(title: String, onExpire: @escaping @Sendable () -> Void) {
+                modelTitle = title
                 let identifier = Self.identifierPrefix + UUID().uuidString
-                let isRegistered = BGTaskScheduler.shared.register(forTaskWithIdentifier: identifier, using: .main) { [weak self] task in
-                    guard let task = task as? BGContinuedProcessingTask else {
-                        task.setTaskCompleted(success: false)
-                        return
-                    }
-                    task.expirationHandler = onExpire
-                    MainActor.assumeIsolated {
-                        guard let self else {
+                let isRegistered = BGTaskScheduler.shared
+                    .register(forTaskWithIdentifier: identifier, using: .main) { [weak self] task in
+                        guard let task = task as? BGContinuedProcessingTask else {
                             task.setTaskCompleted(success: false)
                             return
                         }
-                        self.start(task)
+                        task.expirationHandler = onExpire
+                        MainActor.assumeIsolated {
+                            guard let self else {
+                                task.setTaskCompleted(success: false)
+                                return
+                            }
+                            self.start(task)
+                        }
                     }
-                }
-                let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: title, subtitle: "")
+                let request = BGContinuedProcessingTaskRequest(
+                    identifier: identifier,
+                    title: title,
+                    subtitle: status.phaseDescription
+                )
                 request.strategy = .fail
                 do {
                     guard isRegistered else { throw CocoaError(.featureUnsupported) }
                     try BGTaskScheduler.shared.submit(request)
                 } catch {
                     RealtimeLog.warn("model", "continued download task unavailable error=\(error); using short background time")
-                    fallbackIdentifier = UIApplication.shared.beginBackgroundTask(withName: "RecognitionModelDownload") { [weak self] in
-                        onExpire()
-                        self?.endFallback()
-                    }
+                    fallbackIdentifier = UIApplication.shared
+                        .beginBackgroundTask(withName: "RecognitionModelDownload") { [weak self] in
+                            onExpire()
+                            self?.endFallback()
+                        }
                 }
             }
 
-            func report(_ fraction: Double) {
-                fractionCompleted = fraction
-                guard let progress = continuedTask?.progress else { return }
-                progress.completedUnitCount = Int64((fraction * Double(progress.totalUnitCount)).rounded())
+            func report(_ status: RecognitionModelDownloadStatus) {
+                guard completedSuccessfully == nil else { return }
+                self.status = status
+                guard let task = continuedTask else { return }
+                let fraction = status.phase == .installing ? 0.99 : min(status.fractionCompleted, 0.98)
+                task.progress.completedUnitCount = Int64((fraction * Double(task.progress.totalUnitCount)).rounded())
+                task.updateTitle(modelTitle, subtitle: status.activityDescription)
             }
 
-            func end(success: Bool) {
+            func end(success: Bool, status: RecognitionModelDownloadStatus?) {
+                completedSuccessfully = success
+                if let status {
+                    self.status = status
+                }
                 endFallback()
                 guard let continuedTask else {
-                    completedSuccessfully = success
                     return
                 }
                 self.continuedTask = nil
                 if success {
                     continuedTask.progress.completedUnitCount = continuedTask.progress.totalUnitCount
                 }
+                continuedTask.updateTitle(
+                    "\(self.status.phaseDescription) · \(modelTitle)",
+                    subtitle: self.status.errorMessage ?? modelTitle
+                )
                 continuedTask.setTaskCompleted(success: success)
             }
 
             private func start(_ task: BGContinuedProcessingTask) {
-                task.progress.totalUnitCount = 100
+                task.progress.totalUnitCount = 10000
                 if let completedSuccessfully {
+                    if completedSuccessfully {
+                        task.progress.completedUnitCount = task.progress.totalUnitCount
+                    }
+                    task.updateTitle("\(status.phaseDescription) · \(modelTitle)", subtitle: status.errorMessage ?? modelTitle)
                     task.setTaskCompleted(success: completedSuccessfully)
                     return
                 }
                 continuedTask = task
-                report(fractionCompleted)
+                report(status)
             }
 
             private func endFallback() {
@@ -650,7 +747,7 @@
     private final class RecognitionModelDownloader: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
         private struct DownloadState {
             let destination: URL
-            let progress: (Double) -> Void
+            let progress: @Sendable (Double, Int64, Int64?) -> Void
             let continuation: CheckedContinuation<Void, Error>
             var isResolved = false
         }
@@ -662,7 +759,7 @@
         func download(
             from url: URL,
             to destination: URL,
-            progress: @escaping (Double) -> Void
+            progress: @escaping @Sendable (Double, Int64, Int64?) -> Void
         ) async throws {
             let task = session.downloadTask(with: url)
             try await withTaskCancellationHandler {
@@ -688,12 +785,12 @@
             totalBytesWritten: Int64,
             totalBytesExpectedToWrite: Int64
         ) {
-            guard totalBytesExpectedToWrite > 0 else { return }
-            let progress = min(max(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite), 0), 1)
+            let total = totalBytesExpectedToWrite > 0 ? totalBytesExpectedToWrite : nil
+            let progress = total.map { min(max(Double(totalBytesWritten) / Double($0), 0), 1) } ?? 0
             lock.lock()
             let state = states[downloadTask.taskIdentifier]
             lock.unlock()
-            state?.progress(progress)
+            state?.progress(progress, totalBytesWritten, total)
         }
 
         func urlSession(
@@ -711,13 +808,17 @@
             lock.unlock()
 
             do {
+                if let response = downloadTask.response as? HTTPURLResponse, !(200 ... 299).contains(response.statusCode) {
+                    throw URLError(.badServerResponse)
+                }
                 let parent = current.destination.deletingLastPathComponent()
                 try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
                 if FileManager.default.fileExists(atPath: current.destination.path) {
                     try FileManager.default.removeItem(at: current.destination)
                 }
                 try FileManager.default.moveItem(at: location, to: current.destination)
-                current.progress(1)
+                let size = (try? current.destination.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+                current.progress(1, Int64(size), Int64(size))
                 current.continuation.resume()
             } catch {
                 current.continuation.resume(throwing: error)
