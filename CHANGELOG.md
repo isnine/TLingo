@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [5.7.4] - 2026-11-09
+## [5.7.4] - 2026-11-12
 
 ### Added
 
 - Support custom OpenAI-compatible endpoints
+
+### Improved
+
+- Sync custom endpoints with iCloud Keychain
+- Move model picker to footer in quick panel
+- [Mac] Move run hint under quick panel placeholder
+- Show first completed result first by default
+
+### Fixed
+
+- Open What's New at half height without clipped buttons
 
 ## [5.7.3] - 2026-11-01
 

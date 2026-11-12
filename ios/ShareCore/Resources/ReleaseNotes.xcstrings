@@ -2876,6 +2876,256 @@
         }
       }
     },
+    "Move model picker to footer in quick panel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نقل منتقي النماذج إلى تذييل اللوحة السريعة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyt modelvælgeren til sidefoden i hurtigpanelet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellauswahl in die Fußzeile des Schnellpanels verschieben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move model picker to footer in quick panel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover el selector de modelo al pie del panel rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer le sélecteur de modèle vers le pied du panneau rapide"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pindahkan pemilih model ke footer di panel cepat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta il selettore del modello nel piè di pagina del pannello rapido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルピッカーをクイックパネルのフッターに移動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 선택기를 빠른 패널 하단으로 이동"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alihkan pemilih model ke pengaki dalam panel pantas"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytt modellvelgeren til bunnteksten i hurtigpanelet"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelkiezer naar de voettekst van het snelle paneel verplaatsen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przenieś selektor modelu do stopki w panelu szybkim"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover o seletor de modelo para o rodapé do painel rápido"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytta modellväljaren till sidfoten i snabbpanelen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model seçiciyi hızlı panelin alt bilgisine taşı"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將模型選擇器移至快速面板的頁腳"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将模型选择器移至快速面板的页脚"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將模型選擇器移至快速面板的頁尾"
+          }
+        }
+      }
+    },
+    "Move run hint under quick panel placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نقل تلميح التشغيل إلى أسفل العنصر النائب في اللوحة السريعة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyt kørselshintet under pladsholderen i hurtigpanelet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungshinweis unter den Platzhalter des Schnellpanels verschieben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move run hint under quick panel placeholder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover la indicación de ejecución debajo del marcador de posición del panel rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer l’indication d’exécution sous l’espace réservé du panneau rapide"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pindahkan petunjuk jalankan ke bawah placeholder panel cepat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta il suggerimento di esecuzione sotto il segnaposto del pannello rapido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実行ヒントをクイックパネルのプレースホルダーの下に移動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 힌트를 빠른 패널 플레이스홀더 아래로 이동"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alihkan petunjuk larian di bawah pemegang tempat panel pantas"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytt kjøretipset under plassholderen i hurtigpanelet"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitvoerhint onder de tijdelijke aanduiding van het snelle paneel verplaatsen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przenieś podpowiedź uruchamiania pod symbol zastępczy panelu szybkiego"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover a dica de execução para baixo do placeholder do painel rápido"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytta körningstipset under platshållaren i snabbpanelen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalıştırma ipucunu hızlı panel yer tutucusunun altına taşı"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將執行提示移至快速面板預留位置下方"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将运行提示移至快速面板占位符下方"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將執行提示移至快速面板預留位置下方"
+          }
+        }
+      }
+    },
     "Moved model reordering into the model picker sheet, with its own reset and done actions." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3247,6 +3497,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全新安裝預設啟用 Microsoft Translate 和第一個免費 AI 模型，結果預設按模型清單順序排列。"
+          }
+        }
+      }
+    },
+    "Open What's New at half height without clipped buttons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح \"ما الجديد\" بنصف الارتفاع دون اقتطاع الأزرار"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn \"Nyheder\" i halv højde uden afklippede knapper"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Neuigkeiten\" in halber Höhe öffnen, ohne abgeschnittene Schaltflächen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open What's New at half height without clipped buttons"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir \"Novedades\" a media altura sin que los botones se recorten"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir « Nouveautés » à mi-hauteur sans boutons coupés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka \"Apa yang Baru\" setengah tinggi tanpa tombol terpotong"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri \"Novità\" a metà altezza senza pulsanti tagliati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「新機能」を半分の高さで開き、ボタンが切れないようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"새로운 기능\"을 절반 높이로 열고 버튼이 잘리지 않도록"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka \"Apa yang Baharu\" pada separuh tinggi tanpa butang terpotong"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpne \"Nyheter\" i halv høyde uten avkuttede knapper"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Wat is er nieuw\" op halve hoogte openen zonder afgesneden knoppen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwieraj „Nowości” na połowie wysokości bez przyciętych przycisków"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir \"Novidades\" na metade da altura sem botões cortados"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna \"Nyheter\" på halva höjden utan avklippta knappar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Yenilikler\"i yarım yükseklikte aç, düğmeler kesilmesin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以半高開啟「新功能」，按鈕不被裁切"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以半高打开“新功能”，按钮不被裁切"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以半高開啟「新功能」，按鈕不被裁切"
           }
         }
       }
@@ -4251,6 +4626,131 @@
         }
       }
     },
+    "Show first completed result first by default" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض أول نتيجة مكتملة أولاً افتراضيًا"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis det første fuldførte resultat først som standard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das zuerst abgeschlossene Ergebnis standardmäßig zuerst anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show first completed result first by default"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el primer resultado completado primero de forma predeterminada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher par défaut le premier résultat terminé en premier"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan hasil pertama yang selesai lebih dulu secara default"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra il primo risultato completato per primo per impostazione predefinita"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最初に完了した結果をデフォルトで先頭に表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본적으로 가장 먼저 완료된 결과를 먼저 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tunjukkan hasil pertama yang selesai dahulu secara lalai"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis det første fullførte resultatet først som standard"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon standaard het eerst voltooide resultaat als eerste"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślnie pokazuj pierwszy ukończony wynik jako pierwszy"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar o primeiro resultado concluído primeiro por padrão"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa det första slutförda resultatet först som standard"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk tamamlanan sonucu varsayılan olarak önce göster"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設優先顯示首個完成的結果"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认优先显示首个完成的结果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設優先顯示第一個完成的結果"
+          }
+        }
+      }
+    },
     "Stabilized realtime captions during translation updates and added pause-based sentence breaks." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4622,6 +5122,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "支援自訂 OpenAI 相容端點"
+          }
+        }
+      }
+    },
+    "Sync custom endpoints with iCloud Keychain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مزامنة نقاط النهاية المخصصة مع iCloud Keychain"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synkroniser brugerdefinerede endpoints med iCloud Keychain"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Endpunkte mit iCloud Keychain synchronisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync custom endpoints with iCloud Keychain"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar endpoints personalizados con iCloud Keychain"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchroniser les points de terminaison personnalisés avec iCloud Keychain"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinkronkan endpoint kustom dengan iCloud Keychain"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizza gli endpoint personalizzati con iCloud Keychain"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カスタムエンドポイントをiCloudキーチェーンと同期"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 지정 엔드포인트를 iCloud 키체인과 동기화"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segerakkan titik akhir tersuai dengan iCloud Keychain"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synkroniser egendefinerte endepunkter med iCloud Keychain"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepaste endpoints synchroniseren met iCloud-sleutelhanger"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronizuj niestandardowe punkty końcowe z iCloud Keychain"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar endpoints personalizados com o iCloud Keychain"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synkronisera anpassade slutpunkter med iCloud-nyckelringen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özel uç noktaları iCloud Anahtarlığı ile eşitle"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將自訂端點與 iCloud 鑰匙串同步"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将自定义端点与 iCloud 钥匙串同步"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將自訂端點與 iCloud 鑰匙圈同步"
           }
         }
       }

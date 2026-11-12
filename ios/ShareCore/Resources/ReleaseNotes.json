@@ -6,6 +6,29 @@
         {
           "kind": "added",
           "text": "Support custom OpenAI-compatible endpoints"
+        },
+        {
+          "kind": "improved",
+          "text": "Sync custom endpoints with iCloud Keychain"
+        },
+        {
+          "kind": "improved",
+          "text": "Move model picker to footer in quick panel"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Move run hint under quick panel placeholder"
+        },
+        {
+          "kind": "improved",
+          "text": "Show first completed result first by default"
+        },
+        {
+          "kind": "fixed",
+          "text": "Open What's New at half height without clipped buttons"
         }
       ]
     },
