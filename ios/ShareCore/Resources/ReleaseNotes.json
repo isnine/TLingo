@@ -8,27 +8,56 @@
           "text": "Support custom OpenAI-compatible endpoints"
         },
         {
-          "kind": "improved",
-          "text": "Sync custom endpoints with iCloud Keychain"
+          "kind": "added",
+          "text": "Customize realtime caption fonts, spacing, and colors"
+        },
+        {
+          "kind": "added",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Adjust floating caption background opacity"
         },
         {
           "kind": "improved",
-          "text": "Move model picker to footer in quick panel"
+          "text": "Sync custom endpoints with iCloud Keychain"
         },
         {
           "kind": "improved",
           "platforms": [
             "macos"
           ],
-          "text": "Move run hint under quick panel placeholder"
+          "text": "Move model picker to the quick panel footer and show the run hint beside the placeholder"
         },
         {
           "kind": "improved",
           "text": "Show first completed result first by default"
         },
         {
+          "kind": "improved",
+          "text": "Remember caption display mode across realtime sessions"
+        },
+        {
+          "kind": "improved",
+          "text": "Show model download speed, remaining time, and clearer retry guidance"
+        },
+        {
           "kind": "fixed",
           "text": "Open What's New at half height without clipped buttons"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Keep Picture in Picture captions ready when switching to the background"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Keep the newest bilingual caption pair visible in compact Picture in Picture"
         }
       ]
     },

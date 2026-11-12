@@ -1001,6 +1001,131 @@
         }
       }
     },
+    "Adjust floating caption background opacity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ضبط عتامة خلفية الترجمة العائمة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juster gennemsigtigheden af baggrunden for flydende undertekster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckkraft des Hintergrunds für schwebende Untertitel anpassen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust floating caption background opacity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar la opacidad del fondo de los subtítulos flotantes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajuster l’opacité de l’arrière-plan des sous-titres flottants"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesuaikan opasitas latar belakang takarir mengambang"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regola l'opacità dello sfondo dei sottotitoli flottanti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フローティング字幕の背景の不透明度を調整"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "플로팅 자막 배경 불투명도 조정"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laraskan kelegapan latar belakang kapsyen terapung"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juster gjennomsiktigheten til bakgrunnen for flytende undertekster"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas de dekking van de achtergrond van zwevende ondertitels aan"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostosuj krycie tła pływających napisów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar a opacidade do plano de fundo das legendas flutuantes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Justera ogenomskinligheten för bakgrunden till flytande undertexter"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yüzen altyazı arka planı opaklığını ayarla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "調整浮動字幕背景不透明度"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整浮动字幕背景不透明度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "調整浮動字幕背景不透明度"
+          }
+        }
+      }
+    },
     "Allowed more Apple Speech languages and repaired Apple Translate download routing." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1497,6 +1622,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "繼續在背景中使用系統進度下載本機語音模型。"
+          }
+        }
+      }
+    },
+    "Customize realtime caption fonts, spacing, and colors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تخصيص خطوط الترجمات الفورية والتباعد والألوان"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilpas skrifttyper, afstand og farver for realtidsundertekster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schriftarten, Abstände und Farben für Echtzeit-Untertitel anpassen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize realtime caption fonts, spacing, and colors"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizar las fuentes, el espaciado y los colores de los subtítulos en tiempo real"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personnaliser les polices, l’espacement et les couleurs des sous-titres en temps réel"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesuaikan font, spasi, dan warna takarir real-time"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizza caratteri, spaziatura e colori dei sottotitoli in tempo reale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム字幕のフォント、間隔、色をカスタマイズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 자막의 글꼴, 간격 및 색상 사용자화"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesuaikan fon, jarak dan warna kapsyen masa nyata"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilpass skrifttyper, avstand og farger for sanntidsundertekster"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas lettertypen, afstand en kleuren van realtime-ondertitels aan"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostosuj czcionki, odstępy i kolory napisów w czasie rzeczywistym"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizar fontes, espaçamento e cores das legendas em tempo real"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anpassa teckensnitt, avstånd och färger för realtidsundertexter"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı altyazı yazı tiplerini, aralıklarını ve renklerini özelleştir"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂即時字幕的字型、間距和顏色"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义实时字幕的字体、间距和颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂即時字幕的字型、間距和顏色"
           }
         }
       }
@@ -2251,6 +2501,256 @@
         }
       }
     },
+    "Keep Picture in Picture captions ready when switching to the background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أبقِ ترجمات صورة داخل صورة جاهزة عند التبديل إلى الخلفية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold Picture in Picture-undertekster klar, når du skifter til baggrunden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture-in-Picture-Untertitel bereithalten, wenn in den Hintergrund gewechselt wird"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Picture in Picture captions ready when switching to the background"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener los subtítulos de imagen en imagen listos al cambiar al segundo plano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder les sous-titres de l’incrustation vidéo prêts lors du passage en arrière-plan"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siapkan takarir Picture in Picture saat beralih ke latar belakang"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni pronti i sottotitoli Picture in Picture quando passi in background"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックグラウンドに切り替えたときにピクチャ・イン・ピクチャ字幕を準備しておく"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "백그라운드로 전환할 때 PIP 자막을 준비 상태로 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan kapsyen Picture in Picture sedia apabila beralih ke latar belakang"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold Picture in Picture-undertekster klare når du bytter til bakgrunnen"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd Picture in Picture-ondertitels gereed wanneer je naar de achtergrond schakelt"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymuj napisy Picture in Picture gotowe przy przełączaniu w tło"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter as legendas de Picture in Picture prontas ao alternar para o segundo plano"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll Picture in Picture-undertexter redo när du växlar till bakgrunden"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka plana geçerken Picture in Picture altyazılarını hazır tut"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換至背景時保持子母畫面字幕就緒"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换到后台时保持画中画字幕就绪"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換至背景時保持子母畫面字幕就緒"
+          }
+        }
+      }
+    },
+    "Keep the newest bilingual caption pair visible in compact Picture in Picture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أبقِ أحدث زوج ترجمات ثنائي اللغة ظاهرًا في وضع صورة داخل صورة المدمج"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold det nyeste tosprogede undertekstpar synligt i kompakt Picture in Picture"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das neueste zweisprachige Untertitelpaar in kompaktem Picture-in-Picture sichtbar halten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the newest bilingual caption pair visible in compact Picture in Picture"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener visible el par de subtítulos bilingües más reciente en la imagen en imagen compacta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder la plus récente paire de sous-titres bilingues visible dans l’incrustation vidéo compacte"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tetap tampilkan pasangan takarir bilingual terbaru di Picture in Picture ringkas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni visibile la coppia di sottotitoli bilingui più recente nel Picture in Picture compatto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンパクトなピクチャ・イン・ピクチャで最新のバイリンガル字幕ペアを表示したままにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컴팩트 PIP에서 최신 이중 언어 자막 쌍을 계속 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan pasangan kapsyen dwibahasa terbaharu kelihatan dalam Picture in Picture padat"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold det nyeste tospråklige undertekstparet synlig i kompakt Picture in Picture"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd het nieuwste tweetalige ondertitelpaar zichtbaar in compacte Picture in Picture"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymuj najnowszą parę napisów dwujęzycznych widoczną w kompaktowym Picture in Picture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter o par de legendas bilíngues mais recente visível no Picture in Picture compacto"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll det senaste tvåspråkiga undertextparet synligt i kompakt Picture in Picture"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompakt Picture in Picture içinde en yeni iki dilli altyazı çiftini görünür tut"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在精簡子母畫面中保持最新雙語字幕對可見"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在精简画中画中保持最新双语字幕对可见"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在精簡子母畫面中保持最新雙語字幕對可見"
+          }
+        }
+      }
+    },
     "Kept iPhone Audio recognition and History running in the background even when Picture in Picture is off." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2876,252 +3376,127 @@
         }
       }
     },
-    "Move model picker to footer in quick panel" : {
+    "Move model picker to the quick panel footer and show the run hint beside the placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "نقل منتقي النماذج إلى تذييل اللوحة السريعة"
+            "value" : "نقل منتقي النماذج إلى تذييل اللوحة السريعة وإظهار تلميح التشغيل بجانب النص النائب"
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Flyt modelvælgeren til sidefoden i hurtigpanelet"
+            "value" : "Flyt modelvælgeren til sidefoden i hurtigpanelet, og vis kørselshintet ved siden af pladsholderen"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modellauswahl in die Fußzeile des Schnellpanels verschieben"
+            "value" : "Modellauswahl in die Fußzeile des Schnellpanels verschieben und den Ausführungshinweis neben dem Platzhalter anzeigen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move model picker to footer in quick panel"
+            "value" : "Move model picker to the quick panel footer and show the run hint beside the placeholder"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mover el selector de modelo al pie del panel rápido"
+            "value" : "Mover el selector de modelo al pie del panel rápido y mostrar la sugerencia de ejecución junto al marcador de posición"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Déplacer le sélecteur de modèle vers le pied du panneau rapide"
+            "value" : "Déplacer le sélecteur de modèle vers le pied du panneau rapide et afficher l’indication d’exécution à côté de l’espace réservé"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pindahkan pemilih model ke footer di panel cepat"
+            "value" : "Pindahkan pemilih model ke footer panel cepat dan tampilkan petunjuk jalankan di samping placeholder"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sposta il selettore del modello nel piè di pagina del pannello rapido"
+            "value" : "Sposta il selettore del modello nel piè di pagina del pannello rapido e mostra il suggerimento di esecuzione accanto al segnaposto"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "モデルピッカーをクイックパネルのフッターに移動"
+            "value" : "モデルピッカーをクイックパネルのフッターに移動し、プレースホルダーの横に実行ヒントを表示"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모델 선택기를 빠른 패널 하단으로 이동"
+            "value" : "모델 선택기를 빠른 패널 하단으로 이동하고 플레이스홀더 옆에 실행 힌트 표시"
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alihkan pemilih model ke pengaki dalam panel pantas"
+            "value" : "Alihkan pemilih model ke pengaki panel pantas dan tunjukkan petunjuk jalankan di sebelah pemegang tempat"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Flytt modellvelgeren til bunnteksten i hurtigpanelet"
+            "value" : "Flytt modellvelgeren til bunnteksten i hurtigpanelet, og vis kjøretipset ved siden av plassholderen"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modelkiezer naar de voettekst van het snelle paneel verplaatsen"
+            "value" : "Verplaats de modelkiezer naar de voettekst van het snelle paneel en toon de uitvoerhint naast de tijdelijke aanduiding"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przenieś selektor modelu do stopki w panelu szybkim"
+            "value" : "Przenieś selektor modelu do stopki szybkiego panelu i pokaż podpowiedź uruchomienia obok symbolu zastępczego"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mover o seletor de modelo para o rodapé do painel rápido"
+            "value" : "Mover o seletor de modelo para o rodapé do painel rápido e mostrar a dica de execução ao lado do placeholder"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Flytta modellväljaren till sidfoten i snabbpanelen"
+            "value" : "Flytta modellväljaren till sidfoten i snabbpanelen och visa körningstipset bredvid platshållaren"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Model seçiciyi hızlı panelin alt bilgisine taşı"
+            "value" : "Model seçiciyi hızlı panelin alt bilgisine taşı ve çalıştırma ipucunu yer tutucunun yanında göster"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將模型選擇器移至快速面板的頁腳"
+            "value" : "將模型選擇器移至快速面板頁尾，並在預留位置旁顯示執行提示"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将模型选择器移至快速面板的页脚"
+            "value" : "将模型选择器移至快速面板页脚，并在占位符旁显示运行提示"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將模型選擇器移至快速面板的頁尾"
-          }
-        }
-      }
-    },
-    "Move run hint under quick panel placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "نقل تلميح التشغيل إلى أسفل العنصر النائب في اللوحة السريعة"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flyt kørselshintet under pladsholderen i hurtigpanelet"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ausführungshinweis unter den Platzhalter des Schnellpanels verschieben"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move run hint under quick panel placeholder"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mover la indicación de ejecución debajo del marcador de posición del panel rápido"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Déplacer l’indication d’exécution sous l’espace réservé du panneau rapide"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pindahkan petunjuk jalankan ke bawah placeholder panel cepat"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sposta il suggerimento di esecuzione sotto il segnaposto del pannello rapido"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "実行ヒントをクイックパネルのプレースホルダーの下に移動"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 힌트를 빠른 패널 플레이스홀더 아래로 이동"
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alihkan petunjuk larian di bawah pemegang tempat panel pantas"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flytt kjøretipset under plassholderen i hurtigpanelet"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uitvoerhint onder de tijdelijke aanduiding van het snelle paneel verplaatsen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przenieś podpowiedź uruchamiania pod symbol zastępczy panelu szybkiego"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mover a dica de execução para baixo do placeholder do painel rápido"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flytta körningstipset under platshållaren i snabbpanelen"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Çalıştırma ipucunu hızlı panel yer tutucusunun altına taşı"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將執行提示移至快速面板預留位置下方"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将运行提示移至快速面板占位符下方"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將執行提示移至快速面板預留位置下方"
+            "value" : "將模型選擇器移至快速面板頁尾，並在預留位置旁顯示執行提示"
           }
         }
       }
@@ -4626,6 +5001,131 @@
         }
       }
     },
+    "Remember caption display mode across realtime sessions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تذكر وضع عرض الترجمة عبر جلسات الوقت الفعلي"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Husk undertekstvisningstilstand på tværs af realtidssessioner"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untertitelanzeigemodus über Echtzeit-Sitzungen hinweg beibehalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remember caption display mode across realtime sessions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordar el modo de visualización de subtítulos entre sesiones en tiempo real"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mémoriser le mode d’affichage des sous-titres entre les sessions en temps réel"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingat mode tampilan takarir di seluruh sesi real-time"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricorda la modalità di visualizzazione dei sottotitoli tra le sessioni in tempo reale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイムセッション間で字幕表示モードを記憶"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 세션 전반에서 자막 표시 모드 기억"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingat mod paparan kapsyen merentas sesi masa nyata"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Husk undertekstvisningsmodus på tvers av sanntidsøkter"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onthoud de ondertitelweergavemodus tussen realtime-sessies"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapamiętuj tryb wyświetlania napisów między sesjami w czasie rzeczywistym"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lembrar o modo de exibição das legendas entre sessões em tempo real"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kom ihåg undertextvisningsläget mellan realtidssessioner"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı oturumlar arasında altyazı görüntüleme modunu hatırla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在即時工作階段之間記住字幕顯示模式"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在实时会话之间记住字幕显示模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在即時工作階段之間記住字幕顯示模式"
+          }
+        }
+      }
+    },
     "Show first completed result first by default" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4747,6 +5247,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設優先顯示第一個完成的結果"
+          }
+        }
+      }
+    },
+    "Show model download speed, remaining time, and clearer retry guidance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار سرعة تنزيل النموذج والوقت المتبقي وإرشادات إعادة المحاولة الأوضح"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis modeldownloadhastighed, resterende tid og tydeligere vejledning til forsøg igen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloadgeschwindigkeit des Modells, verbleibende Zeit und klarere Wiederholungsanleitung anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show model download speed, remaining time, and clearer retry guidance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar la velocidad de descarga del modelo, el tiempo restante y una guía de reintento más clara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la vitesse de téléchargement du modèle, le temps restant et des indications de nouvelle tentative plus claires"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan kecepatan unduh model, sisa waktu, dan panduan coba lagi yang lebih jelas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra la velocità di download del modello, il tempo rimanente e indicazioni più chiare per riprovare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルのダウンロード速度、残り時間、より明確な再試行ガイダンスを表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 다운로드 속도, 남은 시간 및 더 명확한 재시도 안내 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tunjukkan kelajuan muat turun model, masa berbaki dan panduan cuba semula yang lebih jelas"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis nedlastingshastighet for modellen, gjenstående tid og tydeligere veiledning for nytt forsøk"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon de downloadsnelheid van het model, resterende tijd en duidelijkere richtlijnen voor opnieuw proberen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj prędkość pobierania modelu, pozostały czas i wyraźniejsze wskazówki ponawiania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar a velocidade de download do modelo, o tempo restante e orientações mais claras para tentar novamente"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa modellens nedladdningshastighet, återstående tid och tydligare vägledning för att försöka igen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model indirme hızını, kalan süreyi ve daha net yeniden deneme yönergelerini göster"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示模型下載速度、剩餘時間及更清晰的重新嘗試指引"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示模型下载速度、剩余时间和更清晰的重新尝试指引"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示模型下載速度、剩餘時間及更清晰的重試指引"
           }
         }
       }

@@ -11,18 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support custom OpenAI-compatible endpoints
+- [Both] Support custom OpenAI-compatible endpoints
+- [Both] Customize realtime caption fonts, spacing, and colors
+- [Mac] Adjust floating caption background opacity
 
 ### Improved
 
-- Sync custom endpoints with iCloud Keychain
-- Move model picker to footer in quick panel
-- [Mac] Move run hint under quick panel placeholder
-- Show first completed result first by default
+- [Both] Sync custom endpoints with iCloud Keychain
+- [Mac] Move model picker to the quick panel footer and show the run hint beside the placeholder
+- [Both] Show first completed result first by default
+- [Both] Remember caption display mode across realtime sessions
+- [Both] Show model download speed, remaining time, and clearer retry guidance
 
 ### Fixed
 
-- Open What's New at half height without clipped buttons
+- [Both] Open What's New at half height without clipped buttons
+- [iOS] Keep Picture in Picture captions ready when switching to the background
+- [iOS] Keep the newest bilingual caption pair visible in compact Picture in Picture
 
 ## [5.7.3] - 2026-11-01
 
