@@ -117,12 +117,14 @@
                 .frame(minWidth: 180)
                 .overlay(alignment: .topLeading) {
                     if viewModel.inputText.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
                             Text("Type or paste text")
                                 .font(.system(size: 20))
+                            Spacer(minLength: 12)
                             Text("Press Return to run")
                                 .font(.system(size: 12))
                                 .opacity(0.7)
+                                .lineLimit(1)
                         }
                         .foregroundStyle(colors.textSecondary)
                         .padding(.leading, 4)
