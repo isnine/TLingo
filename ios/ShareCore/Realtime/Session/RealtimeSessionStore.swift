@@ -1,3244 +1,3192 @@
-#if os(macOS) || os(iOS)
-    #if os(iOS)
-        import UIKit
-    #endif
-    import AVFoundation
-    import Combine
-    import CoreMedia
-    import Foundation
-    import os
-    #if canImport(Translation)
-        import Translation
-    #endif
+#if os(iOS)
+    import UIKit
+#endif
+import AVFoundation
+import Combine
+import CoreMedia
+import Foundation
+import os
+import Translation
 
 
-    public struct RealtimeStartFailureAlert: Identifiable, Equatable {
-        public let id: UUID
+public struct RealtimeStartFailureAlert: Identifiable, Equatable {
+    public let id: UUID
+    public let title: String
+    public let message: String
+    /// The start failed only because an Apple Translate language pack is missing; starting
+    /// again shows the system download prompt.
+    public let offersAppleTranslationDownload: Bool
+
+    public init(
+        id: UUID = UUID(),
+        title: String,
+        message: String,
+        offersAppleTranslationDownload: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.message = message
+        self.offersAppleTranslationDownload = offersAppleTranslationDownload
+    }
+}
+
+#if os(macOS)
+    public struct RealtimeModelDownload: Identifiable, Equatable {
+        public let id: String
         public let title: String
-        public let message: String
-        /// The start failed only because an Apple Translate language pack is missing; starting
-        /// again shows the system download prompt.
-        public let offersAppleTranslationDownload: Bool
+        public var progress: Double
 
-        public init(
-            id: UUID = UUID(),
-            title: String,
-            message: String,
-            offersAppleTranslationDownload: Bool = false
-        ) {
+        public init(id: String, title: String, progress: Double) {
             self.id = id
             self.title = title
-            self.message = message
-            self.offersAppleTranslationDownload = offersAppleTranslationDownload
+            self.progress = progress
+        }
+    }
+#endif
+
+@MainActor
+public final class RealtimeSessionStore: ObservableObject {
+    public static let shared = RealtimeSessionStore()
+    #if os(macOS)
+        private static let captionLineDisplayLimit = 160
+    #endif
+    private static let realtimeHistoryAutosaveInterval: TimeInterval = 5
+
+    @Published public var inputSource: RealtimeAudioInputSource = .default
+    @Published public var showCaptions: Bool {
+        didSet {
+            guard showCaptions != oldValue else { return }
+            preferences.setRealtimeShowCaptions(showCaptions)
         }
     }
 
-    #if os(macOS)
-        public struct RealtimeModelDownload: Identifiable, Equatable {
-            public let id: String
-            public let title: String
-            public var progress: Double
+    @Published public var captionDisplayMode: RealtimeCaptionDisplayMode = .bilingual {
+        didSet {
+            guard captionDisplayMode != oldValue else { return }
+            if !isApplyingCaptionModePreference {
+                preferences.setRealtimeCaptionDisplayMode(captionDisplayMode)
+            }
+            #if os(macOS)
+                realtimePipelineCoordinator.updateCaptionDisplayMode(captionDisplayMode)
+                refreshInactiveLaneCaptionPresentation()
+            #endif
+            refreshCaptionLines(event: "captionDisplayModeChanged")
+        }
+    }
 
-            public init(id: String, title: String, progress: Double) {
-                self.id = id
-                self.title = title
-                self.progress = progress
+    @Published public private(set) var isRunning = false
+    @Published public private(set) var isStarting = false
+    @Published public private(set) var isStopping = false
+    /// A producer failure reported while `start()` is still bringing capture up.
+    private var pendingStartFailure: Error?
+    @Published public private(set) var isPaused = false
+    @Published public private(set) var sourceText = ""
+    @Published public private(set) var translatedText = ""
+    @Published public private(set) var translationSourceText = ""
+    @Published public private(set) var sentencePairs: [SentencePair] = []
+    @Published public private(set) var pendingSourceText = ""
+    @Published public private(set) var pendingTranslatedText = ""
+    @Published public private(set) var captionLines: [RealtimeCaptionLine] = []
+    /// Bumped on every `captionLines` change so `[RT][ui]` and `[RT][view]` logs share one id.
+    public private(set) var captionRevision = 0
+    @Published public private(set) var statusText = String(localized: "Ready")
+    @Published public private(set) var errorMessage: String?
+    @Published public private(set) var startFailureAlert: RealtimeStartFailureAlert?
+    /// Set after a stopped session (with saved audio) is written to History; views show a tappable notice.
+    @Published public private(set) var savedHistoryNotice: RealtimeSavedHistoryNotice?
+    /// Set while a start waits for a local recognition model to finish loading.
+    @Published public private(set) var recognitionModelLoad: RealtimeModelLoadProgress?
+    /// Title of the recognition model a start is loading; views abbreviate it to fit one line.
+    @Published public private(set) var loadingRecognitionModelTitle: String?
+    /// Set while a start waits for the system Apple Translate download prompt. Language packs can
+    /// only be downloaded through `prepareTranslation()` on a session from `.translationTask`,
+    /// so realtime views host that modifier and hand the session back. Kept after a request so a
+    /// retry for the same pair can `invalidate()` it: `.translationTask` ignores an equal new value.
+    @Published public private(set) var appleTranslationDownloadConfiguration: TranslationSession.Configuration?
+    private var appleTranslationDownloadRequestID: UUID?
+    private var isAppleTranslationDownloadPromptPresented = false
+    /// The system download prompt only appears when the user asks for it from the start failure alert.
+    private var allowsAppleTranslationDownloadPromptOnNextStart = false
+    private var appleTranslationDownloadContinuation: CheckedContinuation<Void, Never>?
+    /// Not `@Published`: level updates arrive ~20 times per second and would redraw every
+    /// observer of the store. Views read `inputLevel` instead.
+    public private(set) var audioLevel: Float? {
+        didSet { inputLevel.update(decibels: audioLevel) }
+    }
+
+    public private(set) var audioSampleCount = 0
+    public let inputLevel = RealtimeInputLevel()
+    #if os(macOS)
+        @Published public private(set) var laneConfigurations: [RealtimeLaneConfiguration] = []
+        @Published public private(set) var laneSnapshots: [RealtimeLaneSnapshot] = []
+        @Published public private(set) var primaryLaneID = UUID()
+        @Published public private(set) var isRealtimeMemoryConstrained = false
+        @Published public private(set) var importedAudioURL: URL?
+        @Published public private(set) var modelDownloads: [RealtimeModelDownload] = []
+    #else
+        /// True once the iPhone Audio broadcast extension is recognizing app audio.
+        @Published public private(set) var isIPhoneAudioCaptureReady = false
+    #endif
+
+    public var audioLevelFraction: Double {
+        guard let audioLevel else { return 0 }
+        return min(max((Double(audioLevel) + 60) / 60, 0), 1)
+    }
+
+    public var hasRequiredLanguageSelection: Bool {
+        return RealtimeSetupPromptRequirement.hasRequiredLanguageSelection(
+            sourceLanguage: preferences.realtimeSourceLanguage,
+            targetLanguage: preferences.realtimeTargetLanguage,
+            requiresTargetLanguage: preferences.realtimeTranslationProvider.performsTranslation
+        )
+    }
+
+    #if os(macOS)
+        public func updateModelDownload(
+            id: String,
+            title: String,
+            progress: Double
+        ) {
+            let download = RealtimeModelDownload(
+                id: id,
+                title: title,
+                progress: min(max(progress, 0), 1)
+            )
+            if let index = modelDownloads.firstIndex(where: { $0.id == id }) {
+                modelDownloads[index] = download
+            } else {
+                modelDownloads.append(download)
+            }
+        }
+
+        public func removeModelDownload(id: String) {
+            modelDownloads.removeAll { $0.id == id }
+        }
+    #endif
+
+    private nonisolated let transcriber = RealtimeLiveSpeechTranscriber()
+    private nonisolated let activeRecognizer = RealtimeRecognizerSlot()
+    private nonisolated let callbackDrain = RealtimeCallbackDrain()
+    #if os(macOS)
+        private nonisolated let systemAudioCapture = RealtimeSystemAudioCapture()
+        private nonisolated let secondarySystemAudioCapture = RealtimeSystemAudioCapture()
+        private nonisolated let realtimePipelineAudioFanout = RealtimePipelineAudioFanout()
+        private let realtimePipelineCoordinator: RealtimePipelineCoordinator
+    #endif
+    private nonisolated let microphoneAudioCapture = RealtimeMicrophoneAudioCapture()
+    #if os(macOS)
+        private nonisolated let secondaryMicrophoneAudioCapture = RealtimeMicrophoneAudioCapture()
+    #endif
+    private nonisolated let audioHistoryRecorder = RealtimeAudioHistoryRecorder()
+    private nonisolated let secondaryAudioHistoryRecorder = RealtimeAudioHistoryRecorder()
+
+    private let preferences: AppPreferences
+    private var captionModeObservation: AnyCancellable?
+    private var isApplyingCaptionModePreference = false
+    private var transcriptAccumulator = RealtimeTranscriptAccumulator()
+    private var translationState = RealtimeIncrementalTranslationState()
+    private var presentationSourceSegments: [String] = []
+    private var captionClearAnchor = RealtimeCaptionDisplayClearAnchor.empty
+    private var historyCheckpoint = RealtimeHistoryCheckpoint()
+    private var historySessionBuilder = RealtimeHistorySessionBuilder()
+    /// Latest recognizer audio position; a history session started mid-run (transcript
+    /// cleared) begins its recording here.
+    private var recognitionAudioPosition: TimeInterval = 0
+    private var lastRealtimeHistoryAutosaveAt: Date?
+    private var lastRealtimeHistoryAutosaveSegments: [RealtimeHistorySegment]?
+    private var lastRealtimeHistoryAutosaveRecordings: [RealtimeHistoryAudioRecording]?
+    private var lastRealtimeHistoryAutosaveTracks: [RealtimeHistoryTrack]?
+    #if os(macOS)
+        private var secondaryAudioSource: RealtimeAudioInputSource?
+        private var importedAudioTask: Task<Void, Never>?
+        private var isImportedAudioSession = false
+        private var preMOSSRecognitionModelIDs: [UUID: String] = [:]
+    #endif
+    private let translationScheduler = RealtimeTranslationScheduler()
+    private var realtimeHistoryAutosaveTask: Task<Void, Never>?
+    private var realtimeHistoryTitleTasks: [UUID: Task<Void, Never>] = [:]
+    private var realtimeHistoryTitleRequestIDs: Set<UUID> = []
+    private var lastBroadcastStateLogSignature: String?
+    private var lastAppliedBroadcastSourceSegments: [String] = []
+    private var lastCaptionDiagnosticsSignature: String?
+    /// Origin of the next caption refresh (`asr#12`, `txp#3`, `txf#4`), carried into `[RT][ui]`.
+    private var captionUpdateCause = "-"
+    private var captionTraceSequence = 0
+    private var lastCaptionRevisionTime: ContinuousClock.Instant?
+    private var activeSessionID = UUID()
+    private var drainingSessionID: UUID?
+    #if os(iOS)
+        public static let broadcastUploadExtensionBundleIdentifier = "com.zanderwang.AITranslator.BroadcastUpload"
+        nonisolated static let broadcastPickerWaitTimeout: TimeInterval = 15
+
+        private let broadcastStateStore: RealtimeBroadcastStateStore?
+        private var broadcastStatePollingTask: Task<Void, Never>?
+        private var sessionLifecycleObservers: [NSObjectProtocol] = []
+        /// Set when an audio interruption paused the microphone, so its end may resume it.
+        private var isPausedForAudioInterruption = false
+        private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
+        /// True for an iPhone Audio session whose relayed audio the host recognizes with a local
+        /// model; the host then owns the transcript and history instead of the extension.
+        private var usesHostRecognitionRelay = false
+        private var hostRecognitionRelayTask: Task<Void, Never>?
+        private var hostRecognitionRelayReader: RealtimeAudioRelayReader?
+        private var isDrainingHostRecognitionRelay = false
+        nonisolated static let hostRecognitionRelayPollInterval: Duration = .milliseconds(50)
+        /// Audio older than this after a stall is dropped instead of overflowing the recognizer backlog.
+        nonisolated static let hostRecognitionRelayMaximumChunkDuration: TimeInterval = 10
+    #endif
+
+    public init(preferences: AppPreferences = .shared) {
+        defer { configureTranslationScheduler() }
+        #if os(macOS)
+            realtimePipelineCoordinator = RealtimePipelineCoordinator(
+                audioFanout: realtimePipelineAudioFanout
+            )
+        #endif
+        self.preferences = preferences
+        showCaptions = preferences.realtimeShowCaptions
+        captionDisplayMode = preferences.realtimeCaptionDisplayMode
+        #if os(iOS)
+            broadcastStateStore = RealtimeBroadcastStateStore()
+        #endif
+        transcriber.delegate = self
+        captionModeObservation = preferences.$realtimeCaptionDisplayMode
+            .dropFirst()
+            .sink { [weak self] mode in
+                guard let self, captionDisplayMode != mode else { return }
+                isApplyingCaptionModePreference = true
+                captionDisplayMode = mode
+                isApplyingCaptionModePreference = false
+            }
+        #if os(macOS)
+            systemAudioCapture.delegate = self
+            secondarySystemAudioCapture.delegate = self
+            let persistedLanes = RealtimeLaneConfigurationPersistence.load(
+                defaults: .standard,
+                fallbackRecognitionModelID: preferences.realtimeRecognitionModelID,
+                fallbackTranslationProvider: preferences.realtimeTranslationProvider
+            )
+            laneConfigurations = persistedLanes.configurations
+            primaryLaneID = persistedLanes.primaryLaneID
+            if let primaryConfiguration = persistedLanes.configurations.first(where: {
+                $0.id == persistedLanes.primaryLaneID
+            }) {
+                preferences.setRealtimeRecognitionModelID(primaryConfiguration.recognitionModelID)
+                preferences.setRealtimeTranslationProvider(primaryConfiguration.translationProvider)
+            }
+            laneSnapshots = persistedLanes.configurations.map {
+                RealtimeLaneSnapshot(configuration: $0)
+            }
+            realtimePipelineCoordinator.onSnapshotsChanged = { [weak self] snapshots in
+                self?.applyLaneSnapshots(snapshots)
+            }
+            realtimePipelineCoordinator.onFailure = { [weak self] _, error in
+                Task { @MainActor [weak self] in
+                    await self?.handleRuntimeFailure(error, context: "pipeline")
+                }
+            }
+            realtimePipelineCoordinator.onMemoryPressureChanged = { [weak self] constrained in
+                self?.isRealtimeMemoryConstrained = constrained
+            }
+            realtimePipelineCoordinator.onLaneTerminated = { [weak self] laneID, message in
+                guard let self else { return }
+                self.laneConfigurations.removeAll { $0.id == laneID }
+                self.laneSnapshots.removeAll { $0.id == laneID }
+                self.persistLaneConfiguration()
+                self.handleErrorMessage(message)
+            }
+        #endif
+        microphoneAudioCapture.delegate = self
+        #if os(macOS)
+            secondaryMicrophoneAudioCapture.delegate = self
+        #endif
+        #if os(iOS)
+            registerSessionLifecycle()
+        #endif
+        if SnapshotLaunchArguments.isSnapshotMode(),
+           let fixture = SnapshotLaunchArguments.fixture()
+        {
+            #if os(macOS)
+                if fixture == .macRealtimeMultiLane {
+                    let locale = SnapshotLocaleCatalog.current()
+                    preferences.setRealtimeSourceLanguage(.english, reason: "Snapshot fixture")
+                    preferences.setRealtimeTargetLanguage(locale.targetLanguage, reason: "Snapshot fixture")
+                    let laneFixture = SnapshotFixtureData.macRealtimeLaneSnapshots()
+                    applyLaneSnapshotFixture(
+                        laneFixture.snapshots,
+                        primaryLaneID: laneFixture.primaryLaneID
+                    )
+                    isRunning = true
+                    statusText = String(localized: "Listening to \(inputSource.title)")
+                } else if let realtimeFixture = SnapshotFixtureData.realtimeFixture(for: fixture) {
+                    applySnapshotFixture(realtimeFixture)
+                }
+            #else
+                if let realtimeFixture = SnapshotFixtureData.realtimeFixture(for: fixture) {
+                    applySnapshotFixture(realtimeFixture)
+                }
+            #endif
+        }
+    }
+
+    deinit {
+        #if os(iOS)
+            for observer in sessionLifecycleObservers {
+                NotificationCenter.default.removeObserver(observer)
+            }
+        #endif
+    }
+
+    #if os(macOS)
+        public var canAddRealtimeLane: Bool {
+            laneConfigurations.count < RealtimePipelineCoordinator.maximumLaneCount &&
+                !isRealtimeMemoryConstrained
+        }
+
+        public var primaryLaneConfiguration: RealtimeLaneConfiguration? {
+            laneConfigurations.first(where: { $0.id == primaryLaneID }) ?? laneConfigurations.first
+        }
+
+        public var hasImportedAudio: Bool {
+            importedAudioURL != nil
+        }
+
+        public var hasMOSSLane: Bool {
+            laneConfigurations.contains {
+                $0.recognitionModelID == RecognitionModelDescriptor.mossTranscribeDiarize.id
+            }
+        }
+
+        public var canPauseCurrentSession: Bool {
+            !hasMOSSLane
+        }
+
+        public var laneConfigurationStartBlocker: RealtimeStartBlocker? {
+            Self.startConfigurationBlocker(
+                configurations: laneConfigurations,
+                hasImportedAudio: hasImportedAudio,
+                isMemoryConstrained: isRealtimeMemoryConstrained,
+                sourceLanguage: preferences.realtimeSourceLanguage
+            )
+        }
+
+        nonisolated static func startConfigurationBlocker(
+            configurations: [RealtimeLaneConfiguration],
+            hasImportedAudio: Bool,
+            isMemoryConstrained: Bool,
+            sourceLanguage: SourceLanguageOption = .auto,
+            physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory
+        ) -> RealtimeStartBlocker? {
+            guard !configurations.isEmpty else {
+                return .missingLane
+            }
+            guard !isMemoryConstrained else {
+                return .memoryPressure
+            }
+            for configuration in configurations {
+                let model: RecognitionModelDescriptor
+                if configuration.recognitionModelID == RecognitionModelDescriptor.mossTranscribeDiarize.id {
+                    model = .mossTranscribeDiarize
+                } else {
+                    guard let descriptor = RecognitionModelStore.descriptor(
+                              forModelID: configuration.recognitionModelID
+                          ),
+                          RecognitionModelStore.selectableModels.contains(where: { $0.id == descriptor.id })
+                    else {
+                        return .unsupportedRecognitionModel(configuration.recognitionModelID)
+                    }
+                    model = descriptor
+                }
+                if model.runtime == .mossOffline {
+                    guard RecognitionModelStore.isRuntimeSupported(model) else {
+                        return .unsupportedRecognitionModel(model.title)
+                    }
+                    guard hasImportedAudio else {
+                        return .importedAudioRequired(model.title)
+                    }
+                } else if !RecognitionModelStore.isSelectable(model) {
+                    return .unsupportedRecognitionModel(model.title)
+                }
+                guard model.supports(sourceLanguage: sourceLanguage) else {
+                    return .unsupportedSourceLanguage(model.title, sourceLanguage.primaryLabel)
+                }
+            }
+            do {
+                _ = try RealtimePipelineCoordinator.validated(
+                    configurations,
+                    physicalMemory: physicalMemory
+                )
+                return nil
+            } catch let error as RealtimePipelineError {
+                return RealtimeStartBlocker(error)
+            } catch {
+                return nil
+            }
+        }
+
+        nonisolated static func shouldSerializeMOSS(
+            configurations: [RealtimeLaneConfiguration],
+            physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory
+        ) -> Bool {
+            guard physicalMemory < 24 * 1024 * 1024 * 1024 else { return false }
+            return configurations.contains { $0.recognitionModel.runtime == .mossOffline } &&
+                configurations.contains { $0.recognitionModel.runtime == .fluidAudio }
+        }
+
+        public func setImportedAudioURL(_ url: URL?) {
+            guard !isRealtimeSessionBusy else { return }
+            importedAudioURL = url
+            if url == nil {
+                restorePreMOSSRecognitionModels()
+            }
+            statusText = String(localized: "Ready")
+        }
+
+        public func addDefaultLane() async throws {
+            let recognitionModelID = preferences.realtimeRecognitionModelID
+            guard let translationProvider = RealtimeTranslationProvider.availableCases.first(where: { provider in
+                !laneConfigurations.contains {
+                    $0.recognitionModelID == recognitionModelID &&
+                        $0.translationProvider == provider
+                }
+            }) else {
+                throw RealtimePipelineError.duplicateLane
+            }
+            try await addLane(
+                recognitionModelID: recognitionModelID,
+                translationProvider: translationProvider
+            )
+        }
+
+        public func addLane(
+            recognitionModelID: String,
+            translationProvider: RealtimeTranslationProvider
+        ) async throws {
+            guard laneConfigurations.count < RealtimePipelineCoordinator.maximumLaneCount else {
+                throw RealtimePipelineError.maximumLaneCount
+            }
+            guard !isRealtimeMemoryConstrained else {
+                throw RealtimePipelineError.memoryPressure
+            }
+            let model = RecognitionModelStore.selectableDescriptor(forModelID: recognitionModelID)
+            guard model.runtime != .mossOffline || hasImportedAudio else {
+                throw RealtimeRecognizerError.unsupportedModel(model.id)
+            }
+            guard !laneConfigurations.contains(where: {
+                $0.recognitionModelID == model.id &&
+                    $0.translationProvider == translationProvider
+            }) else {
+                throw RealtimePipelineError.duplicateLane
+            }
+            guard model.supports(sourceLanguage: preferences.realtimeSourceLanguage) else {
+                throw RealtimeRecognizerError.unsupportedModel(model.id)
+            }
+            guard await RecognitionModelStore.shared.isModelCached(model) else {
+                throw RealtimePipelineError.modelNotDownloaded(model.title)
+            }
+            let configuration = RealtimeLaneConfiguration(
+                recognitionModelID: model.id,
+                translationProvider: translationProvider
+            )
+            _ = try RealtimePipelineCoordinator.validated(laneConfigurations + [configuration])
+            if isRunning {
+                try await ensureAppleTranslateLanguagesInstalledIfNeeded(providers: [translationProvider])
+                try await realtimePipelineCoordinator.addLane(configuration)
+            }
+            laneConfigurations.append(configuration)
+            laneSnapshots.append(RealtimeLaneSnapshot(
+                configuration: configuration,
+                phase: isRunning ? .loading : .ready
+            ))
+            if isRunning {
+                applyLaneSnapshots(realtimePipelineCoordinator.snapshots)
+            }
+            persistLaneConfiguration()
+        }
+
+        public func removeLane(id: UUID) async {
+            guard laneConfigurations.count > 1,
+                  laneConfigurations.contains(where: { $0.id == id })
+            else {
+                return
+            }
+            // Remove before suspending so a concurrent removal sees the updated count.
+            laneConfigurations.removeAll { $0.id == id }
+            laneSnapshots.removeAll { $0.id == id }
+            if isRunning {
+                await realtimePipelineCoordinator.removeLane(id: id)
+            }
+            if primaryLaneID == id, let first = laneConfigurations.first {
+                primaryLaneID = first.id
+                realtimePipelineCoordinator.setPrimaryLaneID(first.id)
+            }
+            persistLaneConfiguration()
+            projectPrimaryLane()
+        }
+
+        public func setPrimaryLane(id: UUID) {
+            guard laneConfigurations.contains(where: { $0.id == id }) else { return }
+            primaryLaneID = id
+            realtimePipelineCoordinator.setPrimaryLaneID(id)
+            if let configuration = primaryLaneConfiguration {
+                if configuration.recognitionModel.runtime != .mossOffline {
+                    preferences.setRealtimeRecognitionModelID(configuration.recognitionModelID)
+                }
+                preferences.setRealtimeTranslationProvider(configuration.translationProvider)
+            }
+            persistLaneConfiguration()
+            projectPrimaryLane()
+        }
+
+        public func updateLane(
+            id: UUID,
+            recognitionModelID: String,
+            translationProvider: RealtimeTranslationProvider
+        ) {
+            guard !isRealtimeSessionBusy,
+                  let index = laneConfigurations.firstIndex(where: { $0.id == id })
+            else {
+                return
+            }
+            let model = RecognitionModelStore.selectableDescriptor(forModelID: recognitionModelID)
+            guard model.runtime != .mossOffline || hasImportedAudio else { return }
+            guard model.supports(sourceLanguage: preferences.realtimeSourceLanguage) else { return }
+            let duplicate = laneConfigurations.contains {
+                $0.id != id &&
+                    $0.recognitionModelID == model.id &&
+                    $0.translationProvider == translationProvider
+            }
+            guard !duplicate else { return }
+            let previousModelID = laneConfigurations[index].recognitionModelID
+            if model.runtime == .mossOffline,
+               previousModelID != model.id
+            {
+                preMOSSRecognitionModelIDs[id] = previousModelID
+            } else if model.runtime != .mossOffline {
+                preMOSSRecognitionModelIDs[id] = nil
+            }
+            laneConfigurations[index].recognitionModelID = model.id
+            laneConfigurations[index].translationProvider = translationProvider
+            laneSnapshots[index] = RealtimeLaneSnapshot(configuration: laneConfigurations[index])
+            if id == primaryLaneID {
+                if model.runtime != .mossOffline {
+                    preferences.setRealtimeRecognitionModelID(model.id)
+                }
+                preferences.setRealtimeTranslationProvider(translationProvider)
+            }
+            persistLaneConfiguration()
+            projectPrimaryLane()
+        }
+
+        private var isRealtimeSessionBusy: Bool {
+            isRunning || isStarting || isStopping
+        }
+
+        private func persistLaneConfiguration() {
+            let persistentConfigurations = laneConfigurations.map { configuration in
+                guard configuration.recognitionModel.runtime == .mossOffline else {
+                    return configuration
+                }
+                var restored = configuration
+                restored.recognitionModelID =
+                    preMOSSRecognitionModelIDs[configuration.id] ??
+                    RecognitionModelDescriptor.appleSpeech.id
+                return restored
+            }
+            RealtimeLaneConfigurationPersistence.save(
+                configurations: persistentConfigurations,
+                primaryLaneID: primaryLaneID,
+                defaults: .standard
+            )
+        }
+
+        private func restorePreMOSSRecognitionModels() {
+            guard !preMOSSRecognitionModelIDs.isEmpty else { return }
+            for index in laneConfigurations.indices {
+                guard laneConfigurations[index].recognitionModel.runtime == .mossOffline else { continue }
+                laneConfigurations[index].recognitionModelID =
+                    preMOSSRecognitionModelIDs[laneConfigurations[index].id] ??
+                    RecognitionModelDescriptor.appleSpeech.id
+                laneSnapshots[index].configuration = laneConfigurations[index]
+            }
+            preMOSSRecognitionModelIDs.removeAll()
+            persistLaneConfiguration()
+            projectPrimaryLane()
+        }
+
+        private func applyLaneSnapshots(_ snapshots: [RealtimeLaneSnapshot]) {
+            var snapshotsByID = Dictionary(uniqueKeysWithValues: snapshots.map { ($0.id, $0) })
+            laneSnapshots = laneConfigurations.compactMap { configuration in
+                snapshotsByID.removeValue(forKey: configuration.id) ??
+                    laneSnapshots.first(where: { $0.id == configuration.id }) ??
+                    RealtimeLaneSnapshot(configuration: configuration)
+            }
+            projectPrimaryLane()
+            autosaveRealtimeHistoryIfNeeded()
+        }
+
+        private func projectPrimaryLane() {
+            guard let lane = laneSnapshots.first(where: { $0.id == primaryLaneID }) ?? laneSnapshots.first else {
+                return
+            }
+            assignIfChanged(&sourceText, lane.sourceText)
+            assignIfChanged(&translatedText, lane.translatedText)
+            assignIfChanged(&pendingSourceText, lane.pendingSourceText)
+            assignIfChanged(&pendingTranslatedText, lane.pendingTranslatedText)
+            assignIfChanged(&sentencePairs, lane.sentencePairs)
+            assignIfChanged(&captionLines, lane.captionLines)
+            translationSourceText = lane.sentencePairs.map(\.original).joined(separator: "\n\n")
+            presentationSourceSegments = lane.sentencePairs.map(\.original)
+            historySessionBuilder.sync(
+                pairs: realtimeHistoryPairs(),
+                at: Date()
+            )
+            if isRunning {
+                statusText = lane.phase == .paused
+                    ? String(localized: "Paused")
+                    : String(localized: "Listening to \(inputSource.title)")
+            }
+        }
+
+        func applyLaneSnapshotFixture(
+            _ snapshots: [RealtimeLaneSnapshot],
+            primaryLaneID: UUID
+        ) {
+            laneConfigurations = snapshots.map(\.configuration)
+            laneSnapshots = snapshots
+            self.primaryLaneID = primaryLaneID
+            refreshInactiveLaneCaptionPresentation()
+            projectPrimaryLane()
+        }
+
+        private func refreshInactiveLaneCaptionPresentation() {
+            let activeLaneIDs = Set(realtimePipelineCoordinator.snapshots.map(\.id))
+            laneSnapshots = laneSnapshots.map { snapshot in
+                guard !activeLaneIDs.contains(snapshot.id) else { return snapshot }
+                var updated = snapshot
+                updated.captionLines = RealtimeCaptionDisplay.displayWindow(
+                    RealtimeCaptionDisplay.resolvedLines(
+                        pairs: snapshot.sentencePairs,
+                        translatedSource: snapshot.sentencePairs.map(\.original).joined(separator: "\n\n"),
+                        translatedText: snapshot.translatedText,
+                        pendingSource: snapshot.pendingSourceText,
+                        pendingTranslation: snapshot.pendingTranslatedText,
+                        sourceText: snapshot.sourceText,
+                        mode: snapshot.configuration.translationProvider.performsTranslation
+                            ? captionDisplayMode : .sourceOnly
+                    ),
+                    limit: Self.captionLineDisplayLimit
+                )
+                return updated
             }
         }
     #endif
 
-    @MainActor
-    public final class RealtimeSessionStore: ObservableObject {
-        public static let shared = RealtimeSessionStore()
+    public func start() async {
+        logRealtime(
+            """
+            start requested input=\(inputSource.rawValue) provider=\(preferences.realtimeTranslationProvider.rawValue) \
+            model=\(preferences.realtimeRecognitionModelID) source=\(preferences.realtimeSourceLanguage.rawValue) \
+            target=\(preferences.realtimeTargetLanguage.rawValue) showCaptions=\(showCaptions)
+            """
+        )
+        guard !isRunning else {
+            logRealtime("start ignored reason=alreadyRunning input=\(inputSource.rawValue)")
+            return
+        }
+        guard !isStarting else {
+            logRealtime("start ignored reason=alreadyStarting input=\(inputSource.rawValue)")
+            return
+        }
+        guard hasRequiredLanguageSelection else {
+            errorMessage = nil
+            startFailureAlert = nil
+            statusText = preferences.realtimeTranslationProvider.performsTranslation
+                ? String(localized: "Choose source and target languages to start")
+                : String(localized: "Choose source language to start")
+            logRealtime("start blocked reason=missingLanguage status=\(statusText)")
+            return
+        }
+        let sessionID = UUID()
+        activeSessionID = sessionID
+        drainingSessionID = nil
         #if os(macOS)
-            private static let captionLineDisplayLimit = 160
+            isImportedAudioSession = importedAudioURL != nil
         #endif
-        private static let realtimeHistoryAutosaveInterval: TimeInterval = 5
-
-        @Published public var inputSource: RealtimeAudioInputSource = .default
-        @Published public var showCaptions: Bool {
-            didSet {
-                guard showCaptions != oldValue else { return }
-                preferences.setRealtimeShowCaptions(showCaptions)
-            }
+        isStarting = true
+        pendingStartFailure = nil
+        defer {
+            isStarting = false
+            pendingStartFailure = nil
         }
 
-        @Published public var captionDisplayMode: RealtimeCaptionDisplayMode = .bilingual {
-            didSet {
-                guard captionDisplayMode != oldValue else { return }
-                if !isApplyingCaptionModePreference {
-                    preferences.setRealtimeCaptionDisplayMode(captionDisplayMode)
-                }
-                #if os(macOS)
-                    realtimePipelineCoordinator.updateCaptionDisplayMode(captionDisplayMode)
-                    refreshInactiveLaneCaptionPresentation()
-                #endif
-                refreshCaptionLines(event: "captionDisplayModeChanged")
-            }
-        }
-
-        @Published public private(set) var isRunning = false
-        @Published public private(set) var isStarting = false
-        @Published public private(set) var isStopping = false
-        /// A producer failure reported while `start()` is still bringing capture up.
-        private var pendingStartFailure: Error?
-        @Published public private(set) var isPaused = false
-        @Published public private(set) var sourceText = ""
-        @Published public private(set) var translatedText = ""
-        @Published public private(set) var translationSourceText = ""
-        @Published public private(set) var sentencePairs: [SentencePair] = []
-        @Published public private(set) var pendingSourceText = ""
-        @Published public private(set) var pendingTranslatedText = ""
-        @Published public private(set) var captionLines: [RealtimeCaptionLine] = []
-        /// Bumped on every `captionLines` change so `[RT][ui]` and `[RT][view]` logs share one id.
-        public private(set) var captionRevision = 0
-        @Published public private(set) var statusText = String(localized: "Ready")
-        @Published public private(set) var errorMessage: String?
-        @Published public private(set) var startFailureAlert: RealtimeStartFailureAlert?
-        /// Set after a stopped session (with saved audio) is written to History; views show a tappable notice.
-        @Published public private(set) var savedHistoryNotice: RealtimeSavedHistoryNotice?
-        /// Set while a start waits for a local recognition model to finish loading.
-        @Published public private(set) var recognitionModelLoad: RealtimeModelLoadProgress?
-        /// Title of the recognition model a start is loading; views abbreviate it to fit one line.
-        @Published public private(set) var loadingRecognitionModelTitle: String?
-        /// Set while a start waits for the system Apple Translate download prompt. Language packs can
-        /// only be downloaded through `prepareTranslation()` on a session from `.translationTask`,
-        /// so realtime views host that modifier and hand the session back. Kept after a request so a
-        /// retry for the same pair can `invalidate()` it: `.translationTask` ignores an equal new value.
-        @Published public private(set) var appleTranslationDownloadConfiguration: TranslationSession.Configuration?
-        private var appleTranslationDownloadRequestID: UUID?
-        private var isAppleTranslationDownloadPromptPresented = false
-        /// The system download prompt only appears when the user asks for it from the start failure alert.
-        private var allowsAppleTranslationDownloadPromptOnNextStart = false
-        private var appleTranslationDownloadContinuation: CheckedContinuation<Void, Never>?
-        /// Not `@Published`: level updates arrive ~20 times per second and would redraw every
-        /// observer of the store. Views read `inputLevel` instead.
-        public private(set) var audioLevel: Float? {
-            didSet { inputLevel.update(decibels: audioLevel) }
-        }
-
-        public private(set) var audioSampleCount = 0
-        public let inputLevel = RealtimeInputLevel()
-        #if os(macOS)
-            @Published public private(set) var laneConfigurations: [RealtimeLaneConfiguration] = []
-            @Published public private(set) var laneSnapshots: [RealtimeLaneSnapshot] = []
-            @Published public private(set) var primaryLaneID = UUID()
-            @Published public private(set) var isRealtimeMemoryConstrained = false
-            @Published public private(set) var importedAudioURL: URL?
-            @Published public private(set) var modelDownloads: [RealtimeModelDownload] = []
-        #else
-            /// True once the iPhone Audio broadcast extension is recognizing app audio.
-            @Published public private(set) var isIPhoneAudioCaptureReady = false
-        #endif
-
-        public var audioLevelFraction: Double {
-            guard let audioLevel else { return 0 }
-            return min(max((Double(audioLevel) + 60) / 60, 0), 1)
-        }
-
-        public var hasRequiredLanguageSelection: Bool {
-            return RealtimeSetupPromptRequirement.hasRequiredLanguageSelection(
-                sourceLanguage: preferences.realtimeSourceLanguage,
-                targetLanguage: preferences.realtimeTargetLanguage,
-                requiresTargetLanguage: preferences.realtimeTranslationProvider.performsTranslation
-            )
-        }
-
-        #if os(macOS)
-            public func updateModelDownload(
-                id: String,
-                title: String,
-                progress: Double
-            ) {
-                let download = RealtimeModelDownload(
-                    id: id,
-                    title: title,
-                    progress: min(max(progress, 0), 1)
-                )
-                if let index = modelDownloads.firstIndex(where: { $0.id == id }) {
-                    modelDownloads[index] = download
-                } else {
-                    modelDownloads.append(download)
-                }
-            }
-
-            public func removeModelDownload(id: String) {
-                modelDownloads.removeAll { $0.id == id }
-            }
-        #endif
-
-        private nonisolated let transcriber = RealtimeLiveSpeechTranscriber()
-        private nonisolated let activeRecognizer = RealtimeRecognizerSlot()
-        private nonisolated let callbackDrain = RealtimeCallbackDrain()
-        #if os(macOS)
-            private nonisolated let systemAudioCapture = RealtimeSystemAudioCapture()
-            private nonisolated let secondarySystemAudioCapture = RealtimeSystemAudioCapture()
-            private nonisolated let realtimePipelineAudioFanout = RealtimePipelineAudioFanout()
-            private let realtimePipelineCoordinator: RealtimePipelineCoordinator
-        #endif
-        private nonisolated let microphoneAudioCapture = RealtimeMicrophoneAudioCapture()
-        #if os(macOS)
-            private nonisolated let secondaryMicrophoneAudioCapture = RealtimeMicrophoneAudioCapture()
-        #endif
-        private nonisolated let audioHistoryRecorder = RealtimeAudioHistoryRecorder()
-        private nonisolated let secondaryAudioHistoryRecorder = RealtimeAudioHistoryRecorder()
-
-        private let preferences: AppPreferences
-        private var captionModeObservation: AnyCancellable?
-        private var isApplyingCaptionModePreference = false
-        private var transcriptAccumulator = RealtimeTranscriptAccumulator()
-        private var translationState = RealtimeIncrementalTranslationState()
-        private var presentationSourceSegments: [String] = []
-        private var captionClearAnchor = RealtimeCaptionDisplayClearAnchor.empty
-        private var historyCheckpoint = RealtimeHistoryCheckpoint()
-        private var historySessionBuilder = RealtimeHistorySessionBuilder()
-        /// Latest recognizer audio position; a history session started mid-run (transcript
-        /// cleared) begins its recording here.
-        private var recognitionAudioPosition: TimeInterval = 0
-        private var lastRealtimeHistoryAutosaveAt: Date?
-        private var lastRealtimeHistoryAutosaveSegments: [RealtimeHistorySegment]?
-        private var lastRealtimeHistoryAutosaveRecordings: [RealtimeHistoryAudioRecording]?
-        private var lastRealtimeHistoryAutosaveTracks: [RealtimeHistoryTrack]?
-        #if os(macOS)
-            private var secondaryAudioSource: RealtimeAudioInputSource?
-            private var importedAudioTask: Task<Void, Never>?
-            private var isImportedAudioSession = false
-            private var preMOSSRecognitionModelIDs: [UUID: String] = [:]
-        #endif
-        private var finalTranslationTask: Task<Void, Never>?
-        private var partialTranslationTask: Task<Void, Never>?
-        private var realtimeHistoryAutosaveTask: Task<Void, Never>?
-        private var realtimeHistoryTitleTasks: [UUID: Task<Void, Never>] = [:]
-        private var realtimeHistoryTitleRequestIDs: Set<UUID> = []
-        private var lastBroadcastStateLogSignature: String?
-        private var lastAppliedBroadcastSourceSegments: [String] = []
-        private var lastCaptionDiagnosticsSignature: String?
-        /// Origin of the next caption refresh (`asr#12`, `txp#3`, `txf#4`), carried into `[RT][ui]`.
-        private var captionUpdateCause = "-"
-        private var captionTraceSequence = 0
-        private var lastCaptionRevisionTime: ContinuousClock.Instant?
-        private var queuedFinalTranslationRequests: [RealtimeTextTranslationRequest] = []
-        private var latestPartialTranslationRequest: RealtimeTextTranslationRequest?
-        private var nextPartialTranslationAllowedAt: Date?
-        private var activeSessionID = UUID()
-        private var drainingSessionID: UUID?
         #if os(iOS)
-            public static let broadcastUploadExtensionBundleIdentifier = "com.zanderwang.AITranslator.BroadcastUpload"
-            nonisolated static let broadcastPickerWaitTimeout: TimeInterval = 15
-
-            private let broadcastStateStore: RealtimeBroadcastStateStore?
-            private var broadcastStatePollingTask: Task<Void, Never>?
-            private var sessionLifecycleObservers: [NSObjectProtocol] = []
-            /// Set when an audio interruption paused the microphone, so its end may resume it.
-            private var isPausedForAudioInterruption = false
-            private var latestBroadcastRealtimeHistorySession: RealtimeHistorySession?
-            /// True for an iPhone Audio session whose relayed audio the host recognizes with a local
-            /// model; the host then owns the transcript and history instead of the extension.
-            private var usesHostRecognitionRelay = false
-            private var hostRecognitionRelayTask: Task<Void, Never>?
-            private var hostRecognitionRelayReader: RealtimeAudioRelayReader?
-            private var isDrainingHostRecognitionRelay = false
-            nonisolated static let hostRecognitionRelayPollInterval: Duration = .milliseconds(50)
-            /// Audio older than this after a stall is dropped instead of overflowing the recognizer backlog.
-            nonisolated static let hostRecognitionRelayMaximumChunkDuration: TimeInterval = 10
+            if inputSource == .iphoneAudio {
+                await startIPhoneAudioBroadcastSession()
+                return
+            }
         #endif
 
-        public init(preferences: AppPreferences = .shared) {
+        do {
+            try await ensureAppleTranslateLanguagesInstalledIfNeeded()
+        } catch {
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            handleStartFailure(error)
+            return
+        }
+        guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+
+        resetTranscript()
+        isPaused = false
+        errorMessage = nil
+        startFailureAlert = nil
+
+        do {
             #if os(macOS)
-                realtimePipelineCoordinator = RealtimePipelineCoordinator(
-                    audioFanout: realtimePipelineAudioFanout
-                )
-            #endif
-            self.preferences = preferences
-            showCaptions = preferences.realtimeShowCaptions
-            captionDisplayMode = preferences.realtimeCaptionDisplayMode
-            #if os(iOS)
-                broadcastStateStore = RealtimeBroadcastStateStore()
-            #endif
-            transcriber.delegate = self
-            captionModeObservation = preferences.$realtimeCaptionDisplayMode
-                .dropFirst()
-                .sink { [weak self] mode in
-                    guard let self, captionDisplayMode != mode else { return }
-                    isApplyingCaptionModePreference = true
-                    captionDisplayMode = mode
-                    isApplyingCaptionModePreference = false
+                if importedAudioURL == nil {
+                    try await startLiveCaptureBeforeRecognition()
                 }
+            #endif
+            let audioSampleRate = try await startRecognition(sessionID: sessionID)
             #if os(macOS)
-                systemAudioCapture.delegate = self
-                secondarySystemAudioCapture.delegate = self
-                let persistedLanes = RealtimeLaneConfigurationPersistence.load(
-                    defaults: .standard,
-                    fallbackRecognitionModelID: preferences.realtimeRecognitionModelID,
-                    fallbackTranslationProvider: preferences.realtimeTranslationProvider
-                )
-                laneConfigurations = persistedLanes.configurations
-                primaryLaneID = persistedLanes.primaryLaneID
-                if let primaryConfiguration = persistedLanes.configurations.first(where: {
-                    $0.id == persistedLanes.primaryLaneID
-                }) {
-                    preferences.setRealtimeRecognitionModelID(primaryConfiguration.recognitionModelID)
-                    preferences.setRealtimeTranslationProvider(primaryConfiguration.translationProvider)
+                if importedAudioURL != nil {
+                    startRealtimeHistorySessionIfNeeded()
                 }
-                laneSnapshots = persistedLanes.configurations.map {
-                    RealtimeLaneSnapshot(configuration: $0)
-                }
-                realtimePipelineCoordinator.onSnapshotsChanged = { [weak self] snapshots in
-                    self?.applyLaneSnapshots(snapshots)
-                }
-                realtimePipelineCoordinator.onFailure = { [weak self] _, error in
-                    Task { @MainActor [weak self] in
-                        await self?.handleRuntimeFailure(error, context: "pipeline")
-                    }
-                }
-                realtimePipelineCoordinator.onMemoryPressureChanged = { [weak self] constrained in
-                    self?.isRealtimeMemoryConstrained = constrained
-                }
-                realtimePipelineCoordinator.onLaneTerminated = { [weak self] laneID, message in
-                    guard let self else { return }
-                    self.laneConfigurations.removeAll { $0.id == laneID }
-                    self.laneSnapshots.removeAll { $0.id == laneID }
-                    self.persistLaneConfiguration()
-                    self.handleErrorMessage(message)
-                }
+            #else
+                startRealtimeHistorySessionIfNeeded()
             #endif
-            microphoneAudioCapture.delegate = self
-            #if os(macOS)
-                secondaryMicrophoneAudioCapture.delegate = self
-            #endif
-            #if os(iOS)
-                registerSessionLifecycle()
-            #endif
-            if SnapshotLaunchArguments.isSnapshotMode(),
-               let fixture = SnapshotLaunchArguments.fixture()
-            {
-                #if os(macOS)
-                    if fixture == .macRealtimeMultiLane {
-                        let locale = SnapshotLocaleCatalog.current()
-                        preferences.setRealtimeSourceLanguage(.english, reason: "Snapshot fixture")
-                        preferences.setRealtimeTargetLanguage(locale.targetLanguage, reason: "Snapshot fixture")
-                        let laneFixture = SnapshotFixtureData.macRealtimeLaneSnapshots()
-                        applyLaneSnapshotFixture(
-                            laneFixture.snapshots,
-                            primaryLaneID: laneFixture.primaryLaneID
-                        )
-                        isRunning = true
-                        statusText = String(localized: "Listening to \(inputSource.title)")
-                    } else if let realtimeFixture = SnapshotFixtureData.realtimeFixture(for: fixture) {
-                        applySnapshotFixture(realtimeFixture)
-                    }
-                #else
-                    if let realtimeFixture = SnapshotFixtureData.realtimeFixture(for: fixture) {
-                        applySnapshotFixture(realtimeFixture)
-                    }
-                #endif
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else {
+                await stop()
+                return
             }
-        }
-
-        deinit {
-            #if os(iOS)
-                for observer in sessionLifecycleObservers {
-                    NotificationCenter.default.removeObserver(observer)
+            #if os(macOS)
+                if let importedAudioURL {
+                    if let pendingStartFailure { throw pendingStartFailure }
+                    isRunning = true
+                    statusText = String(localized: "Recognizing speech")
+                    startImportedAudioTask(url: importedAudioURL, sessionID: sessionID)
+                    return
                 }
             #endif
+            #if os(iOS)
+                statusText = String(localized: "Starting \(inputSource.title)...")
+                switch inputSource {
+                case .microphone:
+                    try await microphoneAudioCapture.start(
+                        sampleRate: audioSampleRate,
+                        allowsPlayback: false
+                    )
+                case .iphoneAudio:
+                    throw RealtimeIPhoneAudioPreflightFailure.appleTranslateUnavailable
+                }
+            #endif
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else {
+                await stop()
+                return
+            }
+            if let pendingStartFailure { throw pendingStartFailure }
+            isRunning = true
+            statusText = String(localized: "Listening to \(inputSource.title)")
+            logRealtime("start succeeded input=\(inputSource.rawValue) sampleRate=\(audioSampleRate)")
+        } catch {
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            await stop()
+            logRealtime("start failed error=\(Self.describe(error))")
+            handleStartFailure(error)
         }
+    }
 
+    public func stop() async {
+        guard !isStopping else {
+            logRealtime("stop ignored reason=alreadyStopping input=\(inputSource.rawValue)")
+            return
+        }
+        isStopping = true
+        drainingSessionID = activeSessionID
         #if os(macOS)
-            public var canAddRealtimeLane: Bool {
-                laneConfigurations.count < RealtimePipelineCoordinator.maximumLaneCount &&
-                    !isRealtimeMemoryConstrained
-            }
+            importedAudioTask?.cancel()
+            importedAudioTask = nil
+        #endif
+        defer {
+            isStopping = false
+        }
 
-            public var primaryLaneConfiguration: RealtimeLaneConfiguration? {
-                laneConfigurations.first(where: { $0.id == primaryLaneID }) ?? laneConfigurations.first
-            }
-
-            public var hasImportedAudio: Bool {
-                importedAudioURL != nil
-            }
-
-            public var hasMOSSLane: Bool {
-                laneConfigurations.contains {
-                    $0.recognitionModelID == RecognitionModelDescriptor.mossTranscribeDiarize.id
-                }
-            }
-
-            public var canPauseCurrentSession: Bool {
-                !hasMOSSLane
-            }
-
-            public var laneConfigurationStartBlocker: RealtimeStartBlocker? {
-                Self.startConfigurationBlocker(
-                    configurations: laneConfigurations,
-                    hasImportedAudio: hasImportedAudio,
-                    isMemoryConstrained: isRealtimeMemoryConstrained,
-                    sourceLanguage: preferences.realtimeSourceLanguage
-                )
-            }
-
-            nonisolated static func startConfigurationBlocker(
-                configurations: [RealtimeLaneConfiguration],
-                hasImportedAudio: Bool,
-                isMemoryConstrained: Bool,
-                sourceLanguage: SourceLanguageOption = .auto,
-                physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory
-            ) -> RealtimeStartBlocker? {
-                guard !configurations.isEmpty else {
-                    return .missingLane
-                }
-                guard !isMemoryConstrained else {
-                    return .memoryPressure
-                }
-                for configuration in configurations {
-                    let model: RecognitionModelDescriptor
-                    if configuration.recognitionModelID == RecognitionModelDescriptor.mossTranscribeDiarize.id {
-                        model = .mossTranscribeDiarize
-                    } else {
-                        guard let descriptor = RecognitionModelStore.descriptor(
-                            forModelID: configuration.recognitionModelID
-                        ),
-                            RecognitionModelStore.selectableModels.contains(where: { $0.id == descriptor.id })
-                        else {
-                            return .unsupportedRecognitionModel(configuration.recognitionModelID)
-                        }
-                        model = descriptor
-                    }
-                    if model.runtime == .mossOffline {
-                        guard RecognitionModelStore.isRuntimeSupported(model) else {
-                            return .unsupportedRecognitionModel(model.title)
-                        }
-                        guard hasImportedAudio else {
-                            return .importedAudioRequired(model.title)
-                        }
-                    } else if !RecognitionModelStore.isSelectable(model) {
-                        return .unsupportedRecognitionModel(model.title)
-                    }
-                    guard model.supports(sourceLanguage: sourceLanguage) else {
-                        return .unsupportedSourceLanguage(model.title, sourceLanguage.primaryLabel)
-                    }
-                }
-                do {
-                    _ = try RealtimePipelineCoordinator.validated(
-                        configurations,
-                        physicalMemory: physicalMemory
-                    )
-                    return nil
-                } catch let error as RealtimePipelineError {
-                    return RealtimeStartBlocker(error)
-                } catch {
-                    return nil
-                }
-            }
-
-            nonisolated static func shouldSerializeMOSS(
-                configurations: [RealtimeLaneConfiguration],
-                physicalMemory: UInt64 = ProcessInfo.processInfo.physicalMemory
-            ) -> Bool {
-                guard physicalMemory < 24 * 1024 * 1024 * 1024 else { return false }
-                return configurations.contains { $0.recognitionModel.runtime == .mossOffline } &&
-                    configurations.contains { $0.recognitionModel.runtime == .fluidAudio }
-            }
-
-            public func setImportedAudioURL(_ url: URL?) {
-                guard !isRealtimeSessionBusy else { return }
-                importedAudioURL = url
-                if url == nil {
-                    restorePreMOSSRecognitionModels()
-                }
-                statusText = String(localized: "Ready")
-            }
-
-            public func addDefaultLane() async throws {
-                let recognitionModelID = preferences.realtimeRecognitionModelID
-                guard let translationProvider = RealtimeTranslationProvider.availableCases.first(where: { provider in
-                    !laneConfigurations.contains {
-                        $0.recognitionModelID == recognitionModelID &&
-                            $0.translationProvider == provider
-                    }
-                }) else {
-                    throw RealtimePipelineError.duplicateLane
-                }
-                try await addLane(
-                    recognitionModelID: recognitionModelID,
-                    translationProvider: translationProvider
-                )
-            }
-
-            public func addLane(
-                recognitionModelID: String,
-                translationProvider: RealtimeTranslationProvider
-            ) async throws {
-                guard laneConfigurations.count < RealtimePipelineCoordinator.maximumLaneCount else {
-                    throw RealtimePipelineError.maximumLaneCount
-                }
-                guard !isRealtimeMemoryConstrained else {
-                    throw RealtimePipelineError.memoryPressure
-                }
-                let model = RecognitionModelStore.selectableDescriptor(forModelID: recognitionModelID)
-                guard model.runtime != .mossOffline || hasImportedAudio else {
-                    throw RealtimeRecognizerError.unsupportedModel(model.id)
-                }
-                guard !laneConfigurations.contains(where: {
-                    $0.recognitionModelID == model.id &&
-                        $0.translationProvider == translationProvider
-                }) else {
-                    throw RealtimePipelineError.duplicateLane
-                }
-                guard model.supports(sourceLanguage: preferences.realtimeSourceLanguage) else {
-                    throw RealtimeRecognizerError.unsupportedModel(model.id)
-                }
-                guard await RecognitionModelStore.shared.isModelCached(model) else {
-                    throw RealtimePipelineError.modelNotDownloaded(model.title)
-                }
-                let configuration = RealtimeLaneConfiguration(
-                    recognitionModelID: model.id,
-                    translationProvider: translationProvider
-                )
-                _ = try RealtimePipelineCoordinator.validated(laneConfigurations + [configuration])
-                if isRunning {
-                    try await ensureAppleTranslateLanguagesInstalledIfNeeded(providers: [translationProvider])
-                    try await realtimePipelineCoordinator.addLane(configuration)
-                }
-                laneConfigurations.append(configuration)
-                laneSnapshots.append(RealtimeLaneSnapshot(
-                    configuration: configuration,
-                    phase: isRunning ? .loading : .ready
-                ))
-                if isRunning {
-                    applyLaneSnapshots(realtimePipelineCoordinator.snapshots)
-                }
-                persistLaneConfiguration()
-            }
-
-            public func removeLane(id: UUID) async {
-                guard laneConfigurations.count > 1,
-                      laneConfigurations.contains(where: { $0.id == id })
-                else {
+        statusText = String(localized: "Stopping capture")
+        logRealtime(
+            """
+            stop requested input=\(inputSource.rawValue) running=\(isRunning) sourceLen=\(sourceText.count) \
+            stableLen=\(translationSourceText.count) pendingLen=\(pendingSourceText.count) pairs=\(sentencePairs.count)
+            """
+        )
+        #if os(iOS)
+            if inputSource == .iphoneAudio {
+                await drainHostRecognitionRelay()
+                saveRealtimeHistoryIfPossible()
+                guard let broadcastStateStore else {
+                    finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
                     return
                 }
-                // Remove before suspending so a concurrent removal sees the updated count.
-                laneConfigurations.removeAll { $0.id == id }
-                laneSnapshots.removeAll { $0.id == id }
-                if isRunning {
-                    await realtimePipelineCoordinator.removeLane(id: id)
+                // Capture the phase before requestStop() overwrites it with .stopping.
+                let priorState = broadcastStateStore.load()
+                let priorPhase = priorState?.phase
+                broadcastStateStore.requestStop()
+                isPaused = false
+                audioLevel = nil
+                // When the broadcast upload extension never started, no heartbeat
+                // will consume stopRequested, so finish immediately instead of
+                // waiting for the state to go stale.
+                if priorPhase == nil || priorPhase == .idle || priorPhase == .waiting {
+                    finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+                } else {
+                    statusText = String(localized: "Stopping iPhone Audio")
+                    await waitForIPhoneAudioBroadcastStop(sessionID: priorState?.sessionID)
                 }
-                if primaryLaneID == id, let first = laneConfigurations.first {
-                    primaryLaneID = first.id
-                    realtimePipelineCoordinator.setPrimaryLaneID(first.id)
-                }
-                persistLaneConfiguration()
-                projectPrimaryLane()
-            }
-
-            public func setPrimaryLane(id: UUID) {
-                guard laneConfigurations.contains(where: { $0.id == id }) else { return }
-                primaryLaneID = id
-                realtimePipelineCoordinator.setPrimaryLaneID(id)
-                if let configuration = primaryLaneConfiguration {
-                    if configuration.recognitionModel.runtime != .mossOffline {
-                        preferences.setRealtimeRecognitionModelID(configuration.recognitionModelID)
-                    }
-                    preferences.setRealtimeTranslationProvider(configuration.translationProvider)
-                }
-                persistLaneConfiguration()
-                projectPrimaryLane()
-            }
-
-            public func updateLane(
-                id: UUID,
-                recognitionModelID: String,
-                translationProvider: RealtimeTranslationProvider
-            ) {
-                guard !isRealtimeSessionBusy,
-                      let index = laneConfigurations.firstIndex(where: { $0.id == id })
-                else {
-                    return
-                }
-                let model = RecognitionModelStore.selectableDescriptor(forModelID: recognitionModelID)
-                guard model.runtime != .mossOffline || hasImportedAudio else { return }
-                guard model.supports(sourceLanguage: preferences.realtimeSourceLanguage) else { return }
-                let duplicate = laneConfigurations.contains {
-                    $0.id != id &&
-                        $0.recognitionModelID == model.id &&
-                        $0.translationProvider == translationProvider
-                }
-                guard !duplicate else { return }
-                let previousModelID = laneConfigurations[index].recognitionModelID
-                if model.runtime == .mossOffline,
-                   previousModelID != model.id
-                {
-                    preMOSSRecognitionModelIDs[id] = previousModelID
-                } else if model.runtime != .mossOffline {
-                    preMOSSRecognitionModelIDs[id] = nil
-                }
-                laneConfigurations[index].recognitionModelID = model.id
-                laneConfigurations[index].translationProvider = translationProvider
-                laneSnapshots[index] = RealtimeLaneSnapshot(configuration: laneConfigurations[index])
-                if id == primaryLaneID {
-                    if model.runtime != .mossOffline {
-                        preferences.setRealtimeRecognitionModelID(model.id)
-                    }
-                    preferences.setRealtimeTranslationProvider(translationProvider)
-                }
-                persistLaneConfiguration()
-                projectPrimaryLane()
-            }
-
-            private var isRealtimeSessionBusy: Bool {
-                isRunning || isStarting || isStopping
-            }
-
-            private func persistLaneConfiguration() {
-                let persistentConfigurations = laneConfigurations.map { configuration in
-                    guard configuration.recognitionModel.runtime == .mossOffline else {
-                        return configuration
-                    }
-                    var restored = configuration
-                    restored.recognitionModelID =
-                        preMOSSRecognitionModelIDs[configuration.id] ??
-                        RecognitionModelDescriptor.appleSpeech.id
-                    return restored
-                }
-                RealtimeLaneConfigurationPersistence.save(
-                    configurations: persistentConfigurations,
-                    primaryLaneID: primaryLaneID,
-                    defaults: .standard
-                )
-            }
-
-            private func restorePreMOSSRecognitionModels() {
-                guard !preMOSSRecognitionModelIDs.isEmpty else { return }
-                for index in laneConfigurations.indices {
-                    guard laneConfigurations[index].recognitionModel.runtime == .mossOffline else { continue }
-                    laneConfigurations[index].recognitionModelID =
-                        preMOSSRecognitionModelIDs[laneConfigurations[index].id] ??
-                        RecognitionModelDescriptor.appleSpeech.id
-                    laneSnapshots[index].configuration = laneConfigurations[index]
-                }
-                preMOSSRecognitionModelIDs.removeAll()
-                persistLaneConfiguration()
-                projectPrimaryLane()
-            }
-
-            private func applyLaneSnapshots(_ snapshots: [RealtimeLaneSnapshot]) {
-                var snapshotsByID = Dictionary(uniqueKeysWithValues: snapshots.map { ($0.id, $0) })
-                laneSnapshots = laneConfigurations.compactMap { configuration in
-                    snapshotsByID.removeValue(forKey: configuration.id) ??
-                        laneSnapshots.first(where: { $0.id == configuration.id }) ??
-                        RealtimeLaneSnapshot(configuration: configuration)
-                }
-                projectPrimaryLane()
-                autosaveRealtimeHistoryIfNeeded()
-            }
-
-            private func projectPrimaryLane() {
-                guard let lane = laneSnapshots.first(where: { $0.id == primaryLaneID }) ?? laneSnapshots.first else {
-                    return
-                }
-                assignIfChanged(&sourceText, lane.sourceText)
-                assignIfChanged(&translatedText, lane.translatedText)
-                assignIfChanged(&pendingSourceText, lane.pendingSourceText)
-                assignIfChanged(&pendingTranslatedText, lane.pendingTranslatedText)
-                assignIfChanged(&sentencePairs, lane.sentencePairs)
-                assignIfChanged(&captionLines, lane.captionLines)
-                translationSourceText = lane.sentencePairs.map(\.original).joined(separator: "\n\n")
-                presentationSourceSegments = lane.sentencePairs.map(\.original)
-                historySessionBuilder.sync(
-                    pairs: realtimeHistoryPairs(),
-                    at: Date()
-                )
-                if isRunning {
-                    statusText = lane.phase == .paused
-                        ? String(localized: "Paused")
-                        : String(localized: "Listening to \(inputSource.title)")
-                }
-            }
-
-            func applyLaneSnapshotFixture(
-                _ snapshots: [RealtimeLaneSnapshot],
-                primaryLaneID: UUID
-            ) {
-                laneConfigurations = snapshots.map(\.configuration)
-                laneSnapshots = snapshots
-                self.primaryLaneID = primaryLaneID
-                refreshInactiveLaneCaptionPresentation()
-                projectPrimaryLane()
-            }
-
-            private func refreshInactiveLaneCaptionPresentation() {
-                let activeLaneIDs = Set(realtimePipelineCoordinator.snapshots.map(\.id))
-                laneSnapshots = laneSnapshots.map { snapshot in
-                    guard !activeLaneIDs.contains(snapshot.id) else { return snapshot }
-                    var updated = snapshot
-                    updated.captionLines = RealtimeCaptionDisplay.displayWindow(
-                        RealtimeCaptionDisplay.resolvedLines(
-                            pairs: snapshot.sentencePairs,
-                            translatedSource: snapshot.sentencePairs.map(\.original).joined(separator: "\n\n"),
-                            translatedText: snapshot.translatedText,
-                            pendingSource: snapshot.pendingSourceText,
-                            pendingTranslation: snapshot.pendingTranslatedText,
-                            sourceText: snapshot.sourceText,
-                            mode: snapshot.configuration.translationProvider.performsTranslation
-                                ? captionDisplayMode : .sourceOnly
-                        ),
-                        limit: Self.captionLineDisplayLimit
-                    )
-                    return updated
-                }
+                return
             }
         #endif
 
-        public func start() async {
+        statusText = String(localized: "Processing final text")
+        #if os(macOS)
+            await systemAudioCapture.stop()
+            await secondarySystemAudioCapture.stop()
+        #endif
+        microphoneAudioCapture.stop()
+        #if os(macOS)
+            secondaryMicrophoneAudioCapture.stop()
+            secondaryAudioSource = nil
+        #endif
+        #if os(macOS)
+            await realtimePipelineCoordinator.stop()
+            realtimePipelineAudioFanout.resetTimeline()
+        #else
+            await activeRecognizer.stop()
+        #endif
+        await callbackDrain.wait()
+        activeSessionID = UUID()
+        drainingSessionID = nil
+        finalizePendingRecognition()
+        await translationScheduler.settle()
+        audioHistoryRecorder.finish()
+        secondaryAudioHistoryRecorder.finish()
+        statusText = String(localized: "Saving realtime history")
+        saveRealtimeHistoryIfPossible(generateTitle: true)
+        publishSavedHistoryNoticeIfNeeded()
+        isRunning = false
+        isPaused = false
+        audioLevel = nil
+        audioSampleCount = 0
+        statusText = sourceText.isEmpty ? String(localized: "Ready") : String(localized: "Stopped")
+        #if os(macOS)
+            if isImportedAudioSession {
+                isImportedAudioSession = false
+                importedAudioURL = nil
+                restorePreMOSSRecognitionModels()
+            }
+        #endif
+        logRealtime("stop completed status=\(statusText) savedSourceLen=\(sourceText.count)")
+    }
+
+    public func toggleRunning() async {
+        if isRunning {
+            await stop()
+        } else {
+            await start()
+        }
+    }
+
+    public func dismissSavedHistoryNotice() {
+        savedHistoryNotice = nil
+    }
+
+    /// Starts loading the selected local recognition model so a later start does not wait for it.
+    public func prewarmRecognitionModel() async {
+        #if os(iOS) && arch(arm64) && canImport(FluidAudio)
+            guard !isRunning, !isStarting, inputSource == .microphone else { return }
+            let model = RecognitionModelStore.selectableDescriptor(
+                forModelID: preferences.realtimeRecognitionModelID
+            )
+            guard model.runtime == .fluidAudio,
+                  await RecognitionModelStore.shared.isModelCached(model)
+            else {
+                return
+            }
+            await RealtimeFluidAudioEngineCache.shared.prewarm(model)
+        #endif
+    }
+
+    private func publishSavedHistoryNoticeIfNeeded() {
+        let recordingCount = lastRealtimeHistoryAutosaveRecordings?.count ?? 0
+        logRealtime("saved history notice recordings=\(recordingCount)")
+        guard recordingCount > 0 else { return }
+        savedHistoryNotice = RealtimeSavedHistoryNotice(requestID: historySessionBuilder.requestID)
+    }
+
+    public func dismissStartFailureAlert() {
+        startFailureAlert = nil
+    }
+
+    /// Lets the next start show the system Apple Translate download prompt for a missing language pack.
+    public func allowAppleTranslationDownloadOnNextStart() {
+        allowsAppleTranslationDownloadPromptOnNextStart = true
+    }
+
+    public func cycleCaptionDisplayMode() {
+        captionDisplayMode = captionDisplayMode.next
+    }
+
+    public func togglePaused() {
+        guard isRunning else { return }
+        #if os(macOS)
+            guard canPauseCurrentSession else { return }
+        #endif
+        #if os(iOS)
+            guard inputSource != .iphoneAudio else { return }
+        #endif
+        #if os(iOS)
+            isPausedForAudioInterruption = false
+            // An interruption stops the engine; resuming must restart it before recognition continues.
+            if isPaused, inputSource == .microphone {
+                do {
+                    try microphoneAudioCapture.restartIfStopped()
+                } catch {
+                    logRealtime("microphone resume failed error=\(Self.describe(error))")
+                    errorMessage = Self.realtimeErrorDescription(for: error)
+                    return
+                }
+            }
+        #endif
+        let isTranslating = translationScheduler.isTranslating
+        isPaused.toggle()
+        if usesRealtimeSessionHistory {
+            if isPaused {
+                historySessionBuilder.pause()
+                audioHistoryRecorder.pause()
+                secondaryAudioHistoryRecorder.pause()
+            } else {
+                historySessionBuilder.resume()
+                audioHistoryRecorder.resume()
+                secondaryAudioHistoryRecorder.resume()
+            }
+        }
+        activeRecognizer.setPaused(isPaused)
+        #if os(macOS)
+            realtimePipelineCoordinator.setPaused(isPaused)
+        #endif
+        statusText = isPaused ? String(localized: "Paused") : String(localized: "Listening to \(inputSource.title)")
+        logRealtime("pause toggled paused=\(isPaused) translating=\(isTranslating) status=\(statusText)")
+        if isPaused, !isTranslating {
+            saveRealtimeHistoryIfPossible()
+        }
+    }
+
+    public func pause() {
+        guard isRunning, !isPaused else { return }
+        togglePaused()
+    }
+
+    #if os(iOS)
+        /// True while the upload extension is broadcasting for this session. A stop the extension
+        /// initiates always shows a ReplayKit alert, so the UI ends a live broadcast through the
+        /// system picker instead.
+        public var isIPhoneAudioBroadcastLive: Bool {
+            guard inputSource == .iphoneAudio, isRunning, !isStopping,
+                  let phase = broadcastStateStore?.load()?.phase
+            else { return false }
+            switch phase {
+            case .broadcasting, .recognizing, .translating, .paused:
+                return true
+            case .idle, .waiting, .stopping, .stopped, .failed:
+                return false
+            }
+        }
+    #endif
+
+    public func resetTranscript() {
+        logRealtime(
+            """
+            resetTranscript sourceLen=\(sourceText.count) stableLen=\(translationSourceText.count) \
+            pendingLen=\(pendingSourceText.count) translatedLen=\(translatedText.count) pairs=\(sentencePairs.count)
+            """
+        )
+        cancelTranslationWork()
+        captionClearAnchor = .empty
+        transcriptAccumulator.reset()
+        translationState.reset()
+        #if os(macOS)
+            realtimePipelineCoordinator.reset()
+            laneSnapshots = laneConfigurations.map {
+                RealtimeLaneSnapshot(configuration: $0)
+            }
+        #endif
+        presentationSourceSegments = []
+        historyCheckpoint.reset()
+        historySessionBuilder.reset()
+        audioHistoryRecorder.reset()
+        secondaryAudioHistoryRecorder.reset()
+        #if os(macOS)
+            secondaryAudioSource = nil
+        #endif
+        resetRealtimeHistoryAutosave()
+        #if os(iOS)
+            latestBroadcastRealtimeHistorySession = nil
+        #endif
+        if !sourceText.isEmpty {
+            sourceText = ""
+        }
+        syncTranslationStatePresentation()
+        errorMessage = nil
+        if !isRunning {
+            statusText = String(localized: "Ready")
+        } else {
+            startRealtimeHistorySessionIfNeeded()
+        }
+    }
+
+    public func clearTranscriptDisplay() {
+        captionClearAnchor = RealtimeCaptionDisplayClearAnchor(lines: resolvedCaptionLines())
+        assignIfChanged(&captionLines, [])
+    }
+
+    public func endSession() async {
+        await stop()
+        resetTranscript()
+    }
+
+    public func applySnapshotFixture(_ fixture: SnapshotRealtimeBilingualLiveFixture) {
+        cancelTranslationWork()
+        #if os(iOS)
+            inputSource = SnapshotLaunchArguments.isSnapshotMode()
+                && SnapshotLaunchArguments.value(after: "-SNAPSHOT_SCENE") == "video"
+                ? .iphoneAudio : .microphone
+        #else
+            inputSource = .microphone
+        #endif
+        preferences.setRealtimeTranslationProvider(fixture.translationProvider)
+        captionDisplayMode = fixture.captionDisplayMode
+        isRunning = true
+        isPaused = false
+        sourceText = fixture.sourceText
+        translatedText = fixture.translatedText
+        translationSourceText = fixture.sourceText
+        sentencePairs = fixture.sentencePairs
+        pendingSourceText = fixture.pendingSource
+        pendingTranslatedText = fixture.pendingTranslation
+        presentationSourceSegments = RealtimeTranscriptSegmenter.segments(from: translationSourceText)
+        refreshCaptionLines(event: "snapshotFixture")
+        statusText = String(localized: "Listening to \(inputSource.title)")
+        errorMessage = nil
+        startFailureAlert = nil
+        audioLevel = -22
+        audioSampleCount = 1240
+        preferences.setRealtimeSourceLanguage(fixture.sourceLanguage, reason: "Snapshot fixture")
+        preferences.setRealtimeTargetLanguage(fixture.targetLanguage, reason: "Snapshot fixture")
+        preferences.setRealtimeRecognitionEngine(.appleSpeech)
+        #if os(macOS)
+            let configuration = RealtimeLaneConfiguration(
+                recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
+                translationProvider: fixture.translationProvider
+            )
+            laneConfigurations = [configuration]
+            primaryLaneID = configuration.id
+            laneSnapshots = [
+                RealtimeLaneSnapshot(
+                    configuration: configuration,
+                    phase: .recognizing,
+                    sourceText: fixture.sourceText,
+                    translatedText: fixture.translatedText,
+                    pendingSourceText: fixture.pendingSource,
+                    pendingTranslatedText: fixture.pendingTranslation,
+                    sentencePairs: fixture.sentencePairs,
+                    captionLines: captionLines
+                ),
+            ]
+        #endif
+    }
+
+    public func languageSelectionDidChange() {
+        logRealtime(
+            """
+            languageSelectionDidChange provider=\(preferences.realtimeTranslationProvider.rawValue) \
+            source=\(preferences.realtimeSourceLanguage.rawValue) target=\(preferences.realtimeTargetLanguage.rawValue)
+            """
+        )
+        cancelTranslationWork()
+        errorMessage = nil
+        translationState.resetTranslationResults()
+        updateTranscriptPresentation()
+        scheduleTranslation()
+    }
+
+    private func speechLocale() -> Locale {
+        switch preferences.realtimeSourceLanguage {
+        case .auto:
+            return RecognitionModelStore.selectableDescriptor(
+                forModelID: preferences.realtimeRecognitionModelID
+            ) == .nemotronMultilingual2240
+                ? Locale(identifier: "und")
+                : Locale(identifier: "en-US")
+        default:
+            return Locale(identifier: preferences.realtimeSourceLanguage.rawValue)
+        }
+    }
+
+    #if os(iOS)
+        private func registerSessionLifecycle() {
+            // Recording continues while the device is locked: History and audio files use the
+            // default protection class, which stays readable after the first unlock.
+            sessionLifecycleObservers = [
+                NotificationCenter.default.addObserver(
+                    forName: AVAudioSession.interruptionNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                          let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+                    else {
+                        return
+                    }
+                    let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+                    let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
+                    Task { @MainActor in
+                        self?.handleAudioSessionInterruption(type, shouldResume: shouldResume)
+                    }
+                },
+            ]
+        }
+
+        /// A call, Siri or alarm pauses a long session instead of ending it, and resumes it when
+        /// the system says so. Without that hint it stays paused until the user resumes.
+        private func handleAudioSessionInterruption(_ type: AVAudioSession.InterruptionType, shouldResume: Bool) {
+            guard isRunning, inputSource == .microphone else { return }
+            switch type {
+            case .began:
+                guard !isPaused else { return }
+                pause()
+                isPausedForAudioInterruption = true
+                logRealtime("audio interruption began; paused")
+            case .ended:
+                guard isPausedForAudioInterruption, isPaused else { return }
+                isPausedForAudioInterruption = false
+                logRealtime("audio interruption ended shouldResume=\(shouldResume)")
+                if shouldResume {
+                    togglePaused()
+                }
+            @unknown default:
+                break
+            }
+        }
+
+        private func startIPhoneAudioBroadcastSession() async {
             logRealtime(
                 """
-                start requested input=\(inputSource.rawValue) provider=\(preferences.realtimeTranslationProvider.rawValue) \
-                model=\(preferences.realtimeRecognitionModelID) source=\(preferences.realtimeSourceLanguage.rawValue) \
-                target=\(preferences.realtimeTargetLanguage.rawValue) showCaptions=\(showCaptions)
-                """
+                start requested source=\(preferences.realtimeSourceLanguage.rawValue) \
+                target=\(preferences.realtimeTargetLanguage.rawValue)
+                """,
+                stage: "broadcast"
             )
-            guard !isRunning else {
-                logRealtime("start ignored reason=alreadyRunning input=\(inputSource.rawValue)")
-                return
-            }
-            guard !isStarting else {
-                logRealtime("start ignored reason=alreadyStarting input=\(inputSource.rawValue)")
-                return
-            }
-            guard hasRequiredLanguageSelection else {
-                errorMessage = nil
-                startFailureAlert = nil
-                statusText = preferences.realtimeTranslationProvider.performsTranslation
-                    ? String(localized: "Choose source and target languages to start")
-                    : String(localized: "Choose source language to start")
-                logRealtime("start blocked reason=missingLanguage status=\(statusText)")
-                return
-            }
-            let sessionID = UUID()
-            activeSessionID = sessionID
-            drainingSessionID = nil
-            #if os(macOS)
-                isImportedAudioSession = importedAudioURL != nil
-            #endif
-            isStarting = true
-            pendingStartFailure = nil
-            defer {
-                isStarting = false
-                pendingStartFailure = nil
-            }
-
-            #if os(iOS)
-                if inputSource == .iphoneAudio {
-                    await startIPhoneAudioBroadcastSession()
-                    return
-                }
-            #endif
-
+            // Runs first so a missing language pack surfaces as the alert that offers the download.
             do {
                 try await ensureAppleTranslateLanguagesInstalledIfNeeded()
             } catch {
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+                logRealtime("languagePreflightFailed error=\(Self.describe(error))", stage: "broadcast")
                 handleStartFailure(error)
                 return
             }
-            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            if let failure = await RealtimeIPhoneAudioPreflight.evaluate(
+                sourceLanguage: preferences.realtimeSourceLanguage,
+                targetLanguage: preferences.realtimeTargetLanguage,
+                requiresTranslation: preferences.realtimeTranslationProvider.performsTranslation
+            ) {
+                logRealtime("preflightFailed error=\(Self.describe(failure))", stage: "broadcast")
+                handleStartFailure(failure)
+                return
+            }
 
             resetTranscript()
             isPaused = false
             errorMessage = nil
             startFailureAlert = nil
+            audioLevel = nil
+            audioSampleCount = 0
+            isIPhoneAudioCaptureReady = false
 
-            do {
-                #if os(macOS)
-                    if importedAudioURL == nil {
-                        try await startLiveCaptureBeforeRecognition()
-                    }
-                #endif
-                let audioSampleRate = try await startRecognition(sessionID: sessionID)
-                #if os(macOS)
-                    if importedAudioURL != nil {
-                        startRealtimeHistorySessionIfNeeded()
-                    }
-                #else
-                    startRealtimeHistorySessionIfNeeded()
-                #endif
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID) else {
-                    await stop()
+            let sessionID = UUID().uuidString
+            broadcastStateStore?.reset(sessionID: sessionID, phase: .waiting)
+            RealtimeAudioRelay.removeStaleSessions(keeping: nil)
+            usesHostRecognitionRelay = false
+            if let relayModel = await hostRelayRecognitionModel() {
+                let recognitionSessionID = activeSessionID
+                logRealtime("host recognition loading model=\(relayModel.id) session=\(sessionID)", stage: "relay")
+                do {
+                    _ = try await startRecognition(sessionID: recognitionSessionID)
+                } catch {
+                    logRealtime("host recognition load failed error=\(Self.describe(error))", stage: "relay")
+                    handleStartFailure(error)
                     return
                 }
-                #if os(macOS)
-                    if let importedAudioURL {
-                        if let pendingStartFailure { throw pendingStartFailure }
-                        isRunning = true
-                        statusText = String(localized: "Recognizing speech")
-                        startImportedAudioTask(url: importedAudioURL, sessionID: sessionID)
+                guard shouldAcceptRealtimeCallback(sessionID: recognitionSessionID) else {
+                    logRealtime("host recognition abandoned reason=sessionChanged", stage: "relay")
+                    await activeRecognizer.stop()
+                    return
+                }
+                if let reader = RealtimeAudioRelayReader(sessionID: sessionID) {
+                    usesHostRecognitionRelay = true
+                    broadcastStateStore?.update(sessionID: sessionID, synchronize: true) { state in
+                        state.usesHostRecognition = true
+                    }
+                    broadcastStateStore?.markHostAlive(sessionID: sessionID)
+                    startRealtimeHistorySessionIfNeeded()
+                    startHostRecognitionRelay(reader: reader)
+                    logRealtime("host recognition ready model=\(relayModel.id) session=\(sessionID)", stage: "relay")
+                } else {
+                    logRealtime("host recognition unavailable reason=noRelayReader; extension recognizes", stage: "relay")
+                    await activeRecognizer.stop()
+                }
+            } else {
+                logRealtime("host recognition off model=\(preferences.realtimeRecognitionModelID)", stage: "relay")
+            }
+            isRunning = true
+            statusText = String(localized: "Waiting for iPhone Audio broadcast")
+            lastBroadcastStateLogSignature = nil
+            lastAppliedBroadcastSourceSegments = []
+            logRealtime("waiting session=\(sessionID)", stage: "broadcast")
+            startBroadcastStatePolling(sessionID: sessionID)
+        }
+
+        private func startBroadcastStatePolling(sessionID: String) {
+            stopBroadcastStatePolling()
+            broadcastStatePollingTask = Task { @MainActor [weak self] in
+                while !Task.isCancelled {
+                    self?.pollBroadcastState(sessionID: sessionID)
+                    do {
+                        try await Task.sleep(for: .milliseconds(500))
+                    } catch {
                         return
                     }
-                #endif
-                #if os(iOS)
-                    statusText = String(localized: "Starting \(inputSource.title)...")
-                    switch inputSource {
-                    case .microphone:
-                        try await microphoneAudioCapture.start(
-                            sampleRate: audioSampleRate,
-                            allowsPlayback: false
-                        )
-                    case .iphoneAudio:
-                        throw RealtimeIPhoneAudioPreflightFailure.appleTranslateUnavailable
-                    }
-                #endif
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID) else {
-                    await stop()
-                    return
                 }
-                if let pendingStartFailure { throw pendingStartFailure }
-                isRunning = true
-                statusText = String(localized: "Listening to \(inputSource.title)")
-                logRealtime("start succeeded input=\(inputSource.rawValue) sampleRate=\(audioSampleRate)")
-            } catch {
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
-                await stop()
-                logRealtime("start failed error=\(Self.describe(error))")
-                handleStartFailure(error)
             }
         }
 
-        public func stop() async {
-            guard !isStopping else {
-                logRealtime("stop ignored reason=alreadyStopping input=\(inputSource.rawValue)")
+        private func stopBroadcastStatePolling() {
+            broadcastStatePollingTask?.cancel()
+            broadcastStatePollingTask = nil
+        }
+
+        private func waitForIPhoneAudioBroadcastStop(sessionID: String?) async {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+            while isRunning, inputSource == .iphoneAudio, ContinuousClock.now < deadline {
+                if let state = broadcastStateStore?.load(), state.sessionID == sessionID {
+                    switch state.phase {
+                    case .stopped, .failed:
+                        applyBroadcastState(state)
+                        return
+                    default:
+                        break
+                    }
+                }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }
+
+        private func pollBroadcastState(sessionID: String) {
+            guard isRunning, inputSource == .iphoneAudio else {
+                stopBroadcastStatePolling()
                 return
             }
-            isStopping = true
-            drainingSessionID = activeSessionID
-            #if os(macOS)
-                importedAudioTask?.cancel()
-                importedAudioTask = nil
-            #endif
-            defer {
-                isStopping = false
+            guard !isDrainingHostRecognitionRelay else { return }
+            if usesHostRecognitionRelay {
+                broadcastStateStore?.markHostAlive(sessionID: sessionID)
             }
 
-            statusText = String(localized: "Stopping capture")
-            logRealtime(
-                """
-                stop requested input=\(inputSource.rawValue) running=\(isRunning) sourceLen=\(sourceText.count) \
-                stableLen=\(translationSourceText.count) pendingLen=\(pendingSourceText.count) pairs=\(sentencePairs.count)
-                """
-            )
-            #if os(iOS)
-                if inputSource == .iphoneAudio {
-                    await drainHostRecognitionRelay()
-                    saveRealtimeHistoryIfPossible()
-                    guard let broadcastStateStore else {
-                        finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+            guard let state = broadcastStateStore?.load(),
+                  state.sessionID == sessionID
+            else {
+                statusText = String(localized: "Waiting for iPhone Audio broadcast")
+                return
+            }
+            if Self.isIPhoneAudioBroadcastWaitTimedOut(state) {
+                broadcastStateStore?.update(synchronize: true) { state in
+                    guard state.sessionID == sessionID,
+                          Self.isIPhoneAudioBroadcastWaitTimedOut(state)
+                    else {
                         return
                     }
-                    // Capture the phase before requestStop() overwrites it with .stopping.
-                    let priorState = broadcastStateStore.load()
-                    let priorPhase = priorState?.phase
-                    broadcastStateStore.requestStop()
-                    isPaused = false
-                    audioLevel = nil
-                    // When the broadcast upload extension never started, no heartbeat
-                    // will consume stopRequested, so finish immediately instead of
-                    // waiting for the state to go stale.
-                    if priorPhase == nil || priorPhase == .idle || priorPhase == .waiting {
-                        finishIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
-                    } else {
-                        statusText = String(localized: "Stopping iPhone Audio")
-                        await waitForIPhoneAudioBroadcastStop(sessionID: priorState?.sessionID)
-                    }
-                    return
+                    state.phase = .stopped
+                    state.stopRequested = false
                 }
-            #endif
+                if let state = broadcastStateStore?.load(),
+                   state.sessionID == sessionID,
+                   state.phase == .stopped
+                {
+                    endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+                }
+                return
+            }
 
-            statusText = String(localized: "Processing final text")
-            #if os(macOS)
-                await systemAudioCapture.stop()
-                await secondarySystemAudioCapture.stop()
-            #endif
-            microphoneAudioCapture.stop()
-            #if os(macOS)
-                secondaryMicrophoneAudioCapture.stop()
-                secondaryAudioSource = nil
-            #endif
-            #if os(macOS)
-                await realtimePipelineCoordinator.stop()
-                realtimePipelineAudioFanout.resetTimeline()
-            #else
-                await activeRecognizer.stop()
-            #endif
+            applyBroadcastState(state)
+        }
+
+        private func applyBroadcastState(_ state: RealtimeBroadcastState) {
+            if usesHostRecognitionRelay, !state.usesHostRecognition, hostRecognitionRelayTask != nil {
+                handOffHostRecognitionToExtension(state: state)
+                return
+            }
+            // Polling mostly delivers heartbeats; skip transcript work and
+            // `@Published` writes when the text did not move. Relayed sessions keep the host transcript.
+            let transcriptChanged = !usesHostRecognitionRelay && (
+                sourceText != state.sourceText
+                    || translationSourceText != state.translationSourceText
+                    || pendingSourceText != state.pendingSourceText
+                    || translatedText != state.translatedText
+                    || pendingTranslatedText != state.pendingTranslatedText
+                    || sentencePairs != state.sentencePairs
+                    || lastAppliedBroadcastSourceSegments != state.sourceSegments
+            )
+            if !usesHostRecognitionRelay {
+                assignIfChanged(&sourceText, state.sourceText)
+            }
+            if transcriptChanged {
+                lastAppliedBroadcastSourceSegments = state.sourceSegments
+                assignIfChanged(&translationSourceText, state.translationSourceText)
+                assignIfChanged(
+                    &presentationSourceSegments,
+                    state.sourceSegments.isEmpty
+                        ? RealtimeTranscriptSegmenter.segments(from: state.translationSourceText)
+                        : state.sourceSegments
+                )
+                assignIfChanged(&pendingSourceText, state.pendingSourceText)
+                assignIfChanged(&translatedText, state.translatedText)
+                assignIfChanged(&pendingTranslatedText, state.pendingTranslatedText)
+                assignIfChanged(&sentencePairs, state.sentencePairs)
+            }
+            assignIfChanged(&audioSampleCount, state.audioSampleCount)
+            assignIfChanged(&audioLevel, state.audioLevel)
+            assignIfChanged(&errorMessage, state.errorMessage)
+            assignIfChanged(&isIPhoneAudioCaptureReady, state.isRecognitionReady)
+            if !usesHostRecognitionRelay {
+                latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
+            }
+            autosaveRealtimeHistoryIfNeeded()
+            if transcriptChanged {
+                refreshCaptionLines(event: "broadcastState")
+            }
+            logBroadcastStateIfNeeded(state)
+
+            if state.isStale(), state.phase != .stopped, state.phase != .failed {
+                if Self.isStaleActiveIPhoneAudioBroadcast(state) {
+                    let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
+                    endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
+                } else {
+                    statusText = String(localized: "Waiting for iPhone Audio broadcast")
+                }
+                return
+            }
+
+            switch state.phase {
+            case .idle, .waiting:
+                statusText = String(localized: "Waiting for iPhone Audio broadcast")
+            case .broadcasting:
+                statusText = state.audioSampleCount == 0
+                    ? String(localized: "Broadcasting, no app audio detected")
+                    : String(localized: "Broadcasting iPhone Audio")
+            case .recognizing:
+                statusText = String(localized: "Recognizing iPhone Audio")
+            case .translating:
+                statusText = String(localized: "Translating")
+            case .paused:
+                statusText = String(localized: "iPhone Audio broadcast paused")
+            case .stopping:
+                statusText = String(localized: "Stopping iPhone Audio")
+            case .stopped:
+                endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
+            case .failed:
+                let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
+                endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
+            }
+        }
+
+        private func hostRelayRecognitionModel() async -> RecognitionModelDescriptor? {
+            let model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
+            guard model.runtime == .fluidAudio else { return nil }
+            guard await RecognitionModelStore.shared.isModelCached(model) else {
+                logRealtime("host recognition off reason=modelNotCached model=\(model.id)", stage: "relay")
+                return nil
+            }
+            return model
+        }
+
+        /// Feeds relayed extension audio to the local recognizer off the main actor.
+        private func startHostRecognitionRelay(reader: RealtimeAudioRelayReader) {
+            hostRecognitionRelayReader = reader
+            let recognizer = activeRecognizer
+            hostRecognitionRelayTask = Task.detached(priority: .userInitiated) {
+                var bufferCount = 0
+                func deliver(_ buffer: AVAudioPCMBuffer) {
+                    let duration = Double(buffer.frameLength) / RealtimeAudioRelay.sampleRate
+                    guard duration <= RealtimeSessionStore.hostRecognitionRelayMaximumChunkDuration else {
+                        RealtimeLog.warn("relay", "host dropped stalled chunk seconds=\(String(format: "%.1f", duration))")
+                        return
+                    }
+                    bufferCount += 1
+                    if bufferCount == 1 {
+                        RealtimeLog.log("relay", "host first audio chunk seconds=\(String(format: "%.2f", duration))")
+                    }
+                    recognizer.append(buffer)
+                }
+                RealtimeLog.log("relay", "host reader started")
+                while !Task.isCancelled {
+                    if let buffer = reader.readAvailable() {
+                        deliver(buffer)
+                    }
+                    try? await Task.sleep(for: RealtimeSessionStore.hostRecognitionRelayPollInterval)
+                }
+                // Audio written before the stop still reaches the recognizer.
+                if let buffer = reader.readAvailable() {
+                    deliver(buffer)
+                }
+                RealtimeLog.log(
+                    "relay",
+                    "host reader stopped chunks=\(bufferCount) totalSeconds=\(String(format: "%.1f", Double(reader.totalSampleCount) / RealtimeAudioRelay.sampleRate))"
+                )
+            }
+        }
+
+        /// Stops reading relayed audio, then finishes recognition and translation like a microphone stop.
+        private func drainHostRecognitionRelay() async {
+            guard let task = hostRecognitionRelayTask else { return }
+            hostRecognitionRelayTask = nil
+            logRealtime("host drain begin sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+            task.cancel()
+            await task.value
+            await activeRecognizer.stop()
             await callbackDrain.wait()
+            finalizePendingRecognition()
+            await translationScheduler.settle()
+            audioHistoryRecorder.finish()
+            hostRecognitionRelayReader?.removeAll()
+            hostRecognitionRelayReader = nil
+            logRealtime("host drain end sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+        }
+
+        /// The extension stopped seeing host heartbeats and recognizes locally now. Save what the host
+        /// recognized as its own history entry, then show the extension's transcript.
+        private func handOffHostRecognitionToExtension(state: RealtimeBroadcastState) {
+            guard !isDrainingHostRecognitionRelay else { return }
+            logRealtime(
+                "host lost ownership phase=\(state.phase.rawValue) extensionSourceLen=\(state.sourceText.count); draining",
+                stage: "relay"
+            )
+            isDrainingHostRecognitionRelay = true
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await drainHostRecognitionRelay()
+                saveRealtimeHistoryIfPossible(generateTitle: true)
+                usesHostRecognitionRelay = false
+                isDrainingHostRecognitionRelay = false
+                logRealtime("host handed off to extension", stage: "relay")
+            }
+        }
+
+        /// Ends the session, first draining host recognition when relayed audio was in use.
+        private func endIPhoneAudioBroadcastSession(status: String, alert: RealtimeStartFailureAlert? = nil) {
+            let finish = { [self] in
+                finishIPhoneAudioBroadcastSession(status: status)
+                if let alert {
+                    handleErrorMessage(alert.message)
+                    startFailureAlert = alert
+                }
+            }
+            guard hostRecognitionRelayTask != nil else {
+                finish()
+                return
+            }
+            guard !isDrainingHostRecognitionRelay else { return }
+            isDrainingHostRecognitionRelay = true
+            stopBroadcastStatePolling()
+            logRealtime("session ending status=\(status); draining host recognition", stage: "relay")
+            Task { @MainActor [weak self] in
+                await self?.drainHostRecognitionRelay()
+                self?.isDrainingHostRecognitionRelay = false
+                finish()
+            }
+        }
+
+        private func finishIPhoneAudioBroadcastSession(status: String) {
+            if let task = hostRecognitionRelayTask {
+                logRealtime("finish without drain; stopping host recognition", stage: "relay")
+                task.cancel()
+                hostRecognitionRelayTask = nil
+                hostRecognitionRelayReader?.removeAll()
+                hostRecognitionRelayReader = nil
+                let recognizer = activeRecognizer
+                Task { await recognizer.stop() }
+            }
+            saveRealtimeHistoryIfPossible(generateTitle: true)
+            usesHostRecognitionRelay = false
+            stopBroadcastStatePolling()
+            isRunning = false
+            isStopping = false
             activeSessionID = UUID()
             drainingSessionID = nil
-            finalizePendingRecognition()
-            let partialTask = partialTranslationTask
-            cancelPartialTranslationWork()
-            await partialTask?.value
-            let finalTask = finalTranslationTask
-            await finalTask?.value
-            audioHistoryRecorder.finish()
-            secondaryAudioHistoryRecorder.finish()
-            statusText = String(localized: "Saving realtime history")
-            saveRealtimeHistoryIfPossible(generateTitle: true)
-            publishSavedHistoryNoticeIfNeeded()
-            isRunning = false
             isPaused = false
             audioLevel = nil
             audioSampleCount = 0
-            statusText = sourceText.isEmpty ? String(localized: "Ready") : String(localized: "Stopped")
-            #if os(macOS)
-                if isImportedAudioSession {
-                    isImportedAudioSession = false
-                    importedAudioURL = nil
-                    restorePreMOSSRecognitionModels()
-                }
-            #endif
-            logRealtime("stop completed status=\(statusText) savedSourceLen=\(sourceText.count)")
+            isIPhoneAudioCaptureReady = false
+            statusText = status
+            logRealtime("finished status=\(status)", stage: "broadcast")
         }
+    #endif
 
-        public func toggleRunning() async {
-            if isRunning {
-                await stop()
-            } else {
-                await start()
-            }
-        }
-
-        public func dismissSavedHistoryNotice() {
-            savedHistoryNotice = nil
-        }
-
-        /// Starts loading the selected local recognition model so a later start does not wait for it.
-        public func prewarmRecognitionModel() async {
-            #if os(iOS) && arch(arm64) && canImport(FluidAudio)
-                guard !isRunning, !isStarting, inputSource == .microphone else { return }
-                let model = RecognitionModelStore.selectableDescriptor(
-                    forModelID: preferences.realtimeRecognitionModelID
-                )
-                guard model.runtime == .fluidAudio,
-                      await RecognitionModelStore.shared.isModelCached(model)
-                else {
-                    return
-                }
-                await RealtimeFluidAudioEngineCache.shared.prewarm(model)
-            #endif
-        }
-
-        private func publishSavedHistoryNoticeIfNeeded() {
-            let recordingCount = lastRealtimeHistoryAutosaveRecordings?.count ?? 0
-            logRealtime("saved history notice recordings=\(recordingCount)")
-            guard recordingCount > 0 else { return }
-            savedHistoryNotice = RealtimeSavedHistoryNotice(requestID: historySessionBuilder.requestID)
-        }
-
-        public func dismissStartFailureAlert() {
-            startFailureAlert = nil
-        }
-
-        /// Lets the next start show the system Apple Translate download prompt for a missing language pack.
-        public func allowAppleTranslationDownloadOnNextStart() {
-            allowsAppleTranslationDownloadPromptOnNextStart = true
-        }
-
-        public func cycleCaptionDisplayMode() {
-            captionDisplayMode = captionDisplayMode.next
-        }
-
-        public func togglePaused() {
-            guard isRunning else { return }
-            #if os(macOS)
-                guard canPauseCurrentSession else { return }
-            #endif
-            #if os(iOS)
-                guard inputSource != .iphoneAudio else { return }
-            #endif
-            #if os(iOS)
-                isPausedForAudioInterruption = false
-                // An interruption stops the engine; resuming must restart it before recognition continues.
-                if isPaused, inputSource == .microphone {
-                    do {
-                        try microphoneAudioCapture.restartIfStopped()
-                    } catch {
-                        logRealtime("microphone resume failed error=\(Self.describe(error))")
-                        errorMessage = Self.realtimeErrorDescription(for: error)
-                        return
+    private func startRecognition(sessionID: UUID) async throws -> Int {
+        recognitionAudioPosition = 0
+        #if os(macOS)
+            for configuration in laneConfigurations {
+                let model = configuration.recognitionModel
+                if model.runtime == .mossOffline {
+                    guard importedAudioURL != nil else {
+                        throw RealtimeRecognizerError.unsupportedModel(model.id)
                     }
+                    #if arch(arm64) && canImport(MLXAudioCore) && canImport(MLXAudioSTT)
+                        guard await RealtimeHistoryMOSSReconstructor.shared.isModelCached() else {
+                            throw RealtimePipelineError.modelNotDownloaded(model.title)
+                        }
+                    #else
+                        throw RealtimeRecognizerError.unsupportedModel(model.id)
+                    #endif
+                    continue
                 }
-            #endif
-            let isTranslating = finalTranslationTask != nil || partialTranslationTask != nil
-            isPaused.toggle()
-            if usesRealtimeSessionHistory {
-                if isPaused {
-                    historySessionBuilder.pause()
-                    audioHistoryRecorder.pause()
-                    secondaryAudioHistoryRecorder.pause()
-                } else {
-                    historySessionBuilder.resume()
-                    audioHistoryRecorder.resume()
-                    secondaryAudioHistoryRecorder.resume()
+                guard await RecognitionModelStore.shared.isModelCached(model) else {
+                    throw RealtimePipelineError.modelNotDownloaded(model.title)
                 }
             }
-            activeRecognizer.setPaused(isPaused)
-            #if os(macOS)
-                realtimePipelineCoordinator.setPaused(isPaused)
-            #endif
-            statusText = isPaused ? String(localized: "Paused") : String(localized: "Listening to \(inputSource.title)")
-            logRealtime("pause toggled paused=\(isPaused) translating=\(isTranslating) status=\(statusText)")
-            if isPaused, !isTranslating {
-                saveRealtimeHistoryIfPossible()
-            }
-        }
+            try await realtimePipelineCoordinator.start(
+                configurations: laneConfigurations,
+                primaryLaneID: primaryLaneID,
+                sourceLanguage: preferences.realtimeSourceLanguage,
+                targetLanguage: preferences.realtimeTargetLanguage,
+                captionDisplayMode: captionDisplayMode,
+                importedAudioURL: importedAudioURL,
+                serializesMOSS: Self.shouldSerializeMOSS(configurations: laneConfigurations) ||
+                    isRealtimeMemoryConstrained
+            )
+            return 16000
+        #else
+            await activeRecognizer.stop()
 
-        public func pause() {
-            guard isRunning, !isPaused else { return }
-            togglePaused()
-        }
-
-        #if os(iOS)
-            /// True while the upload extension is broadcasting for this session. A stop the extension
-            /// initiates always shows a ReplayKit alert, so the UI ends a live broadcast through the
-            /// system picker instead.
-            public var isIPhoneAudioBroadcastLive: Bool {
-                guard inputSource == .iphoneAudio, isRunning, !isStopping,
-                      let phase = broadcastStateStore?.load()?.phase
-                else { return false }
-                switch phase {
-                case .broadcasting, .recognizing, .translating, .paused:
-                    return true
-                case .idle, .waiting, .stopping, .stopped, .failed:
-                    return false
+            switch preferences.realtimeRecognitionEngine {
+            case .appleSpeech:
+                var model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
+                if !(await RecognitionModelStore.shared.isModelCached(model)) {
+                    model = .appleSpeech
+                }
+                if preferences.realtimeRecognitionModelID != model.id {
+                    preferences.setRealtimeRecognitionModelID(model.id)
+                }
+                statusText = Self.loadingRecognitionModelStatus(modelTitle: model.title)
+                loadingRecognitionModelTitle = model.title
+                defer { loadingRecognitionModelTitle = nil }
+                switch model.runtime {
+                case .appleSpeech:
+                    try await transcriber.start(model: model, locale: speechLocale(), sessionID: sessionID)
+                    activeRecognizer.set(transcriber)
+                    return transcriber.sampleRate
+                case .fluidAudio:
+                    #if arch(arm64) && canImport(FluidAudio)
+                        if let progress = await RealtimeFluidAudioEngineCache.shared.loadProgress(for: model) {
+                            recognitionModelLoad = progress
+                        }
+                        defer { recognitionModelLoad = nil }
+                        let recognizer = RealtimeFluidAudioRecognizer(delegate: self)
+                        try await recognizer.start(model: model, locale: speechLocale(), sessionID: sessionID)
+                        activeRecognizer.set(recognizer)
+                        return recognizer.sampleRate
+                    #else
+                        throw RealtimeRecognizerError.unsupportedModel(model.id)
+                    #endif
+                case .coreML, .mossOffline, .mlxStreaming, .onnx:
+                    throw RealtimeRecognizerError.unsupportedModel(model.id)
                 }
             }
         #endif
+    }
 
-        public func resetTranscript() {
-            logRealtime(
+    public static func loadingRecognitionModelStatus(modelTitle: String) -> String {
+        String(localized: "Loading \(modelTitle) to recognize speech...")
+    }
+
+    #if os(macOS)
+        private func startLiveCaptureBeforeRecognition() async throws {
+            realtimePipelineAudioFanout.beginStartupBuffering()
+            startRealtimeHistorySessionIfNeeded()
+            statusText = String(localized: "Starting \(inputSource.title)...")
+            switch inputSource {
+            case .macAudio:
+                try systemAudioCapture.requestScreenRecordingAccess()
+                try await systemAudioCapture.start(sampleRate: 16000)
+            case .microphone:
+                try await microphoneAudioCapture.start(
+                    sampleRate: 16000,
+                    allowsPlayback: false
+                )
+            }
+            await startSecondaryAudioRecordingIfNeeded(sampleRate: 16000)
+        }
+
+        private func startImportedAudioTask(url: URL, sessionID: UUID) {
+            let fanout = realtimePipelineAudioFanout
+            let recorder = audioHistoryRecorder
+            importedAudioTask = Task.detached(priority: .userInitiated) { [store = self] in
+                do {
+                    try await RealtimeImportedAudioReader.run(
+                        url: url,
+                        isPaused: {
+                            await store.isPaused
+                        },
+                        onBuffer: { buffer in
+                            let completedAudioSegment = recorder.append(buffer)
+                            fanout.append(buffer)
+                            let level = realtimeAudioLevel(from: buffer)
+                            Task { @MainActor in
+                                guard store.shouldAcceptRealtimeCallback(sessionID: sessionID)
+                                else {
+                                    return
+                                }
+                                store.updateAudioSampleCount(
+                                    store.audioSampleCount + Int(buffer.frameLength),
+                                    level: level
+                                )
+                                if completedAudioSegment {
+                                    store.autosaveRealtimeHistoryIfNeeded()
+                                }
+                            }
+                        }
+                    )
+                    try Task.checkCancellation()
+                    await store.realtimePipelineCoordinator.finishImportedAudioInputAndWaitForOfflineRecognition()
+                    try Task.checkCancellation()
+                    await store.finishImportedAudioIfCurrent(sessionID: sessionID)
+                } catch is CancellationError {
+                    return
+                } catch {
+                    await store.handleImportedAudioFailure(error, sessionID: sessionID)
+                }
+            }
+        }
+
+        private func finishImportedAudioIfCurrent(sessionID: UUID) async {
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID),
+                  isImportedAudioSession
+            else {
+                return
+            }
+            importedAudioTask = nil
+            await stop()
+        }
+
+        private func handleImportedAudioFailure(_ error: Error, sessionID: UUID) async {
+            guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            importedAudioTask = nil
+            await stop()
+            handleStartFailure(error)
+        }
+
+        private func startSecondaryAudioRecordingIfNeeded(sampleRate: Int) async {
+            guard let secondarySource = secondaryAudioSource else { return }
+
+            do {
+                switch secondarySource {
+                case .macAudio:
+                    try secondarySystemAudioCapture.requestScreenRecordingAccess()
+                    try await secondarySystemAudioCapture.start(sampleRate: sampleRate)
+                case .microphone:
+                    try await secondaryMicrophoneAudioCapture.start(sampleRate: sampleRate)
+                }
+                logRealtime("secondary audio recording started source=\(secondarySource.rawValue)")
+            } catch {
+                secondaryAudioHistoryRecorder.finish()
+                secondaryAudioSource = nil
+                logRealtime(
+                    "secondary audio recording skipped source=\(secondarySource.rawValue) error=\(Self.describe(error))"
+                )
+            }
+        }
+
+        private func handleSecondaryAudioFailure(_ error: Error, source: RealtimeAudioInputSource) async {
+            guard secondaryAudioSource == source else { return }
+            secondaryAudioHistoryRecorder.finish()
+            secondaryAudioSource = nil
+            switch source {
+            case .macAudio:
+                await secondarySystemAudioCapture.stop()
+            case .microphone:
+                secondaryMicrophoneAudioCapture.stop()
+            }
+            logRealtime("secondary audio recording stopped source=\(source.rawValue) error=\(Self.describe(error))")
+            autosaveRealtimeHistoryIfNeeded()
+        }
+    #endif
+
+    private func ensureAppleTranslateLanguagesInstalledIfNeeded(
+        providers requestedProviders: Set<RealtimeTranslationProvider>? = nil
+    ) async throws {
+        let allowsDownloadPrompt = allowsAppleTranslationDownloadPromptOnNextStart
+        allowsAppleTranslationDownloadPromptOnNextStart = false
+        let providers: Set<RealtimeTranslationProvider> = {
+            if let requestedProviders {
+                return requestedProviders
+            }
+            #if os(macOS)
+                return Set(laneConfigurations.map(\.translationProvider))
+            #else
+                return [preferences.realtimeTranslationProvider]
+            #endif
+        }()
+        let appleProviders = providers.filter(\.usesAppleTextTranslation)
+        guard !appleProviders.isEmpty,
+              let source = preferences.realtimeSourceLanguage.localeLanguage
+        else {
+            return
+        }
+
+        let targetOption = preferences.realtimeTargetLanguage
+        let target = targetOption.localeLanguage
+        guard !RealtimeLanguageMatcher.matches(source, target) else { return }
+
+        guard AppleTranslationService.shared.isAvailable else {
+            throw LocalProviderError.notAvailable(AppleTranslationService.shared.availabilityStatus)
+        }
+
+        statusText = String(localized: "Checking Apple Translate languages...")
+        let languagePair = AppleTranslationErrorFormatter.languagePairDescription(
+            source: source,
+            target: targetOption
+        )
+        let strategies: Set<AppleTranslationAvailabilityStrategy> = Set(appleProviders.map {
+            $0 == .appleTranslationRealtime ? .lowLatency : .automatic
+        })
+        for strategy in strategies {
+            var status = try await AppleTranslationService.shared.languageAvailabilityStatus(
+                source: source,
+                target: target,
+                strategy: strategy
+            )
+            if status == .supported, allowsDownloadPrompt {
+                await requestAppleTranslationLanguageDownload(source: source, target: target, strategy: strategy)
+                status = try await AppleTranslationService.shared.languageAvailabilityStatus(
+                    source: source,
+                    target: target,
+                    strategy: strategy
+                )
+                // iOS keeps downloading after its prompt is dismissed and won't prompt again
+                // meanwhile, so offering Download again would loop without visible effect.
+                if status == .supported {
+                    let message = NSLocalizedString(
+                        "iOS is downloading this language pair in the background. Try again in a moment.",
+                        comment: "Shown when realtime Apple Translate is still waiting for a language pack download"
+                    )
+                    throw LocalProviderError.translationFailed(
+                        AppleTranslationErrorFormatter.withLanguagePair(message, languagePair: languagePair)
+                    )
+                }
+            }
+            if let error = Self.appleTranslateLanguagePreflightFailure(
+                status: status,
+                languagePair: languagePair
+            ) {
+                throw error
+            }
+        }
+    }
+
+    private func requestAppleTranslationLanguageDownload(
+        source: Locale.Language,
+        target: Locale.Language,
+        strategy: AppleTranslationAvailabilityStrategy
+    ) async {
+        finishAppleTranslationLanguageDownload(requestID: appleTranslationDownloadRequestID)
+        var configuration: TranslationSession.Configuration
+        if #available(iOS 26.4, macOS 26.4, *), strategy == .lowLatency {
+            configuration = .init(source: source, target: target, preferredStrategy: .lowLatency)
+        } else {
+            configuration = .init(source: source, target: target)
+        }
+        if var previous = appleTranslationDownloadConfiguration,
+           previous.source == configuration.source,
+           previous.target == configuration.target,
+           Self.hasSameStrategy(previous, configuration)
+        {
+            previous.invalidate()
+            configuration = previous
+        }
+        let requestID = UUID()
+        logRealtime("apple translate download requested strategy=\(strategy)")
+        await withCheckedContinuation { continuation in
+            appleTranslationDownloadRequestID = requestID
+            isAppleTranslationDownloadPromptPresented = false
+            appleTranslationDownloadContinuation = continuation
+            appleTranslationDownloadConfiguration = configuration
+            // Starts outside the realtime view (e.g. the floating caption window) have no
+            // `.translationTask` host; fail the preflight instead of waiting forever.
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(10))
+                guard let self,
+                      self.appleTranslationDownloadRequestID == requestID,
+                      !self.isAppleTranslationDownloadPromptPresented
+                else {
+                    return
+                }
+                self.logRealtime("apple translate download prompt not presented")
+                self.finishAppleTranslationLanguageDownload(requestID: requestID)
+            }
+        }
+    }
+
+    /// Called from a realtime view's `.translationTask` with the session for
+    /// `appleTranslationDownloadConfiguration`.
+    public func prepareAppleTranslationLanguageDownload(using session: TranslationSession) async {
+        guard let requestID = appleTranslationDownloadRequestID else { return }
+        // Keeps the prompt timeout from firing while the user decides.
+        isAppleTranslationDownloadPromptPresented = true
+        do {
+            try await session.prepareTranslation()
+            logRealtime("apple translate download prepared")
+        } catch {
+            logRealtime("apple translate download failed error=\(Self.describe(error))")
+        }
+        finishAppleTranslationLanguageDownload(requestID: requestID)
+    }
+
+    private static func hasSameStrategy(
+        _ lhs: TranslationSession.Configuration,
+        _ rhs: TranslationSession.Configuration
+    ) -> Bool {
+        guard #available(iOS 26.4, macOS 26.4, *) else { return true }
+        return lhs.preferredStrategy == rhs.preferredStrategy
+    }
+
+    private func finishAppleTranslationLanguageDownload(requestID: UUID?) {
+        guard let requestID, requestID == appleTranslationDownloadRequestID else { return }
+        appleTranslationDownloadRequestID = nil
+        appleTranslationDownloadContinuation?.resume()
+        appleTranslationDownloadContinuation = nil
+    }
+
+    private func handleRecognized(_ result: RealtimeRecognitionResult) {
+        beginCaptionTrace(
+            "asr",
+            "state=\(result.state) at=\(result.audioOffset.map { String(format: "%.2fs", $0) } ?? "-") " +
+                "text=\(RealtimeLog.text(result.text, limit: 64))"
+        )
+        defer { captionUpdateCause = "-" }
+        let previousSegments = translationState.sourceSegments
+        let previousPairCount = sentencePairs.count
+        let previousDisplayedTranslationLength = translatedText.count + pendingTranslatedText.count
+        let recognizedSourceText = transcriptAccumulator.append(result, afterLongSilence: false)
+        if sourceText != recognizedSourceText {
+            sourceText = recognizedSourceText
+        }
+        updateTranscriptPresentation()
+        let recognitionTimings = result.snapshot.map(Self.recognitionTimings(in:)) ?? []
+        recognitionAudioPosition = max(
+            recognitionAudioPosition,
+            result.audioOffset ?? recognitionTimings.last?.endTime ?? 0
+        )
+        if usesRealtimeSessionHistory {
+            historySessionBuilder.noteSource(
+                committedCount: translationState.sourceSegments.count,
+                hasText: !pendingSourceText.isEmpty
+            )
+            historySessionBuilder.noteRecognition(timings: recognitionTimings)
+        }
+        Self.logSourceSegmentChange(
+            from: previousSegments,
+            to: translationState.sourceSegments,
+            pending: pendingSourceText,
+            result: result
+        )
+        let displayedTranslationLength = translatedText.count + pendingTranslatedText.count
+        if displayedTranslationLength < previousDisplayedTranslationLength {
+            RealtimeLog.warn(
+                "align",
                 """
-                resetTranscript sourceLen=\(sourceText.count) stableLen=\(translationSourceText.count) \
-                pendingLen=\(pendingSourceText.count) translatedLen=\(translatedText.count) pairs=\(sentencePairs.count)
+                translation shrank len=\(previousDisplayedTranslationLength)->\(displayedTranslationLength) \
+                pairs=\(previousPairCount)->\(sentencePairs.count) segs=\(previousSegments.count)->\(translationState.sourceSegments.count)
                 """
             )
+        }
+        statusText = result
+            .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
+        scheduleTranslation()
+    }
+
+    /// Word timings when the recognizer reports them; otherwise each timed segment is one span.
+    private static func recognitionTimings(
+        in snapshot: RealtimeRecognitionSnapshot
+    ) -> [RealtimeRecognitionTokenTiming] {
+        guard snapshot.tokenTimings.isEmpty else { return snapshot.tokenTimings }
+        return (snapshot.stableSegments + [snapshot.pendingSegment].compactMap(\.self)).map {
+            RealtimeRecognitionTokenTiming(
+                token: $0.text,
+                startTime: $0.startOffset,
+                endTime: $0.endOffset,
+                confidence: 0.5
+            )
+        }
+    }
+
+    private func finalizePendingRecognition() {
+        let pending = transcriptAccumulator.pendingSentenceText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !pending.isEmpty else { return }
+
+        assignIfChanged(&sourceText, transcriptAccumulator.commitPartial())
+        updateTranscriptPresentation()
+        scheduleTranslation()
+    }
+
+    private func updateAudioSampleCount(_ count: Int, level: Float?) {
+        audioSampleCount = count
+        audioLevel = level
+    }
+
+    private func scheduleTranslation() {
+        let provider = preferences.realtimeTranslationProvider
+        guard provider.performsTranslation else {
             cancelTranslationWork()
-            captionClearAnchor = .empty
-            transcriptAccumulator.reset()
-            translationState.reset()
-            #if os(macOS)
-                realtimePipelineCoordinator.reset()
-                laneSnapshots = laneConfigurations.map {
-                    RealtimeLaneSnapshot(configuration: $0)
+            translationState.resetTranslationResults()
+            syncTranslationStatePresentation()
+            updateStatusAfterTranslationActivity()
+            return
+        }
+        let stableSourceText = translationSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let partialSourceText = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !stableSourceText.isEmpty || !partialSourceText.isEmpty else {
+            cancelTranslationWork()
+            translationState.clearStableTranslation()
+            syncTranslationStatePresentation()
+            return
+        }
+
+        guard hasRequiredLanguageSelection else {
+            logRealtime("missingLanguage clearsTranslation=true", stage: "tx")
+            cancelTranslationWork()
+            translationState.resetTranslationResults()
+            syncTranslationStatePresentation()
+            statusText = String(localized: "Choose source and target languages to start")
+            return
+        }
+
+        let sourceLanguage = preferences.realtimeSourceLanguage
+        let source = sourceLanguage.localeLanguage
+        let targetOption = preferences.realtimeTargetLanguage
+        let target = targetOption.localeLanguage
+        let languagePair = AppleTranslationErrorFormatter.languagePairDescription(
+            source: source,
+            target: targetOption
+        )
+
+        if let source, RealtimeLanguageMatcher.matches(source, target) {
+            logRealtime("sameLanguage provider=\(provider.rawValue) skipsTranslation=true", stage: "tx")
+            cancelTranslationWork()
+            translationState.applySameLanguageTranslation()
+            syncTranslationStatePresentation()
+            statusText = String(localized: "Source and target are the same (\(languagePair))")
+            return
+        }
+
+        if stableSourceText.isEmpty {
+            translationState.clearStableTranslation()
+            syncTranslationStatePresentation()
+        } else {
+            translationState.updateCachedSentencePairs(
+                provider: provider,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetOption
+            )
+            syncTranslationStatePresentation()
+            enqueueFinalTranslationRequests(
+                provider: provider,
+                sourceLanguage: sourceLanguage,
+                source: source,
+                targetLanguage: targetOption
+            )
+        }
+        schedulePartialTranslation(
+            provider: provider,
+            sourceLanguage: sourceLanguage,
+            source: source,
+            targetLanguage: targetOption
+        )
+        updateStatusAfterTranslationActivity()
+    }
+
+    private func configureTranslationScheduler() {
+        translationScheduler.handlers = .init(
+            translate: { try await RealtimeTranslationService.translate($0) },
+            finalResult: { [weak self] request, result in
+                self?.applyFinalTranslationResult(result, request: request)
+            },
+            finalFailure: { [weak self] request, error in
+                self?.handleTranslationError(error, request: request, kind: "final")
+            },
+            partialResult: { [weak self] request, result in
+                self?.applyPartialTranslationResult(result, request: request)
+            },
+            partialFailure: { [weak self] request, error in
+                self?.handleTranslationError(error, request: request, kind: "partial")
+            },
+            finalIdle: { [weak self] in
+                guard let self else { return }
+                updateStatusAfterTranslationActivity()
+                if isPaused {
+                    saveRealtimeHistoryIfPossible()
                 }
+            },
+            partialIdle: { [weak self] in self?.updateStatusAfterTranslationActivity() }
+        )
+    }
+
+    private func handleTranslationError(_ error: Error, request: RealtimeTextTranslationRequest, kind: String) {
+        if kind == "final" {
+            translationState.finishFinalTranslationRequest(request)
+            syncTranslationStatePresentation()
+        }
+        let message = Self.translationErrorMessage(
+            error,
+            source: request.source,
+            target: request.targetLanguage,
+            provider: request.provider
+        )
+        RealtimeLog.warn("tx", "\(kind) error src=\(RealtimeLog.text(request.translationText)) error=\(message)")
+        handleErrorMessage(message)
+    }
+
+    private func saveRealtimeHistoryIfPossible(generateTitle: Bool = false) {
+        if let session = currentRealtimeHistorySession() {
+            if saveRealtimeHistorySession(session, event: "saved"), generateTitle {
+                generateRealtimeHistoryTitleIfNeeded(for: session)
+            }
+            return
+        }
+        #if os(iOS)
+            if inputSource == .iphoneAudio {
+                logRealtime("history skipped reason=missingBroadcastRealtimeSession")
+                return
+            }
+        #endif
+
+        guard let snapshot = Self.historySnapshot(
+            sourceText: sourceText,
+            translatedText: translatedText,
+            pendingTranslatedText: pendingTranslatedText,
+            checkpoint: &historyCheckpoint
+        ) else {
+            logRealtime(
+                """
+                history skipped sourceLen=\(sourceText.count) translatedLen=\(translatedText.count) \
+                pendingTranslationLen=\(pendingTranslatedText.count)
+                """
+            )
+            return
+        }
+
+        do {
+            try TranslationHistoryService.shared.saveThrowing(
+                requestID: UUID(),
+                sourceText: snapshot.sourceText,
+                resultText: snapshot.translatedText,
+                actionName: TranslationRecord.realtimeActionName,
+                targetLanguage: preferences.realtimeTargetLanguage.englishName,
+                modelID: preferences.realtimeTranslationProvider.modelID,
+                modelDisplayName: preferences.realtimeTranslationProvider.model.displayName,
+                duration: 0
+            )
+            historyCheckpoint.acknowledge(snapshot)
+            logRealtime(
+                """
+                history saved sourceLen=\(snapshot.sourceText.count) translatedLen=\(snapshot.translatedText.count)
+                """
+            )
+        } catch {
+            logRealtime("history save failed error=\(Self.describe(error))")
+        }
+    }
+
+    private func autosaveRealtimeHistoryIfNeeded(now: Date = Date()) {
+        guard isRunning else { return }
+        // Throttle before building the session: this runs on every recognition update.
+        if let lastRealtimeHistoryAutosaveAt {
+            let delay = Self.realtimeHistoryAutosaveInterval - now.timeIntervalSince(lastRealtimeHistoryAutosaveAt)
+            if delay > 0 {
+                if realtimeHistoryAutosaveTask == nil {
+                    scheduleRealtimeHistoryAutosave(after: delay)
+                }
+                return
+            }
+        }
+
+        guard let session = currentRealtimeHistorySession(),
+              session.segments != lastRealtimeHistoryAutosaveSegments ||
+              session.audioRecordings != lastRealtimeHistoryAutosaveRecordings ||
+              session.tracks != lastRealtimeHistoryAutosaveTracks
+        else {
+            return
+        }
+
+        _ = saveRealtimeHistorySession(session, at: now, event: "autosaved")
+    }
+
+    private func scheduleRealtimeHistoryAutosave(after delay: TimeInterval) {
+        realtimeHistoryAutosaveTask?.cancel()
+        realtimeHistoryAutosaveTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            self?.realtimeHistoryAutosaveTask = nil
+            self?.autosaveRealtimeHistoryIfNeeded()
+        }
+    }
+
+    private func saveRealtimeHistorySession(
+        _ session: RealtimeHistorySession,
+        at date: Date = Date(),
+        event: String
+    ) -> Bool {
+        realtimeHistoryAutosaveTask?.cancel()
+        realtimeHistoryAutosaveTask = nil
+        do {
+            try TranslationHistoryService.shared.saveRealtimeSession(session)
+            lastRealtimeHistoryAutosaveAt = date
+            lastRealtimeHistoryAutosaveSegments = session.segments
+            lastRealtimeHistoryAutosaveRecordings = session.audioRecordings
+            lastRealtimeHistoryAutosaveTracks = session.tracks
+            return true
+        } catch {
+            logRealtime("history session save failed event=\(event) error=\(Self.describe(error))")
+            return false
+        }
+    }
+
+    private func generateRealtimeHistoryTitleIfNeeded(for session: RealtimeHistorySession) {
+        let requestID = session.requestID
+        guard session.generatedTitle == nil,
+              !realtimeHistoryTitleRequestIDs.contains(requestID),
+              !session.sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            return
+        }
+
+        realtimeHistoryTitleRequestIDs.insert(requestID)
+        realtimeHistoryTitleTasks[requestID] = Task { @MainActor [weak self] in
+            defer {
+                self?.realtimeHistoryTitleTasks[requestID] = nil
+            }
+            do {
+                guard let title = try await RealtimeHistoryTitleGenerator.generateTitle(for: session.sourceText) else {
+                    return
+                }
+                try TranslationHistoryService.shared.updateRealtimeGeneratedTitle(
+                    requestID: requestID,
+                    title: title
+                )
+                self?.logRealtime("history title generated request=\(requestID.uuidString.prefix(8))")
+            } catch {
+                self?.logRealtime("history title generation failed error=\(Self.describe(error))")
+            }
+        }
+    }
+
+    private func currentRealtimeHistorySession() -> RealtimeHistorySession? {
+        #if os(iOS)
+            if inputSource == .iphoneAudio, !usesHostRecognitionRelay {
+                guard [.appleTranslator, .transcriptionOnly].contains(preferences.realtimeTranslationProvider) else {
+                    return nil
+                }
+                var session = latestBroadcastRealtimeHistorySession
+                session?.inputSourceID = historyInputSourceID(for: inputSource)
+                return session
+            }
+        #endif
+
+        guard usesRealtimeSessionHistory else { return nil }
+        syncRealtimeHistorySession()
+        #if os(macOS)
+            let primaryConfiguration = primaryLaneConfiguration
+            let modelID = primaryConfiguration?.translationProvider.modelID ??
+                preferences.realtimeTranslationProvider.modelID
+            let modelDisplayName = primaryConfiguration?.translationProvider.model.displayName ??
+                preferences.realtimeTranslationProvider.model.displayName
+        #else
+            let modelID = preferences.realtimeTranslationProvider.modelID
+            let modelDisplayName = preferences.realtimeTranslationProvider.model.displayName
+        #endif
+        #if os(macOS)
+            let tracks = realtimePipelineCoordinator.tracks
+            let transcriptionModels = tracks.map {
+                RealtimeHistoryTranscriptionModel(
+                    source: activeHistoryAudioSource,
+                    modelID: $0.recognitionModelID,
+                    modelDisplayName: $0.recognitionModelDisplayName
+                )
+            }
+            let historyPrimaryTrackID: UUID? = primaryLaneID
+        #else
+            let tracks: [RealtimeHistoryTrack] = []
+            let transcriptionModels: [RealtimeHistoryTranscriptionModel] = []
+            let historyPrimaryTrackID: UUID? = nil
+        #endif
+        var session = historySessionBuilder.makeSession(
+            inputSource: activeHistoryAudioSource.title,
+            sourceLanguage: preferences.realtimeSourceLanguage.englishName,
+            targetLanguage: preferences.realtimeTargetLanguage.englishName,
+            modelID: modelID,
+            modelDisplayName: modelDisplayName,
+            transcriptionModels: transcriptionModels,
+            tracks: tracks,
+            primaryTrackID: historyPrimaryTrackID
+        )
+        session?.audioRecordings = audioHistoryRecordingsSnapshot()
+        session?.inputSourceID = activeHistoryInputSourceID
+        #if os(macOS)
+            session?.tracks = tracks
+            session?.primaryTrackID = primaryLaneID
+        #endif
+        return session
+    }
+
+    private func historyInputSourceID(for inputSource: RealtimeAudioInputSource) -> RealtimeHistoryInputSource {
+        switch inputSource {
+        #if os(macOS)
+            case .macAudio:
+                return .macAudio
+        #endif
+        case .microphone:
+            return .microphone
+        #if os(iOS)
+            case .iphoneAudio:
+                return .iphoneAudio
+        #endif
+        }
+    }
+
+    private func resetRealtimeHistoryAutosave() {
+        realtimeHistoryAutosaveTask?.cancel()
+        realtimeHistoryAutosaveTask = nil
+        lastRealtimeHistoryAutosaveAt = nil
+        lastRealtimeHistoryAutosaveSegments = nil
+        lastRealtimeHistoryAutosaveRecordings = nil
+        lastRealtimeHistoryAutosaveTracks = nil
+    }
+
+    private var usesRealtimeSessionHistory: Bool {
+        #if os(macOS)
+            return !laneConfigurations.isEmpty
+        #else
+            return true
+        #endif
+    }
+
+    private func startRealtimeHistorySessionIfNeeded() {
+        resetRealtimeHistoryAutosave()
+        if usesRealtimeSessionHistory {
+            historySessionBuilder.start(recognitionTimelineBase: recognitionAudioPosition)
+            audioHistoryRecorder.start(
+                requestID: historySessionBuilder.requestID,
+                source: activeHistoryAudioSource
+            )
+            #if os(macOS)
+                if let secondarySource = secondaryHistoryInputSource {
+                    secondaryAudioSource = secondarySource
+                    secondaryAudioHistoryRecorder.start(
+                        requestID: historySessionBuilder.requestID,
+                        source: historyAudioSource(for: secondarySource)
+                    )
+                } else {
+                    secondaryAudioSource = nil
+                    secondaryAudioHistoryRecorder.reset()
+                }
+            #else
+                secondaryAudioHistoryRecorder.reset()
             #endif
-            presentationSourceSegments = []
-            historyCheckpoint.reset()
+        } else {
             historySessionBuilder.reset()
             audioHistoryRecorder.reset()
             secondaryAudioHistoryRecorder.reset()
             #if os(macOS)
                 secondaryAudioSource = nil
             #endif
-            resetRealtimeHistoryAutosave()
-            #if os(iOS)
-                latestBroadcastRealtimeHistorySession = nil
-            #endif
-            if !sourceText.isEmpty {
-                sourceText = ""
-            }
-            syncTranslationStatePresentation()
-            errorMessage = nil
-            if !isRunning {
-                statusText = String(localized: "Ready")
-            } else {
-                startRealtimeHistorySessionIfNeeded()
-            }
         }
+    }
 
-        public func clearTranscriptDisplay() {
-            captionClearAnchor = RealtimeCaptionDisplayClearAnchor(lines: resolvedCaptionLines())
-            assignIfChanged(&captionLines, [])
-        }
+    private func audioHistoryRecordingsSnapshot() -> [RealtimeHistoryAudioRecording] {
+        [
+            audioHistoryRecorder.snapshot(),
+            secondaryAudioHistoryRecorder.snapshot(),
+        ]
+        .compactMap { $0 }
+        .sorted { $0.source.rawValue < $1.source.rawValue }
+    }
 
-        public func endSession() async {
-            await stop()
-            resetTranscript()
-        }
-
-        public func applySnapshotFixture(_ fixture: SnapshotRealtimeBilingualLiveFixture) {
-            cancelTranslationWork()
-            #if os(iOS)
-                inputSource = SnapshotLaunchArguments.isSnapshotMode()
-                    && SnapshotLaunchArguments.value(after: "-SNAPSHOT_SCENE") == "video"
-                    ? .iphoneAudio : .microphone
-            #else
-                inputSource = .microphone
-            #endif
-            preferences.setRealtimeTranslationProvider(fixture.translationProvider)
-            captionDisplayMode = fixture.captionDisplayMode
-            isRunning = true
-            isPaused = false
-            sourceText = fixture.sourceText
-            translatedText = fixture.translatedText
-            translationSourceText = fixture.sourceText
-            sentencePairs = fixture.sentencePairs
-            pendingSourceText = fixture.pendingSource
-            pendingTranslatedText = fixture.pendingTranslation
-            presentationSourceSegments = RealtimeTranscriptSegmenter.segments(from: translationSourceText)
-            refreshCaptionLines(event: "snapshotFixture")
-            statusText = String(localized: "Listening to \(inputSource.title)")
-            errorMessage = nil
-            startFailureAlert = nil
-            audioLevel = -22
-            audioSampleCount = 1240
-            preferences.setRealtimeSourceLanguage(fixture.sourceLanguage, reason: "Snapshot fixture")
-            preferences.setRealtimeTargetLanguage(fixture.targetLanguage, reason: "Snapshot fixture")
-            preferences.setRealtimeRecognitionEngine(.appleSpeech)
-            #if os(macOS)
-                let configuration = RealtimeLaneConfiguration(
-                    recognitionModelID: RecognitionModelDescriptor.appleSpeech.id,
-                    translationProvider: fixture.translationProvider
-                )
-                laneConfigurations = [configuration]
-                primaryLaneID = configuration.id
-                laneSnapshots = [
-                    RealtimeLaneSnapshot(
-                        configuration: configuration,
-                        phase: .recognizing,
-                        sourceText: fixture.sourceText,
-                        translatedText: fixture.translatedText,
-                        pendingSourceText: fixture.pendingSource,
-                        pendingTranslatedText: fixture.pendingTranslation,
-                        sentencePairs: fixture.sentencePairs,
-                        captionLines: captionLines
-                    ),
-                ]
-            #endif
-        }
-
-        public func languageSelectionDidChange() {
-            logRealtime(
-                """
-                languageSelectionDidChange provider=\(preferences.realtimeTranslationProvider.rawValue) \
-                source=\(preferences.realtimeSourceLanguage.rawValue) target=\(preferences.realtimeTargetLanguage.rawValue)
-                """
-            )
-            cancelTranslationWork()
-            errorMessage = nil
-            translationState.resetTranslationResults()
-            updateTranscriptPresentation()
-            scheduleTranslation()
-        }
-
-        private func speechLocale() -> Locale {
-            switch preferences.realtimeSourceLanguage {
-            case .auto:
-                return RecognitionModelStore.selectableDescriptor(
-                    forModelID: preferences.realtimeRecognitionModelID
-                ) == .nemotronMultilingual2240
-                    ? Locale(identifier: "und")
-                    : Locale(identifier: "en-US")
-            default:
-                return Locale(identifier: preferences.realtimeSourceLanguage.rawValue)
-            }
-        }
-
-        #if os(iOS)
-            private func registerSessionLifecycle() {
-                // Recording continues while the device is locked: History and audio files use the
-                // default protection class, which stays readable after the first unlock.
-                sessionLifecycleObservers = [
-                    NotificationCenter.default.addObserver(
-                        forName: AVAudioSession.interruptionNotification,
-                        object: nil,
-                        queue: .main
-                    ) { [weak self] notification in
-                        guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                              let type = AVAudioSession.InterruptionType(rawValue: typeValue)
-                        else {
-                            return
-                        }
-                        let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
-                        let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
-                        Task { @MainActor in
-                            self?.handleAudioSessionInterruption(type, shouldResume: shouldResume)
-                        }
-                    },
-                ]
-            }
-
-            /// A call, Siri or alarm pauses a long session instead of ending it, and resumes it when
-            /// the system says so. Without that hint it stays paused until the user resumes.
-            private func handleAudioSessionInterruption(_ type: AVAudioSession.InterruptionType, shouldResume: Bool) {
-                guard isRunning, inputSource == .microphone else { return }
-                switch type {
-                case .began:
-                    guard !isPaused else { return }
-                    pause()
-                    isPausedForAudioInterruption = true
-                    logRealtime("audio interruption began; paused")
-                case .ended:
-                    guard isPausedForAudioInterruption, isPaused else { return }
-                    isPausedForAudioInterruption = false
-                    logRealtime("audio interruption ended shouldResume=\(shouldResume)")
-                    if shouldResume {
-                        togglePaused()
-                    }
-                @unknown default:
-                    break
-                }
-            }
-
-            private func startIPhoneAudioBroadcastSession() async {
-                logRealtime(
-                    """
-                    start requested source=\(preferences.realtimeSourceLanguage.rawValue) \
-                    target=\(preferences.realtimeTargetLanguage.rawValue)
-                    """,
-                    stage: "broadcast"
-                )
-                // Runs first so a missing language pack surfaces as the alert that offers the download.
-                do {
-                    try await ensureAppleTranslateLanguagesInstalledIfNeeded()
-                } catch {
-                    logRealtime("languagePreflightFailed error=\(Self.describe(error))", stage: "broadcast")
-                    handleStartFailure(error)
-                    return
-                }
-                if let failure = await RealtimeIPhoneAudioPreflight.evaluate(
-                    sourceLanguage: preferences.realtimeSourceLanguage,
-                    targetLanguage: preferences.realtimeTargetLanguage,
-                    requiresTranslation: preferences.realtimeTranslationProvider.performsTranslation
-                ) {
-                    logRealtime("preflightFailed error=\(Self.describe(failure))", stage: "broadcast")
-                    handleStartFailure(failure)
-                    return
-                }
-
-                resetTranscript()
-                isPaused = false
-                errorMessage = nil
-                startFailureAlert = nil
-                audioLevel = nil
-                audioSampleCount = 0
-                isIPhoneAudioCaptureReady = false
-
-                let sessionID = UUID().uuidString
-                broadcastStateStore?.reset(sessionID: sessionID, phase: .waiting)
-                RealtimeAudioRelay.removeStaleSessions(keeping: nil)
-                usesHostRecognitionRelay = false
-                if let relayModel = await hostRelayRecognitionModel() {
-                    let recognitionSessionID = activeSessionID
-                    logRealtime("host recognition loading model=\(relayModel.id) session=\(sessionID)", stage: "relay")
-                    do {
-                        _ = try await startRecognition(sessionID: recognitionSessionID)
-                    } catch {
-                        logRealtime("host recognition load failed error=\(Self.describe(error))", stage: "relay")
-                        handleStartFailure(error)
-                        return
-                    }
-                    guard shouldAcceptRealtimeCallback(sessionID: recognitionSessionID) else {
-                        logRealtime("host recognition abandoned reason=sessionChanged", stage: "relay")
-                        await activeRecognizer.stop()
-                        return
-                    }
-                    if let reader = RealtimeAudioRelayReader(sessionID: sessionID) {
-                        usesHostRecognitionRelay = true
-                        broadcastStateStore?.update(sessionID: sessionID, synchronize: true) { state in
-                            state.usesHostRecognition = true
-                        }
-                        broadcastStateStore?.markHostAlive(sessionID: sessionID)
-                        startRealtimeHistorySessionIfNeeded()
-                        startHostRecognitionRelay(reader: reader)
-                        logRealtime("host recognition ready model=\(relayModel.id) session=\(sessionID)", stage: "relay")
-                    } else {
-                        logRealtime("host recognition unavailable reason=noRelayReader; extension recognizes", stage: "relay")
-                        await activeRecognizer.stop()
-                    }
-                } else {
-                    logRealtime("host recognition off model=\(preferences.realtimeRecognitionModelID)", stage: "relay")
-                }
-                isRunning = true
-                statusText = String(localized: "Waiting for iPhone Audio broadcast")
-                lastBroadcastStateLogSignature = nil
-                lastAppliedBroadcastSourceSegments = []
-                logRealtime("waiting session=\(sessionID)", stage: "broadcast")
-                startBroadcastStatePolling(sessionID: sessionID)
-            }
-
-            private func startBroadcastStatePolling(sessionID: String) {
-                stopBroadcastStatePolling()
-                broadcastStatePollingTask = Task { @MainActor [weak self] in
-                    while !Task.isCancelled {
-                        self?.pollBroadcastState(sessionID: sessionID)
-                        do {
-                            try await Task.sleep(for: .milliseconds(500))
-                        } catch {
-                            return
-                        }
-                    }
-                }
-            }
-
-            private func stopBroadcastStatePolling() {
-                broadcastStatePollingTask?.cancel()
-                broadcastStatePollingTask = nil
-            }
-
-            private func waitForIPhoneAudioBroadcastStop(sessionID: String?) async {
-                let deadline = ContinuousClock.now.advanced(by: .seconds(10))
-                while isRunning, inputSource == .iphoneAudio, ContinuousClock.now < deadline {
-                    if let state = broadcastStateStore?.load(), state.sessionID == sessionID {
-                        switch state.phase {
-                        case .stopped, .failed:
-                            applyBroadcastState(state)
-                            return
-                        default:
-                            break
-                        }
-                    }
-                    try? await Task.sleep(for: .milliseconds(100))
-                }
-            }
-
-            private func pollBroadcastState(sessionID: String) {
-                guard isRunning, inputSource == .iphoneAudio else {
-                    stopBroadcastStatePolling()
-                    return
-                }
-                guard !isDrainingHostRecognitionRelay else { return }
-                if usesHostRecognitionRelay {
-                    broadcastStateStore?.markHostAlive(sessionID: sessionID)
-                }
-
-                guard let state = broadcastStateStore?.load(),
-                      state.sessionID == sessionID
-                else {
-                    statusText = String(localized: "Waiting for iPhone Audio broadcast")
-                    return
-                }
-                if Self.isIPhoneAudioBroadcastWaitTimedOut(state) {
-                    broadcastStateStore?.update(synchronize: true) { state in
-                        guard state.sessionID == sessionID,
-                              Self.isIPhoneAudioBroadcastWaitTimedOut(state)
-                        else {
-                            return
-                        }
-                        state.phase = .stopped
-                        state.stopRequested = false
-                    }
-                    if let state = broadcastStateStore?.load(),
-                       state.sessionID == sessionID,
-                       state.phase == .stopped
-                    {
-                        endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
-                    }
-                    return
-                }
-
-                applyBroadcastState(state)
-            }
-
-            private func applyBroadcastState(_ state: RealtimeBroadcastState) {
-                if usesHostRecognitionRelay, !state.usesHostRecognition, hostRecognitionRelayTask != nil {
-                    handOffHostRecognitionToExtension(state: state)
-                    return
-                }
-                // Polling mostly delivers heartbeats; skip transcript work and
-                // `@Published` writes when the text did not move. Relayed sessions keep the host transcript.
-                let transcriptChanged = !usesHostRecognitionRelay && (
-                    sourceText != state.sourceText
-                        || translationSourceText != state.translationSourceText
-                        || pendingSourceText != state.pendingSourceText
-                        || translatedText != state.translatedText
-                        || pendingTranslatedText != state.pendingTranslatedText
-                        || sentencePairs != state.sentencePairs
-                        || lastAppliedBroadcastSourceSegments != state.sourceSegments
-                )
-                if !usesHostRecognitionRelay {
-                    assignIfChanged(&sourceText, state.sourceText)
-                }
-                if transcriptChanged {
-                    lastAppliedBroadcastSourceSegments = state.sourceSegments
-                    assignIfChanged(&translationSourceText, state.translationSourceText)
-                    assignIfChanged(
-                        &presentationSourceSegments,
-                        state.sourceSegments.isEmpty
-                            ? RealtimeTranscriptSegmenter.segments(from: state.translationSourceText)
-                            : state.sourceSegments
-                    )
-                    assignIfChanged(&pendingSourceText, state.pendingSourceText)
-                    assignIfChanged(&translatedText, state.translatedText)
-                    assignIfChanged(&pendingTranslatedText, state.pendingTranslatedText)
-                    assignIfChanged(&sentencePairs, state.sentencePairs)
-                }
-                assignIfChanged(&audioSampleCount, state.audioSampleCount)
-                assignIfChanged(&audioLevel, state.audioLevel)
-                assignIfChanged(&errorMessage, state.errorMessage)
-                assignIfChanged(&isIPhoneAudioCaptureReady, state.isRecognitionReady)
-                if !usesHostRecognitionRelay {
-                    latestBroadcastRealtimeHistorySession = state.realtimeHistorySession
-                }
-                autosaveRealtimeHistoryIfNeeded()
-                if transcriptChanged {
-                    refreshCaptionLines(event: "broadcastState")
-                }
-                logBroadcastStateIfNeeded(state)
-
-                if state.isStale(), state.phase != .stopped, state.phase != .failed {
-                    if Self.isStaleActiveIPhoneAudioBroadcast(state) {
-                        let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
-                        endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
-                    } else {
-                        statusText = String(localized: "Waiting for iPhone Audio broadcast")
-                    }
-                    return
-                }
-
-                switch state.phase {
-                case .idle, .waiting:
-                    statusText = String(localized: "Waiting for iPhone Audio broadcast")
-                case .broadcasting:
-                    statusText = state.audioSampleCount == 0
-                        ? String(localized: "Broadcasting, no app audio detected")
-                        : String(localized: "Broadcasting iPhone Audio")
-                case .recognizing:
-                    statusText = String(localized: "Recognizing iPhone Audio")
-                case .translating:
-                    statusText = String(localized: "Translating")
-                case .paused:
-                    statusText = String(localized: "iPhone Audio broadcast paused")
-                case .stopping:
-                    statusText = String(localized: "Stopping iPhone Audio")
-                case .stopped:
-                    endIPhoneAudioBroadcastSession(status: String(localized: "Stopped"))
-                case .failed:
-                    let alert = Self.iPhoneAudioBroadcastFailureAlert(for: state)
-                    endIPhoneAudioBroadcastSession(status: String(localized: "Error"), alert: alert)
-                }
-            }
-
-            private func hostRelayRecognitionModel() async -> RecognitionModelDescriptor? {
-                let model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
-                guard model.runtime == .fluidAudio else { return nil }
-                guard await RecognitionModelStore.shared.isModelCached(model) else {
-                    logRealtime("host recognition off reason=modelNotCached model=\(model.id)", stage: "relay")
-                    return nil
-                }
-                return model
-            }
-
-            /// Feeds relayed extension audio to the local recognizer off the main actor.
-            private func startHostRecognitionRelay(reader: RealtimeAudioRelayReader) {
-                hostRecognitionRelayReader = reader
-                let recognizer = activeRecognizer
-                hostRecognitionRelayTask = Task.detached(priority: .userInitiated) {
-                    var bufferCount = 0
-                    func deliver(_ buffer: AVAudioPCMBuffer) {
-                        let duration = Double(buffer.frameLength) / RealtimeAudioRelay.sampleRate
-                        guard duration <= RealtimeSessionStore.hostRecognitionRelayMaximumChunkDuration else {
-                            RealtimeLog.warn("relay", "host dropped stalled chunk seconds=\(String(format: "%.1f", duration))")
-                            return
-                        }
-                        bufferCount += 1
-                        if bufferCount == 1 {
-                            RealtimeLog.log("relay", "host first audio chunk seconds=\(String(format: "%.2f", duration))")
-                        }
-                        recognizer.append(buffer)
-                    }
-                    RealtimeLog.log("relay", "host reader started")
-                    while !Task.isCancelled {
-                        if let buffer = reader.readAvailable() {
-                            deliver(buffer)
-                        }
-                        try? await Task.sleep(for: RealtimeSessionStore.hostRecognitionRelayPollInterval)
-                    }
-                    // Audio written before the stop still reaches the recognizer.
-                    if let buffer = reader.readAvailable() {
-                        deliver(buffer)
-                    }
-                    RealtimeLog.log(
-                        "relay",
-                        "host reader stopped chunks=\(bufferCount) totalSeconds=\(String(format: "%.1f", Double(reader.totalSampleCount) / RealtimeAudioRelay.sampleRate))"
-                    )
-                }
-            }
-
-            /// Stops reading relayed audio, then finishes recognition and translation like a microphone stop.
-            private func drainHostRecognitionRelay() async {
-                guard let task = hostRecognitionRelayTask else { return }
-                hostRecognitionRelayTask = nil
-                logRealtime("host drain begin sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
-                task.cancel()
-                await task.value
-                await activeRecognizer.stop()
-                await callbackDrain.wait()
-                finalizePendingRecognition()
-                let partialTask = partialTranslationTask
-                cancelPartialTranslationWork()
-                await partialTask?.value
-                let finalTask = finalTranslationTask
-                await finalTask?.value
-                audioHistoryRecorder.finish()
-                hostRecognitionRelayReader?.removeAll()
-                hostRecognitionRelayReader = nil
-                logRealtime("host drain end sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
-            }
-
-            /// The extension stopped seeing host heartbeats and recognizes locally now. Save what the host
-            /// recognized as its own history entry, then show the extension's transcript.
-            private func handOffHostRecognitionToExtension(state: RealtimeBroadcastState) {
-                guard !isDrainingHostRecognitionRelay else { return }
-                logRealtime(
-                    "host lost ownership phase=\(state.phase.rawValue) extensionSourceLen=\(state.sourceText.count); draining",
-                    stage: "relay"
-                )
-                isDrainingHostRecognitionRelay = true
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    await drainHostRecognitionRelay()
-                    saveRealtimeHistoryIfPossible(generateTitle: true)
-                    usesHostRecognitionRelay = false
-                    isDrainingHostRecognitionRelay = false
-                    logRealtime("host handed off to extension", stage: "relay")
-                }
-            }
-
-            /// Ends the session, first draining host recognition when relayed audio was in use.
-            private func endIPhoneAudioBroadcastSession(status: String, alert: RealtimeStartFailureAlert? = nil) {
-                let finish = { [self] in
-                    finishIPhoneAudioBroadcastSession(status: status)
-                    if let alert {
-                        handleErrorMessage(alert.message)
-                        startFailureAlert = alert
-                    }
-                }
-                guard hostRecognitionRelayTask != nil else {
-                    finish()
-                    return
-                }
-                guard !isDrainingHostRecognitionRelay else { return }
-                isDrainingHostRecognitionRelay = true
-                stopBroadcastStatePolling()
-                logRealtime("session ending status=\(status); draining host recognition", stage: "relay")
-                Task { @MainActor [weak self] in
-                    await self?.drainHostRecognitionRelay()
-                    self?.isDrainingHostRecognitionRelay = false
-                    finish()
-                }
-            }
-
-            private func finishIPhoneAudioBroadcastSession(status: String) {
-                if let task = hostRecognitionRelayTask {
-                    logRealtime("finish without drain; stopping host recognition", stage: "relay")
-                    task.cancel()
-                    hostRecognitionRelayTask = nil
-                    hostRecognitionRelayReader?.removeAll()
-                    hostRecognitionRelayReader = nil
-                    let recognizer = activeRecognizer
-                    Task { await recognizer.stop() }
-                }
-                saveRealtimeHistoryIfPossible(generateTitle: true)
-                usesHostRecognitionRelay = false
-                stopBroadcastStatePolling()
-                isRunning = false
-                isStopping = false
-                activeSessionID = UUID()
-                drainingSessionID = nil
-                isPaused = false
-                audioLevel = nil
-                audioSampleCount = 0
-                isIPhoneAudioCaptureReady = false
-                statusText = status
-                logRealtime("finished status=\(status)", stage: "broadcast")
-            }
-        #endif
-
-        private func startRecognition(sessionID: UUID) async throws -> Int {
-            recognitionAudioPosition = 0
-            #if os(macOS)
-                for configuration in laneConfigurations {
-                    let model = configuration.recognitionModel
-                    if model.runtime == .mossOffline {
-                        guard importedAudioURL != nil else {
-                            throw RealtimeRecognizerError.unsupportedModel(model.id)
-                        }
-                        #if arch(arm64) && canImport(MLXAudioCore) && canImport(MLXAudioSTT)
-                            guard await RealtimeHistoryMOSSReconstructor.shared.isModelCached() else {
-                                throw RealtimePipelineError.modelNotDownloaded(model.title)
-                            }
-                        #else
-                            throw RealtimeRecognizerError.unsupportedModel(model.id)
-                        #endif
-                        continue
-                    }
-                    guard await RecognitionModelStore.shared.isModelCached(model) else {
-                        throw RealtimePipelineError.modelNotDownloaded(model.title)
-                    }
-                }
-                try await realtimePipelineCoordinator.start(
-                    configurations: laneConfigurations,
-                    primaryLaneID: primaryLaneID,
-                    sourceLanguage: preferences.realtimeSourceLanguage,
-                    targetLanguage: preferences.realtimeTargetLanguage,
-                    captionDisplayMode: captionDisplayMode,
-                    importedAudioURL: importedAudioURL,
-                    serializesMOSS: Self.shouldSerializeMOSS(configurations: laneConfigurations) ||
-                        isRealtimeMemoryConstrained
-                )
-                return 16000
-            #else
-                await activeRecognizer.stop()
-
-                switch preferences.realtimeRecognitionEngine {
-                case .appleSpeech:
-                    var model = RecognitionModelStore.selectableDescriptor(forModelID: preferences.realtimeRecognitionModelID)
-                    if !(await RecognitionModelStore.shared.isModelCached(model)) {
-                        model = .appleSpeech
-                    }
-                    if preferences.realtimeRecognitionModelID != model.id {
-                        preferences.setRealtimeRecognitionModelID(model.id)
-                    }
-                    statusText = Self.loadingRecognitionModelStatus(modelTitle: model.title)
-                    loadingRecognitionModelTitle = model.title
-                    defer { loadingRecognitionModelTitle = nil }
-                    switch model.runtime {
-                    case .appleSpeech:
-                        try await transcriber.start(model: model, locale: speechLocale(), sessionID: sessionID)
-                        activeRecognizer.set(transcriber)
-                        return transcriber.sampleRate
-                    case .fluidAudio:
-                        #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
-                            if let progress = await RealtimeFluidAudioEngineCache.shared.loadProgress(for: model) {
-                                recognitionModelLoad = progress
-                            }
-                            defer { recognitionModelLoad = nil }
-                            let recognizer = RealtimeFluidAudioRecognizer(delegate: self)
-                            try await recognizer.start(model: model, locale: speechLocale(), sessionID: sessionID)
-                            activeRecognizer.set(recognizer)
-                            return recognizer.sampleRate
-                        #else
-                            throw RealtimeRecognizerError.unsupportedModel(model.id)
-                        #endif
-                    case .coreML, .mossOffline, .mlxStreaming, .onnx:
-                        throw RealtimeRecognizerError.unsupportedModel(model.id)
-                    }
-                }
-            #endif
-        }
-
-        public static func loadingRecognitionModelStatus(modelTitle: String) -> String {
-            String(localized: "Loading \(modelTitle) to recognize speech...")
-        }
-
+    private func historyAudioSource(for inputSource: RealtimeAudioInputSource) -> RealtimeHistoryAudioSource {
+        switch inputSource {
         #if os(macOS)
-            private func startLiveCaptureBeforeRecognition() async throws {
-                realtimePipelineAudioFanout.beginStartupBuffering()
-                startRealtimeHistorySessionIfNeeded()
-                statusText = String(localized: "Starting \(inputSource.title)...")
-                switch inputSource {
-                case .macAudio:
-                    try systemAudioCapture.requestScreenRecordingAccess()
-                    try await systemAudioCapture.start(sampleRate: 16000)
-                case .microphone:
-                    try await microphoneAudioCapture.start(
-                        sampleRate: 16000,
-                        allowsPlayback: false
-                    )
-                }
-                await startSecondaryAudioRecordingIfNeeded(sampleRate: 16000)
+            case .macAudio:
+                return .macAudio
+        #endif
+        case .microphone:
+            return .microphone
+        #if os(iOS)
+            case .iphoneAudio:
+                return .microphone
+        #endif
+        }
+    }
+
+    private var activeHistoryAudioSource: RealtimeHistoryAudioSource {
+        #if os(macOS)
+            isImportedAudioSession ? .importedAudio : historyAudioSource(for: inputSource)
+        #else
+            historyAudioSource(for: inputSource)
+        #endif
+    }
+
+    private var activeHistoryInputSourceID: RealtimeHistoryInputSource {
+        #if os(macOS)
+            isImportedAudioSession ? .importedAudio : historyInputSourceID(for: inputSource)
+        #else
+            historyInputSourceID(for: inputSource)
+        #endif
+    }
+
+    #if os(macOS)
+        private var secondaryHistoryInputSource: RealtimeAudioInputSource? {
+            guard !isImportedAudioSession else { return nil }
+            guard preferences.realtimeDualInputHistoryRecordingEnabled else { return nil }
+            switch inputSource {
+            case .macAudio:
+                return .microphone
+            case .microphone:
+                return .macAudio
             }
+        }
+    #endif
 
-            private func startImportedAudioTask(url: URL, sessionID: UUID) {
-                let fanout = realtimePipelineAudioFanout
-                let recorder = audioHistoryRecorder
-                importedAudioTask = Task.detached(priority: .userInitiated) { [store = self] in
-                    do {
-                        try await RealtimeImportedAudioReader.run(
-                            url: url,
-                            isPaused: {
-                                await store.isPaused
-                            },
-                            onBuffer: { buffer in
-                                let completedAudioSegment = recorder.append(buffer)
-                                fanout.append(buffer)
-                                let level = realtimeAudioLevel(from: buffer)
-                                Task { @MainActor in
-                                    guard store.shouldAcceptRealtimeCallback(sessionID: sessionID)
-                                    else {
-                                        return
-                                    }
-                                    store.updateAudioSampleCount(
-                                        store.audioSampleCount + Int(buffer.frameLength),
-                                        level: level
-                                    )
-                                    if completedAudioSegment {
-                                        store.autosaveRealtimeHistoryIfNeeded()
-                                    }
-                                }
-                            }
-                        )
-                        try Task.checkCancellation()
-                        await store.realtimePipelineCoordinator.finishImportedAudioInputAndWaitForOfflineRecognition()
-                        try Task.checkCancellation()
-                        await store.finishImportedAudioIfCurrent(sessionID: sessionID)
-                    } catch is CancellationError {
-                        return
-                    } catch {
-                        await store.handleImportedAudioFailure(error, sessionID: sessionID)
-                    }
-                }
-            }
-
-            private func finishImportedAudioIfCurrent(sessionID: UUID) async {
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID),
-                      isImportedAudioSession
-                else {
-                    return
-                }
-                importedAudioTask = nil
-                await stop()
-            }
-
-            private func handleImportedAudioFailure(_ error: Error, sessionID: UUID) async {
-                guard shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
-                importedAudioTask = nil
-                await stop()
-                handleStartFailure(error)
-            }
-
-            private func startSecondaryAudioRecordingIfNeeded(sampleRate: Int) async {
-                guard let secondarySource = secondaryAudioSource else { return }
-
-                do {
-                    switch secondarySource {
-                    case .macAudio:
-                        try secondarySystemAudioCapture.requestScreenRecordingAccess()
-                        try await secondarySystemAudioCapture.start(sampleRate: sampleRate)
-                    case .microphone:
-                        try await secondaryMicrophoneAudioCapture.start(sampleRate: sampleRate)
-                    }
-                    logRealtime("secondary audio recording started source=\(secondarySource.rawValue)")
-                } catch {
-                    secondaryAudioHistoryRecorder.finish()
-                    secondaryAudioSource = nil
-                    logRealtime(
-                        "secondary audio recording skipped source=\(secondarySource.rawValue) error=\(Self.describe(error))"
-                    )
-                }
-            }
-
-            private func handleSecondaryAudioFailure(_ error: Error, source: RealtimeAudioInputSource) async {
-                guard secondaryAudioSource == source else { return }
-                secondaryAudioHistoryRecorder.finish()
-                secondaryAudioSource = nil
-                switch source {
-                case .macAudio:
-                    await secondarySystemAudioCapture.stop()
-                case .microphone:
-                    secondaryMicrophoneAudioCapture.stop()
-                }
-                logRealtime("secondary audio recording stopped source=\(source.rawValue) error=\(Self.describe(error))")
-                autosaveRealtimeHistoryIfNeeded()
+    private func syncRealtimeHistorySession() {
+        guard usesRealtimeSessionHistory else { return }
+        #if os(iOS)
+            if !preferences.realtimeTranslationProvider.performsTranslation {
+                historySessionBuilder.sync(pairs: translationState.sourceOnlyPairs, allowsUntranslated: true)
+                return
             }
         #endif
+        historySessionBuilder.sync(pairs: realtimeHistoryPairs())
+    }
 
-        private func ensureAppleTranslateLanguagesInstalledIfNeeded(
-            providers requestedProviders: Set<RealtimeTranslationProvider>? = nil
-        ) async throws {
-            let allowsDownloadPrompt = allowsAppleTranslationDownloadPromptOnNextStart
-            allowsAppleTranslationDownloadPromptOnNextStart = false
-            let providers: Set<RealtimeTranslationProvider> = {
-                if let requestedProviders {
-                    return requestedProviders
-                }
-                #if os(macOS)
-                    return Set(laneConfigurations.map(\.translationProvider))
-                #else
-                    return [preferences.realtimeTranslationProvider]
-                #endif
-            }()
-            let appleProviders = providers.filter(\.usesAppleTextTranslation)
-            guard !appleProviders.isEmpty,
-                  let source = preferences.realtimeSourceLanguage.localeLanguage
-            else {
-                return
-            }
+    private func realtimeHistoryPairs() -> [SentencePair] {
+        return Self.historyPairs(
+            sentencePairs: sentencePairs,
+            pendingSourceText: pendingSourceText,
+            pendingTranslatedText: pendingTranslatedText,
+            sourceText: sourceText,
+            translatedText: translatedText
+        )
+    }
 
-            let targetOption = preferences.realtimeTargetLanguage
-            let target = targetOption.localeLanguage
-            guard !RealtimeLanguageMatcher.matches(source, target) else { return }
+    private func handleErrorMessage(_ message: String) {
+        logRealtime("errorMessage \(message)")
+        errorMessage = message
+        statusText = String(localized: "Error")
+    }
 
-            guard AppleTranslationService.shared.isAvailable else {
-                throw LocalProviderError.notAvailable(AppleTranslationService.shared.availabilityStatus)
-            }
+    private func handleStartFailure(_ error: Error) {
+        handleErrorMessage(Self.describe(error))
+        startFailureAlert = Self.startFailureAlert(for: error)
+    }
 
-            guard #available(iOS 17.4, macOS 14.4, *) else {
-                throw LocalProviderError.notAvailable(AppleTranslationService.shared.availabilityStatus)
-            }
-
-            statusText = String(localized: "Checking Apple Translate languages...")
-            let languagePair = AppleTranslationErrorFormatter.languagePairDescription(
-                source: source,
-                target: targetOption
+    private func handleRuntimeFailure(_ error: Error, context: String) async {
+        guard !Self.isCancellationError(error) else { return }
+        if isStarting, !isStopping {
+            // start() surfaces it before marking the session running.
+            pendingStartFailure = pendingStartFailure ?? error
+            logRealtime("runtimeFailure deferred to start context=\(context)")
+            return
+        }
+        guard isRunning, !isStopping else {
+            logRealtime(
+                "runtimeFailure ignored context=\(context) running=\(isRunning) stopping=\(isStopping)"
             )
-            let strategies: Set<AppleTranslationAvailabilityStrategy> = Set(appleProviders.map {
-                $0 == .appleTranslationRealtime ? .lowLatency : .automatic
-            })
-            for strategy in strategies {
-                var status = try await AppleTranslationService.shared.languageAvailabilityStatus(
-                    source: source,
-                    target: target,
-                    strategy: strategy
-                )
-                if status == .supported, allowsDownloadPrompt {
-                    await requestAppleTranslationLanguageDownload(source: source, target: target, strategy: strategy)
-                    status = try await AppleTranslationService.shared.languageAvailabilityStatus(
-                        source: source,
-                        target: target,
-                        strategy: strategy
-                    )
-                    // iOS keeps downloading after its prompt is dismissed and won't prompt again
-                    // meanwhile, so offering Download again would loop without visible effect.
-                    if status == .supported {
-                        let message = NSLocalizedString(
-                            "iOS is downloading this language pair in the background. Try again in a moment.",
-                            comment: "Shown when realtime Apple Translate is still waiting for a language pack download"
-                        )
-                        throw LocalProviderError.translationFailed(
-                            AppleTranslationErrorFormatter.withLanguagePair(message, languagePair: languagePair)
-                        )
-                    }
-                }
-                if let error = Self.appleTranslateLanguagePreflightFailure(
-                    status: status,
-                    languagePair: languagePair
-                ) {
-                    throw error
-                }
-            }
+            return
         }
 
-        private func requestAppleTranslationLanguageDownload(
-            source: Locale.Language,
-            target: Locale.Language,
-            strategy: AppleTranslationAvailabilityStrategy
-        ) async {
-            finishAppleTranslationLanguageDownload(requestID: appleTranslationDownloadRequestID)
-            var configuration: TranslationSession.Configuration
-            if #available(iOS 26.4, macOS 26.4, *), strategy == .lowLatency {
-                configuration = .init(source: source, target: target, preferredStrategy: .lowLatency)
-            } else {
-                configuration = .init(source: source, target: target)
-            }
-            if var previous = appleTranslationDownloadConfiguration,
-               previous.source == configuration.source,
-               previous.target == configuration.target,
-               Self.hasSameStrategy(previous, configuration)
-            {
-                previous.invalidate()
-                configuration = previous
-            }
-            let requestID = UUID()
-            logRealtime("apple translate download requested strategy=\(strategy)")
-            await withCheckedContinuation { continuation in
-                appleTranslationDownloadRequestID = requestID
-                isAppleTranslationDownloadPromptPresented = false
-                appleTranslationDownloadContinuation = continuation
-                appleTranslationDownloadConfiguration = configuration
-                // Starts outside the realtime view (e.g. the floating caption window) have no
-                // `.translationTask` host; fail the preflight instead of waiting forever.
-                Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(10))
-                    guard let self,
-                          self.appleTranslationDownloadRequestID == requestID,
-                          !self.isAppleTranslationDownloadPromptPresented
-                    else {
-                        return
-                    }
-                    self.logRealtime("apple translate download prompt not presented")
-                    self.finishAppleTranslationLanguageDownload(requestID: requestID)
-                }
-            }
-        }
+        let alert = Self.startFailureAlert(for: error)
+        logRealtime("runtimeFailure context=\(context) \(alert.message)")
+        await stop()
+        handleErrorMessage(alert.message)
+        startFailureAlert = alert
+    }
 
-        /// Called from a realtime view's `.translationTask` with the session for
-        /// `appleTranslationDownloadConfiguration`.
-        public func prepareAppleTranslationLanguageDownload(using session: TranslationSession) async {
-            guard let requestID = appleTranslationDownloadRequestID else { return }
-            // Keeps the prompt timeout from firing while the user decides.
-            isAppleTranslationDownloadPromptPresented = true
-            do {
-                try await session.prepareTranslation()
-                logRealtime("apple translate download prepared")
-            } catch {
-                logRealtime("apple translate download failed error=\(Self.describe(error))")
-            }
-            finishAppleTranslationLanguageDownload(requestID: requestID)
-        }
+    nonisolated static func startFailureAlertMessage(for error: Error) -> String {
+        describe(error)
+    }
 
-        private static func hasSameStrategy(
-            _ lhs: TranslationSession.Configuration,
-            _ rhs: TranslationSession.Configuration
-        ) -> Bool {
-            guard #available(iOS 26.4, macOS 26.4, *) else { return true }
-            return lhs.preferredStrategy == rhs.preferredStrategy
-        }
+    public nonisolated static func realtimeErrorDescription(for error: Error) -> String {
+        describe(error)
+    }
 
-        private func finishAppleTranslationLanguageDownload(requestID: UUID?) {
-            guard let requestID, requestID == appleTranslationDownloadRequestID else { return }
-            appleTranslationDownloadRequestID = nil
-            appleTranslationDownloadContinuation?.resume()
-            appleTranslationDownloadContinuation = nil
-        }
-
-        private func handleRecognized(_ result: RealtimeRecognitionResult) {
-            beginCaptionTrace(
-                "asr",
-                "state=\(result.state) at=\(result.audioOffset.map { String(format: "%.2fs", $0) } ?? "-") " +
-                    "text=\(RealtimeLog.text(result.text, limit: 64))"
+    #if os(iOS)
+        nonisolated static func iPhoneAudioBroadcastFailureAlert(
+            for state: RealtimeBroadcastState,
+            referenceDate: Date = Date()
+        ) -> RealtimeStartFailureAlert {
+            RealtimeStartFailureAlert(
+                title: "iPhone Audio Failed",
+                message: iPhoneAudioBroadcastFailureMessage(for: state, referenceDate: referenceDate)
             )
-            defer { captionUpdateCause = "-" }
-            let previousSegments = translationState.sourceSegments
-            let previousPairCount = sentencePairs.count
-            let previousDisplayedTranslationLength = translatedText.count + pendingTranslatedText.count
-            let recognizedSourceText = transcriptAccumulator.append(result, afterLongSilence: false)
-            if sourceText != recognizedSourceText {
-                sourceText = recognizedSourceText
-            }
-            updateTranscriptPresentation()
-            let recognitionTimings = result.snapshot.map(Self.recognitionTimings(in:)) ?? []
-            recognitionAudioPosition = max(
-                recognitionAudioPosition,
-                result.audioOffset ?? recognitionTimings.last?.endTime ?? 0
-            )
-            if usesRealtimeSessionHistory {
-                historySessionBuilder.noteSource(
-                    committedCount: translationState.sourceSegments.count,
-                    hasText: !pendingSourceText.isEmpty
-                )
-                historySessionBuilder.noteRecognition(timings: recognitionTimings)
-            }
-            Self.logSourceSegmentChange(
-                from: previousSegments,
-                to: translationState.sourceSegments,
-                pending: pendingSourceText,
-                result: result
-            )
-            let displayedTranslationLength = translatedText.count + pendingTranslatedText.count
-            if displayedTranslationLength < previousDisplayedTranslationLength {
-                RealtimeLog.warn(
-                    "align",
-                    """
-                    translation shrank len=\(previousDisplayedTranslationLength)->\(displayedTranslationLength) \
-                    pairs=\(previousPairCount)->\(sentencePairs.count) segs=\(previousSegments.count)->\(translationState.sourceSegments.count)
-                    """
-                )
-            }
-            statusText = result
-                .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
-            scheduleTranslation()
         }
 
-        /// Word timings when the recognizer reports them; otherwise each timed segment is one span.
-        private static func recognitionTimings(
-            in snapshot: RealtimeRecognitionSnapshot
-        ) -> [RealtimeRecognitionTokenTiming] {
-            guard snapshot.tokenTimings.isEmpty else { return snapshot.tokenTimings }
-            return (snapshot.stableSegments + [snapshot.pendingSegment].compactMap(\.self)).map {
-                RealtimeRecognitionTokenTiming(
-                    token: $0.text,
-                    startTime: $0.startOffset,
-                    endTime: $0.endOffset,
-                    confidence: 0.5
-                )
-            }
-        }
-
-        private func finalizePendingRecognition() {
-            let pending = transcriptAccumulator.pendingSentenceText
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !pending.isEmpty else { return }
-
-            assignIfChanged(&sourceText, transcriptAccumulator.commitPartial())
-            updateTranscriptPresentation()
-            scheduleTranslation()
-        }
-
-        private func updateAudioSampleCount(_ count: Int, level: Float?) {
-            audioSampleCount = count
-            audioLevel = level
-        }
-
-        private func scheduleTranslation() {
-            let provider = preferences.realtimeTranslationProvider
-            guard provider.performsTranslation else {
-                cancelTranslationWork()
-                translationState.resetTranslationResults()
-                syncTranslationStatePresentation()
-                updateStatusAfterTranslationActivity()
-                return
-            }
-            let stableSourceText = translationSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let partialSourceText = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !stableSourceText.isEmpty || !partialSourceText.isEmpty else {
-                cancelTranslationWork()
-                translationState.clearStableTranslation()
-                syncTranslationStatePresentation()
-                return
-            }
-
-            guard hasRequiredLanguageSelection else {
-                logRealtime("missingLanguage clearsTranslation=true", stage: "tx")
-                cancelTranslationWork()
-                translationState.resetTranslationResults()
-                syncTranslationStatePresentation()
-                statusText = String(localized: "Choose source and target languages to start")
-                return
-            }
-
-            let sourceLanguage = preferences.realtimeSourceLanguage
-            let source = sourceLanguage.localeLanguage
-            let targetOption = preferences.realtimeTargetLanguage
-            let target = targetOption.localeLanguage
-            let languagePair = AppleTranslationErrorFormatter.languagePairDescription(
-                source: source,
-                target: targetOption
-            )
-
-            if let source, RealtimeLanguageMatcher.matches(source, target) {
-                logRealtime("sameLanguage provider=\(provider.rawValue) skipsTranslation=true", stage: "tx")
-                cancelTranslationWork()
-                translationState.applySameLanguageTranslation()
-                syncTranslationStatePresentation()
-                statusText = String(localized: "Source and target are the same (\(languagePair))")
-                return
-            }
-
-            if stableSourceText.isEmpty {
-                translationState.clearStableTranslation()
-                syncTranslationStatePresentation()
-            } else {
-                translationState.updateCachedSentencePairs(
-                    provider: provider,
-                    sourceLanguage: sourceLanguage,
-                    targetLanguage: targetOption
-                )
-                syncTranslationStatePresentation()
-                enqueueFinalTranslationRequests(
-                    provider: provider,
-                    sourceLanguage: sourceLanguage,
-                    source: source,
-                    targetLanguage: targetOption
-                )
-            }
-            schedulePartialTranslation(
-                provider: provider,
-                sourceLanguage: sourceLanguage,
-                source: source,
-                targetLanguage: targetOption
-            )
-            updateStatusAfterTranslationActivity()
-        }
-
-        private func processFinalTranslationRequests() async {
-            while !Task.isCancelled {
-                guard !queuedFinalTranslationRequests.isEmpty else {
-                    finalTranslationTask = nil
-                    updateStatusAfterTranslationActivity()
-                    if isPaused {
-                        saveRealtimeHistoryIfPossible()
-                    }
-                    return
-                }
-                let request = queuedFinalTranslationRequests.removeFirst()
-
-                do {
-                    guard !Task.isCancelled else { return }
-                    let result = try await RealtimeTranslationService.translate(request)
-                    guard !Task.isCancelled else { return }
-                    applyFinalTranslationResult(result, request: request)
-                    if !queuedFinalTranslationRequests.isEmpty {
-                        try await Task.sleep(for: .milliseconds(Int((request.cadenceInterval * 1000).rounded(.up))))
-                    }
-                } catch is CancellationError {
-                    // The canceller already cleared the handle and may have scheduled a replacement.
-                    return
-                } catch {
-                    translationState.finishFinalTranslationRequest(request)
-                    syncTranslationStatePresentation()
-                    let message = Self.translationErrorMessage(
-                        error,
-                        source: request.source,
-                        target: request.targetLanguage,
-                        provider: request.provider
-                    )
-                    RealtimeLog.warn("tx", "final error src=\(RealtimeLog.text(request.translationText)) error=\(message)")
-                    handleErrorMessage(message)
-                }
-            }
-        }
-
-        private func processPartialTranslationRequests() async {
-            while !Task.isCancelled {
-                guard var request = latestPartialTranslationRequest else {
-                    partialTranslationTask = nil
-                    nextPartialTranslationAllowedAt = nil
-                    updateStatusAfterTranslationActivity()
-                    return
-                }
-                latestPartialTranslationRequest = nil
-
-                do {
-                    let allowedAt = nextPartialTranslationAllowedAt ?? Date().addingTimeInterval(request.cadenceInterval)
-                    nextPartialTranslationAllowedAt = allowedAt
-                    let delay = allowedAt.timeIntervalSinceNow
-                    if delay > 0 {
-                        try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
-                    }
-
-                    if let newerRequest = latestPartialTranslationRequest {
-                        request = newerRequest
-                        latestPartialTranslationRequest = nil
-                    }
-
-                    guard !Task.isCancelled else { return }
-                    nextPartialTranslationAllowedAt = Date().addingTimeInterval(request.cadenceInterval)
-                    let result = try await RealtimeTranslationService.translate(request)
-                    guard !Task.isCancelled else { return }
-                    applyPartialTranslationResult(result, request: request)
-                } catch is CancellationError {
-                    // The canceller already cleared the handle and may have scheduled a replacement.
-                    return
-                } catch {
-                    let message = Self.translationErrorMessage(
-                        error,
-                        source: request.source,
-                        target: request.targetLanguage,
-                        provider: request.provider
-                    )
-                    RealtimeLog.warn("tx", "partial error src=\(RealtimeLog.text(request.translationText)) error=\(message)")
-                    handleErrorMessage(message)
-                }
-            }
-        }
-
-        private func saveRealtimeHistoryIfPossible(generateTitle: Bool = false) {
-            if let session = currentRealtimeHistorySession() {
-                if saveRealtimeHistorySession(session, event: "saved"), generateTitle {
-                    generateRealtimeHistoryTitleIfNeeded(for: session)
-                }
-                return
-            }
-            #if os(iOS)
-                if inputSource == .iphoneAudio {
-                    logRealtime("history skipped reason=missingBroadcastRealtimeSession")
-                    return
-                }
-            #endif
-
-            guard let snapshot = Self.historySnapshot(
-                sourceText: sourceText,
-                translatedText: translatedText,
-                pendingTranslatedText: pendingTranslatedText,
-                checkpoint: &historyCheckpoint
-            ) else {
-                logRealtime(
-                    """
-                    history skipped sourceLen=\(sourceText.count) translatedLen=\(translatedText.count) \
-                    pendingTranslationLen=\(pendingTranslatedText.count)
-                    """
-                )
-                return
-            }
-
-            do {
-                try TranslationHistoryService.shared.saveThrowing(
-                    requestID: UUID(),
-                    sourceText: snapshot.sourceText,
-                    resultText: snapshot.translatedText,
-                    actionName: TranslationRecord.realtimeActionName,
-                    targetLanguage: preferences.realtimeTargetLanguage.englishName,
-                    modelID: preferences.realtimeTranslationProvider.modelID,
-                    modelDisplayName: preferences.realtimeTranslationProvider.model.displayName,
-                    duration: 0
-                )
-                historyCheckpoint.acknowledge(snapshot)
-                logRealtime(
-                    """
-                    history saved sourceLen=\(snapshot.sourceText.count) translatedLen=\(snapshot.translatedText.count)
-                    """
-                )
-            } catch {
-                logRealtime("history save failed error=\(Self.describe(error))")
-            }
-        }
-
-        private func autosaveRealtimeHistoryIfNeeded(now: Date = Date()) {
-            guard isRunning else { return }
-            // Throttle before building the session: this runs on every recognition update.
-            if let lastRealtimeHistoryAutosaveAt {
-                let delay = Self.realtimeHistoryAutosaveInterval - now.timeIntervalSince(lastRealtimeHistoryAutosaveAt)
-                if delay > 0 {
-                    if realtimeHistoryAutosaveTask == nil {
-                        scheduleRealtimeHistoryAutosave(after: delay)
-                    }
-                    return
-                }
-            }
-
-            guard let session = currentRealtimeHistorySession(),
-                  session.segments != lastRealtimeHistoryAutosaveSegments ||
-                  session.audioRecordings != lastRealtimeHistoryAutosaveRecordings ||
-                  session.tracks != lastRealtimeHistoryAutosaveTracks
-            else {
-                return
-            }
-
-            _ = saveRealtimeHistorySession(session, at: now, event: "autosaved")
-        }
-
-        private func scheduleRealtimeHistoryAutosave(after delay: TimeInterval) {
-            realtimeHistoryAutosaveTask?.cancel()
-            realtimeHistoryAutosaveTask = Task { @MainActor [weak self] in
-                do {
-                    try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
-                } catch {
-                    return
-                }
-                guard !Task.isCancelled else { return }
-                self?.realtimeHistoryAutosaveTask = nil
-                self?.autosaveRealtimeHistoryIfNeeded()
-            }
-        }
-
-        private func saveRealtimeHistorySession(
-            _ session: RealtimeHistorySession,
-            at date: Date = Date(),
-            event: String
-        ) -> Bool {
-            realtimeHistoryAutosaveTask?.cancel()
-            realtimeHistoryAutosaveTask = nil
-            do {
-                try TranslationHistoryService.shared.saveRealtimeSession(session)
-                lastRealtimeHistoryAutosaveAt = date
-                lastRealtimeHistoryAutosaveSegments = session.segments
-                lastRealtimeHistoryAutosaveRecordings = session.audioRecordings
-                lastRealtimeHistoryAutosaveTracks = session.tracks
+        nonisolated static func isStaleActiveIPhoneAudioBroadcast(_ state: RealtimeBroadcastState) -> Bool {
+            if state.audioSampleCount > 0 {
                 return true
-            } catch {
-                logRealtime("history session save failed event=\(event) error=\(Self.describe(error))")
+            }
+
+            switch state.phase {
+            case .broadcasting, .recognizing, .translating, .paused, .stopping, .failed:
+                return true
+            case .idle, .waiting, .stopped:
                 return false
             }
         }
 
-        private func generateRealtimeHistoryTitleIfNeeded(for session: RealtimeHistorySession) {
-            let requestID = session.requestID
-            guard session.generatedTitle == nil,
-                  !realtimeHistoryTitleRequestIDs.contains(requestID),
-                  !session.sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            else {
-                return
+        nonisolated static func isIPhoneAudioBroadcastWaitTimedOut(
+            _ state: RealtimeBroadcastState,
+            referenceDate: Date = Date(),
+            timeout: TimeInterval = broadcastPickerWaitTimeout
+        ) -> Bool {
+            state.phase == .waiting &&
+                state.audioSampleCount == 0 &&
+                referenceDate.timeIntervalSince(state.lastUpdatedAt) >= timeout
+        }
+
+        private nonisolated static func iPhoneAudioBroadcastFailureMessage(
+            for state: RealtimeBroadcastState,
+            referenceDate: Date
+        ) -> String {
+            if let errorMessage = state.errorMessage?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !errorMessage.isEmpty
+            {
+                return errorMessage
             }
 
-            realtimeHistoryTitleRequestIDs.insert(requestID)
-            realtimeHistoryTitleTasks[requestID] = Task { @MainActor [weak self] in
-                defer {
-                    self?.realtimeHistoryTitleTasks[requestID] = nil
-                }
-                do {
-                    guard let title = try await RealtimeHistoryTitleGenerator.generateTitle(for: session.sourceText) else {
-                        return
-                    }
-                    try TranslationHistoryService.shared.updateRealtimeGeneratedTitle(
-                        requestID: requestID,
-                        title: title
-                    )
-                    self?.logRealtime("history title generated request=\(requestID.uuidString.prefix(8))")
-                } catch {
-                    self?.logRealtime("history title generation failed error=\(Self.describe(error))")
-                }
-            }
-        }
-
-        private func currentRealtimeHistorySession() -> RealtimeHistorySession? {
-            #if os(iOS)
-                if inputSource == .iphoneAudio, !usesHostRecognitionRelay {
-                    guard [.appleTranslator, .transcriptionOnly].contains(preferences.realtimeTranslationProvider) else {
-                        return nil
-                    }
-                    var session = latestBroadcastRealtimeHistorySession
-                    session?.inputSourceID = historyInputSourceID(for: inputSource)
-                    return session
-                }
-            #endif
-
-            guard usesRealtimeSessionHistory else { return nil }
-            syncRealtimeHistorySession()
-            #if os(macOS)
-                let primaryConfiguration = primaryLaneConfiguration
-                let modelID = primaryConfiguration?.translationProvider.modelID ??
-                    preferences.realtimeTranslationProvider.modelID
-                let modelDisplayName = primaryConfiguration?.translationProvider.model.displayName ??
-                    preferences.realtimeTranslationProvider.model.displayName
-            #else
-                let modelID = preferences.realtimeTranslationProvider.modelID
-                let modelDisplayName = preferences.realtimeTranslationProvider.model.displayName
-            #endif
-            #if os(macOS)
-                let tracks = realtimePipelineCoordinator.tracks
-                let transcriptionModels = tracks.map {
-                    RealtimeHistoryTranscriptionModel(
-                        source: activeHistoryAudioSource,
-                        modelID: $0.recognitionModelID,
-                        modelDisplayName: $0.recognitionModelDisplayName
-                    )
-                }
-                let historyPrimaryTrackID: UUID? = primaryLaneID
-            #else
-                let tracks: [RealtimeHistoryTrack] = []
-                let transcriptionModels: [RealtimeHistoryTranscriptionModel] = []
-                let historyPrimaryTrackID: UUID? = nil
-            #endif
-            var session = historySessionBuilder.makeSession(
-                inputSource: activeHistoryAudioSource.title,
-                sourceLanguage: preferences.realtimeSourceLanguage.englishName,
-                targetLanguage: preferences.realtimeTargetLanguage.englishName,
-                modelID: modelID,
-                modelDisplayName: modelDisplayName,
-                transcriptionModels: transcriptionModels,
-                tracks: tracks,
-                primaryTrackID: historyPrimaryTrackID
-            )
-            session?.audioRecordings = audioHistoryRecordingsSnapshot()
-            session?.inputSourceID = activeHistoryInputSourceID
-            #if os(macOS)
-                session?.tracks = tracks
-                session?.primaryTrackID = primaryLaneID
-            #endif
-            return session
-        }
-
-        private func historyInputSourceID(for inputSource: RealtimeAudioInputSource) -> RealtimeHistoryInputSource {
-            switch inputSource {
-            #if os(macOS)
-                case .macAudio:
-                    return .macAudio
-            #endif
-            case .microphone:
-                return .microphone
-            #if os(iOS)
-                case .iphoneAudio:
-                    return .iphoneAudio
-            #endif
-            }
-        }
-
-        private func resetRealtimeHistoryAutosave() {
-            realtimeHistoryAutosaveTask?.cancel()
-            realtimeHistoryAutosaveTask = nil
-            lastRealtimeHistoryAutosaveAt = nil
-            lastRealtimeHistoryAutosaveSegments = nil
-            lastRealtimeHistoryAutosaveRecordings = nil
-            lastRealtimeHistoryAutosaveTracks = nil
-        }
-
-        private var usesRealtimeSessionHistory: Bool {
-            #if os(macOS)
-                return !laneConfigurations.isEmpty
-            #else
-                return true
-            #endif
-        }
-
-        private func startRealtimeHistorySessionIfNeeded() {
-            resetRealtimeHistoryAutosave()
-            if usesRealtimeSessionHistory {
-                historySessionBuilder.start(recognitionTimelineBase: recognitionAudioPosition)
-                audioHistoryRecorder.start(
-                    requestID: historySessionBuilder.requestID,
-                    source: activeHistoryAudioSource
-                )
-                #if os(macOS)
-                    if let secondarySource = secondaryHistoryInputSource {
-                        secondaryAudioSource = secondarySource
-                        secondaryAudioHistoryRecorder.start(
-                            requestID: historySessionBuilder.requestID,
-                            source: historyAudioSource(for: secondarySource)
-                        )
-                    } else {
-                        secondaryAudioSource = nil
-                        secondaryAudioHistoryRecorder.reset()
-                    }
-                #else
-                    secondaryAudioHistoryRecorder.reset()
-                #endif
-            } else {
-                historySessionBuilder.reset()
-                audioHistoryRecorder.reset()
-                secondaryAudioHistoryRecorder.reset()
-                #if os(macOS)
-                    secondaryAudioSource = nil
-                #endif
-            }
-        }
-
-        private func audioHistoryRecordingsSnapshot() -> [RealtimeHistoryAudioRecording] {
-            [
-                audioHistoryRecorder.snapshot(),
-                secondaryAudioHistoryRecorder.snapshot(),
-            ]
-            .compactMap { $0 }
-            .sorted { $0.source.rawValue < $1.source.rawValue }
-        }
-
-        private func historyAudioSource(for inputSource: RealtimeAudioInputSource) -> RealtimeHistoryAudioSource {
-            switch inputSource {
-            #if os(macOS)
-                case .macAudio:
-                    return .macAudio
-            #endif
-            case .microphone:
-                return .microphone
-            #if os(iOS)
-                case .iphoneAudio:
-                    return .microphone
-            #endif
-            }
-        }
-
-        private var activeHistoryAudioSource: RealtimeHistoryAudioSource {
-            #if os(macOS)
-                isImportedAudioSession ? .importedAudio : historyAudioSource(for: inputSource)
-            #else
-                historyAudioSource(for: inputSource)
-            #endif
-        }
-
-        private var activeHistoryInputSourceID: RealtimeHistoryInputSource {
-            #if os(macOS)
-                isImportedAudioSession ? .importedAudio : historyInputSourceID(for: inputSource)
-            #else
-                historyInputSourceID(for: inputSource)
-            #endif
-        }
-
-        #if os(macOS)
-            private var secondaryHistoryInputSource: RealtimeAudioInputSource? {
-                guard !isImportedAudioSession else { return nil }
-                guard preferences.realtimeDualInputHistoryRecordingEnabled else { return nil }
-                switch inputSource {
-                case .macAudio:
-                    return .microphone
-                case .microphone:
-                    return .macAudio
-                }
-            }
-        #endif
-
-        private func syncRealtimeHistorySession() {
-            guard usesRealtimeSessionHistory else { return }
-            #if os(iOS)
-                if !preferences.realtimeTranslationProvider.performsTranslation {
-                    historySessionBuilder.sync(pairs: translationState.sourceOnlyPairs, allowsUntranslated: true)
-                    return
-                }
-            #endif
-            historySessionBuilder.sync(pairs: realtimeHistoryPairs())
-        }
-
-        private func realtimeHistoryPairs() -> [SentencePair] {
-            return Self.historyPairs(
-                sentencePairs: sentencePairs,
-                pendingSourceText: pendingSourceText,
-                pendingTranslatedText: pendingTranslatedText,
-                sourceText: sourceText,
-                translatedText: translatedText
-            )
-        }
-
-        private func handleErrorMessage(_ message: String) {
-            logRealtime("errorMessage \(message)")
-            errorMessage = message
-            statusText = String(localized: "Error")
-        }
-
-        private func handleStartFailure(_ error: Error) {
-            handleErrorMessage(Self.describe(error))
-            startFailureAlert = Self.startFailureAlert(for: error)
-        }
-
-        private func handleRuntimeFailure(_ error: Error, context: String) async {
-            guard !Self.isCancellationError(error) else { return }
-            if isStarting, !isStopping {
-                // start() surfaces it before marking the session running.
-                pendingStartFailure = pendingStartFailure ?? error
-                logRealtime("runtimeFailure deferred to start context=\(context)")
-                return
-            }
-            guard isRunning, !isStopping else {
-                logRealtime(
-                    "runtimeFailure ignored context=\(context) running=\(isRunning) stopping=\(isStopping)"
-                )
-                return
-            }
-
-            let alert = Self.startFailureAlert(for: error)
-            logRealtime("runtimeFailure context=\(context) \(alert.message)")
-            await stop()
-            handleErrorMessage(alert.message)
-            startFailureAlert = alert
-        }
-
-        nonisolated static func startFailureAlertMessage(for error: Error) -> String {
-            describe(error)
-        }
-
-        public nonisolated static func realtimeErrorDescription(for error: Error) -> String {
-            describe(error)
-        }
-
-        #if os(iOS)
-            nonisolated static func iPhoneAudioBroadcastFailureAlert(
-                for state: RealtimeBroadcastState,
-                referenceDate: Date = Date()
-            ) -> RealtimeStartFailureAlert {
-                RealtimeStartFailureAlert(
-                    title: "iPhone Audio Failed",
-                    message: iPhoneAudioBroadcastFailureMessage(for: state, referenceDate: referenceDate)
-                )
-            }
-
-            nonisolated static func isStaleActiveIPhoneAudioBroadcast(_ state: RealtimeBroadcastState) -> Bool {
-                if state.audioSampleCount > 0 {
-                    return true
-                }
-
-                switch state.phase {
-                case .broadcasting, .recognizing, .translating, .paused, .stopping, .failed:
-                    return true
-                case .idle, .waiting, .stopped:
-                    return false
-                }
-            }
-
-            nonisolated static func isIPhoneAudioBroadcastWaitTimedOut(
-                _ state: RealtimeBroadcastState,
-                referenceDate: Date = Date(),
-                timeout: TimeInterval = broadcastPickerWaitTimeout
-            ) -> Bool {
-                state.phase == .waiting &&
-                    state.audioSampleCount == 0 &&
-                    referenceDate.timeIntervalSince(state.lastUpdatedAt) >= timeout
-            }
-
-            private nonisolated static func iPhoneAudioBroadcastFailureMessage(
-                for state: RealtimeBroadcastState,
-                referenceDate: Date
-            ) -> String {
-                if let errorMessage = state.errorMessage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !errorMessage.isEmpty
-                {
-                    return errorMessage
-                }
-
-                if state.isStale(referenceDate: referenceDate) {
-                    let elapsed = max(0, Int(referenceDate.timeIntervalSince(state.lastUpdatedAt).rounded()))
-                    return """
-                    The iPhone Audio broadcast stopped reporting status after \(elapsed) seconds. \
-                    Last phase: \(state.phase.rawValue). Audio samples received: \(state.audioSampleCount). \
-                    iOS may have terminated the broadcast upload extension before it could return an error.
-                    """
-                }
-
+            if state.isStale(referenceDate: referenceDate) {
+                let elapsed = max(0, Int(referenceDate.timeIntervalSince(state.lastUpdatedAt).rounded()))
                 return """
-                The iPhone Audio broadcast stopped without reporting a detailed error. \
-                Last phase: \(state.phase.rawValue). Audio samples received: \(state.audioSampleCount).
+                The iPhone Audio broadcast stopped reporting status after \(elapsed) seconds. \
+                Last phase: \(state.phase.rawValue). Audio samples received: \(state.audioSampleCount). \
+                iOS may have terminated the broadcast upload extension before it could return an error.
                 """
             }
-        #endif
 
-        nonisolated static func isCancellationError(_ error: Error) -> Bool {
-            if error is CancellationError {
-                return true
-            }
-            if let urlError = error as? URLError, urlError.code == .cancelled {
-                return true
-            }
+            return """
+            The iPhone Audio broadcast stopped without reporting a detailed error. \
+            Last phase: \(state.phase.rawValue). Audio samples received: \(state.audioSampleCount).
+            """
+        }
+    #endif
 
-            let nsError = error as NSError
-            return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
+    nonisolated static func isCancellationError(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        if let urlError = error as? URLError, urlError.code == .cancelled {
+            return true
         }
 
-        private nonisolated static func startFailureAlert(for error: Error) -> RealtimeStartFailureAlert {
-            RealtimeStartFailureAlert(
-                title: String(localized: "Realtime Failed"),
-                message: startFailureAlertMessage(for: error),
-                offersAppleTranslationDownload: {
-                    if case .languagePackNotInstalled? = error as? LocalProviderError { return true }
-                    return false
-                }()
-            )
-        }
-
-        @available(iOS 17.4, macOS 14.4, *)
-        nonisolated static func appleTranslateLanguagePreflightFailure(
-            status: LanguageAvailability.Status,
-            languagePair: String
-        ) -> LocalProviderError? {
-            switch status {
-            case .installed:
-                return nil
-            case .supported:
-                return .languagePackNotInstalled(languagePair: languagePair)
-            case .unsupported:
-                return .translationFailed(AppleTranslationErrorFormatter.withLanguagePair(
-                    "Apple Translate does not support this language pair.",
-                    languagePair: languagePair
-                ))
-            @unknown default:
-                return .translationFailed(AppleTranslationErrorFormatter.withLanguagePair(
-                    "Apple Translate could not confirm this language pair is installed.",
-                    languagePair: languagePair
-                ))
-            }
-        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
-    extension RealtimeSessionStore {
-        nonisolated static func transcriptSegments(from text: String) -> [String] {
-            text.components(separatedBy: "\n\n")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
+    private nonisolated static func startFailureAlert(for error: Error) -> RealtimeStartFailureAlert {
+        RealtimeStartFailureAlert(
+            title: String(localized: "Realtime Failed"),
+            message: startFailureAlertMessage(for: error),
+            offersAppleTranslationDownload: {
+                if case .languagePackNotInstalled? = error as? LocalProviderError { return true }
+                return false
+            }()
+        )
+    }
+
+    nonisolated static func appleTranslateLanguagePreflightFailure(
+        status: LanguageAvailability.Status,
+        languagePair: String
+    ) -> LocalProviderError? {
+        switch status {
+        case .installed:
+            return nil
+        case .supported:
+            return .languagePackNotInstalled(languagePair: languagePair)
+        case .unsupported:
+            return .translationFailed(AppleTranslationErrorFormatter.withLanguagePair(
+                "Apple Translate does not support this language pair.",
+                languagePair: languagePair
+            ))
+        @unknown default:
+            return .translationFailed(AppleTranslationErrorFormatter.withLanguagePair(
+                "Apple Translate could not confirm this language pair is installed.",
+                languagePair: languagePair
+            ))
+        }
+    }
+}
+
+extension RealtimeSessionStore {
+    nonisolated static func transcriptSegments(from text: String) -> [String] {
+        text.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    nonisolated static func historySnapshot(
+        sourceText: String,
+        translatedText: String,
+        pendingTranslatedText: String,
+        checkpoint: inout RealtimeHistoryCheckpoint
+    ) -> RealtimeHistorySnapshot? {
+        let historyTranslatedText = joinedHistoryText(translatedText, pendingTranslatedText)
+        return checkpoint.snapshot(sourceText: sourceText, translatedText: historyTranslatedText)
+    }
+
+    nonisolated static func historyPairs(
+        sentencePairs: [SentencePair],
+        pendingSourceText: String,
+        pendingTranslatedText: String,
+        sourceText: String,
+        translatedText: String
+    ) -> [SentencePair] {
+        var pairs = sentencePairs
+        let pendingSource = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pendingTranslation = pendingTranslatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !pendingSource.isEmpty, !pendingTranslation.isEmpty {
+            pairs.append(SentencePair(original: pendingSource, translation: pendingTranslation))
         }
 
-        nonisolated static func historySnapshot(
-            sourceText: String,
-            translatedText: String,
-            pendingTranslatedText: String,
-            checkpoint: inout RealtimeHistoryCheckpoint
-        ) -> RealtimeHistorySnapshot? {
-            let historyTranslatedText = joinedHistoryText(translatedText, pendingTranslatedText)
-            return checkpoint.snapshot(sourceText: sourceText, translatedText: historyTranslatedText)
+        if !pairs.isEmpty {
+            return pairs
         }
 
-        nonisolated static func historyPairs(
-            sentencePairs: [SentencePair],
-            pendingSourceText: String,
-            pendingTranslatedText: String,
-            sourceText: String,
-            translatedText: String
-        ) -> [SentencePair] {
-            var pairs = sentencePairs
-            let pendingSource = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let pendingTranslation = pendingTranslatedText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !pendingSource.isEmpty, !pendingTranslation.isEmpty {
-                pairs.append(SentencePair(original: pendingSource, translation: pendingTranslation))
-            }
+        let source = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let translation = translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !translation.isEmpty else { return [] }
 
-            if !pairs.isEmpty {
-                return pairs
-            }
+        guard !source.isEmpty else { return [] }
+        return [SentencePair(original: source, translation: translation)]
+    }
 
-            let source = sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let translation = translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !translation.isEmpty else { return [] }
+    nonisolated static func shouldAcceptRealtimeCallback(
+        sessionID: UUID,
+        activeSessionID: UUID,
+        isStopping: Bool
+    ) -> Bool {
+        !isStopping && sessionID == activeSessionID
+    }
 
-            guard !source.isEmpty else { return [] }
-            return [SentencePair(original: source, translation: translation)]
-        }
+    nonisolated static func shouldAcceptRealtimeCallbackDuringDrain(
+        sessionID: UUID,
+        activeSessionID: UUID,
+        isStopping: Bool,
+        drainingSessionID: UUID?
+    ) -> Bool {
+        sessionID == activeSessionID && (!isStopping || sessionID == drainingSessionID)
+    }
 
-        nonisolated static func shouldAcceptRealtimeCallback(
-            sessionID: UUID,
-            activeSessionID: UUID,
-            isStopping: Bool
-        ) -> Bool {
-            !isStopping && sessionID == activeSessionID
-        }
+    private nonisolated static func joinedHistoryText(_ translatedText: String, _ pendingTranslatedText: String) -> String {
+        let translated = translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pending = pendingTranslatedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        nonisolated static func shouldAcceptRealtimeCallbackDuringDrain(
-            sessionID: UUID,
-            activeSessionID: UUID,
-            isStopping: Bool,
-            drainingSessionID: UUID?
-        ) -> Bool {
-            sessionID == activeSessionID && (!isStopping || sessionID == drainingSessionID)
-        }
-
-        private nonisolated static func joinedHistoryText(_ translatedText: String, _ pendingTranslatedText: String) -> String {
-            let translated = translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let pending = pendingTranslatedText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            switch (translated.isEmpty, pending.isEmpty) {
-            case (true, true):
-                return ""
-            case (true, false):
-                return pending
-            case (false, true):
+        switch (translated.isEmpty, pending.isEmpty) {
+        case (true, true):
+            return ""
+        case (true, false):
+            return pending
+        case (false, true):
+            return translated
+        case (false, false):
+            if translated == pending || translated.hasSuffix("\n\n\(pending)") {
                 return translated
-            case (false, false):
-                if translated == pending || translated.hasSuffix("\n\n\(pending)") {
-                    return translated
-                }
-                return "\(translated)\n\n\(pending)"
             }
+            return "\(translated)\n\n\(pending)"
+        }
+    }
+}
+
+public extension RealtimeSessionStore {
+    var captionTranslationAvailable: Bool {
+        #if os(macOS)
+            primaryLaneConfiguration?.translationProvider.performsTranslation
+                ?? preferences.realtimeTranslationProvider.performsTranslation
+        #else
+            preferences.realtimeTranslationProvider.performsTranslation
+        #endif
+    }
+
+    /// The mode `captionLines` were built for; transcription-only sessions always show source captions.
+    var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
+        if !captionTranslationAvailable {
+            return .sourceOnly
+        }
+        return captionDisplayMode
+    }
+}
+
+private extension RealtimeSessionStore {
+    func logRealtime(_ message: String, stage: String = "session") {
+        RealtimeLog.log(stage, message)
+    }
+
+    func assignIfChanged<Value: Equatable>(_ value: inout Value, _ newValue: Value) {
+        if value != newValue {
+            value = newValue
         }
     }
 
-    public extension RealtimeSessionStore {
-        var captionTranslationAvailable: Bool {
-            #if os(macOS)
-                primaryLaneConfiguration?.translationProvider.performsTranslation
-                    ?? preferences.realtimeTranslationProvider.performsTranslation
-            #else
-                preferences.realtimeTranslationProvider.performsTranslation
+    func refreshCaptionLines(event: String) {
+        let allLines = resolvedCaptionLines()
+        let visibleLines = RealtimeCaptionDisplay.linesVisibleAfterClear(allLines, anchor: captionClearAnchor)
+        #if os(macOS)
+            let displayLines = RealtimeCaptionDisplay.displayWindow(visibleLines, limit: Self.captionLineDisplayLimit)
+        #else
+            let displayLines = visibleLines
+        #endif
+        if captionLines != displayLines {
+            #if DEBUG
+                // Re-segments the whole transcript; too costly for every release partial.
+                logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
             #endif
+            logCaptionLayoutChange(event: event, from: captionLines, to: displayLines)
+            logCaptionRevision(event: event, from: captionLines, to: displayLines)
         }
-
-        /// The mode `captionLines` were built for; transcription-only sessions always show source captions.
-        var resolvedCaptionDisplayMode: RealtimeCaptionDisplayMode {
-            if !captionTranslationAvailable {
-                return .sourceOnly
-            }
-            return captionDisplayMode
-        }
+        assignIfChanged(&captionLines, displayLines)
     }
 
-    private extension RealtimeSessionStore {
-        func logRealtime(_ message: String, stage: String = "session") {
-            RealtimeLog.log(stage, message)
-        }
+    /// Starts one traced input (ASR result or translation reply); every caption revision it
+    /// produces logs `cause=<kind>#<n>`, so a jump can be followed from input to layout.
+    func beginCaptionTrace(_ kind: String, _ detail: String) {
+        captionTraceSequence += 1
+        captionUpdateCause = "\(kind)#\(captionTraceSequence)"
+        RealtimeLog.log("trace", "\(captionUpdateCause) \(detail) rev=\(captionRevision)")
+    }
 
-        func assignIfChanged<Value: Equatable>(_ value: inout Value, _ newValue: Value) {
-            if value != newValue {
-                value = newValue
+    /// Logs every published caption change with the lines that changed, unfiltered.
+    func logCaptionRevision(
+        event: String,
+        from oldLines: [RealtimeCaptionLine],
+        to newLines: [RealtimeCaptionLine]
+    ) {
+        captionRevision += 1
+        let now = ContinuousClock.now
+        let gap = lastCaptionRevisionTime.map { "\(Int(($0.duration(to: now) / .milliseconds(1)).rounded()))ms" } ?? "-"
+        lastCaptionRevisionTime = now
+
+        let common = min(oldLines.count, newLines.count)
+        let firstChanged = (0 ..< common).first { oldLines[$0] != newLines[$0] } ?? common
+        let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let changes = newLines.dropFirst(firstChanged).prefix(6).map { line -> String in
+            let flag = line.isPending ? "*" : ""
+            guard let old = oldByID[line.id] else {
+                return "+\(line.id)\(flag)=\(RealtimeLog.text(line.text, limit: 40))"
             }
+            if old == line { return "=\(line.id)" }
+            let pending = old.isPending == line.isPending ? "" : " pending:\(old.isPending)->\(line.isPending)"
+            return "~\(line.id)\(flag)\(pending) \(RealtimeLog.text(old.text, limit: 40))->\(RealtimeLog.text(line.text, limit: 40))"
+        }
+        let newIDs = Set(newLines.map(\.id))
+        let removed = oldLines.dropFirst(firstChanged).filter { !newIDs.contains($0.id) }.map { "-\($0.id)" }
+        RealtimeLog.log(
+            "ui",
+            """
+            rev=\(captionRevision) cause=\(captionUpdateCause) event=\(event) gap=\(gap) \
+            lines=\(oldLines.count)->\(newLines.count) from=\(firstChanged) \
+            \((changes + removed).joined(separator: " | "))
+            """
+        )
+    }
+
+    /// Logs caption changes likely to shift layout height: line identity churn or a large
+    /// per-line text delta. Small in-place growth of a line is skipped to keep the log readable.
+    func logCaptionLayoutChange(
+        event: String,
+        from oldLines: [RealtimeCaptionLine],
+        to newLines: [RealtimeCaptionLine]
+    ) {
+        let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let newIDs = Set(newLines.map(\.id))
+        let added = newLines.filter { oldByID[$0.id] == nil }.map(\.id)
+        let removed = oldLines.filter { !newIDs.contains($0.id) }.map(\.id)
+        let resized = newLines.compactMap { line -> String? in
+            guard let old = oldByID[line.id] else { return nil }
+            let delta = line.text.count - old.text.count
+            return abs(delta) >= 12 ? "\(line.id):\(old.text.count)->\(line.text.count)" : nil
+        }
+        guard !added.isEmpty || !removed.isEmpty || !resized.isEmpty else { return }
+
+        let oldChars = oldLines.reduce(0) { $0 + $1.text.count }
+        let newChars = newLines.reduce(0) { $0 + $1.text.count }
+        let layout = newLines.map { "\($0.id)\($0.isPending ? "*" : ""):\($0.text.count)" }
+        RealtimeLog.log(
+            "layout",
+            """
+            event=\(event) lines=\(oldLines.count)->\(newLines.count) chars=\(oldChars)->\(newChars) \
+            added=\(added) removed=\(removed) resized=\(resized) \
+            tail=\(layout.suffix(6)) pendingSrc=\(RealtimeLog.text(pendingSourceText, limit: 24)) \
+            pendingTr=\(RealtimeLog.text(pendingTranslatedText, limit: 24))
+            """
+        )
+    }
+
+    /// Flags caption states that look like misalignment or missing text. Deduplicated by
+    /// signature so an unchanged problem is logged once, not on every recognition tick.
+    func logCaptionDiagnostics(
+        event: String,
+        allLines: [RealtimeCaptionLine],
+        displayLines: [RealtimeCaptionLine]
+    ) {
+        let segments = presentationSourceSegments
+        let segmentKeys = Set(segments.map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") })
+        // Translations appended at the bottom because their source line could not be matched.
+        let orphanTranslations = displayLines.filter { $0.id.hasPrefix("previous-translation") }
+        // Pairs whose original no longer equals any current segment (whitespace-normalized).
+        let unmatchedPairs = sentencePairs.filter {
+            !segmentKeys.contains($0.original.split(whereSeparator: \.isWhitespace).joined(separator: " "))
+        }
+        let inFlight = displayLines.filter { $0.id.hasSuffix("-source-in-flight") }
+        let hasTranslationWork = translationScheduler.finalTask != nil || !translationScheduler.queuedFinal.isEmpty
+        let stuckUntranslated = hasTranslationWork ? [] : inFlight
+        let hiddenByClear = allLines.count - displayLines.count
+        let duplicateIDs = Dictionary(grouping: displayLines, by: \.id).filter { $0.value.count > 1 }.keys
+        let lostAllLines = displayLines.isEmpty && !captionLines.isEmpty && !sourceText.isEmpty
+
+        var problems: [String] = []
+        if !orphanTranslations.isEmpty {
+            problems.append("orphanTranslations=\(RealtimeLog.segments(orphanTranslations.map(\.text)))")
+        }
+        if !unmatchedPairs.isEmpty {
+            problems.append("unmatchedPairs=\(RealtimeLog.segments(unmatchedPairs.map(\.original)))")
+        }
+        if !stuckUntranslated.isEmpty {
+            problems.append("untranslatedIdle=\(RealtimeLog.segments(stuckUntranslated.map(\.text)))")
+        }
+        if !duplicateIDs.isEmpty {
+            problems.append("duplicateIDs=\(duplicateIDs.sorted())")
+        }
+        if lostAllLines {
+            problems.append("allLinesDisappeared sourceLen=\(sourceText.count)")
+        }
+        if displayLines.count < captionLines.count, !sourceText.isEmpty {
+            let currentIDs = Set(displayLines.map(\.id))
+            let removed = captionLines.filter { !currentIDs.contains($0.id) }.prefix(4)
+            problems.append(
+                "lines=\(captionLines.count)->\(displayLines.count) removed=\(removed.map { "\($0.id):\(RealtimeLog.text($0.text, limit: 24))" })"
+            )
         }
 
-        func refreshCaptionLines(event: String) {
-            let allLines = resolvedCaptionLines()
-            let visibleLines = RealtimeCaptionDisplay.linesVisibleAfterClear(allLines, anchor: captionClearAnchor)
-            #if os(macOS)
-                let displayLines = RealtimeCaptionDisplay.displayWindow(visibleLines, limit: Self.captionLineDisplayLimit)
-            #else
-                let displayLines = visibleLines
-            #endif
-            if captionLines != displayLines {
-                #if DEBUG
-                    // Re-segments the whole transcript; too costly for every release partial.
-                    logCaptionDiagnostics(event: event, allLines: allLines, displayLines: displayLines)
-                #endif
-                logCaptionLayoutChange(event: event, from: captionLines, to: displayLines)
-                logCaptionRevision(event: event, from: captionLines, to: displayLines)
-            }
-            assignIfChanged(&captionLines, displayLines)
+        guard !problems.isEmpty else {
+            lastCaptionDiagnosticsSignature = nil
+            return
         }
+        let signature = problems.joined(separator: " ")
+        guard signature != lastCaptionDiagnosticsSignature else { return }
+        lastCaptionDiagnosticsSignature = signature
+        RealtimeLog.warn(
+            "caption",
+            """
+            event=\(event) mode=\(resolvedCaptionDisplayMode.rawValue) segs=\(segments.count) \
+            pairs=\(sentencePairs.count) hiddenByClear=\(hiddenByClear) \(signature) \
+            tail=\(RealtimeLog.segments(segments, tail: 2))
+            """
+        )
+    }
 
-        /// Starts one traced input (ASR result or translation reply); every caption revision it
-        /// produces logs `cause=<kind>#<n>`, so a jump can be followed from input to layout.
-        func beginCaptionTrace(_ kind: String, _ detail: String) {
-            captionTraceSequence += 1
-            captionUpdateCause = "\(kind)#\(captionTraceSequence)"
-            RealtimeLog.log("trace", "\(captionUpdateCause) \(detail) rev=\(captionRevision)")
-        }
-
-        /// Logs every published caption change with the lines that changed, unfiltered.
-        func logCaptionRevision(
-            event: String,
-            from oldLines: [RealtimeCaptionLine],
-            to newLines: [RealtimeCaptionLine]
-        ) {
-            captionRevision += 1
-            let now = ContinuousClock.now
-            let gap = lastCaptionRevisionTime.map { "\(Int(($0.duration(to: now) / .milliseconds(1)).rounded()))ms" } ?? "-"
-            lastCaptionRevisionTime = now
-
-            let common = min(oldLines.count, newLines.count)
-            let firstChanged = (0 ..< common).first { oldLines[$0] != newLines[$0] } ?? common
-            let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-            let changes = newLines.dropFirst(firstChanged).prefix(6).map { line -> String in
-                let flag = line.isPending ? "*" : ""
-                guard let old = oldByID[line.id] else {
-                    return "+\(line.id)\(flag)=\(RealtimeLog.text(line.text, limit: 40))"
-                }
-                if old == line { return "=\(line.id)" }
-                let pending = old.isPending == line.isPending ? "" : " pending:\(old.isPending)->\(line.isPending)"
-                return "~\(line.id)\(flag)\(pending) \(RealtimeLog.text(old.text, limit: 40))->\(RealtimeLog.text(line.text, limit: 40))"
-            }
-            let newIDs = Set(newLines.map(\.id))
-            let removed = oldLines.dropFirst(firstChanged).filter { !newIDs.contains($0.id) }.map { "-\($0.id)" }
+    static func logSourceSegmentChange(
+        from previous: [String],
+        to current: [String],
+        pending: String,
+        result: RealtimeRecognitionResult
+    ) {
+        guard previous != current else { return }
+        let offset = result.audioOffset.map { String(format: "%.1fs", $0) } ?? "-"
+        if current.starts(with: previous) {
             RealtimeLog.log(
-                "ui",
-                """
-                rev=\(captionRevision) cause=\(captionUpdateCause) event=\(event) gap=\(gap) \
-                lines=\(oldLines.count)->\(newLines.count) from=\(firstChanged) \
-                \((changes + removed).joined(separator: " | "))
-                """
-            )
-        }
-
-        /// Logs caption changes likely to shift layout height: line identity churn or a large
-        /// per-line text delta. Small in-place growth of a line is skipped to keep the log readable.
-        func logCaptionLayoutChange(
-            event: String,
-            from oldLines: [RealtimeCaptionLine],
-            to newLines: [RealtimeCaptionLine]
-        ) {
-            let oldByID = Dictionary(oldLines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-            let newIDs = Set(newLines.map(\.id))
-            let added = newLines.filter { oldByID[$0.id] == nil }.map(\.id)
-            let removed = oldLines.filter { !newIDs.contains($0.id) }.map(\.id)
-            let resized = newLines.compactMap { line -> String? in
-                guard let old = oldByID[line.id] else { return nil }
-                let delta = line.text.count - old.text.count
-                return abs(delta) >= 12 ? "\(line.id):\(old.text.count)->\(line.text.count)" : nil
-            }
-            guard !added.isEmpty || !removed.isEmpty || !resized.isEmpty else { return }
-
-            let oldChars = oldLines.reduce(0) { $0 + $1.text.count }
-            let newChars = newLines.reduce(0) { $0 + $1.text.count }
-            let layout = newLines.map { "\($0.id)\($0.isPending ? "*" : ""):\($0.text.count)" }
-            RealtimeLog.log(
-                "layout",
-                """
-                event=\(event) lines=\(oldLines.count)->\(newLines.count) chars=\(oldChars)->\(newChars) \
-                added=\(added) removed=\(removed) resized=\(resized) \
-                tail=\(layout.suffix(6)) pendingSrc=\(RealtimeLog.text(pendingSourceText, limit: 24)) \
-                pendingTr=\(RealtimeLog.text(pendingTranslatedText, limit: 24))
-                """
-            )
-        }
-
-        /// Flags caption states that look like misalignment or missing text. Deduplicated by
-        /// signature so an unchanged problem is logged once, not on every recognition tick.
-        func logCaptionDiagnostics(
-            event: String,
-            allLines: [RealtimeCaptionLine],
-            displayLines: [RealtimeCaptionLine]
-        ) {
-            let segments = presentationSourceSegments
-            let segmentKeys = Set(segments.map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") })
-            // Translations appended at the bottom because their source line could not be matched.
-            let orphanTranslations = displayLines.filter { $0.id.hasPrefix("previous-translation") }
-            // Pairs whose original no longer equals any current segment (whitespace-normalized).
-            let unmatchedPairs = sentencePairs.filter {
-                !segmentKeys.contains($0.original.split(whereSeparator: \.isWhitespace).joined(separator: " "))
-            }
-            let inFlight = displayLines.filter { $0.id.hasSuffix("-source-in-flight") }
-            let hasTranslationWork = finalTranslationTask != nil || !queuedFinalTranslationRequests.isEmpty
-            let stuckUntranslated = hasTranslationWork ? [] : inFlight
-            let hiddenByClear = allLines.count - displayLines.count
-            let duplicateIDs = Dictionary(grouping: displayLines, by: \.id).filter { $0.value.count > 1 }.keys
-            let lostAllLines = displayLines.isEmpty && !captionLines.isEmpty && !sourceText.isEmpty
-
-            var problems: [String] = []
-            if !orphanTranslations.isEmpty {
-                problems.append("orphanTranslations=\(RealtimeLog.segments(orphanTranslations.map(\.text)))")
-            }
-            if !unmatchedPairs.isEmpty {
-                problems.append("unmatchedPairs=\(RealtimeLog.segments(unmatchedPairs.map(\.original)))")
-            }
-            if !stuckUntranslated.isEmpty {
-                problems.append("untranslatedIdle=\(RealtimeLog.segments(stuckUntranslated.map(\.text)))")
-            }
-            if !duplicateIDs.isEmpty {
-                problems.append("duplicateIDs=\(duplicateIDs.sorted())")
-            }
-            if lostAllLines {
-                problems.append("allLinesDisappeared sourceLen=\(sourceText.count)")
-            }
-            if displayLines.count < captionLines.count, !sourceText.isEmpty {
-                let currentIDs = Set(displayLines.map(\.id))
-                let removed = captionLines.filter { !currentIDs.contains($0.id) }.prefix(4)
-                problems.append(
-                    "lines=\(captionLines.count)->\(displayLines.count) removed=\(removed.map { "\($0.id):\(RealtimeLog.text($0.text, limit: 24))" })"
-                )
-            }
-
-            guard !problems.isEmpty else {
-                lastCaptionDiagnosticsSignature = nil
-                return
-            }
-            let signature = problems.joined(separator: " ")
-            guard signature != lastCaptionDiagnosticsSignature else { return }
-            lastCaptionDiagnosticsSignature = signature
-            RealtimeLog.warn(
-                "caption",
-                """
-                event=\(event) mode=\(resolvedCaptionDisplayMode.rawValue) segs=\(segments.count) \
-                pairs=\(sentencePairs.count) hiddenByClear=\(hiddenByClear) \(signature) \
-                tail=\(RealtimeLog.segments(segments, tail: 2))
-                """
-            )
-        }
-
-        static func logSourceSegmentChange(
-            from previous: [String],
-            to current: [String],
-            pending: String,
-            result: RealtimeRecognitionResult
-        ) {
-            guard previous != current else { return }
-            let offset = result.audioOffset.map { String(format: "%.1fs", $0) } ?? "-"
-            if current.starts(with: previous) {
-                RealtimeLog.log(
-                    "src",
-                    """
-                    commit +\(current.count - previous.count) segs=\(current.count) at=\(offset) \
-                    new=\(RealtimeLog.segments(Array(current.dropFirst(previous.count)), tail: 4)) \
-                    pending=\(RealtimeLog.text(pending))
-                    """
-                )
-                return
-            }
-            let firstChanged = zip(previous, current).prefix { $0 == $1 }.count
-            let old = previous.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
-            let new = current.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
-            // Revisions of already-committed text are the main source of source/translation drift.
-            RealtimeLog.warn(
                 "src",
                 """
-                revised segs=\(previous.count)->\(current.count) from=[\(firstChanged)] at=\(offset) \
-                final=\(result.state == .final) old=\(old.joined(separator: " ")) new=\(new.joined(separator: " "))
+                commit +\(current.count - previous.count) segs=\(current.count) at=\(offset) \
+                new=\(RealtimeLog.segments(Array(current.dropFirst(previous.count)), tail: 4)) \
+                pending=\(RealtimeLog.text(pending))
                 """
             )
+            return
         }
+        let firstChanged = zip(previous, current).prefix { $0 == $1 }.count
+        let old = previous.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
+        let new = current.dropFirst(firstChanged).prefix(3).map { RealtimeLog.text($0, limit: 32) }
+        // Revisions of already-committed text are the main source of source/translation drift.
+        RealtimeLog.warn(
+            "src",
+            """
+            revised segs=\(previous.count)->\(current.count) from=[\(firstChanged)] at=\(offset) \
+            final=\(result.state == .final) old=\(old.joined(separator: " ")) new=\(new.joined(separator: " "))
+            """
+        )
+    }
 
-        func resolvedCaptionLines() -> [RealtimeCaptionLine] {
-            RealtimeCaptionDisplay.resolvedLines(
-                pairs: sentencePairs,
-                translatedSourceSegments: presentationSourceSegments,
-                translatedSource: translationSourceText,
-                translatedText: translatedText,
-                pendingSource: pendingSourceText,
-                pendingTranslation: pendingTranslatedText,
-                sourceText: sourceText,
-                mode: resolvedCaptionDisplayMode,
-                showsUntranslatedSource: true
+    func resolvedCaptionLines() -> [RealtimeCaptionLine] {
+        RealtimeCaptionDisplay.resolvedLines(
+            pairs: sentencePairs,
+            translatedSourceSegments: presentationSourceSegments,
+            translatedSource: translationSourceText,
+            translatedText: translatedText,
+            pendingSource: pendingSourceText,
+            pendingTranslation: pendingTranslatedText,
+            sourceText: sourceText,
+            mode: resolvedCaptionDisplayMode,
+            showsUntranslatedSource: true
+        )
+    }
+
+    #if os(iOS)
+        func logBroadcastStateIfNeeded(_ state: RealtimeBroadcastState) {
+            let signature = [
+                state.sessionID,
+                state.phase.rawValue,
+                "\(state.sourceText.count)",
+                "\(state.translationSourceText.count)",
+                "\(state.pendingSourceText.count)",
+                "\(state.translatedText.count)",
+                "\(state.pendingTranslatedText.count)",
+                "\(state.sentencePairs.count)",
+                state.errorMessage ?? "",
+            ].joined(separator: "|")
+            guard signature != lastBroadcastStateLogSignature else { return }
+            lastBroadcastStateLogSignature = signature
+            logRealtime(
+                """
+                state session=\(state.sessionID) phase=\(state.phase.rawValue) \
+                sourceLen=\(state.sourceText.count) stableLen=\(state.translationSourceText.count) \
+                pendingLen=\(state.pendingSourceText.count) translatedLen=\(state.translatedText.count) \
+                pendingTranslationLen=\(state.pendingTranslatedText.count) pairs=\(state.sentencePairs.count) \
+                audioSamples=\(state.audioSampleCount) error=\(state.errorMessage ?? "")
+                """,
+                stage: "broadcast"
             )
         }
+    #endif
 
-        #if os(iOS)
-            func logBroadcastStateIfNeeded(_ state: RealtimeBroadcastState) {
-                let signature = [
-                    state.sessionID,
-                    state.phase.rawValue,
-                    "\(state.sourceText.count)",
-                    "\(state.translationSourceText.count)",
-                    "\(state.pendingSourceText.count)",
-                    "\(state.translatedText.count)",
-                    "\(state.pendingTranslatedText.count)",
-                    "\(state.sentencePairs.count)",
-                    state.errorMessage ?? "",
-                ].joined(separator: "|")
-                guard signature != lastBroadcastStateLogSignature else { return }
-                lastBroadcastStateLogSignature = signature
-                logRealtime(
-                    """
-                    state session=\(state.sessionID) phase=\(state.phase.rawValue) \
-                    sourceLen=\(state.sourceText.count) stableLen=\(state.translationSourceText.count) \
-                    pendingLen=\(state.pendingSourceText.count) translatedLen=\(state.translatedText.count) \
-                    pendingTranslationLen=\(state.pendingTranslatedText.count) pairs=\(state.sentencePairs.count) \
-                    audioSamples=\(state.audioSampleCount) error=\(state.errorMessage ?? "")
-                    """,
-                    stage: "broadcast"
-                )
-            }
-        #endif
-
-        static func translationErrorMessage(
-            _ error: Error,
-            source: Locale.Language?,
-            target: TargetLanguageOption,
-            provider: RealtimeTranslationProvider
-        ) -> String {
-            switch provider {
-            case .appleTranslator, .appleTranslationRealtime:
-                return AppleTranslationErrorFormatter.describe(error, source: source, target: target)
-            case .transcriptionOnly:
-                return describe(error)
-            }
+    static func translationErrorMessage(
+        _ error: Error,
+        source: Locale.Language?,
+        target: TargetLanguageOption,
+        provider: RealtimeTranslationProvider
+    ) -> String {
+        switch provider {
+        case .appleTranslator, .appleTranslationRealtime:
+            return AppleTranslationErrorFormatter.describe(error, source: source, target: target)
+        case .transcriptionOnly:
+            return describe(error)
         }
+    }
 
-        nonisolated static func describe(_ error: Error) -> String {
-            let nsError = error as NSError
-            if nsError.domain == "kLSRErrorDomain", nsError.code == 300 {
-                return appendNSErrorDetails(to: """
-                Apple Speech failed to initialize the recognizer. \
-                Restart the device or change the source language.
-                """, nsError: nsError)
-            }
-            if nsError.domain == "SFSpeechErrorDomain", nsError.code == 4 {
-                return appendNSErrorDetails(
-                    to: "Apple Speech could not load the recognition model for the selected source language.",
-                    nsError: nsError
-                )
-            }
-            let baseMessage: String
-            if let localized = error as? LocalizedError {
-                let description = localized.errorDescription ?? ""
-                if !description.isEmpty {
-                    baseMessage = description
-                } else {
-                    baseMessage = error.localizedDescription
-                }
+    nonisolated static func describe(_ error: Error) -> String {
+        let nsError = error as NSError
+        if nsError.domain == "kLSRErrorDomain", nsError.code == 300 {
+            return appendNSErrorDetails(to: """
+            Apple Speech failed to initialize the recognizer. \
+            Restart the device or change the source language.
+            """, nsError: nsError)
+        }
+        if nsError.domain == "SFSpeechErrorDomain", nsError.code == 4 {
+            return appendNSErrorDetails(
+                to: "Apple Speech could not load the recognition model for the selected source language.",
+                nsError: nsError
+            )
+        }
+        let baseMessage: String
+        if let localized = error as? LocalizedError {
+            let description = localized.errorDescription ?? ""
+            if !description.isEmpty {
+                baseMessage = description
             } else {
                 baseMessage = error.localizedDescription
             }
-
-            guard !(error is LocalizedError) else { return baseMessage }
-            return appendNSErrorDetails(to: baseMessage, nsError: nsError)
+        } else {
+            baseMessage = error.localizedDescription
         }
 
-        nonisolated static func appendNSErrorDetails(to message: String, nsError: NSError) -> String {
-            var details: [String] = []
-            if !nsError.domain.isEmpty, !message.contains(nsError.domain) {
-                details.append("Error: \(nsError.domain) \(nsError.code)")
+        guard !(error is LocalizedError) else { return baseMessage }
+        return appendNSErrorDetails(to: baseMessage, nsError: nsError)
+    }
+
+    nonisolated static func appendNSErrorDetails(to message: String, nsError: NSError) -> String {
+        var details: [String] = []
+        if !nsError.domain.isEmpty, !message.contains(nsError.domain) {
+            details.append("Error: \(nsError.domain) \(nsError.code)")
+        }
+        if let reason = nsError.localizedFailureReason, !reason.isEmpty, !message.contains(reason) {
+            details.append("Reason: \(reason)")
+        }
+        if let suggestion = nsError.localizedRecoverySuggestion, !suggestion.isEmpty, !message.contains(suggestion) {
+            details.append("Suggestion: \(suggestion)")
+        }
+        guard !details.isEmpty else { return message }
+        return ([message] + details).joined(separator: "\n\n")
+    }
+
+    private func shouldAcceptRealtimeCallback(sessionID: UUID) -> Bool {
+        Self.shouldAcceptRealtimeCallbackDuringDrain(
+            sessionID: sessionID,
+            activeSessionID: activeSessionID,
+            isStopping: isStopping,
+            drainingSessionID: drainingSessionID
+        )
+    }
+
+    func updateTranscriptPresentation() {
+        translationState.updateSources(from: transcriptAccumulator)
+        syncTranslationStatePresentation()
+    }
+
+    func enqueueFinalTranslationRequests(
+        provider: RealtimeTranslationProvider,
+        sourceLanguage: SourceLanguageOption,
+        source: Locale.Language?,
+        targetLanguage: TargetLanguageOption
+    ) {
+        let requests = translationState.makeFinalTranslationRequests(
+            provider: provider,
+            sourceLanguage: sourceLanguage,
+            source: source,
+            targetLanguage: targetLanguage
+        )
+        guard !requests.isEmpty else { return }
+        translationScheduler.enqueueFinal(requests)
+
+        RealtimeLog.log(
+            "tx",
+            """
+            enqueue final +\(requests.count) queued=\(translationScheduler.queuedFinal.count) \
+            segs=\(translationState.sourceSegments.count) src=\(RealtimeLog.segments(requests.map(\.translationText)))
+            """
+        )
+    }
+
+    func schedulePartialTranslation(
+        provider: RealtimeTranslationProvider,
+        sourceLanguage: SourceLanguageOption,
+        source: Locale.Language?,
+        targetLanguage: TargetLanguageOption
+    ) {
+        guard let request = translationState.makePartialTranslationRequest(
+            provider: provider,
+            sourceLanguage: sourceLanguage,
+            source: source,
+            targetLanguage: targetLanguage
+        ) else {
+            if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                cancelPartialTranslationWork()
+                syncTranslationStatePresentation()
             }
-            if let reason = nsError.localizedFailureReason, !reason.isEmpty, !message.contains(reason) {
-                details.append("Reason: \(reason)")
-            }
-            if let suggestion = nsError.localizedRecoverySuggestion, !suggestion.isEmpty, !message.contains(suggestion) {
-                details.append("Suggestion: \(suggestion)")
-            }
-            guard !details.isEmpty else { return message }
-            return ([message] + details).joined(separator: "\n\n")
+            return
         }
 
-        private func shouldAcceptRealtimeCallback(sessionID: UUID) -> Bool {
-            Self.shouldAcceptRealtimeCallbackDuringDrain(
-                sessionID: sessionID,
-                activeSessionID: activeSessionID,
-                isStopping: isStopping,
-                drainingSessionID: drainingSessionID
+        translationScheduler.submitPartial(request)
+    }
+
+    func applyFinalTranslationResult(
+        _ result: ModelExecutionResult,
+        request: RealtimeTextTranslationRequest
+    ) {
+        beginCaptionTrace("txf", "src=\(RealtimeLog.text(request.translationText))")
+        defer { captionUpdateCause = "-" }
+        guard requestMatchesCurrentConfiguration(request) else {
+            RealtimeLog.warn(
+                "tx",
+                "final discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
             )
-        }
-
-        func updateTranscriptPresentation() {
-            translationState.updateSources(from: transcriptAccumulator)
+            translationState.finishFinalTranslationRequest(request)
             syncTranslationStatePresentation()
+            return
         }
 
-        func enqueueFinalTranslationRequests(
-            provider: RealtimeTranslationProvider,
-            sourceLanguage: SourceLanguageOption,
-            source: Locale.Language?,
-            targetLanguage: TargetLanguageOption
-        ) {
-            let requests = translationState.makeFinalTranslationRequests(
-                provider: provider,
-                sourceLanguage: sourceLanguage,
-                source: source,
-                targetLanguage: targetLanguage
-            )
-            guard !requests.isEmpty else { return }
-            queuedFinalTranslationRequests.append(contentsOf: requests)
-
+        switch result.response {
+        case let .success(text):
+            let applied = translationState.applyFinalTranslationSuccess(result, request: request)
+            let segmentCount = translationState.sourceSegments.count
+            let pairCount = translationState.sentencePairs.count
+            let isStillDisplayed = translationState.sentencePairs.contains { $0.original == request.translationText }
             RealtimeLog.log(
                 "tx",
                 """
-                enqueue final +\(requests.count) queued=\(queuedFinalTranslationRequests.count) \
-                segs=\(translationState.sourceSegments.count) src=\(RealtimeLog.segments(requests.map(\.translationText)))
+                final ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                -> tr=\(RealtimeLog.text(text)) modelPairs=\(result.sentencePairs.count) applied=\(applied) \
+                displayed=\(isStillDisplayed) pairs=\(pairCount)/\(segmentCount)
                 """
             )
-            guard finalTranslationTask == nil else { return }
-            finalTranslationTask = Task { @MainActor [weak self] in
-                await self?.processFinalTranslationRequests()
-            }
-        }
-
-        func schedulePartialTranslation(
-            provider: RealtimeTranslationProvider,
-            sourceLanguage: SourceLanguageOption,
-            source: Locale.Language?,
-            targetLanguage: TargetLanguageOption
-        ) {
-            guard let request = translationState.makePartialTranslationRequest(
-                provider: provider,
-                sourceLanguage: sourceLanguage,
-                source: source,
-                targetLanguage: targetLanguage
-            ) else {
-                if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    cancelPartialTranslationWork()
-                    syncTranslationStatePresentation()
-                }
-                return
-            }
-
-            latestPartialTranslationRequest = request
-            guard partialTranslationTask == nil else { return }
-            partialTranslationTask = Task { @MainActor [weak self] in
-                await self?.processPartialTranslationRequests()
-            }
-        }
-
-        func applyFinalTranslationResult(
-            _ result: ModelExecutionResult,
-            request: RealtimeTextTranslationRequest
-        ) {
-            beginCaptionTrace("txf", "src=\(RealtimeLog.text(request.translationText))")
-            defer { captionUpdateCause = "-" }
-            guard requestMatchesCurrentConfiguration(request) else {
+            if !isStillDisplayed {
+                // The segment was revised while its translation was in flight; the caption keeps
+                // the new text untranslated until the next request finishes.
                 RealtimeLog.warn(
-                    "tx",
-                    "final discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
-                )
-                translationState.finishFinalTranslationRequest(request)
-                syncTranslationStatePresentation()
-                return
-            }
-
-            switch result.response {
-            case let .success(text):
-                let applied = translationState.applyFinalTranslationSuccess(result, request: request)
-                let segmentCount = translationState.sourceSegments.count
-                let pairCount = translationState.sentencePairs.count
-                let isStillDisplayed = translationState.sentencePairs.contains { $0.original == request.translationText }
-                RealtimeLog.log(
-                    "tx",
+                    "align",
                     """
-                    final ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
-                    -> tr=\(RealtimeLog.text(text)) modelPairs=\(result.sentencePairs.count) applied=\(applied) \
-                    displayed=\(isStillDisplayed) pairs=\(pairCount)/\(segmentCount)
-                    """
-                )
-                if !isStillDisplayed {
-                    // The segment was revised while its translation was in flight; the caption keeps
-                    // the new text untranslated until the next request finishes.
-                    RealtimeLog.warn(
-                        "align",
-                        """
-                        final result has no matching segment src=\(RealtimeLog.text(request.translationText)) \
-                        segs=\(RealtimeLog.segments(translationState.sourceSegments))
-                        """
-                    )
-                }
-                syncTranslationStatePresentation()
-            case let .failure(error):
-                let message = Self.translationErrorMessage(
-                    error,
-                    source: request.source,
-                    target: request.targetLanguage,
-                    provider: request.provider
-                )
-                RealtimeLog.warn("tx", "final failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
-                translationState.finishFinalTranslationRequest(request)
-                syncTranslationStatePresentation()
-                handleErrorMessage(message)
-            }
-        }
-
-        func applyPartialTranslationResult(
-            _ result: ModelExecutionResult,
-            request: RealtimeTextTranslationRequest
-        ) {
-            beginCaptionTrace("txp", "src=\(RealtimeLog.text(request.translationText))")
-            defer { captionUpdateCause = "-" }
-            guard requestMatchesCurrentConfiguration(request) else {
-                RealtimeLog.warn(
-                    "tx",
-                    "partial discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
-                )
-                return
-            }
-
-            switch result.response {
-            case let .success(text):
-                if translationState.applyPartialTranslationSuccess(result, request: request) {
-                    RealtimeLog.log(
-                        "tx",
-                        """
-                        partial ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
-                        -> tr=\(RealtimeLog.text(text))
-                        """
-                    )
-                    syncTranslationStatePresentation()
-                    updateStatusAfterTranslationActivity()
-                } else {
-                    RealtimeLog.log(
-                        "tx",
-                        """
-                        partial stale \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
-                        pendingNow=\(RealtimeLog.text(translationState.pendingSourceText))
-                        """
-                    )
-                }
-            case let .failure(error):
-                let message = Self.translationErrorMessage(
-                    error,
-                    source: request.source,
-                    target: request.targetLanguage,
-                    provider: request.provider
-                )
-                RealtimeLog.warn("tx", "partial failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
-                handleErrorMessage(message)
-            }
-        }
-
-        func syncTranslationStatePresentation() {
-            assignIfChanged(&translationSourceText, translationState.translationSourceText)
-            assignIfChanged(&pendingSourceText, translationState.pendingSourceText)
-            assignIfChanged(&translatedText, translationState.translatedText)
-            assignIfChanged(&sentencePairs, translationState.sentencePairs)
-            assignIfChanged(&pendingTranslatedText, translationState.pendingTranslatedText)
-            presentationSourceSegments = translationState.sourceSegments
-            autosaveRealtimeHistoryIfNeeded()
-            refreshCaptionLines(event: "syncTranslationStatePresentation")
-        }
-
-        func requestMatchesCurrentConfiguration(_ request: RealtimeTextTranslationRequest) -> Bool {
-            request.provider == preferences.realtimeTranslationProvider &&
-                request.sourceLanguage == preferences.realtimeSourceLanguage &&
-                request.targetLanguage == preferences.realtimeTargetLanguage
-        }
-
-        func updateStatusAfterTranslationActivity() {
-            let hasTranslationWork = finalTranslationTask != nil ||
-                partialTranslationTask != nil ||
-                !queuedFinalTranslationRequests.isEmpty ||
-                latestPartialTranslationRequest != nil
-            statusText = hasTranslationWork
-                ? String(localized: "Translating")
-                :
-                (
-                    isRunning ?
-                        (isPaused ? String(localized: "Paused") : String(localized: "Listening to \(inputSource.title)")) :
-                        String(localized: "Stopped")
-                )
-        }
-
-        func cancelTranslationWork() {
-            let hadWork = finalTranslationTask != nil ||
-                partialTranslationTask != nil ||
-                !queuedFinalTranslationRequests.isEmpty ||
-                latestPartialTranslationRequest != nil
-            if hadWork {
-                RealtimeLog.log(
-                    "tx",
-                    """
-                    cancel finalTask=\(finalTranslationTask != nil) \
-                    partialTask=\(partialTranslationTask != nil) \
-                    queuedFinal=\(queuedFinalTranslationRequests.count) \
-                    latestPartial=\(latestPartialTranslationRequest != nil)
+                    final result has no matching segment src=\(RealtimeLog.text(request.translationText)) \
+                    segs=\(RealtimeLog.segments(translationState.sourceSegments))
                     """
                 )
             }
-            finalTranslationTask?.cancel()
-            finalTranslationTask = nil
-            queuedFinalTranslationRequests.removeAll()
-            translationState.cancelQueuedFinalTranslationRequests()
-            cancelPartialTranslationWork()
-        }
-
-        func cancelPartialTranslationWork() {
-            partialTranslationTask?.cancel()
-            partialTranslationTask = nil
-            latestPartialTranslationRequest = nil
-            nextPartialTranslationAllowedAt = nil
+            syncTranslationStatePresentation()
+        case let .failure(error):
+            let message = Self.translationErrorMessage(
+                error,
+                source: request.source,
+                target: request.targetLanguage,
+                provider: request.provider
+            )
+            RealtimeLog.warn("tx", "final failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
+            translationState.finishFinalTranslationRequest(request)
+            syncTranslationStatePresentation()
+            handleErrorMessage(message)
         }
     }
 
-    extension RealtimeSessionStore: RealtimeLiveSpeechTranscriberDelegate {
-        nonisolated func realtimeLiveSpeechTranscriber(
-            _: RealtimeLiveSpeechTranscriber,
+    func applyPartialTranslationResult(
+        _ result: ModelExecutionResult,
+        request: RealtimeTextTranslationRequest
+    ) {
+        beginCaptionTrace("txp", "src=\(RealtimeLog.text(request.translationText))")
+        defer { captionUpdateCause = "-" }
+        guard requestMatchesCurrentConfiguration(request) else {
+            RealtimeLog.warn(
+                "tx",
+                "partial discarded reason=configChanged src=\(RealtimeLog.text(request.translationText))"
+            )
+            return
+        }
+
+        switch result.response {
+        case let .success(text):
+            if translationState.applyPartialTranslationSuccess(result, request: request) {
+                RealtimeLog.log(
+                    "tx",
+                    """
+                    partial ok \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                    -> tr=\(RealtimeLog.text(text))
+                    """
+                )
+                syncTranslationStatePresentation()
+                updateStatusAfterTranslationActivity()
+            } else {
+                RealtimeLog.log(
+                    "tx",
+                    """
+                    partial stale \(Int(result.duration * 1000))ms src=\(RealtimeLog.text(request.translationText)) \
+                    pendingNow=\(RealtimeLog.text(translationState.pendingSourceText))
+                    """
+                )
+            }
+        case let .failure(error):
+            let message = Self.translationErrorMessage(
+                error,
+                source: request.source,
+                target: request.targetLanguage,
+                provider: request.provider
+            )
+            RealtimeLog.warn("tx", "partial failure src=\(RealtimeLog.text(request.translationText)) error=\(message)")
+            handleErrorMessage(message)
+        }
+    }
+
+    func syncTranslationStatePresentation() {
+        assignIfChanged(&translationSourceText, translationState.translationSourceText)
+        assignIfChanged(&pendingSourceText, translationState.pendingSourceText)
+        assignIfChanged(&translatedText, translationState.translatedText)
+        assignIfChanged(&sentencePairs, translationState.sentencePairs)
+        assignIfChanged(&pendingTranslatedText, translationState.pendingTranslatedText)
+        presentationSourceSegments = translationState.sourceSegments
+        autosaveRealtimeHistoryIfNeeded()
+        refreshCaptionLines(event: "syncTranslationStatePresentation")
+    }
+
+    func requestMatchesCurrentConfiguration(_ request: RealtimeTextTranslationRequest) -> Bool {
+        request.provider == preferences.realtimeTranslationProvider &&
+            request.sourceLanguage == preferences.realtimeSourceLanguage &&
+            request.targetLanguage == preferences.realtimeTargetLanguage
+    }
+
+    func updateStatusAfterTranslationActivity() {
+        let hasTranslationWork = translationScheduler.hasWork
+        statusText = hasTranslationWork
+            ? String(localized: "Translating")
+            :
+            (
+                isRunning ?
+                    (isPaused ? String(localized: "Paused") : String(localized: "Listening to \(inputSource.title)")) :
+                    String(localized: "Stopped")
+            )
+    }
+
+    func cancelTranslationWork() {
+        if translationScheduler.hasWork {
+            RealtimeLog.log(
+                "tx",
+                """
+                cancel finalTask=\(translationScheduler.finalTask != nil) \
+                partialTask=\(translationScheduler.partialTask != nil) \
+                queuedFinal=\(translationScheduler.queuedFinal.count) \
+                latestPartial=\(translationScheduler.latestPartial != nil)
+                """
+            )
+        }
+        translationScheduler.cancelAll()
+        translationState.cancelQueuedFinalTranslationRequests()
+    }
+
+    func cancelPartialTranslationWork() {
+        translationScheduler.cancelPartial()
+    }
+}
+
+extension RealtimeSessionStore: RealtimeLiveSpeechTranscriberDelegate {
+    nonisolated func realtimeLiveSpeechTranscriber(
+        _: RealtimeLiveSpeechTranscriber,
+        sessionID: UUID,
+        didRecognize result: RealtimeRecognitionResult
+    ) {
+        let callbackDrain = callbackDrain
+        callbackDrain.enter()
+        Task { @MainActor [weak self] in
+            defer { callbackDrain.leave() }
+            guard let self, shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            handleRecognized(result)
+        }
+    }
+
+    nonisolated func realtimeLiveSpeechTranscriber(
+        _: RealtimeLiveSpeechTranscriber,
+        sessionID: UUID,
+        didFail error: Error
+    ) {
+        let callbackDrain = callbackDrain
+        callbackDrain.untrackedMainActorTask { [weak self] in
+            guard let self, shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
+            await handleRuntimeFailure(error, context: "speech")
+        }
+    }
+}
+
+#if arch(arm64) && canImport(FluidAudio)
+    extension RealtimeSessionStore: RealtimeFluidAudioRecognizerDelegate {
+        nonisolated func realtimeFluidAudioRecognizer(
+            _: RealtimeFluidAudioRecognizer,
             sessionID: UUID,
             didRecognize result: RealtimeRecognitionResult
         ) {
@@ -3251,120 +3199,37 @@
             }
         }
 
-        nonisolated func realtimeLiveSpeechTranscriber(
-            _: RealtimeLiveSpeechTranscriber,
+        nonisolated func realtimeFluidAudioRecognizer(
+            _: RealtimeFluidAudioRecognizer,
             sessionID: UUID,
             didFail error: Error
         ) {
             let callbackDrain = callbackDrain
             callbackDrain.untrackedMainActorTask { [weak self] in
                 guard let self, shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
-                await handleRuntimeFailure(error, context: "speech")
+                await handleRuntimeFailure(error, context: "fluidAudio")
             }
         }
     }
+#endif
 
-    #if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
-        extension RealtimeSessionStore: RealtimeFluidAudioRecognizerDelegate {
-            nonisolated func realtimeFluidAudioRecognizer(
-                _: RealtimeFluidAudioRecognizer,
-                sessionID: UUID,
-                didRecognize result: RealtimeRecognitionResult
-            ) {
-                let callbackDrain = callbackDrain
-                callbackDrain.enter()
-                Task { @MainActor [weak self] in
-                    defer { callbackDrain.leave() }
-                    guard let self, shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
-                    handleRecognized(result)
-                }
-            }
-
-            nonisolated func realtimeFluidAudioRecognizer(
-                _: RealtimeFluidAudioRecognizer,
-                sessionID: UUID,
-                didFail error: Error
-            ) {
-                let callbackDrain = callbackDrain
-                callbackDrain.untrackedMainActorTask { [weak self] in
-                    guard let self, shouldAcceptRealtimeCallback(sessionID: sessionID) else { return }
-                    await handleRuntimeFailure(error, context: "fluidAudio")
-                }
-            }
-        }
-    #endif
-
-    #if os(macOS)
-        extension RealtimeSessionStore: RealtimeSystemAudioCaptureDelegate {
-            nonisolated func realtimeSystemAudioCapture(
-                _ capture: RealtimeSystemAudioCapture,
-                didOutput sampleBuffer: CMSampleBuffer
-            ) {
-                if capture === secondarySystemAudioCapture {
-                    let completedAudioSegment = secondaryAudioHistoryRecorder.append(sampleBuffer)
-                    if completedAudioSegment {
-                        Task { @MainActor [weak self] in
-                            self?.autosaveRealtimeHistoryIfNeeded()
-                        }
-                    }
-                    return
-                }
-
-                realtimePipelineAudioFanout.append(sampleBuffer)
-                let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
+#if os(macOS)
+    extension RealtimeSessionStore: RealtimeSystemAudioCaptureDelegate {
+        nonisolated func realtimeSystemAudioCapture(
+            _ capture: RealtimeSystemAudioCapture,
+            didOutput sampleBuffer: CMSampleBuffer
+        ) {
+            if capture === secondarySystemAudioCapture {
+                let completedAudioSegment = secondaryAudioHistoryRecorder.append(sampleBuffer)
                 if completedAudioSegment {
                     Task { @MainActor [weak self] in
                         self?.autosaveRealtimeHistoryIfNeeded()
                     }
                 }
+                return
             }
 
-            nonisolated func realtimeSystemAudioCapture(
-                _ capture: RealtimeSystemAudioCapture,
-                didReceiveAudioSampleCount count: Int,
-                level: Float?
-            ) {
-                guard capture === systemAudioCapture else { return }
-                Task { @MainActor [weak self] in
-                    self?.updateAudioSampleCount(count, level: level)
-                }
-            }
-
-            nonisolated func realtimeSystemAudioCapture(_ capture: RealtimeSystemAudioCapture, didFail error: Error) {
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    if capture === self.secondarySystemAudioCapture {
-                        await self.handleSecondaryAudioFailure(error, source: .macAudio)
-                    } else {
-                        await self.handleRuntimeFailure(error, context: "systemAudio")
-                    }
-                }
-            }
-        }
-    #endif
-
-    extension RealtimeSessionStore: RealtimeMicrophoneAudioCaptureDelegate {
-        nonisolated func realtimeMicrophoneAudioCapture(
-            _ capture: RealtimeMicrophoneAudioCapture,
-            didOutput sampleBuffer: CMSampleBuffer
-        ) {
-            #if os(macOS)
-                if capture === secondaryMicrophoneAudioCapture {
-                    let completedAudioSegment = secondaryAudioHistoryRecorder.append(sampleBuffer)
-                    if completedAudioSegment {
-                        Task { @MainActor [weak self] in
-                            self?.autosaveRealtimeHistoryIfNeeded()
-                        }
-                    }
-                    return
-                }
-            #endif
-
-            #if os(macOS)
-                realtimePipelineAudioFanout.append(sampleBuffer)
-            #else
-                activeRecognizer.append(sampleBuffer)
-            #endif
+            realtimePipelineAudioFanout.append(sampleBuffer)
             let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
             if completedAudioSegment {
                 Task { @MainActor [weak self] in
@@ -3373,63 +3238,116 @@
             }
         }
 
-        nonisolated func realtimeMicrophoneAudioCapture(
-            _ capture: RealtimeMicrophoneAudioCapture,
-            didOutput pcmBuffer: AVAudioPCMBuffer
-        ) {
-            #if os(macOS)
-                if capture === secondaryMicrophoneAudioCapture {
-                    let completedAudioSegment = secondaryAudioHistoryRecorder.append(pcmBuffer)
-                    if completedAudioSegment {
-                        Task { @MainActor [weak self] in
-                            self?.autosaveRealtimeHistoryIfNeeded()
-                        }
-                    }
-                    return
-                }
-            #endif
-
-            // Recognition first; the capture tap delivers a fresh buffer, so AAC encoding can
-            // run on the recorder's queue instead of the realtime audio thread.
-            #if os(macOS)
-                realtimePipelineAudioFanout.append(pcmBuffer)
-            #else
-                activeRecognizer.append(pcmBuffer)
-            #endif
-            audioHistoryRecorder.enqueue(pcmBuffer) { [weak self] in
-                Task { @MainActor [weak self] in
-                    self?.autosaveRealtimeHistoryIfNeeded()
-                }
-            }
-        }
-
-        nonisolated func realtimeMicrophoneAudioCapture(
-            _ capture: RealtimeMicrophoneAudioCapture,
+        nonisolated func realtimeSystemAudioCapture(
+            _ capture: RealtimeSystemAudioCapture,
             didReceiveAudioSampleCount count: Int,
             level: Float?
         ) {
-            #if os(macOS)
-                guard capture === microphoneAudioCapture else { return }
-            #endif
+            guard capture === systemAudioCapture else { return }
             Task { @MainActor [weak self] in
                 self?.updateAudioSampleCount(count, level: level)
             }
         }
 
-        nonisolated func realtimeMicrophoneAudioCapture(_ capture: RealtimeMicrophoneAudioCapture, didFail error: Error) {
+        nonisolated func realtimeSystemAudioCapture(_ capture: RealtimeSystemAudioCapture, didFail error: Error) {
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                #if os(macOS)
-                    if capture === self.secondaryMicrophoneAudioCapture {
-                        await self.handleSecondaryAudioFailure(error, source: .microphone)
-                        return
-                    }
-                #endif
-                await self.handleRuntimeFailure(error, context: "microphone")
+                if capture === self.secondarySystemAudioCapture {
+                    await self.handleSecondaryAudioFailure(error, source: .macAudio)
+                } else {
+                    await self.handleRuntimeFailure(error, context: "systemAudio")
+                }
             }
         }
     }
 #endif
+
+extension RealtimeSessionStore: RealtimeMicrophoneAudioCaptureDelegate {
+    nonisolated func realtimeMicrophoneAudioCapture(
+        _ capture: RealtimeMicrophoneAudioCapture,
+        didOutput sampleBuffer: CMSampleBuffer
+    ) {
+        #if os(macOS)
+            if capture === secondaryMicrophoneAudioCapture {
+                let completedAudioSegment = secondaryAudioHistoryRecorder.append(sampleBuffer)
+                if completedAudioSegment {
+                    Task { @MainActor [weak self] in
+                        self?.autosaveRealtimeHistoryIfNeeded()
+                    }
+                }
+                return
+            }
+        #endif
+
+        #if os(macOS)
+            realtimePipelineAudioFanout.append(sampleBuffer)
+        #else
+            activeRecognizer.append(sampleBuffer)
+        #endif
+        let completedAudioSegment = audioHistoryRecorder.append(sampleBuffer)
+        if completedAudioSegment {
+            Task { @MainActor [weak self] in
+                self?.autosaveRealtimeHistoryIfNeeded()
+            }
+        }
+    }
+
+    nonisolated func realtimeMicrophoneAudioCapture(
+        _ capture: RealtimeMicrophoneAudioCapture,
+        didOutput pcmBuffer: AVAudioPCMBuffer
+    ) {
+        #if os(macOS)
+            if capture === secondaryMicrophoneAudioCapture {
+                let completedAudioSegment = secondaryAudioHistoryRecorder.append(pcmBuffer)
+                if completedAudioSegment {
+                    Task { @MainActor [weak self] in
+                        self?.autosaveRealtimeHistoryIfNeeded()
+                    }
+                }
+                return
+            }
+        #endif
+
+        // Recognition first; the capture tap delivers a fresh buffer, so AAC encoding can
+        // run on the recorder's queue instead of the realtime audio thread.
+        #if os(macOS)
+            realtimePipelineAudioFanout.append(pcmBuffer)
+        #else
+            activeRecognizer.append(pcmBuffer)
+        #endif
+        audioHistoryRecorder.enqueue(pcmBuffer) { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.autosaveRealtimeHistoryIfNeeded()
+            }
+        }
+    }
+
+    nonisolated func realtimeMicrophoneAudioCapture(
+        _ capture: RealtimeMicrophoneAudioCapture,
+        didReceiveAudioSampleCount count: Int,
+        level: Float?
+    ) {
+        #if os(macOS)
+            guard capture === microphoneAudioCapture else { return }
+        #endif
+        Task { @MainActor [weak self] in
+            self?.updateAudioSampleCount(count, level: level)
+        }
+    }
+
+    nonisolated func realtimeMicrophoneAudioCapture(_ capture: RealtimeMicrophoneAudioCapture, didFail error: Error) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            #if os(macOS)
+                if capture === self.secondaryMicrophoneAudioCapture {
+                    await self.handleSecondaryAudioFailure(error, source: .microphone)
+                    return
+                }
+            #endif
+            await self.handleRuntimeFailure(error, context: "microphone")
+        }
+    }
+}
 
 public struct RealtimeSavedHistoryNotice: Identifiable, Equatable, Sendable {
     public let id = UUID()

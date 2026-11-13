@@ -31,11 +31,7 @@
         private var recognitionTimings: [RealtimeRecognitionTokenTiming] = []
         private var pendingRecognitionSegment: RealtimeRecognitionSegment?
         private var pairedHistoryIDsByRecognitionPart: [String: UUID] = [:]
-        private var finalTranslationTask: Task<Void, Never>?
-        private var partialTranslationTask: Task<Void, Never>?
-        private var queuedFinalRequests: [RealtimeTextTranslationRequest] = []
-        private var latestPartialRequest: RealtimeTextTranslationRequest?
-        private var nextPartialAllowedAt: Date?
+        private let translationScheduler = RealtimeTranslationScheduler()
         private var currentEventOffset: TimeInterval
         private var trackUpdatedAt: Date?
         private var latencyContextsByTranslationKey: [String: (
@@ -77,6 +73,7 @@
                 requestID: configuration.id,
                 recognitionTimelineBase: startedOffset
             )
+            configureTranslationScheduler()
         }
 
         func markListening() {
@@ -175,12 +172,8 @@
                     source: sourceLanguage.localeLanguage,
                     targetLanguage: targetLanguage
                 )
-                queuedFinalRequests.append(contentsOf: requests)
-                startFinalTranslationTaskIfNeeded()
-                let partialTask = partialTranslationTask
-                cancelPartialTranslationWork()
-                await partialTask?.value
-                await finalTranslationTask?.value
+                translationScheduler.enqueueFinal(requests)
+                await translationScheduler.settle()
                 syncApplePresentation()
             }
             snapshot.phase = snapshot.errorMessage == nil ? .stopped : .failed
@@ -274,8 +267,7 @@
                     recognizedAt: latencyContext.recognizedAt
                 )
             }
-            queuedFinalRequests.append(contentsOf: finalRequests)
-            startFinalTranslationTaskIfNeeded()
+            translationScheduler.enqueueFinal(finalRequests)
 
             guard let partialRequest = translationState.makePartialTranslationRequest(
                 provider: configuration.translationProvider,
@@ -284,19 +276,11 @@
                 targetLanguage: targetLanguage
             ) else {
                 if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    cancelPartialTranslationWork()
+                    translationScheduler.cancelPartial()
                 }
                 return
             }
-            latestPartialRequest = partialRequest
-            startPartialTranslationTaskIfNeeded()
-        }
-
-        private func cancelPartialTranslationWork() {
-            partialTranslationTask?.cancel()
-            partialTranslationTask = nil
-            latestPartialRequest = nil
-            nextPartialAllowedAt = nil
+            translationScheduler.submitPartial(partialRequest)
         }
 
         private var languagesMatch: Bool {
@@ -304,33 +288,14 @@
             return RealtimeLanguageMatcher.matches(source, targetLanguage.localeLanguage)
         }
 
-        private func startFinalTranslationTaskIfNeeded() {
-            guard finalTranslationTask == nil, !queuedFinalRequests.isEmpty else { return }
-            finalTranslationTask = Task { @MainActor [weak self] in
-                await self?.processFinalTranslations()
-            }
-        }
-
-        private func startPartialTranslationTaskIfNeeded() {
-            guard partialTranslationTask == nil, latestPartialRequest != nil else { return }
-            partialTranslationTask = Task { @MainActor [weak self] in
-                await self?.processPartialTranslations()
-            }
-        }
-
-        private func processFinalTranslations() async {
-            while !Task.isCancelled {
-                guard !isTranslationDisabled else {
-                    finalTranslationTask = nil
-                    return
-                }
-                guard !queuedFinalRequests.isEmpty else {
-                    finalTranslationTask = nil
-                    return
-                }
-                let request = queuedFinalRequests.removeFirst()
-                do {
-                    let result = try await translationExecutor(request)
+        private func configureTranslationScheduler() {
+            translationScheduler.handlers = .init(
+                translate: { [weak self] request in
+                    guard let self else { throw CancellationError() }
+                    return try await translationExecutor(request)
+                },
+                finalResult: { [weak self] request, result in
+                    guard let self else { return }
                     hasSuccessfulTranslation = true
                     snapshot.errorMessage = nil
                     let applied = translationState.applyFinalTranslationSuccess(result, request: request)
@@ -343,61 +308,32 @@
                         latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
                     }
                     syncApplePresentation()
-                    if !queuedFinalRequests.isEmpty, request.cadenceInterval > 0 {
-                        try await Task.sleep(for: .milliseconds(
-                            Int((request.cadenceInterval * 1000).rounded(.up))
-                        ))
-                    }
-                } catch is CancellationError {
-                    // The canceller already cleared the handle and may have scheduled a replacement.
-                    latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
-                    return
-                } catch {
+                },
+                finalFailure: { [weak self] request, error in
+                    guard let self else { return }
                     latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
                     translationState.finishFinalTranslationRequest(request)
                     handleTranslationFailure(error)
                     syncApplePresentation()
-                }
-            }
-        }
-
-        private func processPartialTranslations() async {
-            while !Task.isCancelled {
-                guard !isTranslationDisabled else {
-                    partialTranslationTask = nil
-                    return
-                }
-                guard let request = latestPartialRequest else {
-                    partialTranslationTask = nil
-                    nextPartialAllowedAt = nil
-                    return
-                }
-                latestPartialRequest = nil
-                do {
-                    // Throttle by request start, so a slow translation is followed immediately by the next one.
-                    let allowedAt = nextPartialAllowedAt ?? now().addingTimeInterval(request.cadenceInterval)
-                    nextPartialAllowedAt = allowedAt
-                    let delay = allowedAt.timeIntervalSince(now())
-                    if delay > 0 {
-                        try await Task.sleep(for: .milliseconds(Int((delay * 1000).rounded(.up))))
-                    }
-                    let latestRequest = latestPartialRequest ?? request
-                    latestPartialRequest = nil
-                    guard !Task.isCancelled else { return }
-                    nextPartialAllowedAt = now().addingTimeInterval(latestRequest.cadenceInterval)
-                    let result = try await translationExecutor(latestRequest)
+                },
+                finalCancelled: { [weak self] request in
+                    self?.latencyContextsByTranslationKey.removeValue(forKey: request.cacheKey)
+                },
+                partialResult: { [weak self] request, result in
+                    guard let self else { return }
                     hasSuccessfulTranslation = true
                     snapshot.errorMessage = nil
-                    _ = translationState.applyPartialTranslationSuccess(result, request: latestRequest)
+                    _ = translationState.applyPartialTranslationSuccess(result, request: request)
                     syncApplePresentation()
-                } catch is CancellationError {
-                    // The canceller already cleared the handle and may have scheduled a replacement.
-                    return
-                } catch {
+                },
+                partialFailure: { [weak self] _, error in
+                    guard let self else { return }
                     handleTranslationFailure(error)
                     syncApplePresentation()
-                }
-            }
+                },
+                isDisabled: { [weak self] in self?.isTranslationDisabled ?? true },
+                now: now
+            )
         }
 
         private func handleTranslationFailure(_ error: Error) {
@@ -412,8 +348,7 @@
                 hasSuccessfulTranslation: hasSuccessfulTranslation
             ) else { return }
             isTranslationDisabled = true
-            queuedFinalRequests.removeAll()
-            latestPartialRequest = nil
+            translationScheduler.dropPending()
             translationState.cancelQueuedFinalTranslationRequests()
         }
 
@@ -678,13 +613,7 @@
         }
 
         private func cancelTranslationWork() {
-            finalTranslationTask?.cancel()
-            partialTranslationTask?.cancel()
-            finalTranslationTask = nil
-            partialTranslationTask = nil
-            queuedFinalRequests.removeAll()
-            latestPartialRequest = nil
-            nextPartialAllowedAt = nil
+            translationScheduler.cancelAll()
             latencyContextsByTranslationKey.removeAll()
         }
 
