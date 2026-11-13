@@ -6,10 +6,7 @@
 import Foundation
 
 public enum ModelSelectionPolicy {
-    public static let freeCloudModelLimit = 1
-
     public enum Reason: Equatable {
-        case freeCloudModelLimitReached
         case requiresPro
         case keptDefaultModel
     }
@@ -40,27 +37,15 @@ public enum ModelSelectionPolicy {
         }
 
         var updated = enabledIDs
+        if !isPro, model.isCloudModel {
+            let freeCloudIDs = availableModels
+                .filter { !$0.isPremium && $0.isCloudModel }
+                .map(\.id)
+            updated.subtract(freeCloudIDs)
+        }
         updated.insert(model.id)
 
-        let wouldExceedFreeLimit = !isPro
-            && model.isCloudModel
-            && freeCloudModelCount(in: updated, availableModels: availableModels) > freeCloudModelLimit
-
-        if wouldExceedFreeLimit {
-            return ToggleResult(enabledIDs: enabledIDs, reason: .freeCloudModelLimitReached)
-        }
-
         return ToggleResult(enabledIDs: updated)
-    }
-
-    public static func freeCloudModelCount(
-        in enabledIDs: Set<String>,
-        availableModels: [ModelConfig]
-    ) -> Int {
-        availableModels
-            .filter { enabledIDs.contains($0.id) }
-            .filter { !$0.isPremium && $0.isCloudModel }
-            .count
     }
 
     public static func firstCallableCloudModelID(

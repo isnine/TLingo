@@ -48,6 +48,7 @@ For small changes, compile-check with a single Debug build of the most relevant 
 ## Release Guardrails
 
 - App Store iOS and macOS releases are built and distributed only by Xcode Cloud, which owns App Store build numbers.
+- When replacing a version in `WAITING_FOR_REVIEW` or `IN_REVIEW`, withdraw the selected candidate and reuse its `MARKETING_VERSION`; update the existing `CHANGELOG.md` section and localized in-app and App Store notes before pushing. Do not bump the marketing version merely to replace its build. Check iOS and macOS independently.
 - Routine version bumps update `MARKETING_VERSION`. Update `CHANGELOG.md` before creating a `v*` tag.
 - Commit subjects start with `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by `[iOS]`, `[Mac]`, or `[Both]`. Platform tags only filter release notes and are never shown to users. Only the first three reach users. From `5.7.5` onward every CHANGELOG item must carry an explicit platform tag; older sections keep the implicit both behavior.
 - Before bumping, draft the release section with `scripts/release_notes.py draft` (commits since the last `MARKETING_VERSION` change), shorten it into `CHANGELOG.md`, then run `scripts/release_notes.py build` to refresh the in-app What's New data and translate new keys in `ios/ShareCore/Resources/ReleaseNotes.xcstrings`.

@@ -12,8 +12,8 @@ struct ModelSelectionPolicyTests {
     private let thirdFree = ModelConfig(id: "kimi-k2.6", displayName: "Kimi K2.6")
     private let premium = ModelConfig(id: "gpt-5.4", displayName: "GPT-5.4", isPremium: true)
 
-    @Test("Free users cannot enable a second cloud model")
-    func freeUsersCannotEnableSecondCloudModel() {
+    @Test("Free users switch cloud models by selecting another free model")
+    func freeUsersSwitchCloudModels() {
         let result = ModelSelectionPolicy.toggle(
             secondFree,
             enabledIDs: [firstFree.id],
@@ -21,8 +21,81 @@ struct ModelSelectionPolicyTests {
             isPro: false
         )
 
-        #expect(result.enabledIDs == [firstFree.id])
-        #expect(result.reason == .freeCloudModelLimitReached)
+        #expect(result.enabledIDs == [secondFree.id])
+        #expect(result.reason == nil)
+
+        let switchedBack = ModelSelectionPolicy.toggle(
+            firstFree,
+            enabledIDs: result.enabledIDs,
+            availableModels: [firstFree, secondFree, thirdFree],
+            isPro: false
+        )
+
+        #expect(switchedBack.enabledIDs == [firstFree.id])
+        #expect(switchedBack.reason == nil)
+    }
+
+    @Test("Free users can switch after trying to deselect their last model")
+    func freeUsersCanSwitchAfterKeepingLastModel() {
+        let kept = ModelSelectionPolicy.toggle(
+            firstFree,
+            enabledIDs: [firstFree.id],
+            availableModels: [firstFree, secondFree],
+            isPro: false
+        )
+
+        #expect(kept.enabledIDs == [firstFree.id])
+        #expect(kept.reason == .keptDefaultModel)
+
+        let switched = ModelSelectionPolicy.toggle(
+            secondFree,
+            enabledIDs: kept.enabledIDs,
+            availableModels: [firstFree, secondFree],
+            isPro: false
+        )
+
+        #expect(switched.enabledIDs == [secondFree.id])
+        #expect(switched.reason == nil)
+    }
+
+    @Test("Switching free cloud models preserves other selections")
+    func switchingFreeCloudModelsPreservesOtherSelections() {
+        let custom = ModelConfig(id: "custom-endpoint:my-model", displayName: "My Model")
+        let preservedIDs: Set<String> = [
+            ModelConfig.appleTranslateID,
+            ModelConfig.microsoftTranslateID,
+            ModelConfig.foundationModelID,
+            ModelConfig.privateCloudModelID,
+            custom.id,
+            premium.id,
+            "removed-model",
+        ]
+        let result = ModelSelectionPolicy.toggle(
+            secondFree,
+            enabledIDs: preservedIDs.union([firstFree.id]),
+            availableModels: [
+                firstFree, secondFree, premium, custom,
+                ModelConfig.appleTranslate, ModelConfig.microsoftTranslate,
+                ModelConfig.foundationModel, ModelConfig.privateCloudModel,
+            ],
+            isPro: false
+        )
+
+        #expect(result.enabledIDs == preservedIDs.union([secondFree.id]))
+        #expect(result.reason == nil)
+    }
+
+    @Test("Switching replaces all previously selected free cloud models")
+    func switchingReplacesMultipleFreeCloudModels() {
+        let result = ModelSelectionPolicy.toggle(
+            thirdFree,
+            enabledIDs: [firstFree.id, secondFree.id],
+            availableModels: [firstFree, secondFree, thirdFree],
+            isPro: false
+        )
+
+        #expect(result.enabledIDs == [thirdFree.id])
+        #expect(result.reason == nil)
     }
 
     @Test("Pro users can enable more than two cloud models")

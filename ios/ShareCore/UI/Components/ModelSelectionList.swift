@@ -114,12 +114,6 @@ public struct ModelSelectionList: View {
         ModelConfig.translationServices + ModelConfig.appleIntelligenceModels + displayedCloudModels
     }
 
-    private var hasReachedFreeLimit: Bool {
-        guard !isSingleSelection, !entitlement.isPro else { return false }
-        return ModelSelectionPolicy.freeCloudModelCount(in: enabledIDs, availableModels: displayedCloudModels)
-            >= ModelSelectionPolicy.freeCloudModelLimit
-    }
-
     // MARK: - Body
 
     public var body: some View {
@@ -317,7 +311,6 @@ public struct ModelSelectionList: View {
                 model: model,
                 isSelected: isSelected,
                 isLocked: isLocked,
-                isDimmed: hasReachedFreeLimit && !isSelected && !isLocked && model.isCloudModel,
                 subtitle: model.upstreamID
             ) {
                 select(model)
@@ -471,9 +464,6 @@ public struct ModelSelectionList: View {
         case .requiresPro:
             requirePro()
             return
-        case .freeCloudModelLimitReached:
-            showAlert(for: .freeCloudModelLimitReached)
-            return
         case .keptDefaultModel:
             showAlert(for: .keptDefaultModel)
         case nil:
@@ -502,8 +492,6 @@ public struct ModelSelectionList: View {
 
     private func showAlert(for reason: ModelSelectionPolicy.Reason) {
         let message = switch reason {
-        case .freeCloudModelLimitReached:
-            String(localized: "Free users can select up to \(ModelSelectionPolicy.freeCloudModelLimit) cloud models.")
         case .requiresPro:
             String(localized: "Upgrade to use premium models.")
         case .keptDefaultModel:

@@ -6126,6 +6126,131 @@
         }
       }
     },
+    "Switch free AI models directly without getting stuck in selection alerts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدّل بين نماذج الذكاء الاصطناعي المجانية مباشرةً دون التعثر في تنبيهات الاختيار"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skift direkte mellem gratis AI-modeller uden at sidde fast i valgalarmer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wechsle direkt zwischen kostenlosen KI-Modellen, ohne in Auswahl-Hinweisen festzustecken"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch free AI models directly without getting stuck in selection alerts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia directamente entre modelos de IA gratuitos sin quedarte atascado en los avisos de selección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changez directement de modèle d'IA gratuit sans rester bloqué sur les alertes de sélection"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beralih antar model AI gratis secara langsung tanpa terjebak di peringatan pemilihan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa direttamente da un modello AI gratuito all'altro senza restare bloccato negli avvisi di selezione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択アラートでつまずくことなく、無料のAIモデルを直接切り替えられます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택 알림에 막히지 않고 무료 AI 모델을 바로 전환하세요"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tukar model AI percuma secara terus tanpa terperangkap dalam makluman pemilihan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytt direkte mellom gratis AI-modeller uten å bli sittende fast i valgvarsler"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wissel direct tussen gratis AI-modellen zonder vast te lopen in selectiemeldingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przełączaj się bezpośrednio między darmowymi modelami AI, bez utykania w alertach wyboru"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterne diretamente entre modelos de IA gratuitos sem ficar preso nos alertas de seleção"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt direkt mellan gratis AI-modeller utan att fastna i valvarningar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçim uyarılarına takılmadan ücretsiz AI modelleri arasında doğrudan geçiş yapın"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接切換免費 AI 模型，唔會畀選擇提示卡住"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接切换免费 AI 模型，不会被选择提示卡住"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接切換免費 AI 模型，不會被選擇提示卡住"
+          }
+        }
+      }
+    },
     "Sync custom endpoints with iCloud Keychain" : {
       "extractionState" : "manual",
       "localizations" : {

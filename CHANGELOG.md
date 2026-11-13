@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [Both] Switch free AI models directly without getting stuck in selection alerts
 - [Both] Detect Japanese correctly when source and target languages are automatic
 - [Both] Convert between Traditional and Simplified Chinese locally with Apple Translate
 - [Both] Preserve clearly identifiable Chinese scripts during automatic language detection

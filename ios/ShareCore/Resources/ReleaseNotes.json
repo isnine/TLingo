@@ -5,6 +5,10 @@
       "items": [
         {
           "kind": "fixed",
+          "text": "Switch free AI models directly without getting stuck in selection alerts"
+        },
+        {
+          "kind": "fixed",
           "text": "Detect Japanese correctly when source and target languages are automatic"
         },
         {
