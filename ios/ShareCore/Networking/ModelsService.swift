@@ -88,18 +88,17 @@ public final class ModelsService: Sendable {
         lock.lock()
         let alreadyLoaded = cachedModels != nil
         lock.unlock()
-        guard !alreadyLoaded else { return }
-
-        guard let url = diskCacheURL else { return }
-        guard let data = try? Data(contentsOf: url) else { return }
-        guard let payload = try? JSONDecoder().decode(DiskCachePayload.self, from: data),
+        guard !alreadyLoaded, let url = diskCacheURL, let data = try? Data(contentsOf: url),
+              let payload = try? JSONDecoder().decode(DiskCachePayload.self, from: data),
               let models = try? Self.validatedModels(payload.models)
         else {
             return
         }
 
         lock.lock()
-        cachedModels = models
+        if cachedModels == nil {
+            cachedModels = models
+        }
         lock.unlock()
     }
 

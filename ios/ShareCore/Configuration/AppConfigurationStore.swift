@@ -169,7 +169,7 @@ public final class AppConfigurationStore: ObservableObject {
         }
 
         guard !validationResult.hasErrors else {
-            return .success(validationResult)
+            return .failure(.validationFailed(validationResult))
         }
 
         let previousCustomActions = customActions

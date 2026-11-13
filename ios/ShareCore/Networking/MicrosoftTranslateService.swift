@@ -4,7 +4,7 @@ public final class MicrosoftTranslateService: Sendable {
     public static let shared = MicrosoftTranslateService()
     private let session: URLSession
 
-    public init(session: URLSession = .shared) {
+    public init(session: URLSession = NetworkSession.shared) {
         self.session = session
     }
 
@@ -27,7 +27,7 @@ public final class MicrosoftTranslateService: Sendable {
         return supportedCodes.contains(mapped) ? mapped : nil
     }
 
-    // From https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation
+    /// From https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation
     private static let supportedCodes: Set<String> = [
         "af", "am", "ar", "as", "az", "ba", "be", "bg", "bho", "bn", "bo", "brx", "bs", "ca", "cs", "cy",
         "da", "de", "doi", "dsb", "dv", "el", "en", "es", "es-MX", "et", "eu", "fa", "fi", "fil", "fj",
@@ -64,7 +64,8 @@ public final class MicrosoftTranslateService: Sendable {
             timingTrace?.mark(.streamFinished)
             let http = try response.asHTTP(or: URLError(.badServerResponse))
             guard http.statusCode == 200 else {
-                throw ModelsServiceError.httpError(statusCode: http.statusCode, body: nil)
+                let bodyText = String(data: data, encoding: .utf8)
+                throw ModelsServiceError.httpError(statusCode: http.statusCode, body: bodyText)
             }
             let translated = try JSONDecoder().decode(TranslationResponse.self, from: data).text
             guard !translated.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
