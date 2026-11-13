@@ -816,6 +816,7 @@ extension HomeView {
         #if os(macOS)
             if let onResultReplace {
                 Button {
+                    copyToPasteboard(copyText)
                     onResultReplace(copyText)
                 } label: {
                     Label("Replace", systemImage: "arrow.left.arrow.right")
@@ -827,6 +828,7 @@ extension HomeView {
         #elseif os(iOS)
             if let context, context.allowsReplacement {
                 Button {
+                    copyToPasteboard(copyText)
                     context.finish(translation: AttributedString(copyText))
                 } label: {
                     Label("Replace", systemImage: "arrow.left.arrow.right")

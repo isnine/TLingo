@@ -57,7 +57,6 @@ public struct ProviderResultCardView: View {
             if case let .success(result) = run.status { return result.copyText }
             return ""
         }()
-        let vocabularyDraft = viewModel.vocabularyDraft(forRunID: run.id)
 
         VStack(alignment: .leading, spacing: usesCompactSnapshotMetrics ? 5 : 10) {
             ResultContentView(
@@ -72,8 +71,7 @@ public struct ProviderResultCardView: View {
                 onReplace: onReplace,
                 onChat: onChat,
                 onSuggestedAction: onSuggestedAction,
-                onInspectRequest: onInspectRequest,
-                vocabularyDraft: vocabularyDraft
+                onInspectRequest: onInspectRequest
             )
             ResultBottomInfoBar(
                 run: run,
@@ -94,8 +92,7 @@ public struct ProviderResultCardView: View {
                 onCopy: onCopy,
                 onReplace: onReplace,
                 onChat: onChat,
-                offersLanguageDownload: offersLanguageDownload,
-                vocabularyDraft: vocabularyDraft
+                offersLanguageDownload: offersLanguageDownload
             )
         }
         .padding(usesCompactSnapshotMetrics ? TLingoSpacing.xs : TLingoSpacing.md)
@@ -128,7 +125,6 @@ struct ResultContentView: View {
     let onChat: (() -> Void)?
     let onSuggestedAction: ((String) -> Void)?
     let onInspectRequest: (() -> Void)?
-    var vocabularyDraft: VocabularyDraft?
 
     @ThemeColors private var colors: AppColorPalette
 
@@ -282,8 +278,7 @@ struct ResultContentView: View {
                         onStopSpeaking: onStopSpeaking,
                         onCopy: onCopy,
                         onReplace: onReplace,
-                        onChat: onChat,
-                        vocabularyDraft: vocabularyDraft
+                        onChat: onChat
                     )
                 }
             }
@@ -320,7 +315,6 @@ struct ResultBottomInfoBar: View {
     let onChat: (() -> Void)?
     /// Shows Download instead of Retry when Apple Translate is missing its language pack.
     var offersLanguageDownload = false
-    var vocabularyDraft: VocabularyDraft?
 
     @ThemeColors private var colors: AppColorPalette
 
@@ -417,8 +411,7 @@ struct ResultBottomInfoBar: View {
                     onStopSpeaking: onStopSpeaking,
                     onCopy: onCopy,
                     onReplace: onReplace,
-                    onChat: onChat,
-                    vocabularyDraft: vocabularyDraft
+                    onChat: onChat
                 )
             }
         }
@@ -481,7 +474,6 @@ struct ResultActionButtons: View {
     let onCopy: (String) -> Void
     let onReplace: ((String) -> Void)?
     let onChat: (() -> Void)?
-    var vocabularyDraft: VocabularyDraft?
 
     @ThemeColors private var colors: AppColorPalette
 
@@ -492,9 +484,6 @@ struct ResultActionButtons: View {
             }
             SpeakButton(isSpeaking: isSpeaking, onSpeak: onSpeak, onStop: onStopSpeaking)
             CopyButton(text: copyText, onCopy: onCopy)
-            if let vocabularyDraft {
-                VocabularySaveButton(draft: vocabularyDraft)
-            }
             if let onReplace {
                 ReplaceButton(text: copyText, onReplace: onReplace)
             }
@@ -585,6 +574,7 @@ struct ReplaceButton: View {
 
     var body: some View {
         Button {
+            PasteboardHelper.copy(text)
             onReplace(text)
         } label: {
             Label("Replace", systemImage: "arrow.left.arrow.right")

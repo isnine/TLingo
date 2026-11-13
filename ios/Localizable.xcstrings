@@ -381,6 +381,7 @@
       }
     },
     "/ month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2117,6 +2118,7 @@
       }
     },
     "%@/mo, billed annually · save %lld%%" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6947,12 +6949,6 @@
             "value" : "Ekle"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新增"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6960,6 +6956,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "新增"
@@ -7092,6 +7094,7 @@
       }
     },
     "Add a valid Azure endpoint and API key in Realtime Options before starting." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16533,6 +16536,7 @@
       }
     },
     "Billed monthly · cancel anytime" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -29199,6 +29203,7 @@
       }
     },
     "Continue Monthly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -30668,12 +30673,6 @@
             "value" : "Modeller yüklenemedi"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法載入模型"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30681,6 +30680,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法載入模型"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法載入模型"
@@ -30792,12 +30797,6 @@
             "value" : "Uç nokta (%d) kaydedilemedi."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法儲存端點 (%d)。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30805,6 +30804,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法儲存端點 (%d)。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法儲存端點 (%d)。"
@@ -31539,12 +31544,6 @@
             "value" : "Özel uç nokta"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自訂端點"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -31552,6 +31551,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂端點"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂端點"
@@ -31663,12 +31668,6 @@
             "value" : "ÖZEL UÇ NOKTA"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自訂端點"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -31676,6 +31675,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂端點"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂端點"
@@ -33426,18 +33431,6 @@
     "Detect" : {
       "comment" : "Compact badge before the detected source language name, matching the Auto target-language badge. Use a short label meaning automatic language detection, not an action button.",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detect"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检测"
-          }
-        },
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
@@ -33454,6 +33447,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erkennen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect"
           }
         },
         "es" : {
@@ -33534,13 +33533,19 @@
             "value" : "Algıla"
           }
         },
-        "zh-HK" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检测"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "偵測"
           }
         },
-        "zh-Hant" : {
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "偵測"
@@ -37750,12 +37755,6 @@
             "value" : "Düzenle"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "編輯"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -37763,6 +37762,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "編輯"
@@ -39616,12 +39621,6 @@
             "value" : "http:// veya https:// ile başlayan bir URL girin."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "輸入以 http:// 或 https:// 開頭的 URL。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39629,6 +39628,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入以 http:// 或 https:// 開頭的 URL。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入以 http:// 或 https:// 開頭的 URL。"
@@ -40507,6 +40512,9 @@
           }
         }
       }
+    },
+    "Expand" : {
+
     },
     "Experimental" : {
       "extractionState" : "stale",
@@ -43861,6 +43869,7 @@
       }
     },
     "Free users can select up to %lld cloud models." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -53679,6 +53688,9 @@
         }
       }
     },
+    "Keep TLingo open until this download finishes." : {
+
+    },
     "Keep using these models after your free trial" : {
       "localizations" : {
         "ar" : {
@@ -58137,12 +58149,6 @@
             "value" : "Yerel Çince karakter dönüşümü"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本機繁簡轉換"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -58150,6 +58156,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機繁簡轉換"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "本機繁簡轉換"
@@ -63004,6 +63016,7 @@
       }
     },
     "More Actions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -65090,12 +65103,6 @@
             "value" : "Yanıtta sohbet modeli bulunamadı."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在回應中找不到聊天模型。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -65103,6 +65110,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在回應中找不到聊天模型。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "在回應中找不到聊天模型。"
@@ -86845,12 +86858,6 @@
             "value" : "Uç noktayı kaldır"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除端點"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -86858,6 +86865,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除端點"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除端點"
@@ -116672,12 +116685,6 @@
             "value" : "Özel uç nokta artık yapılandırılmamış."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自訂端點已不再設定。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -116685,6 +116692,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂端點已不再設定。"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂端點已不再設定。"
@@ -122262,12 +122275,6 @@
             "value" : "Token (İsteğe bağlı)"
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "權杖（可選）"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -122275,6 +122282,12 @@
           }
         },
         "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "權杖（可選）"
+          }
+        },
+        "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "權杖（可選）"
@@ -125021,6 +125034,7 @@
     },
     "Translate to" : {
       "comment" : "Label before the target language picker in the extension",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -138550,12 +138564,6 @@
             "value" : "OpenAI uyumlu sunucularla çalışır. Modeller /v1/models üzerinden keşfedilir."
           }
         },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可配合 OpenAI 相容伺服器使用。模型會從 /v1/models 探索。"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -138566,6 +138574,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可與 OpenAI 相容伺服器搭配使用。模型會從 /v1/models 探索。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可配合 OpenAI 相容伺服器使用。模型會從 /v1/models 探索。"
           }
         }
       }

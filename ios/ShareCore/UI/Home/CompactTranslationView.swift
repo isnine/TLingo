@@ -3,7 +3,7 @@
 //  ShareCore
 //
 //  The compact translation surface shared between the iOS system Translation
-//  extension and the onboarding "try premium" sheet. All UI (header bar,
+//  extension and the onboarding "try premium" sheet. All UI (language pill,
 //  action chips, streaming result cards, hint label, loading overlay) lives
 //  here and is driven exclusively by `HomeViewModel`.
 //
@@ -27,6 +27,8 @@
         private let usesCompactSnapshotMetrics: Bool
         private let usesCachedRequestState: Bool
 
+        @State private var collapsedRunIDs: Set<String> = []
+
         @ThemeColors private var colors: AppColorPalette
 
         public init(
@@ -48,22 +50,35 @@
         public var body: some View {
             ZStack {
                 VStack(alignment: .leading, spacing: usesCompactSnapshotMetrics ? 8 : 12) {
-                    headerBar
-
-                    Divider()
-                        .background(colors.divider)
-
+                    // Fading the trailing edge signals that the row scrolls.
                     actionChips
+                        .mask {
+                            HStack(spacing: 0) {
+                                Rectangle()
+                                LinearGradient(
+                                    colors: [.black, .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                                .frame(width: Self.chipRowFadeWidth)
+                            }
+                        }
 
                     if !viewModel.modelRuns.isEmpty {
+                        // Must touch the container's bottom edge so the scroll
+                        // area can extend under the home-indicator safe area.
                         resultSection
-                    } else if !viewModel.isLoadingConfiguration {
-                        hintLabel
+                            .ignoresSafeArea(.container, edges: .bottom)
+                    } else {
+                        if !viewModel.isLoadingConfiguration {
+                            hintLabel
+                        }
+                        Spacer(minLength: 0)
                     }
-
-                    Spacer(minLength: 0)
                 }
-                .padding(usesCompactSnapshotMetrics ? 12 : 16)
+                .padding(.horizontal, usesCompactSnapshotMetrics ? 12 : 16)
+                // The host sheet's navigation bar already separates the content.
+                .padding(.top, usesCompactSnapshotMetrics ? 12 : 4)
 
                 if viewModel.isLoadingConfiguration {
                     configurationLoadingOverlay
@@ -71,40 +86,28 @@
             }
         }
 
-        // MARK: - Header Bar
+        private static var chipRowFadeWidth: CGFloat { 28 }
 
-        private var headerBar: some View {
-            HStack(spacing: 8) {
-                Text("Translate to", comment: "Label before the target language picker in the extension")
-                    .font(.system(size: 13))
-                    .foregroundColor(colors.textSecondary)
+        // MARK: - Language Pill
 
-                LanguageSwitcherView(
-                    globeFont: .system(size: 12),
-                    textFont: .system(size: 13, weight: .medium),
-                    chevronFont: .system(size: 8),
-                    foregroundColor: colors.accent,
-                    languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
-                    resolvedTarget: viewModel.resolvedTargetLanguage,
-                    onOverrideTarget: {
-                        viewModel.overrideTargetLanguage(
-                            $0,
-                            refreshEntitlement: !usesCachedRequestState,
-                            allowModelFallback: usesCachedRequestState
-                        )
-                    },
-                    detectedSource: viewModel.detectedSourceLanguage,
-                    onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
-                )
-
-                Spacer(minLength: 0)
-
-                inputSpeakButton
-
-                chatButton
-            }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 4)
+        private var languagePill: some View {
+            LanguageSwitcherView(
+                globeFont: .system(size: 12),
+                textFont: .system(size: 13, weight: .medium),
+                chevronFont: .system(size: 8),
+                foregroundColor: colors.accent,
+                languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
+                resolvedTarget: viewModel.resolvedTargetLanguage,
+                onOverrideTarget: {
+                    viewModel.overrideTargetLanguage(
+                        $0,
+                        refreshEntitlement: !usesCachedRequestState,
+                        allowModelFallback: usesCachedRequestState
+                    )
+                },
+                detectedSource: viewModel.detectedSourceLanguage,
+                onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
+            )
         }
 
         @ViewBuilder
@@ -157,7 +160,18 @@
                     chipBackground(isSelected: isSelected)
                 },
                 horizontalPadding: 14,
-                verticalPadding: 8
+                verticalPadding: 8,
+                leading: AnyView(languagePill),
+                trailing: AnyView(
+                    HStack(spacing: 14) {
+                        inputSpeakButton
+
+                        chatButton
+                    }
+                    .padding(.leading, 6)
+                    // Keeps the last items clear of the fade when scrolled to the end.
+                    .padding(.trailing, Self.chipRowFadeWidth)
+                )
             ) { action in
                 if viewModel.selectAction(action) {
                     viewModel.performSelectedAction(
@@ -189,24 +203,110 @@
                             viewModel.presentDebugRequestDetails(for: run.id)
                         } : nil
 
-                        ProviderResultCardView(
-                            run: run,
-                            showModelName: true,
-                            viewModel: viewModel,
-                            onCopy: { text in
-                                PasteboardHelper.copy(text)
-                            },
-                            onReplace: onReplace,
-                            onChat: chatHandler(for: run),
-                            onSuggestedAction: suggestedActionHandler(for: run),
-                            onInspectRequest: inspectRequest,
-                            usesCompactSnapshotMetrics: usesCompactSnapshotMetrics
-                        )
+                        let isCollapsed = collapsedRunIDs.contains(run.id)
+
+                        Group {
+                            if isCollapsed {
+                                collapsedRow(for: run)
+                            } else {
+                                ProviderResultCardView(
+                                    run: run,
+                                    showModelName: true,
+                                    viewModel: viewModel,
+                                    onCopy: { text in
+                                        PasteboardHelper.copy(text)
+                                    },
+                                    onReplace: onReplace,
+                                    onChat: chatHandler(for: run),
+                                    onSuggestedAction: suggestedActionHandler(for: run),
+                                    onInspectRequest: inspectRequest,
+                                    usesCompactSnapshotMetrics: usesCompactSnapshotMetrics
+                                )
+                            }
+                        }
+                        .transition(.opacity)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.snappy(duration: 0.3)) {
+                                if isCollapsed {
+                                    collapsedRunIDs.remove(run.id)
+                                } else {
+                                    collapsedRunIDs.insert(run.id)
+                                }
+                            }
+                        }
+                        .accessibilityAction(named: isCollapsed ? Text("Expand") : Text("Collapse")) {
+                            if isCollapsed {
+                                collapsedRunIDs.remove(run.id)
+                            } else {
+                                collapsedRunIDs.insert(run.id)
+                            }
+                        }
                     }
 
                     trailingFooter()
                 }
+                .padding(.bottom, usesCompactSnapshotMetrics ? 12 : 16)
             }
+        }
+
+        // MARK: - Collapsed Row
+
+        private func collapsedRow(for run: HomeViewModel.ModelRunViewState) -> some View {
+            HStack(spacing: 8) {
+                collapsedStatus(for: run)
+
+                Text(collapsedPreview(for: run))
+                    .font(.system(size: 14))
+                    .foregroundColor(colors.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text(run.modelDisplayName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(colors.textSecondary)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(colors.textSecondary)
+            }
+            .padding(.horizontal, usesCompactSnapshotMetrics ? TLingoSpacing.xs : TLingoSpacing.md)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
+                    .fill(colors.cardBackground)
+            )
+        }
+
+        @ViewBuilder
+        private func collapsedStatus(for run: HomeViewModel.ModelRunViewState) -> some View {
+            switch run.status {
+            case .idle, .running, .streaming, .streamingSentencePairs:
+                ProgressView()
+                    .controlSize(.mini)
+            case .success:
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(colors.success)
+            case .failure:
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(colors.error)
+            }
+        }
+
+        private func collapsedPreview(for run: HomeViewModel.ModelRunViewState) -> String {
+            let text: String = switch run.status {
+            case let .success(result): result.copyText
+            case let .streaming(text, _): text
+            case let .streamingSentencePairs(pairs, _): pairs.map(\.translation).joined(separator: " ")
+            case let .failure(message, _, _, _): message
+            case .idle, .running: ""
+            }
+            return text.replacingOccurrences(of: "\n", with: " ")
         }
 
         private func chatHandler(for run: HomeViewModel.ModelRunViewState) -> (() -> Void)? {

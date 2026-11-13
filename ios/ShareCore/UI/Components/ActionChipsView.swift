@@ -10,6 +10,8 @@ public struct ActionChipsView<Background: View>: View {
     let background: (Bool) -> Background
     let horizontalPadding: CGFloat
     let verticalPadding: CGFloat
+    let leading: AnyView?
+    let trailing: AnyView?
     let onSelect: (ActionConfig) -> Void
 
     public init(
@@ -22,6 +24,8 @@ public struct ActionChipsView<Background: View>: View {
         background: @escaping (Bool) -> Background,
         horizontalPadding: CGFloat = 14,
         verticalPadding: CGFloat = 8,
+        leading: AnyView? = nil,
+        trailing: AnyView? = nil,
         onSelect: @escaping (ActionConfig) -> Void
     ) {
         self.actions = actions
@@ -33,12 +37,15 @@ public struct ActionChipsView<Background: View>: View {
         self.background = background
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
+        self.leading = leading
+        self.trailing = trailing
         self.onSelect = onSelect
     }
 
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: spacing) {
+                if let leading { leading }
                 ForEach(actions) { action in
                     let isSelected = action.id == selectedActionID
                     Button {
@@ -53,6 +60,7 @@ public struct ActionChipsView<Background: View>: View {
                     }
                     .buttonStyle(.plain)
                 }
+                if let trailing { trailing }
             }
             .padding(.vertical, contentVerticalPadding)
         }
