@@ -115,12 +115,12 @@ struct ModelSelectionPolicyTests {
     func directTranslationServicesDoNotCountTowardFreeLimit() {
         let microsoftResult = ModelSelectionPolicy.toggle(
             ModelConfig.microsoftTranslate,
-            enabledIDs: [firstFree.id, secondFree.id],
+            enabledIDs: [firstFree.id],
             availableModels: [firstFree, secondFree, ModelConfig.microsoftTranslate],
             isPro: false
         )
 
-        #expect(microsoftResult.enabledIDs == [firstFree.id, secondFree.id, ModelConfig.microsoftTranslateID])
+        #expect(microsoftResult.enabledIDs == [firstFree.id, ModelConfig.microsoftTranslateID])
         #expect(microsoftResult.reason == nil)
 
         let appleResult = ModelSelectionPolicy.toggle(
@@ -130,7 +130,7 @@ struct ModelSelectionPolicyTests {
             isPro: false
         )
 
-        let expectedIDs = Set([firstFree.id, secondFree.id, ModelConfig.microsoftTranslateID, ModelConfig.appleTranslateID])
+        let expectedIDs = Set([firstFree.id, ModelConfig.microsoftTranslateID, ModelConfig.appleTranslateID])
         #expect(appleResult.enabledIDs == expectedIDs)
         #expect(appleResult.reason == nil)
     }
@@ -139,12 +139,12 @@ struct ModelSelectionPolicyTests {
     func foundationModelDoesNotCountTowardFreeLimit() {
         let result = ModelSelectionPolicy.toggle(
             ModelConfig.foundationModel,
-            enabledIDs: [firstFree.id, secondFree.id],
+            enabledIDs: [firstFree.id],
             availableModels: [firstFree, secondFree, ModelConfig.foundationModel],
             isPro: false
         )
 
-        #expect(result.enabledIDs == [firstFree.id, secondFree.id, ModelConfig.foundationModelID])
+        #expect(result.enabledIDs == [firstFree.id, ModelConfig.foundationModelID])
         #expect(result.reason == nil)
     }
 
@@ -211,6 +211,141 @@ struct ModelSelectionPolicyTests {
 
         #expect(freeSelection == nil)
         #expect(proSelection == premium.id)
+    }
+
+    @Test("Lapsed members keep a built-in translator and fall back to the default free model")
+    func lapsedMemberWithBuiltInAndPremiumFallsBackToDefaultFreeModel() {
+        let effective = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: [ModelConfig.microsoftTranslateID, premium.id],
+            availableModels: [secondFree, firstFree, premium, ModelConfig.microsoftTranslate],
+            isPro: false
+        )
+
+        #expect(effective == [ModelConfig.microsoftTranslateID, firstFree.id])
+    }
+
+    @Test("Lapsed members with only a premium model fall back to the default free model")
+    func lapsedMemberWithOnlyPremiumFallsBackToDefaultFreeModel() {
+        let effective = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: [premium.id],
+            availableModels: [secondFree, firstFree, premium],
+            isPro: false
+        )
+        let withoutDefault = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: [premium.id],
+            availableModels: [secondFree, thirdFree, premium],
+            isPro: false
+        )
+
+        #expect(effective == [firstFree.id])
+        #expect(withoutDefault == [secondFree.id])
+    }
+
+    @Test("Non-members keep one free cloud model, preferring the default")
+    func nonMembersKeepOneFreeCloudModel() {
+        let catalog = [secondFree, firstFree, thirdFree]
+
+        #expect(ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: [secondFree.id, firstFree.id, thirdFree.id], availableModels: catalog, isPro: false
+        ) == [firstFree.id])
+        #expect(ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: [thirdFree.id, secondFree.id], availableModels: catalog, isPro: false
+        ) == [secondFree.id])
+    }
+
+    @Test("Built-in selections never gain an AI model")
+    func builtInSelectionsNeverGainAIModel() {
+        let custom = ModelConfig(id: "custom-endpoint:my-model", displayName: "My Model")
+        let stored: Set<String> = [
+            ModelConfig.appleTranslateID,
+            ModelConfig.microsoftTranslateID,
+            ModelConfig.foundationModelID,
+            ModelConfig.privateCloudModelID,
+            custom.id,
+        ]
+        let effective = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: stored,
+            availableModels: [firstFree, premium, custom],
+            isPro: false
+        )
+
+        #expect(effective == stored)
+    }
+
+    @Test("Members keep the stored selection unchanged")
+    func membersKeepStoredSelection() {
+        let stored: Set<String> = [firstFree.id, secondFree.id, premium.id, ModelConfig.microsoftTranslateID]
+        let effective = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: stored,
+            availableModels: [firstFree, secondFree, premium],
+            isPro: true
+        )
+
+        #expect(effective == stored)
+    }
+
+    @Test("Toggling for a lapsed member keeps locked premium selections")
+    func togglingKeepsLockedPremiumSelections() {
+        let result = ModelSelectionPolicy.toggle(
+            secondFree,
+            enabledIDs: [premium.id],
+            availableModels: [firstFree, secondFree, premium],
+            isPro: false
+        )
+
+        #expect(result.enabledIDs == [premium.id, secondFree.id])
+        #expect(result.reason == nil)
+    }
+
+    @Test("The last-model guard ignores locked premium selections")
+    func lastModelGuardIgnoresLockedPremiumSelections() {
+        let result = ModelSelectionPolicy.toggle(
+            firstFree,
+            enabledIDs: [premium.id],
+            availableModels: [firstFree, secondFree, premium],
+            isPro: false
+        )
+
+        #expect(result.enabledIDs == [premium.id, firstFree.id])
+        #expect(result.reason == .keptDefaultModel)
+    }
+
+    @Test("A lapsed member can deselect the last AI model while a built-in translator stays")
+    func lapsedMemberCanDeselectLastAIModel() {
+        let catalog = [firstFree, secondFree, premium]
+        let fallback = ModelSelectionPolicy.toggle(
+            firstFree,
+            enabledIDs: [ModelConfig.microsoftTranslateID, premium.id],
+            availableModels: catalog,
+            isPro: false
+        )
+        let chosen = ModelSelectionPolicy.toggle(
+            secondFree,
+            enabledIDs: [ModelConfig.microsoftTranslateID, premium.id, secondFree.id],
+            availableModels: catalog,
+            isPro: false
+        )
+
+        #expect(fallback.enabledIDs == [ModelConfig.microsoftTranslateID])
+        #expect(chosen.enabledIDs == [ModelConfig.microsoftTranslateID])
+        #expect(fallback.reason == nil)
+    }
+
+    @Test("Callable cloud selection falls back to the free model for lapsed members")
+    func callableCloudSelectionFallsBackForLapsedMembers() {
+        let selected = ModelSelectionPolicy.firstCallableCloudModelID(
+            enabledIDs: [ModelConfig.microsoftTranslateID, premium.id],
+            availableModels: [premium, firstFree, ModelConfig.microsoftTranslate],
+            isPro: false
+        )
+        let builtInsOnly = ModelSelectionPolicy.firstCallableCloudModelID(
+            enabledIDs: [ModelConfig.microsoftTranslateID],
+            availableModels: [premium, firstFree, ModelConfig.microsoftTranslate],
+            isPro: false
+        )
+
+        #expect(selected == firstFree.id)
+        #expect(builtInsOnly == nil)
     }
 
     @Test("First run enables Microsoft Translate and the first free AI model")

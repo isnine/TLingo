@@ -40,7 +40,6 @@
 
         /// Called by HomeViewModel (via its appleTranslationRequestHandler closure) to trigger
         /// a translation through the hidden window.
-        @available(macOS 14.4, *)
         func requestTranslation(
             source: Locale.Language?,
             target: TargetLanguageOption,
@@ -107,7 +106,6 @@
         }
 
         /// Called by the hidden window view when a TranslationSession becomes available.
-        @available(macOS 14.4, *)
         func sessionReady(_ session: TranslationSession) async {
             let token = currentRequestToken
             let vmId = activeViewModel.map { "\(ObjectIdentifier($0))" } ?? "nil"
@@ -139,7 +137,6 @@
     // MARK: - Hidden Window View
 
     /// A zero-size view that holds the .translationTask() modifier.
-    @available(macOS 14.4, *)
     struct AppleTranslationWindowView: View {
         @ObservedObject private var bridge = AppleTranslationBridge.shared
 
@@ -178,7 +175,7 @@
                 else { return }
                 Task { @MainActor in
                     if self.window != nil {
-                        if #available(macOS 14.4, *) { self.registerViewModel(viewModel) }
+                        self.registerViewModel(viewModel)
                     } else {
                         self.pendingViewModels.append(WeakRef(viewModel))
                         logger.debug("Queued viewModel (window not ready yet)")
@@ -189,7 +186,6 @@
 
         func setup() {
             guard window == nil else { return }
-            guard #available(macOS 14.4, *) else { return }
 
             let size = NSSize(width: 400, height: 300)
             let hostingView = NSHostingView(rootView: AppleTranslationWindowView())
@@ -276,7 +272,6 @@
         }
 
         /// Wires the bridge request handler into a HomeViewModel instance.
-        @available(macOS 14.4, *)
         private func registerViewModel(_ viewModel: HomeViewModel) {
             viewModel.appleTranslationRequestHandler = { [weak viewModel] source, target in
                 guard let viewModel else { return }

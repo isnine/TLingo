@@ -27,16 +27,28 @@ public enum ModelSelectionPolicy {
         availableModels: [ModelConfig],
         isPro: Bool
     ) -> ToggleResult {
-        // Locked premium selections are kept so they come back when the subscription is restored.
         guard !model.isPremium || isPro else {
             return ToggleResult(enabledIDs: enabledIDs, reason: .requiresPro)
         }
 
-        if enabledIDs.contains(model.id) {
-            return disabling(model, enabledIDs: enabledIDs, availableModels: availableModels, isPro: isPro)
+        // Edit what is actually usable, then add back the locked premium selections
+        // so they come back when the subscription is restored.
+        let current = effectiveEnabledIDs(enabledIDs: enabledIDs, availableModels: availableModels, isPro: isPro)
+        let lockedIDs = enabledIDs.subtracting(current).intersection(premiumIDs(in: availableModels))
+
+        if current.contains(model.id) {
+            let result = disabling(model, enabledIDs: current, availableModels: availableModels, isPro: isPro)
+            let stored = result.enabledIDs.union(lockedIDs)
+            // With no cloud model left, locked selections would bring a fallback model straight
+            // back, so an explicit deselect forgets them.
+            let effective = effectiveEnabledIDs(enabledIDs: stored, availableModels: availableModels, isPro: isPro)
+            if result.reason == nil, effective != result.enabledIDs {
+                return ToggleResult(enabledIDs: result.enabledIDs)
+            }
+            return ToggleResult(enabledIDs: stored, reason: result.reason)
         }
 
-        var updated = enabledIDs
+        var updated = current
         if !isPro, model.isCloudModel {
             let freeCloudIDs = availableModels
                 .filter { !$0.isPremium && $0.isCloudModel }
@@ -45,7 +57,33 @@ public enum ModelSelectionPolicy {
         }
         updated.insert(model.id)
 
-        return ToggleResult(enabledIDs: updated)
+        return ToggleResult(enabledIDs: updated.union(lockedIDs))
+    }
+
+    /// The part of the stored selection that can run right now. Storage is never modified, so
+    /// premium selections survive a lapsed subscription.
+    ///
+    /// Without Pro, premium models are dropped and at most one free cloud model stays. When the
+    /// user had chosen cloud models but none is left, the default free one replaces them; a
+    /// selection of direct translators only never gains an AI model.
+    public static func effectiveEnabledIDs(
+        enabledIDs: Set<String>,
+        availableModels: [ModelConfig],
+        isPro: Bool
+    ) -> Set<String> {
+        guard !isPro else { return enabledIDs }
+
+        let storedCloudModels = availableModels.filter { $0.isCloudModel && enabledIDs.contains($0.id) }
+        let storedFreeCloudModels = storedCloudModels.filter { !$0.isPremium }
+
+        var effective = enabledIDs.subtracting(premiumIDs(in: availableModels))
+        effective.subtract(storedFreeCloudModels.map(\.id))
+        if let kept = storedFreeCloudModels.first(where: \.isDefault) ?? storedFreeCloudModels.first {
+            effective.insert(kept.id)
+        } else if !storedCloudModels.isEmpty, let fallback = defaultFreeCloudModel(in: availableModels) {
+            effective.insert(fallback.id)
+        }
+        return effective
     }
 
     public static func firstCallableCloudModelID(
@@ -53,11 +91,21 @@ public enum ModelSelectionPolicy {
         availableModels: [ModelConfig],
         isPro: Bool
     ) -> String? {
-        availableModels.first {
-            enabledIDs.contains($0.id)
+        let effectiveIDs = effectiveEnabledIDs(enabledIDs: enabledIDs, availableModels: availableModels, isPro: isPro)
+        return availableModels.first {
+            effectiveIDs.contains($0.id)
                 && $0.isCloudModel
                 && (isPro || !$0.isPremium)
         }?.id
+    }
+
+    private static func premiumIDs(in availableModels: [ModelConfig]) -> Set<String> {
+        Set(availableModels.filter(\.isPremium).map(\.id))
+    }
+
+    private static func defaultFreeCloudModel(in availableModels: [ModelConfig]) -> ModelConfig? {
+        availableModels.first { $0.isDefault && $0.isCloudModel && !$0.isPremium }
+            ?? ModelConfig.firstFreeCloudModel(in: availableModels)
     }
 
     private static func fallbackEnabledIDs(

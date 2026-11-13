@@ -11,7 +11,7 @@
 //  Worker bypasses the premium entitlement check.
 //
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     import os
     import ShareCore
     import SwiftUI
@@ -28,9 +28,7 @@
         @StateObject private var viewModel: HomeViewModel
         @State private var hasStarted = false
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         init(inputText: String, trialModels: [ModelConfig]) {
             self.inputText = inputText

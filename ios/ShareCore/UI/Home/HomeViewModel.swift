@@ -16,9 +16,7 @@ private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", categor
 #if canImport(AppKit)
     import AppKit
 #endif
-#if canImport(Translation)
-    import Translation
-#endif
+import Translation
 
 @MainActor
 public final class HomeViewModel: ObservableObject {
@@ -542,8 +540,7 @@ public final class HomeViewModel: ObservableObject {
                 .receive(on: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
-                    // The endpoint can be configured after this catalog was loaded, and
-                    // updateEnabledModels drops selections the catalog does not contain.
+                    // The endpoint can be configured after this catalog was loaded.
                     self.models = self.models.filter { !$0.isCustomEndpoint }
                         + CustomEndpointService.shared.modelConfigs
                     self.updateEnabledModels()
@@ -811,36 +808,8 @@ public final class HomeViewModel: ObservableObject {
 
     /// Models the next run uses, as the composer's model button names them.
     public func selectedDisplayModels(enabledIDs: Set<String>, isPro: Bool) -> [ModelConfig] {
-        var displayModels: [ModelConfig] = []
-        if enabledIDs.contains(ModelConfig.microsoftTranslateID) {
-            displayModels.append(ModelConfig.microsoftTranslate)
-        }
-        if enabledIDs.contains(ModelConfig.appleTranslateID), AppleTranslationService.shared.isAvailable {
-            displayModels.append(ModelConfig.appleTranslate)
-        }
-        if enabledIDs.contains(ModelConfig.foundationModelID) {
-            displayModels.append(ModelConfig.foundationModel)
-        }
-        if enabledIDs.contains(ModelConfig.privateCloudModelID) {
-            displayModels.append(ModelConfig.privateCloudModel)
-        }
-        displayModels.append(contentsOf: models.filter { enabledIDs.contains($0.id) })
-        displayModels = displayModels.filter { isPro || !$0.isPremium }
-        if displayModels.isEmpty {
-            if enabledIDs.isEmpty, !models.isEmpty {
-                displayModels = [ModelConfig.microsoftTranslate]
-                if let freeModel = ModelConfig.firstFreeCloudModel(in: models) {
-                    displayModels.append(freeModel)
-                }
-            } else {
-                displayModels = models.filter {
-                    $0.isDefault && (isPro || !$0.isPremium)
-                }
-            }
-        }
-        if displayModels.isEmpty, !isLoadingModels, AppleTranslationService.shared.isAvailable {
-            displayModels = [ModelConfig.appleTranslate]
-        }
+        let resolved = resolveSelection(storedIDs: enabledIDs, isPremium: isPro)
+        let displayModels = modelsForRun(enabledIDs: resolved.enabledIDs, catalogModels: resolved.catalogModels)
         let ranks = Dictionary(
             ModelListSections.resultOrder(cloudModels: models, order: preferences.modelListOrder, isPro: isPro)
                 .enumerated().map { ($0.element.id, $0.offset) },
@@ -928,6 +897,69 @@ public final class HomeViewModel: ObservableObject {
         return getEnabledModels().allSatisfy(\.isDirectTranslation)
     }
 
+    /// The usable IDs and catalog models for a stored selection. The request path and the
+    /// composer's model button both resolve through here so they cannot disagree.
+    private func resolveSelection(
+        storedIDs: Set<String>,
+        isPremium: Bool
+    ) -> (enabledIDs: Set<String>, catalogModels: [ModelConfig]) {
+        let modelCatalog = models
+        let enabledIDs = ModelSelectionPolicy.effectiveEnabledIDs(
+            enabledIDs: storedIDs.isEmpty ? ModelConfig.defaultEnabledModelIDs(cloudModels: modelCatalog) : storedIDs,
+            availableModels: modelCatalog,
+            isPro: isPremium
+        )
+        var available = modelCatalog.filter { enabledIDs.contains($0.id) }
+
+        // Fallback: if the selection holds no catalog model (e.g. stale IDs), use the default
+        // free model so the send button never silently fails.
+        // Skip fallback when a standalone built-in model is selected.
+        let builtInModelSelected = enabledIDs.contains {
+            ModelConfig.isDirectTranslationID($0) || ModelConfig.isFoundationModelID($0)
+        }
+        if available.isEmpty, !builtInModelSelected {
+            available = modelCatalog.filter { $0.isDefault && !$0.isPremium }
+        }
+        if available.isEmpty, !builtInModelSelected {
+            available = Array(modelCatalog.filter { !$0.isPremium }.prefix(1))
+        }
+        return (enabledIDs, available)
+    }
+
+    /// The single source of truth for which models a run uses, shared by the composer's model button
+    /// and the request fan-out. Direct translation services only apply to translation actions.
+    /// In SwiftUI contexts the view layer provides an Apple session via `.translationTask()`; in
+    /// non-SwiftUI contexts (e.g. the extension) the installed-language-pack path is used instead.
+    private func modelsForRun(
+        enabledIDs: Set<String>,
+        catalogModels: [ModelConfig],
+        allowModelFallback: Bool = false
+    ) -> [ModelConfig] {
+        let supportsDirectTranslation = selectedAction?.supportsAppleTranslate == true
+        let appleAvailable = AppleTranslationService.shared.isAvailable
+        var available: [ModelConfig] = []
+        if supportsDirectTranslation, appleAvailable, enabledIDs.contains(ModelConfig.appleTranslateID) {
+            available.append(ModelConfig.appleTranslate)
+        }
+        if supportsDirectTranslation, enabledIDs.contains(ModelConfig.microsoftTranslateID) {
+            available.append(ModelConfig.microsoftTranslate)
+        }
+        if enabledIDs.contains(ModelConfig.privateCloudModelID) {
+            available.append(ModelConfig.privateCloudModel)
+        }
+        if enabledIDs.contains(ModelConfig.foundationModelID) {
+            available.append(ModelConfig.foundationModel)
+        }
+        available.append(contentsOf: catalogModels)
+
+        // Last resort when neither the server nor the user settings yield a model.
+        // `allowModelFallback` callers cannot wait for the catalog request to finish.
+        if available.isEmpty, !isLoadingModels || allowModelFallback, supportsDirectTranslation, appleAvailable {
+            available = [ModelConfig.appleTranslate]
+        }
+        return available
+    }
+
     private func getEnabledModels(
         cachedIsPremium: Bool? = nil,
         allowModelFallback: Bool = false
@@ -947,64 +979,12 @@ public final class HomeViewModel: ObservableObject {
                 "getEnabledModels: enabledIDs=\(storedEnabledIDs, privacy: .public), models.count=\(self.models.count, privacy: .public), isPremium=\(isPremium, privacy: .public)"
             )
 
-        let modelCatalog = models
-        let enabledIDs = storedEnabledIDs.isEmpty
-            ? ModelConfig.defaultEnabledModelIDs(cloudModels: modelCatalog)
-            : storedEnabledIDs
-        var available = modelCatalog.filter { enabledIDs.contains($0.id) }
-
-        if !isPremium {
-            available = available.filter { !$0.isPremium }
-        }
-
-        // Fallback: if all selected models were filtered out (e.g. user downgraded),
-        // use the default free model so the send button never silently fails.
-        // Skip fallback when a standalone built-in model is selected.
-        let builtInModelSelected = enabledIDs.contains {
-            ModelConfig.isDirectTranslationID($0) || ModelConfig.isFoundationModelID($0)
-        }
-        if available.isEmpty, !builtInModelSelected {
-            available = modelCatalog.filter { $0.isDefault && !$0.isPremium }
-        }
-        if available.isEmpty, !builtInModelSelected {
-            available = Array(modelCatalog.filter { !$0.isPremium }.prefix(1))
-        }
-
-        if enabledIDs.contains(ModelConfig.foundationModelID) {
-            available.insert(ModelConfig.foundationModel, at: 0)
-        }
-        if enabledIDs.contains(ModelConfig.privateCloudModelID) {
-            available.insert(ModelConfig.privateCloudModel, at: 0)
-        }
-
-        // Inject Apple Translate only for translation actions.
-        // In SwiftUI contexts (supportsAppleTranslate = true), the view layer provides a session
-        // via .translationTask(). In non-SwiftUI contexts (e.g. extension), we fall back to
-        // TranslationSession(installedSource:target:) which requires pre-installed language packs.
-        if enabledIDs.contains(ModelConfig.appleTranslateID),
-           AppleTranslationService.shared.isAvailable,
-           let action = selectedAction, action.supportsAppleTranslate
-        {
-            available.insert(ModelConfig.appleTranslate, at: 0)
-        }
-
-        if enabledIDs.contains(ModelConfig.microsoftTranslateID),
-           let action = selectedAction, action.supportsAppleTranslate
-        {
-            // Insert after Apple Translate if present, otherwise at the beginning.
-            let insertIndex = available.firstIndex(where: { $0.id == ModelConfig.appleTranslateID })
-                .map { available.index(after: $0) } ?? 0
-            available.insert(ModelConfig.microsoftTranslate, at: insertIndex)
-        }
-
-        // Last resort when neither the server nor the user settings yield a model.
-        // `allowModelFallback` callers cannot wait for the catalog request to finish.
-        if available.isEmpty, !isLoadingModels || allowModelFallback,
-           AppleTranslationService.shared.isAvailable,
-           let action = selectedAction, action.supportsAppleTranslate
-        {
-            available = [ModelConfig.appleTranslate]
-        }
+        let (enabledIDs, catalogModels) = resolveSelection(storedIDs: storedEnabledIDs, isPremium: isPremium)
+        let available = modelsForRun(
+            enabledIDs: enabledIDs,
+            catalogModels: catalogModels,
+            allowModelFallback: allowModelFallback
+        )
 
         logger.debug("getEnabledModels result: \(available.map(\.id), privacy: .public)")
         return available
@@ -1030,7 +1010,7 @@ public final class HomeViewModel: ObservableObject {
                     self.hasFetchedModels = true
                     self.models = fetchedModels
                     logger.debug("loadModels: fetched \(fetchedModels.count, privacy: .public) models from network")
-                    self.updateEnabledModels()
+                    self.updateEnabledModels(prunesMissing: true)
 
                     // If a request was attempted before models loaded, trigger it now.
                     if self.pendingAutoAction {
@@ -1053,17 +1033,22 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func updateEnabledModels() {
+    /// `prunesMissing` drops selections the catalog does not contain. Only this view model's own
+    /// fetch may do that: elsewhere the catalog can be older than the one the picker just loaded.
+    private func updateEnabledModels(prunesMissing: Bool = false) {
         let availableIDs = Set(models.map { $0.id })
         guard hasFetchedModels, !availableIDs.isEmpty else { return }
 
         let currentEnabled = preferences.enabledModelIDs
-        // Preserve built-in model IDs that do not come from the cloud model list.
-        let builtInIDs = currentEnabled.filter {
-            ModelConfig.isDirectTranslationID($0)
-                || ModelConfig.isFoundationModelID($0)
+        var resolved = currentEnabled
+        if prunesMissing {
+            // Preserve built-in model IDs that do not come from the cloud model list.
+            let builtInIDs = currentEnabled.filter {
+                ModelConfig.isDirectTranslationID($0)
+                    || ModelConfig.isFoundationModelID($0)
+            }
+            resolved = currentEnabled.intersection(availableIDs).union(builtInIDs)
         }
-        var resolved = currentEnabled.intersection(availableIDs).union(builtInIDs)
         if resolved.isEmpty {
             resolved = ModelConfig.defaultEnabledModelIDs(cloudModels: models)
         }
@@ -1157,7 +1142,7 @@ public final class HomeViewModel: ObservableObject {
                     )
                 let message = requiresAIModelSelection(for: action)
                     ? String(localized: "This action needs an AI model. Select one in Models.")
-                    : "No models available. Please select a model in the Models tab."
+                    : String(localized: "No models available. Please select a model in the Models tab.")
                 modelRuns = [
                     ModelRunViewState(
                         model: ModelConfig(id: "error", displayName: "Error"),
@@ -1231,7 +1216,13 @@ public final class HomeViewModel: ObservableObject {
     /// Retry a single model run (used by the per-result-card Retry button).
     /// This should NOT cancel or restart other model runs.
     public func retryRun(runID: String) {
-        guard let context = activeRequestContext else { return }
+        guard let context = activeRequestContext else {
+            // The no-model error card has no request context; run the selected action again.
+            if modelRuns.contains(where: { $0.id == runID && $0.model.id == "error" }) {
+                performSelectedAction()
+            }
+            return
+        }
         guard let index = modelRuns.firstIndex(where: { $0.id == runID }) else { return }
 
         guard !context.text.isEmpty || !context.images.isEmpty else { return }
@@ -1881,11 +1872,6 @@ public final class HomeViewModel: ObservableObject {
         }
         guard !Task.isCancelled else { return }
 
-        let text = context.text
-        let action = context.action
-        let resolved = context.languages
-        let resolvedTarget = resolved.target
-
         // Separate direct translation services from cloud LLM models.
         let cloudModels = models.filter { !$0.isDirectTranslation }
         let hasAppleTranslate = models.contains { $0.id == ModelConfig.appleTranslateID }
@@ -1894,362 +1880,295 @@ public final class HomeViewModel: ObservableObject {
                 "executeRequest: \(models.count, privacy: .public) models, apple=\(hasAppleTranslate, privacy: .public)"
             )
 
-        // Kick off Apple Translate if present.
         if hasAppleTranslate {
-            guard let appleRunToken = runTokens[ModelConfig.appleTranslateID] else { return }
-            let allowsDownloadPrompt = allowsAppleTranslateDownloadPrompt
-            allowsAppleTranslateDownloadPrompt = false
-            appleTranslateNeedsLanguageDownload = false
-            if action.supportsAppleTranslate {
-                if supportsAppleTranslate {
-                    // SwiftUI context: prefer the direct TranslationSession(installedSource:target:)
-                    // path when the language pack is already installed; fall back to .translationTask()
-                    // only when a download is required.
-                    let sourceLocale: Locale.Language? = resolved.sourceCode.map { Locale.Language(identifier: $0) }
-                    let targetLocale = resolvedTarget.localeLanguage
-                    if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
-                        apply(result: shortCircuit, context: context, runToken: appleRunToken, allowDiff: false)
-                    } else {
-                        serviceTasks.append(Task { [weak self] in
-                            guard let self else { return }
-                            if #available(iOS 17.4, macOS 14.4, *) {
-                                do {
-                                    let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
-                                        source: sourceLocale, target: targetLocale
-                                    )
-                                    guard !Task.isCancelled,
-                                          self.isRunStillValid(
-                                              context,
-                                              runID: ModelConfig.appleTranslateID,
-                                              runToken: appleRunToken
-                                          )
-                                    else {
-                                        return
-                                    }
-                                    if status == .installed {
-                                        // Language pack already on device — skip SwiftUI bridge entirely.
-                                        let result: ModelExecutionResult
-                                        if action.outputType == .sentencePairs {
-                                            result = try await AppleTranslationService.shared
-                                                .translateSentencesWithInstalledLanguages(
-                                                    text: text,
-                                                    source: sourceLocale,
-                                                    target: targetLocale
-                                                )
-                                        } else {
-                                            result = try await AppleTranslationService.shared.translateWithInstalledLanguages(
-                                                text: text, source: sourceLocale, target: targetLocale
-                                            )
-                                        }
-                                        guard self.isRunStillValid(
-                                            context,
-                                            runID: result.modelID,
-                                            runToken: appleRunToken
-                                        ) else { return }
-                                        self.apply(
-                                            result: result,
-                                            context: context,
-                                            runToken: appleRunToken,
-                                            allowDiff: false
-                                        )
-                                        self.saveHistoryIfSuccessful(
-                                            result,
-                                            context: context,
-                                            runToken: appleRunToken
-                                        )
-                                    } else if status == .supported, !allowsDownloadPrompt {
-                                        // Ask in the result card before the system download sheet appears.
-                                        self.appleTranslateNeedsLanguageDownload = true
-                                        let result = ModelExecutionResult(
-                                            modelID: ModelConfig.appleTranslateID,
-                                            duration: 0,
-                                            response: .failure(
-                                                LocalProviderError.translationFailed(
-                                                    AppleTranslationErrorFormatter.withLanguagePair(
-                                                        String(
-                                                            localized: "Apple Translate needs to download this language pair before translating."
-                                                        ),
-                                                        source: sourceLocale,
-                                                        target: resolvedTarget
-                                                    )
-                                                )
-                                            )
-                                        )
-                                        self.apply(
-                                            result: result,
-                                            context: context,
-                                            runToken: appleRunToken,
-                                            allowDiff: false
-                                        )
-                                    } else if status == .unsupported {
-                                        // No download can fix this; .translationTask would only wait out the watchdog.
-                                        let result = ModelExecutionResult(
-                                            modelID: ModelConfig.appleTranslateID,
-                                            duration: 0,
-                                            response: .failure(
-                                                LocalProviderError.unsupportedLanguage(
-                                                    AppleTranslationErrorFormatter.withLanguagePair(
-                                                        String(
-                                                            localized: "Apple Translate does not support the selected language pair."
-                                                        ),
-                                                        source: sourceLocale,
-                                                        target: resolvedTarget
-                                                    )
-                                                )
-                                            )
-                                        )
-                                        self.apply(
-                                            result: result,
-                                            context: context,
-                                            runToken: appleRunToken,
-                                            allowDiff: false
-                                        )
-                                    } else {
-                                        // Language pack not installed; need .translationTask() to trigger download UI.
-                                        self.pendingAppleTranslateText = text
-                                        self.pendingAppleTranslateAction = action
-                                        self.pendingAppleTranslateRequestID = context.historyRequestID
-                                        self.pendingAppleTranslateResolvedTarget = resolvedTarget
-                                        self.pendingAppleTranslateContext = context
-                                        self.pendingAppleTranslateRunToken = appleRunToken
-                                        self.appleTranslateSourceLanguage = sourceLocale
-                                        self.appleTranslateTargetLanguage = resolvedTarget
-                                        logger
-                                            .debug(
-                                                "Apple Translate: published target=\(resolvedTarget.englishName, privacy: .public), starting \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s timeout watchdog"
-                                            )
-                                        self.appleTranslationRequestHandler?(sourceLocale, resolvedTarget)
-
-                                        try? await Task.sleep(for: .seconds(AppleTranslationService.operationTimeoutSeconds))
-                                        guard !Task.isCancelled,
-                                              self.pendingAppleTranslateContext?.generation == context.generation,
-                                              self.pendingAppleTranslateRunToken == appleRunToken
-                                        else { return }
-                                        logger
-                                            .error(
-                                                "Apple Translate watchdog fired — .translationTask() did not respond in \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s, source=\(sourceLocale?.minimalIdentifier ?? "auto", privacy: .public), target=\(resolvedTarget.rawValue, privacy: .public), status=\(String(describing: status), privacy: .public)"
-                                            )
-                                        self.pendingAppleTranslateText = nil
-                                        self.pendingAppleTranslateAction = nil
-                                        self.pendingAppleTranslateRequestID = nil
-                                        self.pendingAppleTranslateResolvedTarget = nil
-                                        self.pendingAppleTranslateContext = nil
-                                        self.pendingAppleTranslateRunToken = nil
-                                        self.appleTranslateSourceLanguage = nil
-                                        self.appleTranslateTargetLanguage = nil
-                                        guard self.isRunStillValid(
-                                            context,
-                                            runID: ModelConfig.appleTranslateID,
-                                            runToken: appleRunToken
-                                        ) else { return }
-                                        let timeoutResult = ModelExecutionResult(
-                                            modelID: ModelConfig.appleTranslateID,
-                                            duration: TimeInterval(AppleTranslationService.operationTimeoutSeconds),
-                                            response: .failure(
-                                                LocalProviderError
-                                                    .translationFailed(
-                                                        AppleTranslationErrorFormatter.withLanguagePair(
-                                                            "Apple Translate timed out after \(AppleTranslationService.operationTimeoutSeconds) seconds. Language pack may not be available.",
-                                                            source: sourceLocale,
-                                                            target: resolvedTarget
-                                                        )
-                                                    )
-                                            )
-                                        )
-                                        self.apply(
-                                            result: timeoutResult,
-                                            context: context,
-                                            runToken: appleRunToken,
-                                            allowDiff: false
-                                        )
-                                    }
-                                } catch {
-                                    logger
-                                        .error(
-                                            "Apple Translate failed: \(String(describing: error), privacy: .public), source=\(sourceLocale?.minimalIdentifier ?? "auto", privacy: .public), target=\(targetLocale.minimalIdentifier, privacy: .public)"
-                                        )
-                                    guard self.isRunStillValid(
-                                        context,
-                                        runID: ModelConfig.appleTranslateID,
-                                        runToken: appleRunToken
-                                    ) else { return }
-                                    let fail = ModelExecutionResult(
-                                        modelID: ModelConfig.appleTranslateID,
-                                        duration: 0,
-                                        response: .failure(
-                                            LocalProviderError
-                                                .translationFailed(AppleTranslationErrorFormatter.describe(
-                                                    error,
-                                                    source: sourceLocale,
-                                                    target: resolvedTarget
-                                                ))
-                                        )
-                                    )
-                                    self.apply(
-                                        result: fail,
-                                        context: context,
-                                        runToken: appleRunToken,
-                                        allowDiff: false
-                                    )
-                                }
-                            }
-                        })
-                    }
-                } else {
-                    // Non-SwiftUI context (e.g. extension): use TranslationSession(installedSource:target:)
-                    // directly. Only works if language packs are already installed.
-                    let sourceLocale: Locale.Language? = resolved.sourceCode.map { Locale.Language(identifier: $0) }
-                    let targetLocale = resolvedTarget.localeLanguage
-                    if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
-                        apply(result: shortCircuit, context: context, runToken: appleRunToken, allowDiff: false)
-                    } else {
-                        serviceTasks.append(Task { [weak self] in
-                            guard let self else { return }
-                            // Always true at runtime (guarded by isAvailable in getEnabledModels),
-                            // but required for the compiler's availability check.
-                            if #available(iOS 17.4, macOS 14.4, *) {
-                                do {
-                                    let result: ModelExecutionResult
-                                    if action.outputType == .sentencePairs {
-                                        result = try await AppleTranslationService.shared
-                                            .translateSentencesWithInstalledLanguages(
-                                                text: text,
-                                                source: sourceLocale,
-                                                target: targetLocale
-                                            )
-                                    } else {
-                                        result = try await AppleTranslationService.shared.translateWithInstalledLanguages(
-                                            text: text, source: sourceLocale, target: targetLocale
-                                        )
-                                    }
-                                    guard self.isRunStillValid(
-                                        context,
-                                        runID: result.modelID,
-                                        runToken: appleRunToken
-                                    ) else { return }
-                                    self.apply(
-                                        result: result,
-                                        context: context,
-                                        runToken: appleRunToken,
-                                        allowDiff: false
-                                    )
-                                    self.saveHistoryIfSuccessful(
-                                        result,
-                                        context: context,
-                                        runToken: appleRunToken
-                                    )
-                                } catch {
-                                    logger
-                                        .error(
-                                            "Apple Translate (non-SwiftUI path) failed: \(String(describing: error), privacy: .public), source=\(sourceLocale?.minimalIdentifier ?? "auto", privacy: .public), target=\(targetLocale.minimalIdentifier, privacy: .public)"
-                                        )
-                                    guard self.isRunStillValid(
-                                        context,
-                                        runID: ModelConfig.appleTranslateID,
-                                        runToken: appleRunToken
-                                    ) else { return }
-                                    let fail = ModelExecutionResult(
-                                        modelID: ModelConfig.appleTranslateID,
-                                        duration: 0,
-                                        response: .failure(
-                                            LocalProviderError
-                                                .translationFailed(AppleTranslationErrorFormatter.describe(
-                                                    error,
-                                                    source: sourceLocale,
-                                                    target: resolvedTarget
-                                                ))
-                                        )
-                                    )
-                                    self.apply(
-                                        result: fail,
-                                        context: context,
-                                        runToken: appleRunToken,
-                                        allowDiff: false
-                                    )
-                                }
-                            }
-                        })
-                    }
-                }
-            } else {
-                // Unsupported action — show inline error immediately.
-                logger.error("Apple Translate: action '\(action.name, privacy: .public)' does not support Apple Translate")
-                let result = ModelExecutionResult(
-                    modelID: ModelConfig.appleTranslateID,
-                    duration: 0,
-                    response: .failure(LocalProviderError.unsupportedAction)
-                )
-                apply(result: result, context: context, runToken: appleRunToken, allowDiff: false)
-            }
+            guard runTokens[ModelConfig.appleTranslateID] != nil else { return }
+            startAppleTranslate(context: context, runTokens: runTokens)
         }
-
         for model in models where model.id == ModelConfig.microsoftTranslateID {
-            guard let serviceRunToken = runTokens[model.id] else { continue }
-            if action.supportsAppleTranslate {
-                if let shortCircuit = sameSourceAndTargetResult(
-                    sourceCode: resolved.sourceCode,
-                    target: resolvedTarget,
-                    modelID: model.id
-                ) {
-                    apply(result: shortCircuit, context: context, runToken: serviceRunToken, allowDiff: false)
-                } else if let targetCode = MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue) {
-                    // An unsupported source is left to Microsoft's own detection.
-                    let sourceCode: String? = resolved.sourceCode.flatMap(MicrosoftTranslateService.translatorCode(for:))
-                    let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
-                    serviceTasks.append(Task { [weak self] in
-                        guard let self else { return }
-                        let result = await MicrosoftTranslateService.shared.translate(
-                            text: text, sourceCode: sourceCode, targetCode: targetCode,
-                            timingTrace: timingTrace
-                        )
-                        guard self.isRunStillValid(
-                            context,
-                            runID: result.modelID,
-                            runToken: serviceRunToken
-                        ) else { return }
-                        self.apply(
-                            result: result,
-                            context: context,
-                            runToken: serviceRunToken,
-                            allowDiff: false
-                        )
-                        self.saveHistoryIfSuccessful(
-                            result,
-                            context: context,
-                            runToken: serviceRunToken
-                        )
-                    })
-                } else {
-                    let result = ModelExecutionResult(
-                        modelID: model.id,
-                        duration: 0,
-                        response: .failure(
-                            LocalProviderError.unsupportedLanguage(
-                                AppleTranslationErrorFormatter.withLanguagePair(
-                                    String(localized: "Microsoft Translate does not support the selected language."),
-                                    sourceCode: resolved.sourceCode,
-                                    target: resolvedTarget
-                                )
-                            )
-                        )
-                    )
-                    apply(result: result, context: context, runToken: serviceRunToken, allowDiff: false)
-                }
-            } else {
-                let result = ModelExecutionResult(
-                    modelID: model.id,
-                    duration: 0,
-                    response: .failure(LocalProviderError.unsupportedAction)
-                )
-                apply(result: result, context: context, runToken: serviceRunToken, allowDiff: false)
-            }
+            startMicrosoftTranslate(model: model, context: context, runTokens: runTokens)
         }
 
-        // Run cloud models through the existing LLM path.
-        guard !cloudModels.isEmpty else {
+        guard !cloudModels.isEmpty else { return }
+        await runCloudModels(cloudModels, context: context, runTokens: runTokens)
+    }
+
+    private func clearPendingAppleTranslate() {
+        pendingAppleTranslateText = nil
+        pendingAppleTranslateAction = nil
+        pendingAppleTranslateRequestID = nil
+        pendingAppleTranslateResolvedTarget = nil
+        pendingAppleTranslateContext = nil
+        pendingAppleTranslateRunToken = nil
+        appleTranslateSourceLanguage = nil
+        appleTranslateTargetLanguage = nil
+    }
+
+    private func applyDirectFailure(
+        _ error: LocalProviderError,
+        modelID: String = ModelConfig.appleTranslateID,
+        duration: TimeInterval = 0,
+        context: RequestContext,
+        runToken: UUID
+    ) {
+        let result = ModelExecutionResult(modelID: modelID, duration: duration, response: .failure(error))
+        apply(result: result, context: context, runToken: runToken, allowDiff: false)
+    }
+
+    /// Translates with the installed language packs (no SwiftUI session) and records the result.
+    private func translateWithInstalledPack(
+        context: RequestContext,
+        source: Locale.Language?,
+        target: Locale.Language,
+        runToken: UUID
+    ) async throws {
+        let result: ModelExecutionResult
+        if context.action.outputType == .sentencePairs {
+            result = try await AppleTranslationService.shared.translateSentencesWithInstalledLanguages(
+                text: context.text, source: source, target: target
+            )
+        } else {
+            result = try await AppleTranslationService.shared.translateWithInstalledLanguages(
+                text: context.text, source: source, target: target
+            )
+        }
+        guard isRunStillValid(context, runID: result.modelID, runToken: runToken) else { return }
+        apply(result: result, context: context, runToken: runToken, allowDiff: false)
+        saveHistoryIfSuccessful(result, context: context, runToken: runToken)
+    }
+
+    private func failAppleTranslate(
+        _ error: Error,
+        label: String,
+        context: RequestContext,
+        source: Locale.Language?,
+        runToken: UUID
+    ) {
+        let resolvedTarget = context.languages.target
+        logger
+            .error(
+                "\(label, privacy: .public) failed: \(String(describing: error), privacy: .public), source=\(source?.minimalIdentifier ?? "auto", privacy: .public), target=\(resolvedTarget.localeLanguage.minimalIdentifier, privacy: .public)"
+            )
+        guard isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken) else { return }
+        applyDirectFailure(
+            .translationFailed(AppleTranslationErrorFormatter.describe(error, source: source, target: resolvedTarget)),
+            context: context,
+            runToken: runToken
+        )
+    }
+
+    private func startAppleTranslate(context: RequestContext, runTokens: [String: UUID]) {
+        guard let runToken = runTokens[ModelConfig.appleTranslateID] else { return }
+        let action = context.action
+        let resolved = context.languages
+        let resolvedTarget = resolved.target
+        let allowsDownloadPrompt = allowsAppleTranslateDownloadPrompt
+        allowsAppleTranslateDownloadPrompt = false
+        appleTranslateNeedsLanguageDownload = false
+
+        guard action.supportsAppleTranslate else {
+            // Unsupported action — show inline error immediately.
+            logger.error("Apple Translate: action '\(action.name, privacy: .public)' does not support Apple Translate")
+            applyDirectFailure(.unsupportedAction, context: context, runToken: runToken)
+            return
+        }
+        if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
+            apply(result: shortCircuit, context: context, runToken: runToken, allowDiff: false)
             return
         }
 
+        let sourceLocale: Locale.Language? = resolved.sourceCode.map { Locale.Language(identifier: $0) }
+        let targetLocale = resolvedTarget.localeLanguage
+
+        guard supportsAppleTranslate else {
+            // Non-SwiftUI context (e.g. extension): use TranslationSession(installedSource:target:)
+            // directly. Only works if language packs are already installed.
+            serviceTasks.append(Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.translateWithInstalledPack(
+                        context: context, source: sourceLocale, target: targetLocale, runToken: runToken
+                    )
+                } catch {
+                    self.failAppleTranslate(
+                        error,
+                        label: "Apple Translate (non-SwiftUI path)",
+                        context: context,
+                        source: sourceLocale,
+                        runToken: runToken
+                    )
+                }
+            })
+            return
+        }
+
+        // SwiftUI context: prefer the direct TranslationSession(installedSource:target:) path when the
+        // language pack is already installed; fall back to .translationTask() only for a download.
+        serviceTasks.append(Task { [weak self] in
+            guard let self else { return }
+            do {
+                let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
+                    source: sourceLocale, target: targetLocale
+                )
+                guard !Task.isCancelled,
+                      self.isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken)
+                else { return }
+                if status == .installed {
+                    // Language pack already on device — skip SwiftUI bridge entirely.
+                    try await self.translateWithInstalledPack(
+                        context: context, source: sourceLocale, target: targetLocale, runToken: runToken
+                    )
+                } else if status == .supported, !allowsDownloadPrompt {
+                    // Ask in the result card before the system download sheet appears.
+                    self.appleTranslateNeedsLanguageDownload = true
+                    self.applyDirectFailure(
+                        .translationFailed(
+                            AppleTranslationErrorFormatter.withLanguagePair(
+                                String(
+                                    localized: "Apple Translate needs to download this language pair before translating."
+                                ),
+                                source: sourceLocale,
+                                target: resolvedTarget
+                            )
+                        ),
+                        context: context,
+                        runToken: runToken
+                    )
+                } else if status == .unsupported {
+                    // No download can fix this; .translationTask would only wait out the watchdog.
+                    self.applyDirectFailure(
+                        .unsupportedLanguage(
+                            AppleTranslationErrorFormatter.withLanguagePair(
+                                String(localized: "Apple Translate does not support the selected language pair."),
+                                source: sourceLocale,
+                                target: resolvedTarget
+                            )
+                        ),
+                        context: context,
+                        runToken: runToken
+                    )
+                } else {
+                    await self.requestAppleTranslationDownload(
+                        context: context,
+                        source: sourceLocale,
+                        status: status,
+                        runToken: runToken
+                    )
+                }
+            } catch {
+                self.failAppleTranslate(
+                    error,
+                    label: "Apple Translate",
+                    context: context,
+                    source: sourceLocale,
+                    runToken: runToken
+                )
+            }
+        })
+    }
+
+    /// Language pack not installed: hand off to `.translationTask()` (which shows the download UI)
+    /// and fail the run if it never responds.
+    private func requestAppleTranslationDownload(
+        context: RequestContext,
+        source sourceLocale: Locale.Language?,
+        status: LanguageAvailability.Status,
+        runToken: UUID
+    ) async {
+        let resolvedTarget = context.languages.target
+        pendingAppleTranslateText = context.text
+        pendingAppleTranslateAction = context.action
+        pendingAppleTranslateRequestID = context.historyRequestID
+        pendingAppleTranslateResolvedTarget = resolvedTarget
+        pendingAppleTranslateContext = context
+        pendingAppleTranslateRunToken = runToken
+        appleTranslateSourceLanguage = sourceLocale
+        appleTranslateTargetLanguage = resolvedTarget
+        logger
+            .debug(
+                "Apple Translate: published target=\(resolvedTarget.englishName, privacy: .public), starting \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s timeout watchdog"
+            )
+        appleTranslationRequestHandler?(sourceLocale, resolvedTarget)
+
+        try? await Task.sleep(for: .seconds(AppleTranslationService.operationTimeoutSeconds))
+        guard !Task.isCancelled,
+              pendingAppleTranslateContext?.generation == context.generation,
+              pendingAppleTranslateRunToken == runToken
+        else { return }
+        logger
+            .error(
+                "Apple Translate watchdog fired — .translationTask() did not respond in \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s, source=\(sourceLocale?.minimalIdentifier ?? "auto", privacy: .public), target=\(resolvedTarget.rawValue, privacy: .public), status=\(String(describing: status), privacy: .public)"
+            )
+        clearPendingAppleTranslate()
+        guard isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken) else { return }
+        applyDirectFailure(
+            .translationFailed(
+                AppleTranslationErrorFormatter.withLanguagePair(
+                    "Apple Translate timed out after \(AppleTranslationService.operationTimeoutSeconds) seconds. Language pack may not be available.",
+                    source: sourceLocale,
+                    target: resolvedTarget
+                )
+            ),
+            duration: TimeInterval(AppleTranslationService.operationTimeoutSeconds),
+            context: context,
+            runToken: runToken
+        )
+    }
+
+    private func startMicrosoftTranslate(model: ModelConfig, context: RequestContext, runTokens: [String: UUID]) {
+        guard let runToken = runTokens[model.id] else { return }
+        let resolved = context.languages
+        let resolvedTarget = resolved.target
+        guard context.action.supportsAppleTranslate else {
+            applyDirectFailure(.unsupportedAction, modelID: model.id, context: context, runToken: runToken)
+            return
+        }
+        if let shortCircuit = sameSourceAndTargetResult(
+            sourceCode: resolved.sourceCode,
+            target: resolvedTarget,
+            modelID: model.id
+        ) {
+            apply(result: shortCircuit, context: context, runToken: runToken, allowDiff: false)
+            return
+        }
+        guard let targetCode = MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue) else {
+            applyDirectFailure(
+                .unsupportedLanguage(
+                    AppleTranslationErrorFormatter.withLanguagePair(
+                        String(localized: "Microsoft Translate does not support the selected language."),
+                        sourceCode: resolved.sourceCode,
+                        target: resolvedTarget
+                    )
+                ),
+                modelID: model.id,
+                context: context,
+                runToken: runToken
+            )
+            return
+        }
+        // An unsupported source is left to Microsoft's own detection.
+        let sourceCode: String? = resolved.sourceCode.flatMap(MicrosoftTranslateService.translatorCode(for:))
+        let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
+        let text = context.text
+        serviceTasks.append(Task { [weak self] in
+            guard let self else { return }
+            let result = await MicrosoftTranslateService.shared.translate(
+                text: text, sourceCode: sourceCode, targetCode: targetCode, timingTrace: timingTrace
+            )
+            guard self.isRunStillValid(context, runID: result.modelID, runToken: runToken) else { return }
+            self.apply(result: result, context: context, runToken: runToken, allowDiff: false)
+            self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
+        })
+    }
+
+    /// Runs cloud LLM models through `LLMService`, streaming partial output into their runs.
+    private func runCloudModels(
+        _ cloudModels: [ModelConfig],
+        context: RequestContext,
+        runTokens: [String: UUID]
+    ) async {
+        let text = context.text
+        let action = context.action
+        let resolved = context.languages
         let coalescers = Dictionary(uniqueKeysWithValues: cloudModels.map { model in
             (model.id, StreamingUpdateCoalescer { [weak self] update in
                 guard let self, let token = runTokens[model.id],
@@ -2317,6 +2236,10 @@ public final class HomeViewModel: ObservableObject {
         }
         guard !validResults.isEmpty else { return }
 
+        recordTranslationOutcome(validResults)
+    }
+
+    private func recordTranslationOutcome(_ validResults: [ModelExecutionResult]) {
         let successFlags = validResults.map { result in
             if case .success = result.response { return true }
             return false
@@ -2383,14 +2306,7 @@ public final class HomeViewModel: ObservableObject {
         perRunTasks.removeAll()
         activeRequestContext = nil
         requestGenerationTracker.cancel()
-        pendingAppleTranslateText = nil
-        pendingAppleTranslateAction = nil
-        pendingAppleTranslateRequestID = nil
-        pendingAppleTranslateResolvedTarget = nil
-        pendingAppleTranslateContext = nil
-        pendingAppleTranslateRunToken = nil
-        appleTranslateSourceLanguage = nil
-        appleTranslateTargetLanguage = nil
+        clearPendingAppleTranslate()
         if resetsLanguages {
             setDetectedSourceLanguage(nil, reason: "Active request cancelled")
         }
@@ -2405,76 +2321,66 @@ public final class HomeViewModel: ObservableObject {
     // MARK: - Apple Translation Execution
 
     /// Called from HomeView's `.translationTask()` callback once a TranslationSession is available.
-    #if canImport(Translation)
-        @available(iOS 17.4, macOS 14.4, *)
-        public func executeAppleTranslation(session: TranslationSession) async {
+    public func executeAppleTranslation(session: TranslationSession) async {
+        logger
+            .debug(
+                "executeAppleTranslation: hasText=\(self.pendingAppleTranslateText != nil, privacy: .public), hasAction=\(self.pendingAppleTranslateAction != nil, privacy: .public)"
+            )
+        guard let text = pendingAppleTranslateText,
+              let action = pendingAppleTranslateAction,
+              let context = pendingAppleTranslateContext,
+              let runToken = pendingAppleTranslateRunToken
+        else {
             logger
-                .debug(
-                    "executeAppleTranslation: hasText=\(self.pendingAppleTranslateText != nil, privacy: .public), hasAction=\(self.pendingAppleTranslateAction != nil, privacy: .public)"
+                .error(
+                    "executeAppleTranslation: missing pending state, aborting (text=\(self.pendingAppleTranslateText != nil, privacy: .public), action=\(self.pendingAppleTranslateAction != nil, privacy: .public), requestID=\(self.pendingAppleTranslateRequestID != nil, privacy: .public))"
                 )
-            guard let text = pendingAppleTranslateText,
-                  let action = pendingAppleTranslateAction,
-                  let context = pendingAppleTranslateContext,
-                  let runToken = pendingAppleTranslateRunToken
-            else {
-                logger
-                    .error(
-                        "executeAppleTranslation: missing pending state, aborting (text=\(self.pendingAppleTranslateText != nil, privacy: .public), action=\(self.pendingAppleTranslateAction != nil, privacy: .public), requestID=\(self.pendingAppleTranslateRequestID != nil, privacy: .public))"
-                    )
-                return
-            }
-
-            // Clear pending state.
-            let resolvedTarget = pendingAppleTranslateResolvedTarget ?? preferences.targetLanguage
-            let sourceLocale = appleTranslateSourceLanguage
-            pendingAppleTranslateText = nil
-            pendingAppleTranslateAction = nil
-            pendingAppleTranslateRequestID = nil
-            pendingAppleTranslateResolvedTarget = nil
-            pendingAppleTranslateContext = nil
-            pendingAppleTranslateRunToken = nil
-            appleTranslateSourceLanguage = nil
-            appleTranslateTargetLanguage = nil
-
-            // The session is only valid inside the `.translationTask` closure, so run inline.
-            do {
-                let result: ModelExecutionResult
-                if action.outputType == .sentencePairs {
-                    result = try await AppleTranslationService.shared.translateSentences(
-                        text: text, using: session
-                    )
-                } else {
-                    result = try await AppleTranslationService.shared.translate(
-                        text: text, using: session
-                    )
-                }
-                guard isRunStillValid(
-                    context,
-                    runID: result.modelID,
-                    runToken: runToken
-                ) else { return }
-                apply(result: result, context: context, runToken: runToken, allowDiff: false)
-                saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-            } catch {
-                logger.error("executeAppleTranslation failed: \(String(describing: error), privacy: .public)")
-                guard isRunStillValid(
-                    context,
-                    runID: ModelConfig.appleTranslateID,
-                    runToken: runToken
-                ) else { return }
-                let failResult = ModelExecutionResult(
-                    modelID: ModelConfig.appleTranslateID,
-                    duration: 0,
-                    response: .failure(LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describe(
-                        error,
-                        source: sourceLocale,
-                        target: resolvedTarget
-                    )))
-                )
-                apply(result: failResult, context: context, runToken: runToken, allowDiff: false)
-            }
+            return
         }
-    #endif
+
+        // Clear pending state.
+        let resolvedTarget = pendingAppleTranslateResolvedTarget ?? preferences.targetLanguage
+        let sourceLocale = appleTranslateSourceLanguage
+        clearPendingAppleTranslate()
+
+        // The session is only valid inside the `.translationTask` closure, so run inline.
+        do {
+            let result: ModelExecutionResult
+            if action.outputType == .sentencePairs {
+                result = try await AppleTranslationService.shared.translateSentences(
+                    text: text, using: session
+                )
+            } else {
+                result = try await AppleTranslationService.shared.translate(
+                    text: text, using: session
+                )
+            }
+            guard isRunStillValid(
+                context,
+                runID: result.modelID,
+                runToken: runToken
+            ) else { return }
+            apply(result: result, context: context, runToken: runToken, allowDiff: false)
+            saveHistoryIfSuccessful(result, context: context, runToken: runToken)
+        } catch {
+            logger.error("executeAppleTranslation failed: \(String(describing: error), privacy: .public)")
+            guard isRunStillValid(
+                context,
+                runID: ModelConfig.appleTranslateID,
+                runToken: runToken
+            ) else { return }
+            let failResult = ModelExecutionResult(
+                modelID: ModelConfig.appleTranslateID,
+                duration: 0,
+                response: .failure(LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describe(
+                    error,
+                    source: sourceLocale,
+                    target: resolvedTarget
+                )))
+            )
+            apply(result: failResult, context: context, runToken: runToken, allowDiff: false)
+        }
+    }
 
     private func saveHistoryIfSuccessful(
         _ result: ModelExecutionResult,

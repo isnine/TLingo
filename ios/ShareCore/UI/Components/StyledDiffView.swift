@@ -5,9 +5,7 @@ struct StyledDiffView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

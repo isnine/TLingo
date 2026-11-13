@@ -51,9 +51,7 @@ public struct LanguageSwitcherView: View {
     /// Called once after any source/target selection or swap changes.
     let onSelectionChanged: (() -> Void)?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         globeFont: Font = .system(size: 12),

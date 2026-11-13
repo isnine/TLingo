@@ -17,9 +17,7 @@ struct DownloadLanguagesGuideView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         NavigationStack {

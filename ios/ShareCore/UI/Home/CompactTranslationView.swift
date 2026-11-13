@@ -14,7 +14,7 @@
 //  the extension to surface "Open in TLingo").
 //
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     import SwiftUI
 
     public struct CompactTranslationView<TrailingFooter: View>: View {
@@ -27,9 +27,7 @@
         private let usesCompactSnapshotMetrics: Bool
         private let usesCachedRequestState: Bool
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         public init(
             viewModel: HomeViewModel,

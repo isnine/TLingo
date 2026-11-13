@@ -30,9 +30,7 @@
         // because @FocusState on NSViewRepresentable competes with AppKit's responder chain.
         let onClose: () -> Void
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         /// Whether the quick translate hotkey is configured
         private var isHotkeyConfigured: Bool {

@@ -44,9 +44,7 @@ struct PaywallView: View {
         self.onContinueFree = onContinueFree
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var hasUpgradeOptions: Bool {
         currentTierPriority < 2
@@ -60,16 +58,16 @@ struct PaywallView: View {
     var body: some View {
         layout
             .tint(colors.accent)
-        .onChange(of: storeManager.activePremiumProductID) { _, newID in
-            if newID != nil {
-                triggerCelebration()
+            .onChange(of: storeManager.activePremiumProductID) { _, newID in
+                if newID != nil {
+                    triggerCelebration()
+                }
             }
-        }
-        .onChange(of: entitlement.isPro) { wasPro, isPro in
-            if !wasPro, isPro {
-                triggerCelebration()
+            .onChange(of: entitlement.isPro) { wasPro, isPro in
+                if !wasPro, isPro {
+                    triggerCelebration()
+                }
             }
-        }
     }
 
     private var purchaseContent: some View {

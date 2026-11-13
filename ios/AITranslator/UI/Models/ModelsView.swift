@@ -18,9 +18,7 @@ struct ModelsView: View {
         self.embedsInNavigationStack = embedsInNavigationStack
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         navigationContainer
@@ -36,13 +34,13 @@ struct ModelsView: View {
             NavigationStack {
                 content
                 #if os(iOS)
-                .toolbar(.hidden, for: .navigationBar)
+                    .toolbar(.hidden, for: .navigationBar)
                 #endif
             }
         } else {
             content
             #if os(iOS)
-            .toolbar(.visible, for: .navigationBar)
+                .toolbar(.visible, for: .navigationBar)
             #endif
         }
     }

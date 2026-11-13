@@ -219,8 +219,7 @@ struct AITranslatorApp: App {
         func copyScreenshotText() {
             Task { @MainActor in
                 guard let text = await ScreenshotOCR.captureAndRecognize() else { return }
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(text, forType: .string)
+                PasteboardHelper.copy(text)
                 NSSound(named: "Pop")?.play()
             }
         }

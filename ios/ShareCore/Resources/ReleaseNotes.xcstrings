@@ -2876,6 +2876,256 @@
         }
       }
     },
+    "Keep chat input stable while composing with an input method" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حافظ على ثبات إدخال الدردشة أثناء الكتابة باستخدام طريقة إدخال"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevar en stabil chatinndata, mens du skriver med en inputmetode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chateingabe beim Verfassen mit einer Eingabemethode stabil halten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep chat input stable while composing with an input method"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén estable la entrada del chat mientras escribes con un método de entrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder la saisie du chat stable pendant la composition avec une méthode de saisie"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaga input chat tetap stabil saat menulis dengan metode masukan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni stabile l'input della chat durante la composizione con un metodo di input"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力メソッドで入力している間もチャット入力を安定して保つ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력기로 작성하는 동안 채팅 입력을 안정적으로 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan input sembang stabil semasa menaip dengan kaedah input"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold chattefeltet stabilt mens du skriver med en inndatametode"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de chatinvoer stabiel tijdens het typen met een invoermethode"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj stabilne pole wprowadzania czatu podczas pisania metodą wprowadzania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenha a entrada do chat estável ao compor com um método de entrada"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll chattinmatningen stabil när du skriver med en inmatningsmetod"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir giriş yöntemiyle yazarken sohbet girişini sabit tut"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法輸入時保持聊天輸入穩定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用输入法输入时保持聊天输入框稳定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法輸入時保持聊天輸入穩定"
+          }
+        }
+      }
+    },
+    "Keep the cached model list when the server returns an empty catalog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احتفظ بقائمة النماذج المخزّنة مؤقتًا عندما يعيد الخادم كتالوجًا فارغًا"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold den cachede modelliste, når serveren returnerer et tomt katalog"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die zwischengespeicherte Modellliste beibehalten, wenn der Server einen leeren Katalog zurückgibt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the cached model list when the server returns an empty catalog"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva la lista de modelos en caché cuando el servidor devuelva un catálogo vacío"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserver la liste de modèles en cache lorsque le serveur renvoie un catalogue vide"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertahankan daftar model yang di-cache saat server mengembalikan katalog kosong"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni l'elenco dei modelli nella cache quando il server restituisce un catalogo vuoto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバーが空のカタログを返したときはキャッシュされたモデルリストを保持する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버가 빈 카탈로그를 반환할 때 캐시된 모델 목록 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan senarai model cache apabila pelayan mengembalikan katalog kosong"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold den bufrende modellisten når serveren returnerer en tom katalog"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behoud de gecachte modellenlijst wanneer de server een lege catalogus retourneert"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj buforowaną listę modeli, gdy serwer zwróci pusty katalog"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenha a lista de modelos em cache quando o servidor retornar um catálogo vazio"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behåll den cachade modellistan när servern returnerar en tom katalog"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucu boş bir katalog döndürdüğünde önbelleğe alınmış model listesini koru"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當伺服器傳回空白目錄時保留已快取的模型列表"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当服务器返回空目录时保留已缓存的模型列表"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當伺服器傳回空白目錄時保留已快取的模型清單"
+          }
+        }
+      }
+    },
     "Keep the newest bilingual caption pair visible in compact Picture in Picture" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3751,6 +4001,131 @@
         }
       }
     },
+    "Move Apple Translate's downloaded language count onto its model row" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نقل عدد اللغات التي تم تنزيلها في Apple Translate إلى صف النموذج الخاص به"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flyt Apples Oversæt-apps antal downloadede sprog op på modellens række"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anzahl der heruntergeladenen Sprachen von Apple Übersetzen in die Modellzeile verschieben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Apple Translate's downloaded language count onto its model row"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve el recuento de idiomas descargados de Apple Translate a su fila de modelo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer le nombre de langues téléchargées d'Apple Traduction sur la ligne de son modèle"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pindahkan jumlah bahasa yang diunduh Apple Translate ke baris modelnya"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta il numero di lingue scaricate di Apple Traduci sulla riga del relativo modello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 翻訳のダウンロード済み言語数をそのモデル行に移動する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 번역의 다운로드된 언어 수를 해당 모델 행으로 이동"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pindahkan kiraan bahasa yang dimuat turun Apple Translate ke baris modelnya"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytt Apples oversettelses antall nedlastede språk opp på modellraden"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verplaats het aantal gedownloade talen van Apple Vertalen naar de bijbehorende modelrij"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przenieś liczbę pobranych języków Apple Translate do wiersza jej modelu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mova a contagem de idiomas baixados do Apple Traduzir para a linha do modelo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flytta Apples Översätt-appens antal nedladdade språk till modellraden"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Çeviri'nin indirilen dil sayısını model satırına taşı"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 Apple 翻譯已下載的語言數量移至其模型列"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 Apple 翻译已下载的语言数量移至其模型行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 Apple 翻譯已下載的語言數量移至其模型列"
+          }
+        }
+      }
+    },
     "Move model picker to the quick panel footer and show the run hint beside the placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4372,6 +4747,256 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以半高開啟「新功能」，按鈕不被裁切"
+          }
+        }
+      }
+    },
+    "Open new chats on a usable model when the saved chat model is premium" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح المحادثات الجديدة على نموذج قابل للاستخدام عندما يكون نموذج المحادثة المحفوظ مميزًا"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn nye chats på en brugbar model, når den gemte chatmodel er premium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats mit einem nutzbaren Modell öffnen, wenn das gespeicherte Chatmodell Premium ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open new chats on a usable model when the saved chat model is premium"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre chats nuevos con un modelo utilizable cuando el modelo de chat guardado sea premium"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les nouveaux chats sur un modèle utilisable lorsque le modèle de chat enregistré est premium"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka chat baru pada model yang dapat digunakan saat model chat tersimpan adalah premium"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri nuove chat su un modello utilizzabile quando il modello della chat salvato è premium"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存されたチャットモデルがプレミアムの場合、新しいチャットを使えるモデルで開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장된 채팅 모델이 프리미엄일 때 사용 가능한 모델로 새 채팅 열기"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka sembang baharu pada model yang boleh digunakan apabila model sembang tersimpan ialah premium"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpne nye chatter på en brukbar modell når den lagrede chatmodellen er premium"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open nieuwe chats op een bruikbaar model wanneer het opgeslagen chatmodel premium is"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwieraj nowe czaty na użytecznym modelu, gdy zapisany model czatu jest premium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra novas conversas em um modelo utilizável quando o modelo salvo da conversa for premium"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna nya chattar med en användbar modell när den sparade chattmodellen är premium"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydedilen sohbet modeli premium olduğunda yeni sohbetleri kullanılabilir bir modelde aç"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當已儲存的聊天模型為進階模型時，以可用的模型開啟新聊天"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当已保存的聊天模型为高级模型时，使用可用的模型打开新聊天"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當已儲存的聊天模型為進階模型時，以可用的模型開啟新聊天"
+          }
+        }
+      }
+    },
+    "Open the paywall directly from the quick panel when a premium model is locked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح شاشة الدفع مباشرة من اللوحة السريعة عندما يكون النموذج المميز مقفلًا"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn betalingsmuren direkte fra hurtigpanelet, når en premiummodel er låst"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Paywall direkt über das Schnellpanel öffnen, wenn ein Premium-Modell gesperrt ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the paywall directly from the quick panel when a premium model is locked"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el muro de pago directamente desde el panel rápido cuando un modelo premium esté bloqueado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir directement le paywall depuis le panneau rapide lorsqu'un modèle premium est verrouillé"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka paywall langsung dari panel cepat saat model premium terkunci"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il paywall direttamente dal pannello rapido quando un modello premium è bloccato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プレミアムモデルがロックされている場合、クイックパネルから直接ペイウォールを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프리미엄 모델이 잠겨 있을 때 빠른 패널에서 바로 페이월 열기"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka paywall terus dari panel pantas apabila model premium dikunci"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpne betalingsmuren direkte fra hurtigpanelet når en premiummodell er låst"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open de betaalmuur rechtstreeks vanuit het snelpaneel wanneer een premiummodel is vergrendeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwieraj ekran płatności bezpośrednio z panelu szybkiego, gdy model premium jest zablokowany"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra o paywall diretamente do painel rápido quando um modelo premium estiver bloqueado"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna betalväggen direkt från snabbpanelen när en premiummodell är låst"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premium model kilitliyken ödeme ekranını hızlı panelden doğrudan aç"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當進階模型被鎖定時，直接從快速面板開啟付費牆"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当高级模型被锁定时，直接从快速面板打开付费墙"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當進階模型被鎖定時，直接從快速面板開啟付費牆"
           }
         }
       }
@@ -5626,6 +6251,381 @@
         }
       }
     },
+    "Retry from the no-model error card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعد المحاولة من بطاقة خطأ \"لا يوجد نموذج\""
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prøv igen fra feilkortet \"ingen model\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über die Fehlerkarte „Kein Modell“ erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry from the no-model error card"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintenta desde la tarjeta de error de \"sin modelo\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer depuis la carte d'erreur « aucun modèle »"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coba lagi dari kartu kesalahan \"tidak ada model\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova dalla scheda di errore \"nessun modello\""
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「モデルなし」エラーカードから再試行する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"모델 없음\" 오류 카드에서 다시 시도"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuba lagi dari kad ralat \"tiada model\""
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prøv på nytt fra feilkortet «ingen modell»"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer opnieuw vanaf de foutkaart 'geen model'"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponów próbę z karty błędu „brak modelu“"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tente novamente pelo cartão de erro \"nenhum modelo\""
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Försök igen från felkortet \"ingen modell\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Model yok\" hata kartından yeniden dene"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從「沒有模型」錯誤卡片重試"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从“无模型”错误卡片重试"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從「沒有模型」錯誤卡片重試"
+          }
+        }
+      }
+    },
+    "Run the free AI model when a lapsed membership still has premium models selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شغّل نموذج الذكاء الاصطناعي المجاني عندما تكون هناك نماذج مميزة محددة في عضوية منتهية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kør den gratis AI-model, når et udløbet medlemskab stadig har premiummodeller valgt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das kostenlose KI-Modell ausführen, wenn eine abgelaufene Mitgliedschaft noch Premium-Modelle ausgewählt hat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the free AI model when a lapsed membership still has premium models selected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuta el modelo de IA gratuito cuando una suscripción vencida todavía tenga modelos premium seleccionados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécuter le modèle d'IA gratuit lorsqu'un abonnement expiré a encore des modèles premium sélectionnés"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jalankan model AI gratis saat keanggotaan yang sudah berakhir masih memilih model premium"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui il modello AI gratuito quando un abbonamento scaduto ha ancora modelli premium selezionati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限切れのメンバーシップでプレミアムモデルが選択されたままの場合、無料の AI モデルを実行する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "만료된 멤버십에 프리미엄 모델이 선택되어 있어도 무료 AI 모델 실행"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jalankan model AI percuma apabila keahlian yang tamat tempoh masih mempunyai model premium dipilih"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kjør den gratis AI-modellen når et utløpt medlemskap fortsatt har premiummodeller valgt"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer het gratis AI-model uit wanneer een verlopen lidmaatschap nog premiummodellen geselecteerd heeft"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchamiaj darmowy model AI, gdy wygasłe członkostwo nadal ma wybrane modele premium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute o modelo de IA gratuito quando uma assinatura expirada ainda tiver modelos premium selecionados"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kör den kostnadsfria AI-modellen när ett utgånget medlemskap fortfarande har premiummodeller valda"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Süresi dolmuş bir üyelikte hâlâ premium modeller seçiliyken ücretsiz AI modelini çalıştır"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當已過期的會員資格仍選取了進階模型時，執行免費 AI 模型"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当已过期的会员仍选择了高级模型时，运行免费 AI 模型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當已過期的會員資格仍選取了進階模型時，執行免費 AI 模型"
+          }
+        }
+      }
+    },
+    "Show every text selection action in the toolbar instead of hiding extras" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اعرض كل إجراءات تحديد النص في شريط الأدوات بدلاً من إخفاء الإضافية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis alle tekstmarkeringshandlinger i værktøjslinjen i stedet for at skjule ekstra"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Aktionen zur Textauswahl in der Symbolleiste anzeigen, statt Extras auszublenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show every text selection action in the toolbar instead of hiding extras"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra todas las acciones de selección de texto en la barra de herramientas en lugar de ocultar las adicionales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher toutes les actions de sélection de texte dans la barre d'outils au lieu de masquer les actions supplémentaires"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan semua tindakan pemilihan teks di toolbar alih-alih menyembunyikan yang tambahan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra tutte le azioni di selezione del testo nella barra degli strumenti invece di nascondere quelle extra"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加のアクションを隠すのではなく、すべてのテキスト選択アクションをツールバーに表示する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가 작업을 숨기지 않고 모든 텍스트 선택 작업을 도구 막대에 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tunjukkan semua tindakan pemilihan teks dalam bar alat dan bukan menyembunyikan yang tambahan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis alle tekstvalghandlinger i verktøylinjen i stedet for å skjule ekstrahandlinger"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon alle acties voor tekstselectie in de werkbalk in plaats van extra's te verbergen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj wszystkie akcje zaznaczania tekstu na pasku narzędzi, zamiast ukrywać dodatkowe"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostre todas as ações de seleção de texto na barra de ferramentas em vez de ocultar as extras"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa alla åtgärder för textmarkering i verktygsfältet i stället för att dölja extra"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekstra eylemleri gizlemek yerine tüm metin seçimi eylemlerini araç çubuğunda göster"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在工具列中顯示所有文字選取操作，而非隱藏額外操作"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在工具栏中显示所有文本选择操作，而不是隐藏额外操作"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在工具列中顯示所有文字選取操作，而非隱藏額外操作"
+          }
+        }
+      }
+    },
     "Show first completed result first by default" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5872,6 +6872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示模型下載速度、剩餘時間及更清晰的重試指引"
+          }
+        }
+      }
+    },
+    "Show the models that will actually run in the model picker, keeping premium selections for later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اعرض النماذج التي ستعمل فعليًا في منتقي النماذج، مع الاحتفاظ بالتحديدات المميزة لوقت لاحق"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis de modeller, der faktisk kører, i modelvælgeren, og behold premiumvalgene til senere"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Modelle, die tatsächlich ausgeführt werden, im Modellauswähler anzeigen und Premium-Auswahlen für später aufbewahren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the models that will actually run in the model picker, keeping premium selections for later"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra en el selector de modelos los que realmente se ejecutarán, conservando las selecciones premium para más adelante"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher dans le sélecteur les modèles qui s'exécuteront réellement, en conservant les sélections premium pour plus tard"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan model yang benar-benar akan dijalankan di pemilih model, dan simpan pilihan premium untuk nanti"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra nel selettore i modelli che verranno effettivamente eseguiti, conservando le selezioni premium per dopo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルピッカーに実際に実行されるモデルを表示し、プレミアムの選択は後で使えるように残す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 선택기에서 실제로 실행될 모델을 표시하고 프리미엄 선택은 나중을 위해 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tunjukkan model yang sebenarnya akan dijalankan dalam pemilih model, sambil menyimpan pilihan premium untuk kemudian"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis modellene som faktisk vil kjøre i modellvelgeren, og behold premiumvalgene til senere"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon de modellen die daadwerkelijk worden uitgevoerd in de modelkiezer en bewaar premiumselecties voor later"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj w selektorze modele, które faktycznie zostaną uruchomione, zachowując wybory premium na później"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostre no seletor de modelos os que realmente serão executados, mantendo as seleções premium para depois"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa modellerna som faktiskt kommer att köras i modellväljaren och behåll premiumvalen till senare"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model seçicide gerçekten çalışacak modelleri göster ve premium seçimleri sonrası için sakla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模型選擇器中顯示實際會執行的模型，並保留進階選擇以備後用"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模型选择器中显示实际会运行的模型，并保留高级选择以供稍后使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模型選擇器中顯示實際會執行的模型，並保留進階選擇以備後用"
           }
         }
       }

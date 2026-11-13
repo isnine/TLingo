@@ -27,15 +27,32 @@ struct ConversationModelSelectionTests {
     @Test("Stored available model overrides the session model")
     func storedAvailableModelOverridesSessionModel() throws {
         let preferences = try makePreferences(chatModelID: premiumModel.id)
-        let viewModel = makeViewModel(preferences: preferences)
+        let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         #expect(viewModel.model == premiumModel)
+    }
+
+    @Test("Unusable stored premium model falls back to the session model")
+    func unusableStoredPremiumModelFallsBackToSessionModel() throws {
+        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let viewModel = makeViewModel(preferences: preferences, isPro: false)
+
+        #expect(viewModel.model == freeModel)
+        #expect(preferences.chatModelID == premiumModel.id)
+    }
+
+    @Test("Unusable stored and session models fall back to the first usable model")
+    func unusableStoredAndSessionModelsFallBackToFirstUsableModel() throws {
+        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let viewModel = makeViewModel(preferences: preferences, sessionModel: premiumModel, isPro: false)
+
+        #expect(viewModel.model == freeModel)
     }
 
     @Test("Missing stored model falls back without clearing the preference")
     func missingStoredModelFallsBackWithoutClearingPreference() throws {
         let preferences = try makePreferences(chatModelID: "missing")
-        let viewModel = makeViewModel(preferences: preferences)
+        let viewModel = makeViewModel(preferences: preferences, isPro: false)
 
         #expect(viewModel.model == freeModel)
         #expect(preferences.chatModelID == "missing")
@@ -44,7 +61,7 @@ struct ConversationModelSelectionTests {
     @Test("Changing model updates the preference")
     func changingModelUpdatesPreference() throws {
         let preferences = try makePreferences()
-        let viewModel = makeViewModel(preferences: preferences)
+        let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         viewModel.model = premiumModel
 
@@ -54,22 +71,27 @@ struct ConversationModelSelectionTests {
     @Test("Premium access gates the selected model")
     func premiumAccessGatesSelectedModel() throws {
         let preferences = try makePreferences(chatModelID: premiumModel.id)
-        let viewModel = makeViewModel(preferences: preferences)
+        let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         #expect(!viewModel.canUseSelectedModel(isPro: false))
         #expect(viewModel.canUseSelectedModel(isPro: true))
     }
 
-    private func makeViewModel(preferences: AppPreferences) -> ConversationViewModel {
+    private func makeViewModel(
+        preferences: AppPreferences,
+        sessionModel: ModelConfig? = nil,
+        isPro: Bool
+    ) -> ConversationViewModel {
         ConversationViewModel(
             session: ConversationSession(
-                model: freeModel,
+                model: sessionModel ?? freeModel,
                 action: ActionConfig(name: "Chat", prompt: ""),
                 availableModels: [freeModel, premiumModel],
                 messages: []
             ),
             llmService: .shared,
-            preferences: preferences
+            preferences: preferences,
+            isPro: isPro
         )
     }
 

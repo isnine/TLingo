@@ -1,4 +1,4 @@
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     import ShareCore
     import SwiftUI
 
@@ -17,9 +17,7 @@
             return SnapshotLocaleCatalog.configuration(for: id)
         }
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         var body: some View {
             ZStack(alignment: .bottom) {

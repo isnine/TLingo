@@ -1,9 +1,7 @@
 #if os(iOS)
     import Foundation
     import Speech
-    #if canImport(Translation)
-        import Translation
-    #endif
+    import Translation
 
     public enum RealtimeIPhoneAudioSpeechAuthorization: Equatable, Sendable {
         case authorized
@@ -187,29 +185,24 @@
             guard let source = sourceLanguage.localeLanguage else { return .unknown }
             let target = targetLanguage.localeLanguage
 
-            #if canImport(Translation)
-                guard #available(iOS 17.4, *) else { return .unavailable }
-                let status: LanguageAvailability.Status
-                do {
-                    status = try await AppleTranslationService.shared.languageAvailabilityStatus(source: source, target: target)
-                } catch is CancellationError {
-                    return .unknown
-                } catch {
-                    return .timedOut
-                }
-                switch status {
-                case .installed:
-                    return .installed
-                case .supported:
-                    return .supported
-                case .unsupported:
-                    return .unsupported
-                @unknown default:
-                    return .unknown
-                }
-            #else
-                return .unavailable
-            #endif
+            let status: LanguageAvailability.Status
+            do {
+                status = try await AppleTranslationService.shared.languageAvailabilityStatus(source: source, target: target)
+            } catch is CancellationError {
+                return .unknown
+            } catch {
+                return .timedOut
+            }
+            switch status {
+            case .installed:
+                return .installed
+            case .supported:
+                return .supported
+            case .unsupported:
+                return .unsupported
+            @unknown default:
+                return .unknown
+            }
         }
     }
 #endif

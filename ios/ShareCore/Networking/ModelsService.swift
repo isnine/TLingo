@@ -183,6 +183,9 @@ public final class ModelsService: Sendable {
         ])
         var seen = Set<String>()
 
+        // An empty list would replace a working cache with a catalog nothing can run on.
+        guard !models.isEmpty else { throw ModelsServiceError.invalidCatalog }
+
         for model in models {
             let id = model.id.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !id.isEmpty, !reservedIDs.contains(id), seen.insert(id).inserted else {

@@ -22,9 +22,7 @@
         @State private var isHovering: Bool = false
         @State private var cursorPushed: Bool = false
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var isActive: Bool {
             isHovering || dragStartHeight != nil
@@ -96,9 +94,7 @@
         @State private var isHovering: Bool = false
         @State private var cursorPushed: Bool = false
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var isActive: Bool {
             isHovering || dragStartWidth != nil

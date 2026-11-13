@@ -21,9 +21,7 @@ struct VoiceIntentConfirmationView: View {
     @State private var errorMessage: String?
     @State private var isRetrying = false
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {

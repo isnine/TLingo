@@ -92,9 +92,7 @@ public struct LanguagePickerView: View {
     private let title: String
     private static let iOSListTopContentMargin: CGFloat = 8
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var filteredRows: [LanguageRow] {
         LanguagePickerSearch.filteredRows(rows, query: searchText)

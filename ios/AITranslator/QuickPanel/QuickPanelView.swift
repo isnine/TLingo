@@ -16,6 +16,8 @@
         @ObservedObject private var preferences = AppPreferences.shared
         @ObservedObject private var entitlement = Entitlement.shared
         @State private var showModelSelection = false
+        @State private var showPaywall = false
+        @State private var pendingPaywall = false
         /// Input of the last run; while the input still matches it, the composer collapses to one row.
         @State private var submittedText: String?
         let onClose: () -> Void
@@ -24,9 +26,7 @@
         private static let resultsHeight: CGFloat = 420
         private static let maxActionShortcuts = 9
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var isCompact: Bool {
             !viewModel.modelRuns.isEmpty && submittedText == viewModel.inputText
@@ -87,8 +87,20 @@
                 preferences.refreshFromDefaults()
                 viewModel.refreshConfiguration()
             }
-            .sheet(isPresented: $showModelSelection) {
-                ModelSelectionSheet(cloudModels: viewModel.models)
+            .sheet(isPresented: $showModelSelection, onDismiss: {
+                // A sheet cannot present another one, so the paywall waits for this one to close.
+                if pendingPaywall {
+                    pendingPaywall = false
+                    showPaywall = true
+                }
+            }) {
+                ModelSelectionSheet(cloudModels: viewModel.models) {
+                    pendingPaywall = true
+                    showModelSelection = false
+                }
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(context: .featureLocked)
             }
             .sheet(isPresented: $viewModel.showDataConsentRequest) {
                 DataConsentView {

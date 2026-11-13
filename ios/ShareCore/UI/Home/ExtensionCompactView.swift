@@ -5,7 +5,7 @@
 //  Created by AI Assistant on 2026/01/04.
 //
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     import os
     import SwiftUI
     import TranslationUIProvider
@@ -25,9 +25,7 @@
 
         private let context: TranslationUIProviderContext
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         public init(context: TranslationUIProviderContext) {
             self.context = context

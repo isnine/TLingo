@@ -17,16 +17,14 @@ private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", categor
 #if canImport(AppKit)
     import AppKit
 #endif
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     import TranslationUIProvider
 #endif
 import UniformTypeIdentifiers
 import WebKit
-#if canImport(Translation)
-    import Translation
-#endif
+import Translation
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if os(iOS)
     public typealias AppTranslationContext = TranslationUIProviderContext
 #else
     public typealias AppTranslationContext = Never
@@ -74,10 +72,8 @@ public struct HomeView: View {
         @State private var selectedResult: SelectedResult?
         @State private var resultDetailDetent: PresentationDetent = .medium
     #endif
-    #if canImport(Translation)
-        @State private var appleTranslationConfig: TranslationSession.Configuration?
-        @State private var appleTranslationConfigLanguagePair: (source: String?, target: String)?
-    #endif
+    @State private var appleTranslationConfig: TranslationSession.Configuration?
+    @State private var appleTranslationConfigLanguagePair: (source: String?, target: String)?
     #if os(macOS)
         @State private var showDataConsent = false
     #endif
@@ -250,9 +246,7 @@ public struct HomeView: View {
     private let onResultReplace: ((String) -> Void)?
     private let onResultConversation: ((ConversationSession) -> Void)?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     /// Hides the keyboard on iOS
     private func hideKeyboard() {
@@ -354,7 +348,7 @@ public struct HomeView: View {
         }
         .homeNavigationChrome(usesNativeNavigationHeader: usesNativeNavigationChrome, colors: colors)
         #if os(iOS)
-        .toolbarVisibility(activeConversationSession == nil ? .automatic : .hidden, for: .tabBar)
+            .toolbarVisibility(activeConversationSession == nil ? .automatic : .hidden, for: .tabBar)
         #endif
             .toolbar {
                 #if os(macOS)
@@ -400,63 +394,62 @@ public struct HomeView: View {
                     }
                 #endif
             }
-        .overlay(alignment: .trailing) {
-            if isConversationInspectorVisible {
-                Rectangle()
-                    .fill(colors.textSecondary.opacity(0.22))
-                    .frame(width: 1)
-                    .ignoresSafeArea(.all, edges: .vertical)
+            .overlay(alignment: .trailing) {
+                if isConversationInspectorVisible {
+                    Rectangle()
+                        .fill(colors.textSecondary.opacity(0.22))
+                        .frame(width: 1)
+                        .ignoresSafeArea(.all, edges: .vertical)
+                }
             }
-        }
-        .erasedForLaunch()
+            .erasedForLaunch()
         #if os(iOS)
-        .sheet(item: $selectedResult) { selectedResult in
-            resultDetailSheet(for: selectedResult.id)
-                .presentationDetents([.medium, .fraction(0.92)], selection: $resultDetailDetent)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(item: $feedbackDraft) { draft in
-            FeedbackMailComposerView(draft: draft) {
-                feedbackDraft = nil
+            .sheet(item: $selectedResult) { selectedResult in
+                resultDetailSheet(for: selectedResult.id)
+                    .presentationDetents([.medium, .fraction(0.92)], selection: $resultDetailDetent)
+                    .presentationDragIndicator(.visible)
             }
-        }
+            .sheet(item: $feedbackDraft) { draft in
+                FeedbackMailComposerView(draft: draft) {
+                    feedbackDraft = nil
+                }
+            }
         #endif
-        .onAppear {
-            AppPreferences.shared.refreshFromDefaults()
+            .onAppear {
+                AppPreferences.shared.refreshFromDefaults()
 
-            // In snapshot conversation mode, auto-present the conversation
-            // sheet so the UI test doesn't need to find and tap the chat button.
-            if HomeViewModel.isSnapshotConversationMode {
-                // On macOS the inspector binding needs the view hierarchy to be
-                // fully laid out before it will open. A short async delay ensures
-                // the window and splitter have finished first layout.
-                #if os(macOS)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                // In snapshot conversation mode, auto-present the conversation
+                // sheet so the UI test doesn't need to find and tap the chat button.
+                if HomeViewModel.isSnapshotConversationMode {
+                    // On macOS the inspector binding needs the view hierarchy to be
+                    // fully laid out before it will open. A short async delay ensures
+                    // the window and splitter have finished first layout.
+                    #if os(macOS)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                            if let session = viewModel.createSnapshotConversationSession() {
+                                presentConversation(session)
+                            }
+                        }
+                    #else
                         if let session = viewModel.createSnapshotConversationSession() {
                             presentConversation(session)
                         }
-                    }
-                #else
-                    if let session = viewModel.createSnapshotConversationSession() {
-                        presentConversation(session)
-                    }
-                #endif
-            }
-
-            #if os(iOS)
-                // For extension context: refresh configuration first, then execute
-                if openFromExtension, !hasTriggeredAutoRequest {
-                    viewModel.refreshConfiguration()
-                    if let inputText = initialContextInput {
-                        viewModel.inputText = inputText
-                    }
-                    hasTriggeredAutoRequest = true
-                    viewModel.performSelectedAction()
+                    #endif
                 }
-                #if canImport(Translation)
+
+                #if os(iOS)
+                    // For extension context: refresh configuration first, then execute
+                    if openFromExtension, !hasTriggeredAutoRequest {
+                        viewModel.refreshConfiguration()
+                        if let inputText = initialContextInput {
+                            viewModel.inputText = inputText
+                        }
+                        hasTriggeredAutoRequest = true
+                        viewModel.performSelectedAction()
+                    }
                     let needsAppleConfig = appleTranslationConfig == nil
                         && preferences.enabledModelIDs.contains(ModelConfig.appleTranslateID)
-                    if #available(iOS 17.4, *), needsAppleConfig {
+                    if needsAppleConfig {
                         let target = AppPreferences.shared.targetLanguage
                         let sourceLocale = AppPreferences.shared.sourceLanguage.localeLanguage
                         let sourceKey = sourceLocale?.minimalIdentifier
@@ -465,177 +458,170 @@ public struct HomeView: View {
                         appleTranslationConfig = .init(source: sourceLocale, target: target.localeLanguage)
                     }
                 #endif
-            #endif
-        }
-        .onAppear {
-            guard !openFromExtension, let homeInputRouteID else { return }
-            HomeInputRouter.shared.registerReceiver(id: inputReceiverID, routeID: homeInputRouteID) { request in
-                switch request {
-                case let .serviceText(text):
-                    viewModel.inputText = text
-                    viewModel.performSelectedAction()
-                case let .handoff(snapshot):
-                    viewModel.adoptStateSnapshot(snapshot)
-                case let .deepLink(text, actionName, configName):
-                    viewModel.applyDeepLink(text: text, actionName: actionName, configName: configName)
-                }
-                isInputExpanded = true
             }
-        }
-        .onDisappear {
-            HomeInputRouter.shared.unregisterReceiver(id: inputReceiverID)
-        }
-        .erasedForLaunch()
+            .onAppear {
+                guard !openFromExtension, let homeInputRouteID else { return }
+                HomeInputRouter.shared.registerReceiver(id: inputReceiverID, routeID: homeInputRouteID) { request in
+                    switch request {
+                    case let .serviceText(text):
+                        viewModel.inputText = text
+                        viewModel.performSelectedAction()
+                    case let .handoff(snapshot):
+                        viewModel.adoptStateSnapshot(snapshot)
+                    case let .deepLink(text, actionName, configName):
+                        viewModel.applyDeepLink(text: text, actionName: actionName, configName: configName)
+                    }
+                    isInputExpanded = true
+                }
+            }
+            .onDisappear {
+                HomeInputRouter.shared.unregisterReceiver(id: inputReceiverID)
+            }
+            .erasedForLaunch()
         #if os(macOS)
-        .onAppear {
-            // Notify the host app (macOS only) so AppleTranslationWindowManager can register
-            // this viewModel with the hidden translation window bridge.
-            NotificationCenter.default.post(
-                name: .appleTranslationViewModelRegister,
-                object: nil,
-                userInfo: ["viewModel": viewModel]
-            )
-        }
+            .onAppear {
+                // Notify the host app (macOS only) so AppleTranslationWindowManager can register
+                // this viewModel with the hidden translation window bridge.
+                NotificationCenter.default.post(
+                    name: .appleTranslationViewModelRegister,
+                    object: nil,
+                    userInfo: ["viewModel": viewModel]
+                )
+            }
         #endif
-        .onChange(of: viewModel.showSatisfactionPrompt) { _, newValue in
-            if newValue {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    showSatisfactionToast = true
-                }
-                viewModel.showSatisfactionPrompt = false
-            }
-        }
-        .onChange(of: viewModel.requestSystemReview) { _, newValue in
-            if newValue {
-                requestReview()
-                viewModel.requestSystemReview = false
-            }
-        }
-        .onChange(of: satisfactionPromptChrome) { oldValue, newValue in
-            if oldValue == .resultCell, newValue == .none, showSatisfactionToast {
-                dismissSatisfactionToast()
-            }
-        }
-        .sheet(
-            isPresented: $showModelSelectionSheet,
-            onDismiss: {
-                presentPendingPremiumIfNeeded()
-            },
-            content: {
-                ModelSelectionSheet(cloudModels: viewModel.models) {
-                    pendingPremiumPresentation = true
-                    showModelSelectionSheet = false
+            .onChange(of: viewModel.showSatisfactionPrompt) { _, newValue in
+                if newValue {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showSatisfactionToast = true
+                    }
+                    viewModel.showSatisfactionPrompt = false
                 }
             }
-        )
-        .alert("This action needs an AI model", isPresented: $showAIModelRequiredAlert) {
-            Button("Choose Model") {
-                showModelSelectionSheet = true
+            .onChange(of: viewModel.requestSystemReview) { _, newValue in
+                if newValue {
+                    requestReview()
+                    viewModel.requestSystemReview = false
+                }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Microsoft Translate and Apple Translate can only translate. Select an AI model to use this action.")
-        }
-        #if os(macOS) || os(iOS)
-        .inspector(isPresented: conversationInspectorBinding) {
-            if let session = activeConversationSession {
-                ConversationContentView(session: session, onPremiumRequired: {
-                    onPremiumRequired?()
-                })
-                .id(session.id)
-                .inspectorColumnWidth(
-                    min: InspectorColumnWidth.min,
-                    ideal: InspectorColumnWidth.ideal,
-                    max: InspectorColumnWidth.max
-                )
+            .onChange(of: satisfactionPromptChrome) { oldValue, newValue in
+                if oldValue == .resultCell, newValue == .none, showSatisfactionToast {
+                    dismissSatisfactionToast()
+                }
             }
-        }
-        #endif
-        #if os(iOS)
-        .sheet(
-            item: conversationSheetBinding,
-            onDismiss: {
-                presentPendingPremiumIfNeeded()
-            },
-            content: { session in
-                ConversationView(session: session, onPremiumRequired: {
-                    pendingPremiumPresentation = true
-                    activeConversationSession = nil
-                })
-                .presentationDetents(
-                    HomeViewModel.isSnapshotConversationMode ? [.large] : [.medium, .large]
-                )
-                .presentationDragIndicator(
-                    HomeViewModel.isSnapshotConversationMode ? .hidden : .visible
-                )
-            }
-        )
-        #endif
-        .sheet(item: $viewModel.selectedDebugNetworkRecord) { record in
-            NavigationStack {
-                NetworkRequestDetailView(record: record)
-            }
-            #if os(macOS)
-            .frame(minWidth: 520, minHeight: 520)
-            #endif
-        }
-        #if os(macOS)
-        .sheet(isPresented: $showDataConsent) {
-            DataConsentView {
-                preferences.setHasAcceptedDataSharing(true)
-                viewModel.performSelectedAction()
-            }
-            .interactiveDismissDisabled()
-        }
-        .onChange(of: viewModel.showDataConsentRequest) { _, newValue in
-            if newValue {
-                showDataConsent = true
-                viewModel.showDataConsentRequest = false
-            }
-        }
-        #endif
-        .erasedForLaunch()
-        #if canImport(Translation)
-        .translationTask(appleTranslationConfig) { session in
-            logger.debug(".translationTask fired, session received")
-            if #available(iOS 17.4, macOS 14.4, *) {
-                await viewModel.executeAppleTranslation(session: session)
-            }
-        }
-        .onChange(of: viewModel.appleTranslateTargetLanguage) { newTarget in
-            logger
-                .debug(
-                    "Apple target changed, hasConfig=\(appleTranslationConfig != nil, privacy: .public)"
-                )
-            #if os(macOS)
-                // On macOS, Apple Translate is routed through the hidden translation window
-                // (AppleTranslationBridge) to avoid Code=14 / _EXUISceneSession errors.
-                // HomeView's .translationTask is iOS-only; skip config updates on macOS.
-                _ = newTarget
-            #else
-                if let target = newTarget {
-                    let sourceLocale = viewModel.appleTranslateSourceLanguage
-                    let sourceKey = sourceLocale?.minimalIdentifier
-                    let targetKey = target.localeLanguage.minimalIdentifier
-                    logger
-                        .debug(
-                            "Apple config source=\(sourceKey ?? "auto", privacy: .public), target=\(targetKey, privacy: .public)"
-                        )
-                    let pairChanged = appleTranslationConfigLanguagePair?.source != sourceKey
-                        || appleTranslationConfigLanguagePair?.target != targetKey
-                    if pairChanged || appleTranslationConfig == nil {
-                        // Language pair changed (or first use): replace config without going through nil
-                        // to avoid the system sheet flash on every request.
-                        appleTranslationConfigLanguagePair = (sourceKey, targetKey)
-                        appleTranslationConfig = .init(source: sourceLocale, target: target.localeLanguage)
-                    } else {
-                        // Same language pair: invalidate to re-trigger .translationTask for the new request.
-                        appleTranslationConfig?.invalidate()
+            .sheet(
+                isPresented: $showModelSelectionSheet,
+                onDismiss: {
+                    presentPendingPremiumIfNeeded()
+                },
+                content: {
+                    ModelSelectionSheet(cloudModels: viewModel.models) {
+                        pendingPremiumPresentation = true
+                        showModelSelectionSheet = false
                     }
                 }
-            #endif
-        }
+            )
+            .alert("This action needs an AI model", isPresented: $showAIModelRequiredAlert) {
+                Button("Choose Model") {
+                    showModelSelectionSheet = true
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Microsoft Translate and Apple Translate can only translate. Select an AI model to use this action.")
+            }
+            .inspector(isPresented: conversationInspectorBinding) {
+                if let session = activeConversationSession {
+                    ConversationContentView(session: session, onPremiumRequired: {
+                        onPremiumRequired?()
+                    })
+                    .id(session.id)
+                    .inspectorColumnWidth(
+                        min: InspectorColumnWidth.min,
+                        ideal: InspectorColumnWidth.ideal,
+                        max: InspectorColumnWidth.max
+                    )
+                }
+            }
+        #if os(iOS)
+            .sheet(
+                item: conversationSheetBinding,
+                onDismiss: {
+                    presentPendingPremiumIfNeeded()
+                },
+                content: { session in
+                    ConversationView(session: session, onPremiumRequired: {
+                        pendingPremiumPresentation = true
+                        activeConversationSession = nil
+                    })
+                    .presentationDetents(
+                        HomeViewModel.isSnapshotConversationMode ? [.large] : [.medium, .large]
+                    )
+                    .presentationDragIndicator(
+                        HomeViewModel.isSnapshotConversationMode ? .hidden : .visible
+                    )
+                }
+            )
         #endif
+            .sheet(item: $viewModel.selectedDebugNetworkRecord) { record in
+                NavigationStack {
+                    NetworkRequestDetailView(record: record)
+                }
+                #if os(macOS)
+                .frame(minWidth: 520, minHeight: 520)
+                #endif
+            }
+        #if os(macOS)
+            .sheet(isPresented: $showDataConsent) {
+                DataConsentView {
+                    preferences.setHasAcceptedDataSharing(true)
+                    viewModel.performSelectedAction()
+                }
+                .interactiveDismissDisabled()
+            }
+            .onChange(of: viewModel.showDataConsentRequest) { _, newValue in
+                if newValue {
+                    showDataConsent = true
+                    viewModel.showDataConsentRequest = false
+                }
+            }
+        #endif
+            .erasedForLaunch()
+            .translationTask(appleTranslationConfig) { session in
+                logger.debug(".translationTask fired, session received")
+                await viewModel.executeAppleTranslation(session: session)
+            }
+            .onChange(of: viewModel.appleTranslateTargetLanguage) { newTarget in
+                logger
+                    .debug(
+                        "Apple target changed, hasConfig=\(appleTranslationConfig != nil, privacy: .public)"
+                    )
+                #if os(macOS)
+                    // On macOS, Apple Translate is routed through the hidden translation window
+                    // (AppleTranslationBridge) to avoid Code=14 / _EXUISceneSession errors.
+                    // HomeView's .translationTask is iOS-only; skip config updates on macOS.
+                    _ = newTarget
+                #else
+                    if let target = newTarget {
+                        let sourceLocale = viewModel.appleTranslateSourceLanguage
+                        let sourceKey = sourceLocale?.minimalIdentifier
+                        let targetKey = target.localeLanguage.minimalIdentifier
+                        logger
+                            .debug(
+                                "Apple config source=\(sourceKey ?? "auto", privacy: .public), target=\(targetKey, privacy: .public)"
+                            )
+                        let pairChanged = appleTranslationConfigLanguagePair?.source != sourceKey
+                            || appleTranslationConfigLanguagePair?.target != targetKey
+                        if pairChanged || appleTranslationConfig == nil {
+                            // Language pair changed (or first use): replace config without going through nil
+                            // to avoid the system sheet flash on every request.
+                            appleTranslationConfigLanguagePair = (sourceKey, targetKey)
+                            appleTranslationConfig = .init(source: sourceLocale, target: target.localeLanguage)
+                        } else {
+                            // Same language pair: invalidate to re-trigger .translationTask for the new request.
+                            appleTranslationConfig?.invalidate()
+                        }
+                    }
+                #endif
+            }
     }
 
     @ViewBuilder
@@ -795,21 +781,21 @@ public struct HomeView: View {
             }
         #endif
         #if os(macOS)
-            .background(colors.background.opacity(colorScheme == .dark ? 0.96 : 0.94).ignoresSafeArea(edges: .bottom))
+        .background(colors.background.opacity(colorScheme == .dark ? 0.96 : 0.94).ignoresSafeArea(edges: .bottom))
         #else
-            // Opaque ground with a short fade on top, so results never read through the chips.
-            .background {
-                colors.background
-                    .mask {
-                        LinearGradient(
-                            stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.1)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    }
-                    .padding(.top, -20)
-                    .ignoresSafeArea(edges: .bottom)
-            }
+        // Opaque ground with a short fade on top, so results never read through the chips.
+        .background {
+            colors.background
+                .mask {
+                    LinearGradient(
+                        stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.1)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .padding(.top, -20)
+                .ignoresSafeArea(edges: .bottom)
+        }
         #endif
     }
 
@@ -3099,9 +3085,7 @@ public struct HomeView: View {
         let durationText: String?
         let result: HomeViewModel.ModelRunViewState.SuccessResult
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var resultText: String {
             result.supplementalTexts.isEmpty ? result.text : result.copyText

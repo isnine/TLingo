@@ -12,9 +12,7 @@ public struct MetadataChipView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(_ text: String, icon: String, isPrimary: Bool = false) {
         self.text = text

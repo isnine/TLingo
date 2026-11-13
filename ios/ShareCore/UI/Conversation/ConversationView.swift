@@ -25,9 +25,7 @@ public struct ConversationContentView: View {
     private let onStreamingChanged: ((Bool) -> Void)?
     private let onStopHandlerReady: ((@escaping () -> Void) -> Void)?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var conversationBackground: Color {
         backgroundColor ?? colors.cardBackground
@@ -356,59 +354,57 @@ public struct ConversationContentView: View {
     }
 }
 
-#if os(iOS) || os(macOS)
-    private extension ConversationContentView {
-        #if os(iOS)
-            func scrollToLatestUserMessage(proxy: ScrollViewProxy) {
-                guard let lastMessage = viewModel.messages.last, lastMessage.role == "user" else { return }
-                isAutoFollowingStreaming = true
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo(lastMessage.id, anchor: UnitPoint(x: 0.5, y: 0.08))
+private extension ConversationContentView {
+    #if os(iOS)
+        func scrollToLatestUserMessage(proxy: ScrollViewProxy) {
+            guard let lastMessage = viewModel.messages.last, lastMessage.role == "user" else { return }
+            isAutoFollowingStreaming = true
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(lastMessage.id, anchor: UnitPoint(x: 0.5, y: 0.08))
+            }
+        }
+
+        func followStreamingIfNeeded(proxy: ScrollViewProxy, frontierY: CGFloat) {
+            conversationFrontierY = frontierY
+            guard viewModel.isStreaming,
+                  ConversationScrollPolicy.shouldFollow(
+                      frontierY: frontierY,
+                      viewportHeight: conversationViewportHeight,
+                      isAutoFollowing: isAutoFollowingStreaming
+                  )
+            else { return }
+
+            let now = Date()
+            guard now.timeIntervalSince(lastScrollTime) >= ConversationScrollPolicy.minimumScrollInterval else {
+                return
+            }
+            lastScrollTime = now
+
+            scrollToConversationFrontier(proxy: proxy)
+        }
+
+        func scrollToConversationFrontier(proxy: ScrollViewProxy) {
+            withAnimation(.easeOut(duration: ConversationScrollPolicy.scrollAnimationDuration)) {
+                proxy.scrollTo(
+                    "conversation-frontier",
+                    anchor: UnitPoint(x: 0.5, y: ConversationScrollPolicy.followViewportFraction)
+                )
+            }
+        }
+    #endif
+
+    #if os(macOS)
+        func scrollToBottom(proxy: ScrollViewProxy) {
+            withAnimation(.easeOut(duration: 0.2)) {
+                if viewModel.isStreaming {
+                    proxy.scrollTo("streaming", anchor: .bottom)
+                } else if let lastMessage = viewModel.messages.last {
+                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
                 }
             }
-
-            func followStreamingIfNeeded(proxy: ScrollViewProxy, frontierY: CGFloat) {
-                conversationFrontierY = frontierY
-                guard viewModel.isStreaming,
-                      ConversationScrollPolicy.shouldFollow(
-                          frontierY: frontierY,
-                          viewportHeight: conversationViewportHeight,
-                          isAutoFollowing: isAutoFollowingStreaming
-                      )
-                else { return }
-
-                let now = Date()
-                guard now.timeIntervalSince(lastScrollTime) >= ConversationScrollPolicy.minimumScrollInterval else {
-                    return
-                }
-                lastScrollTime = now
-
-                scrollToConversationFrontier(proxy: proxy)
-            }
-
-            func scrollToConversationFrontier(proxy: ScrollViewProxy) {
-                withAnimation(.easeOut(duration: ConversationScrollPolicy.scrollAnimationDuration)) {
-                    proxy.scrollTo(
-                        "conversation-frontier",
-                        anchor: UnitPoint(x: 0.5, y: ConversationScrollPolicy.followViewportFraction)
-                    )
-                }
-            }
-        #endif
-
-        #if os(macOS)
-            func scrollToBottom(proxy: ScrollViewProxy) {
-                withAnimation(.easeOut(duration: 0.2)) {
-                    if viewModel.isStreaming {
-                        proxy.scrollTo("streaming", anchor: .bottom)
-                    } else if let lastMessage = viewModel.messages.last {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                    }
-                }
-            }
-        #endif
-    }
-#endif
+        }
+    #endif
+}
 
 #if os(iOS)
     enum ConversationScrollPolicy {

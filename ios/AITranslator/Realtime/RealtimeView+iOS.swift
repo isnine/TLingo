@@ -72,9 +72,7 @@
             self.onDismiss = onDismiss
         }
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var captionLines: [RealtimeCaptionLine] {
             store.captionLines

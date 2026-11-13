@@ -22,9 +22,7 @@ struct HistoryRecordDetailView: View {
     @State private var activeConversationSession: ConversationSession?
     @State private var showFeaturePaywall = false
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Group {
@@ -433,9 +431,7 @@ private struct RealtimeHistoryDetailContent: View {
         )
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -1412,9 +1408,7 @@ private struct RealtimeHistoryDetailContent: View {
         @Environment(\.colorScheme) private var colorScheme
         @FocusState private var focusedSpeakerID: String?
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         var body: some View {
             VStack(alignment: .leading, spacing: 16) {
@@ -1523,9 +1517,7 @@ private struct RealtimeTranscriptRow: View {
         self.onRenameSpeaker = onRenameSpeaker
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     /// Diarized conversations keep chat bubbles; plain transcripts read as a timestamped list.
     private var isBubble: Bool {
@@ -1684,9 +1676,7 @@ private struct HistoryResultCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var durationText: String? {
         guard result.duration > 0 else { return nil }

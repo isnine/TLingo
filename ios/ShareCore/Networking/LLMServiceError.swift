@@ -19,7 +19,11 @@ public enum LLMServiceError: LocalizedError {
         case .emptyContent:
             return String(localized: "No content returned from the model")
         case let .httpError(statusCode, body):
-            switch Self.serverErrorCode(in: body) {
+            let serverCode = Self.serverErrorCode(in: body)
+            if statusCode == 403, serverCode == "Premium required" {
+                return String(localized: "Your selected model requires Premium. Choose a free model or renew your subscription.")
+            }
+            switch serverCode {
             case "trial_exhausted":
                 return String(localized: "You've used all free trial requests on this device. Upgrade to Premium to keep using premium models.")
             case "trial_not_registered", "trial_unavailable":

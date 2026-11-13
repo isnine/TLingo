@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-public struct SelectableModelRow: View {
+public struct SelectableModelRow<TrailingAccessory: View>: View {
     public enum Style {
         case regular
         case compact
@@ -34,10 +34,9 @@ public struct SelectableModelRow: View {
     private let showsPremiumCrown: Bool
     private let showsModelTags: Bool
     private let action: () -> Void
+    private let trailingAccessory: () -> TrailingAccessory
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         model: ModelConfig,
@@ -50,7 +49,8 @@ public struct SelectableModelRow: View {
         showsDefaultBadge: Bool = true,
         showsPremiumCrown: Bool = true,
         showsModelTags: Bool = true,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
+        @ViewBuilder trailingAccessory: @escaping () -> TrailingAccessory
     ) {
         self.model = model
         self.isSelected = isSelected
@@ -63,32 +63,59 @@ public struct SelectableModelRow: View {
         self.showsPremiumCrown = showsPremiumCrown
         self.showsModelTags = showsModelTags
         self.action = action
+        self.trailingAccessory = trailingAccessory
     }
 
     public var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                selectionIcon
-                    .frame(width: 24)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    titleLine
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.system(size: subtitleFontSize))
-                            .foregroundColor(colors.textSecondary)
-                            .lineLimit(1)
-                    }
+        if TrailingAccessory.self == EmptyView.self {
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    rowContent
+                    Spacer(minLength: 0)
                 }
-
-                Spacer(minLength: 0)
+                .padding(.horizontal, 16)
+                .padding(.vertical, verticalPadding)
+                .contentShape(Rectangle())
+                .opacity(isDimmed ? 0.4 : 1)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, verticalPadding)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+        } else {
+            HStack(spacing: 0) {
+                Button(action: action) {
+                    rowContent
+                        .padding(.leading, 16)
+                        .padding(.vertical, verticalPadding)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .layoutPriority(1)
+
+                Spacer(minLength: 8)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: action)
+
+                trailingAccessory()
+            }
+            .padding(.trailing, 16)
             .opacity(isDimmed ? 0.4 : 1)
         }
-        .buttonStyle(.plain)
+    }
+
+    private var rowContent: some View {
+        HStack(spacing: 12) {
+            selectionIcon
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                titleLine
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: subtitleFontSize))
+                        .foregroundColor(colors.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+        }
     }
 
     private var selectionIcon: some View {
@@ -179,6 +206,37 @@ public struct SelectableModelRow: View {
             .padding(.vertical, 2)
             .background(background ?? color.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+public extension SelectableModelRow where TrailingAccessory == EmptyView {
+    init(
+        model: ModelConfig,
+        isSelected: Bool,
+        isLocked: Bool = false,
+        isDimmed: Bool = false,
+        subtitle: String? = nil,
+        style: Style = .regular,
+        additionalBadges: [Badge] = [],
+        showsDefaultBadge: Bool = true,
+        showsPremiumCrown: Bool = true,
+        showsModelTags: Bool = true,
+        action: @escaping () -> Void
+    ) {
+        self.init(
+            model: model,
+            isSelected: isSelected,
+            isLocked: isLocked,
+            isDimmed: isDimmed,
+            subtitle: subtitle,
+            style: style,
+            additionalBadges: additionalBadges,
+            showsDefaultBadge: showsDefaultBadge,
+            showsPremiumCrown: showsPremiumCrown,
+            showsModelTags: showsModelTags,
+            action: action,
+            trailingAccessory: { EmptyView() }
+        )
     }
 }
 

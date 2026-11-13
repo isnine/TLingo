@@ -19,6 +19,7 @@ review_triggers:
 - Completion waits for every selected provider to reach a terminal state.
 - Non-cancellation request setup failures, including trial device registration, produce a per-model failure result rather than leaving a running card.
 - Model selection resolves only models supported by the requested capability.
+- Without Pro, requests, the composer model button, the picker checkmarks and Voice actions all read the stored selection through `ModelSelectionPolicy.effectiveEnabledIDs`: premium models are dropped, at most one free cloud model stays, and the default free model replaces cloud choices that no longer apply. Storage is never rewritten for this, so premium selections return on renewal.
 - Context Chat selects a chat-capable model, never a direct translation engine. Continuing a result retains its original request languages, including after a window handoff.
 - Apple Foundation Model selection requires `SystemLanguageModel.default.availability == .available`; a later availability change keeps the preference but returns an inline provider error.
 - On-device Foundation Model requests never use the Worker and do not count toward the free cloud-model limit.
@@ -56,10 +57,10 @@ review_triggers:
 ## Realtime
 
 - Every start creates an immutable session token captured by that run's tasks and callbacks.
-- macOS captures each realtime audio source once and fans it out to shared recognition and Azure nodes; adding a lane must not create another capture session.
+- macOS captures each realtime audio source once and fans it out to shared recognition nodes; adding a lane must not create another capture session.
 - macOS live capture starts before local model loading completes and buffers at most 15 seconds for ordered replay once recognition nodes are ready.
 - Recognition nodes are shared by model ID. Each lane owns separate transcript, translation, caption and History state.
-- Imported audio is read once at its original pace and fed through the same recognition and Azure fanout as live capture.
+- Imported audio is read once at its original pace and fed through the same recognition fanout as live capture.
 - MOSS is a non-streaming, import-only recognition node. One file-level MOSS task is shared by every MOSS lane, and completion waits for both streamed audio and MOSS translation work.
 - On Macs below 24 GB RAM, imported FluidAudio lanes finish and unload before the shared MOSS task starts.
 - A lane using the `None` translation provider must remain source-only across captions and History and must not schedule translation work.

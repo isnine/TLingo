@@ -70,9 +70,7 @@ struct HistoryView: View {
         self.onConversationSelected = onConversationSelected
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -173,27 +171,27 @@ struct HistoryView: View {
             }
         #else
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    guard isVisible else { return }
-                    refreshRecords()
-                }
+                guard isVisible else { return }
+                refreshRecords()
+            }
         #endif
-                .confirmationDialog(
-                    "Clear All History",
-                    isPresented: $showDeleteAllConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button("Delete All", role: .destructive) {
-                        TranslationHistoryService.shared.deleteAll()
-                        withAnimation {
-                            records.removeAll()
-                        }
+            .confirmationDialog(
+                "Clear All History",
+                isPresented: $showDeleteAllConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete All", role: .destructive) {
+                    TranslationHistoryService.shared.deleteAll()
+                    withAnimation {
+                        records.removeAll()
                     }
-                } message: {
-                    Text("This action cannot be undone.")
                 }
-                .sheet(isPresented: $showFeaturePaywall) {
-                    PaywallView(context: .featureLocked)
-                }
+            } message: {
+                Text("This action cannot be undone.")
+            }
+            .sheet(isPresented: $showFeaturePaywall) {
+                PaywallView(context: .featureLocked)
+            }
     }
 
     // MARK: - Header (macOS)
@@ -508,9 +506,7 @@ private struct TextHistoryRow: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -570,9 +566,7 @@ private struct RealtimeHistoryRow: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {

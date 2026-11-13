@@ -191,6 +191,24 @@ struct HomeRequestRegressionTests {
         #expect(Set(model.modelRuns.map(\.model.id)) == [ModelConfig.microsoftTranslateID, firstFree.id])
     }
 
+    @Test("A lapsed member's locked premium selection still runs the free AI model")
+    func lapsedMemberRunsFreeAIModelForLockedSelection() throws {
+        let harness = try HomeRequestHarness()
+        defer { harness.cleanup() }
+        harness.preferences.setHasAcceptedDataSharing(true)
+        let premium = ModelConfig(id: "premium", displayName: "Premium", isPremium: true)
+        let free = ModelConfig(id: "free-default", displayName: "Free Default", isDefault: true)
+        harness.preferences.setEnabledModelIDs([ModelConfig.microsoftTranslateID, premium.id])
+        let model = harness.makeModel(models: [premium, free])
+        let expected: Set = [ModelConfig.microsoftTranslateID, free.id]
+        #expect(Set(model.selectedDisplayModels(enabledIDs: harness.preferences.enabledModelIDs, isPro: false).map(\.id))
+            == expected)
+        model.inputText = "Hello"
+        model.performSelectedAction(refreshEntitlement: false)
+        #expect(Set(model.modelRuns.map(\.model.id)) == expected)
+        #expect(harness.preferences.enabledModelIDs == [ModelConfig.microsoftTranslateID, premium.id])
+    }
+
     @Test("A handed-off result retains its originating languages")
     func handedOffContinuationKeepsOriginatingLanguages() throws {
         let harness = try HomeRequestHarness()

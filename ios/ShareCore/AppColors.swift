@@ -169,21 +169,12 @@ public enum AppColors {
 
 public typealias AppColorPalette = AppColors.Palette
 
-// MARK: - Environment Key
+/// Resolves the app palette for the current color scheme. Use as `@ThemeColors private var colors`.
+@propertyWrapper
+public struct ThemeColors: DynamicProperty {
+    @Environment(\.colorScheme) private var colorScheme
 
-private struct AppColorsKey: EnvironmentKey {
-    static let defaultValue = AppColors.Palette(colorScheme: .light)
-}
+    public init() {}
 
-public extension EnvironmentValues {
-    var appColors: AppColorPalette {
-        get { self[AppColorsKey.self] }
-        set { self[AppColorsKey.self] = newValue }
-    }
-}
-
-public extension View {
-    func injectAppColors(for colorScheme: ColorScheme) -> some View {
-        environment(\.appColors, AppColors.palette(for: colorScheme))
-    }
+    public var wrappedValue: AppColorPalette { AppColors.palette(for: colorScheme) }
 }

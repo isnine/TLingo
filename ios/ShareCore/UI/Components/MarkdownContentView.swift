@@ -19,9 +19,7 @@ public struct MarkdownContentView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var parsed: ParsedMarkdown?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         text: String,

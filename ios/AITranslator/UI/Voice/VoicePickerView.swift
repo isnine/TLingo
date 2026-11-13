@@ -17,9 +17,7 @@ struct VoicePickerView: View {
     @State private var voices: [VoiceConfig] = []
     @State private var isLoading = true
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         #if os(macOS)

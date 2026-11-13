@@ -3,18 +3,16 @@
 //  ShareCoreTests
 //
 
-#if os(macOS) || os(iOS)
-    import Testing
+import Testing
 
-    @testable import ShareCore
+@testable import ShareCore
 
-    @Suite("RealtimeRecognitionEngine")
-    struct RealtimeRecognitionEngineTests {
-        @Test("Defines default and permission behavior")
-        func definesDefaultAndPermissionBehavior() {
-            #expect(RealtimeRecognitionEngine.default == .appleSpeech)
-            #expect(RealtimeRecognitionEngine.allCases == [.appleSpeech])
-            #expect(RealtimeRecognitionEngine.appleSpeech.requiresSpeechRecognitionPermission)
-        }
+@Suite("RealtimeRecognitionEngine")
+struct RealtimeRecognitionEngineTests {
+    @Test("Defines default and permission behavior")
+    func definesDefaultAndPermissionBehavior() {
+        #expect(RealtimeRecognitionEngine.default == .appleSpeech)
+        #expect(RealtimeRecognitionEngine.allCases == [.appleSpeech])
+        #expect(RealtimeRecognitionEngine.appleSpeech.requiresSpeechRecognitionPermission)
     }
-#endif
+}

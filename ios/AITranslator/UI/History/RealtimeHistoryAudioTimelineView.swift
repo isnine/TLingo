@@ -12,9 +12,7 @@ struct RealtimeHistoryAudioTimelineView: View {
     @StateObject private var audioPlayer = RealtimeHistoryAudioPlayer()
     @State private var waveformLevels: [Float]?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var selectedRecording: RealtimeHistoryAudioRecording? {
         recordings.first { $0.source == selectedSource }
@@ -152,9 +150,7 @@ private struct RealtimeHistoryWaveformView: View {
     private static let barWidth: CGFloat = 2
     private static let barSpacing: CGFloat = 2
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         GeometryReader { proxy in

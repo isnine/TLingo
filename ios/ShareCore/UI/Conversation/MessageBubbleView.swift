@@ -10,9 +10,7 @@ public struct MessageBubbleView: View {
     let message: ChatMessage
     let isStreaming: Bool
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(message: ChatMessage, isStreaming: Bool = false) {
         self.message = message
@@ -142,9 +140,7 @@ public struct StreamingBubbleView: View {
         self.source = source
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public var body: some View {
         HStack {
@@ -200,9 +196,7 @@ private struct ThinkingDisclosureView: View {
         _isExpanded = State(initialValue: initiallyExpanded)
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {

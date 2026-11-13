@@ -19,9 +19,7 @@ public struct ModelSectionCard<Row: View, HeaderAccessory: View>: View {
     private let row: (ModelConfig) -> Row
     private let headerAccessory: () -> HeaderAccessory
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         title: LocalizedStringKey,

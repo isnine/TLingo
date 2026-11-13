@@ -47,7 +47,7 @@ public struct ImageAttachment: Identifiable, Sendable {
         Double(imageData.count) / (1024 * 1024)
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
         /// Creates an ImageAttachment from an NSImage, resizing and compressing automatically.
         public static func from(nsImage: NSImage) -> ImageAttachment? {
             // Try multiple approaches to get a CGImage from NSImage
@@ -204,7 +204,7 @@ public struct ImageAttachment: Identifiable, Sendable {
         return context.makeImage()
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
         /// Create a SwiftUI Image for thumbnail preview (macOS)
         public var thumbnailImage: Image {
             if let nsImage = NSImage(data: imageData) {

@@ -1,86 +1,84 @@
-#if os(macOS) || os(iOS)
-    import Foundation
+import Foundation
 
-    public enum RealtimeAudioInputSource: String, CaseIterable, Identifiable {
+public enum RealtimeAudioInputSource: String, CaseIterable, Identifiable {
+    #if os(macOS)
+        case macAudio
+    #endif
+    case microphone
+    #if os(iOS)
+        case iphoneAudio
+    #endif
+
+    public static var allCases: [RealtimeAudioInputSource] {
         #if os(macOS)
-            case macAudio
+            return [.macAudio, .microphone]
+        #else
+            return [.microphone, .iphoneAudio]
         #endif
-        case microphone
+    }
+
+    public static var `default`: RealtimeAudioInputSource {
+        #if os(macOS)
+            return .macAudio
+        #else
+            return .microphone
+        #endif
+    }
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        #if os(macOS)
+            case .macAudio:
+                return String(localized: "Mac Audio")
+        #endif
+        case .microphone:
+            return String(localized: "Microphone")
         #if os(iOS)
-            case iphoneAudio
+            case .iphoneAudio:
+                return String(localized: "iPhone Audio")
         #endif
-
-        public static var allCases: [RealtimeAudioInputSource] {
-            #if os(macOS)
-                return [.macAudio, .microphone]
-            #else
-                return [.microphone, .iphoneAudio]
-            #endif
-        }
-
-        public static var `default`: RealtimeAudioInputSource {
-            #if os(macOS)
-                return .macAudio
-            #else
-                return .microphone
-            #endif
-        }
-
-        public var id: String { rawValue }
-
-        public var title: String {
-            switch self {
-            #if os(macOS)
-                case .macAudio:
-                    return String(localized: "Mac Audio")
-            #endif
-            case .microphone:
-                return String(localized: "Microphone")
-            #if os(iOS)
-                case .iphoneAudio:
-                    return String(localized: "iPhone Audio")
-            #endif
-            }
-        }
-
-        public var systemImage: String {
-            switch self {
-            #if os(macOS)
-                case .macAudio:
-                    return "speaker.wave.2.fill"
-            #endif
-            case .microphone:
-                return "mic.fill"
-            #if os(iOS)
-                case .iphoneAudio:
-                    return "iphone.radiowaves.left.and.right"
-            #endif
-            }
-        }
-
-        public var supportedTranslationProviders: [RealtimeTranslationProvider] {
-            switch self {
-            #if os(iOS)
-                case .iphoneAudio:
-                    return [.appleTranslator, .transcriptionOnly]
-            #endif
-            default:
-                return RealtimeTranslationProvider.availableCases
-            }
-        }
-
-        public var supportedRecognitionModels: [RecognitionModelDescriptor] {
-            switch self {
-            #if os(iOS)
-                case .iphoneAudio:
-                    // The extension recognizes with Apple Speech; local models run in the host on relayed audio.
-                    return RecognitionModelStore.availableModels.filter {
-                        $0.runtime == .appleSpeech || $0.runtime == .fluidAudio
-                    }
-            #endif
-            default:
-                return RecognitionModelStore.availableModels
-            }
         }
     }
-#endif
+
+    public var systemImage: String {
+        switch self {
+        #if os(macOS)
+            case .macAudio:
+                return "speaker.wave.2.fill"
+        #endif
+        case .microphone:
+            return "mic.fill"
+        #if os(iOS)
+            case .iphoneAudio:
+                return "iphone.radiowaves.left.and.right"
+        #endif
+        }
+    }
+
+    public var supportedTranslationProviders: [RealtimeTranslationProvider] {
+        switch self {
+        #if os(iOS)
+            case .iphoneAudio:
+                return [.appleTranslator, .transcriptionOnly]
+        #endif
+        default:
+            return RealtimeTranslationProvider.availableCases
+        }
+    }
+
+    public var supportedRecognitionModels: [RecognitionModelDescriptor] {
+        switch self {
+        #if os(iOS)
+            case .iphoneAudio:
+                // The extension recognizes with Apple Speech; local models run in the host on relayed audio.
+                return RecognitionModelStore.availableModels.filter {
+                    $0.runtime == .appleSpeech || $0.runtime == .fluidAudio
+                }
+        #endif
+        default:
+            return RecognitionModelStore.availableModels
+        }
+    }
+}

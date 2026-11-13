@@ -29,9 +29,7 @@
             _isInspectorPresented = State(initialValue: MacSnapshotScene.current() != .realtimeMultiLane)
         }
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private var isRealtimeSessionStarting: Bool {
             isStartingRealtimeSession || store.isStarting

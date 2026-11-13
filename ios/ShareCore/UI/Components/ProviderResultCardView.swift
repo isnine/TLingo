@@ -24,9 +24,7 @@ public struct ProviderResultCardView: View {
     let onInspectRequest: (() -> Void)?
     let usesCompactSnapshotMetrics: Bool
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         run: HomeViewModel.ModelRunViewState,
@@ -132,9 +130,7 @@ struct ResultContentView: View {
     let onInspectRequest: (() -> Void)?
     var vocabularyDraft: VocabularyDraft?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         switch run.status {
@@ -326,9 +322,7 @@ struct ResultBottomInfoBar: View {
     var offersLanguageDownload = false
     var vocabularyDraft: VocabularyDraft?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         switch run.status {
@@ -384,7 +378,7 @@ struct ResultBottomInfoBar: View {
             }
             AnimatedEllipsis()
                 .font(.system(size: 12))
-            .foregroundColor(colors.textSecondary)
+                .foregroundColor(colors.textSecondary)
             Spacer()
             LiveTimer(start: start)
         }
@@ -489,9 +483,7 @@ struct ResultActionButtons: View {
     let onChat: (() -> Void)?
     var vocabularyDraft: VocabularyDraft?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Group {
@@ -523,9 +515,7 @@ struct DiffToggleButton: View {
     let isShowingDiff: Bool
     let onToggle: () -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         if hasDiff {
@@ -549,9 +539,7 @@ struct CopyButton: View {
     let text: String
     let onCopy: (String) -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Button {
@@ -571,9 +559,7 @@ struct ContinueChatButton: View {
 
     let onChat: () -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Button {
@@ -595,9 +581,7 @@ struct ReplaceButton: View {
     let text: String
     let onReplace: (String) -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Button {
@@ -619,9 +603,7 @@ struct SpeakButton: View {
     let onSpeak: () -> Void
     let onStop: () -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         Button {
@@ -648,9 +630,7 @@ struct LiveTimer: View {
 
     let start: Date
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         TimelineView(.periodic(from: start, by: 1.0)) { timeline in
@@ -666,9 +646,7 @@ struct LiveTimer: View {
 struct SkeletonPlaceholder: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -689,9 +667,7 @@ struct SuggestedActionChips: View {
     let actions: [String]
     let onTap: (String) -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -729,9 +705,7 @@ struct SentencePairsView: View {
 
     let pairs: [SentencePair]
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -765,9 +739,7 @@ struct SentencePairsView: View {
         @Environment(\.colorScheme) private var colorScheme
         let responseBody: String
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
@@ -793,9 +765,7 @@ struct SentencePairsView: View {
         @Environment(\.dismiss) private var dismiss
         let responseBody: String
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         var body: some View {
             NavigationStack {

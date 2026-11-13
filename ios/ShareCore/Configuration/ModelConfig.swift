@@ -141,20 +141,34 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
         return services
     }
 
-    /// Whether this model runs locally on-device.
-    public var isLocal: Bool { id == Self.appleTranslateID || id == Self.foundationModelID }
+    /// How a model is executed. The single place that classifies a model ID.
+    public enum Backend: Sendable {
+        case appleTranslate, microsoftTranslate, foundationModel, privateCloud, customEndpoint, worker
+    }
+
+    public var backend: Backend { Self.backend(forID: id) }
+
+    public static func backend(forID id: String) -> Backend {
+        switch id {
+        case appleTranslateID: .appleTranslate
+        case microsoftTranslateID: .microsoftTranslate
+        case foundationModelID: .foundationModel
+        case privateCloudModelID: .privateCloud
+        default: isCustomEndpointID(id) ? .customEndpoint : .worker
+        }
+    }
 
     /// Whether this is a non-LLM direct translation service.
     public var isDirectTranslation: Bool { Self.isDirectTranslationID(id) }
 
-    /// Whether this model uses an Apple Foundation Model.
+    /// Whether this model uses an Apple Foundation Model (on-device or Private Cloud Compute).
     public var isFoundationModel: Bool { Self.isFoundationModelID(id) }
 
     /// Whether this model uses Apple Private Cloud Compute.
-    public var isPrivateCloudModel: Bool { id == Self.privateCloudModelID }
+    public var isPrivateCloudModel: Bool { backend == .privateCloud }
 
     /// Whether this model is executed through the cloud Worker.
-    public var isCloudModel: Bool { !isDirectTranslation && !isFoundationModel && !isCustomEndpoint }
+    public var isCloudModel: Bool { backend == .worker }
 
     /// Namespaces discovered models so they cannot collide with cloud catalog IDs.
     static let customEndpointIDPrefix = "custom-endpoint:"
@@ -164,7 +178,7 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
     }
 
     /// Whether this model is served by the user's own endpoint.
-    public var isCustomEndpoint: Bool { Self.isCustomEndpointID(id) }
+    public var isCustomEndpoint: Bool { backend == .customEndpoint }
 
     /// The identifier the serving endpoint knows this model by.
     public var upstreamID: String {
@@ -189,12 +203,18 @@ public struct ModelConfig: Identifiable, Hashable, Codable, Sendable {
 
     /// Whether the given model ID refers to a non-LLM direct translation service.
     public static func isDirectTranslationID(_ id: String) -> Bool {
-        id == appleTranslateID || id == microsoftTranslateID
+        switch backend(forID: id) {
+        case .appleTranslate, .microsoftTranslate: true
+        default: false
+        }
     }
 
     /// Whether the given model ID refers to an Apple Foundation Model.
     public static func isFoundationModelID(_ id: String) -> Bool {
-        id == foundationModelID || id == privateCloudModelID
+        switch backend(forID: id) {
+        case .foundationModel, .privateCloud: true
+        default: false
+        }
     }
 
     public init(from decoder: Decoder) throws {

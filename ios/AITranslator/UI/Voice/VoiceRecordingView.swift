@@ -16,9 +16,7 @@ struct VoiceRecordingView: View {
     @State private var showPermissionAlert = false
     @State private var confirmedTranscript: String?
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     var body: some View {
         VStack(spacing: 20) {

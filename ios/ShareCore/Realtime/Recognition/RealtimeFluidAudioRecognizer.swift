@@ -1,4 +1,4 @@
-#if (os(macOS) || os(iOS)) && arch(arm64) && canImport(FluidAudio)
+#if arch(arm64) && canImport(FluidAudio)
     import AVFoundation
     import CoreMedia
     import FluidAudio

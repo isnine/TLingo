@@ -34,20 +34,25 @@ public final class ConversationViewModel: ObservableObject {
     private var activeRequestStartedAt: Date?
 
     public convenience init(session: ConversationSession, llmService: LLMService = .shared) {
-        self.init(session: session, llmService: llmService, preferences: .shared)
+        self.init(session: session, llmService: llmService, preferences: .shared, isPro: Entitlement.shared.isPro)
     }
 
     init(
         session: ConversationSession,
         llmService: LLMService,
-        preferences: AppPreferences
+        preferences: AppPreferences,
+        isPro: Bool
     ) {
         self.preferences = preferences
         sessionID = session.id
         messages = session.messages
         action = session.action
         availableModels = session.availableModels
-        model = session.availableModels.first { $0.id == preferences.chatModelID } ?? session.model
+        // A saved premium choice must not make every new chat open on an unusable model.
+        let isUsable = { (candidate: ModelConfig) in isPro || !candidate.isPremium }
+        model = session.availableModels.first { $0.id == preferences.chatModelID && isUsable($0) }
+            ?? (isUsable(session.model) ? session.model : session.availableModels.first(where: isUsable))
+            ?? session.model
         annotationContext = session.annotationContext
         self.llmService = llmService
 

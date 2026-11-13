@@ -23,11 +23,7 @@ enum ClientUserAgent {
             return "macOS"
         #else
             if ProcessInfo.processInfo.isiOSAppOnMac { return "iOSAppOnMac" }
-            #if targetEnvironment(macCatalyst)
-                return "macCatalyst"
-            #else
-                return "iOS"
-            #endif
+            return "iOS"
         #endif
     }
 
@@ -42,7 +38,7 @@ enum ClientUserAgent {
         #if targetEnvironment(simulator)
             return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? "Simulator"
         #else
-            #if os(macOS) || targetEnvironment(macCatalyst)
+            #if os(macOS)
                 let key = "hw.model"
             #else
                 let key = ProcessInfo.processInfo.isiOSAppOnMac ? "hw.model" : "hw.machine"

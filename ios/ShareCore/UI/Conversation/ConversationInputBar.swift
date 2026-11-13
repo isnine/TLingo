@@ -25,9 +25,7 @@ public struct ConversationInputBar: View {
         @State private var selectedPhotoItems: [PhotosPickerItem] = []
     #endif
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(
         text: Binding<String>,
@@ -413,6 +411,11 @@ public struct ConversationInputBar: View {
 
             func textDidChange(_ notification: Notification) {
                 guard let textView = notification.object as? NSTextView else { return }
+                // Publish only committed text so IME composition doesn't trigger re-renders.
+                guard !textView.hasMarkedText() else {
+                    reportContentHeight(for: textView)
+                    return
+                }
                 let updated = textView.string
                 if parent.text != updated {
                     parent.text = updated

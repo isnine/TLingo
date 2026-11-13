@@ -22,9 +22,7 @@ public struct VocabularyView: View {
 
     public init() {}
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var filteredEntries: [VocabularyEntry] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)

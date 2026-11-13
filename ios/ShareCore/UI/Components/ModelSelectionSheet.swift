@@ -19,9 +19,7 @@ public struct ModelSelectionSheet: View {
 
     @State private var isReordering = false
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     public init(cloudModels: [ModelConfig], onRequiresPro: (() -> Void)? = nil) {
         source = .enabledModels(cloudModels)

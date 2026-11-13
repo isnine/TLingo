@@ -206,8 +206,7 @@ public enum SourceLanguageDetector {
     }
 
     /// Like `detectLocaleLanguage(of:)`, but skips any hypothesis whose base language
-    /// matches `targetCode`. Delegates to `resolveAutoSourceCode` for the core logic;
-    /// adds full logging.
+    /// matches `targetCode`. See `resolveAutoSourceCode` for the selection rules.
     public static func detectLocaleLanguage(
         of text: String,
         excludingTargetCode targetCode: String?
@@ -215,90 +214,7 @@ public enum SourceLanguageDetector {
         guard let targetCode, !targetCode.isEmpty else {
             return detectLocaleLanguage(of: text)
         }
-
-        let recognizer = NLLanguageRecognizer()
-        recognizer.languageConstraints = supportedNLLanguages
-        recognizer.languageHints = languageHints
-        recognizer.processString(text)
-
-        let hypotheses = recognizer.languageHypotheses(withMaximum: maxHypotheses)
-        guard !hypotheses.isEmpty else {
-            logger
-                .debug(
-                    "detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) no hypotheses"
-                )
-            return nil
-        }
-
-        let isShort = isShortText(text)
-        let threshold = isShort ? shortTextThreshold : defaultThreshold
-        let minimumExclusionConfidence = 0.15
-        let excludedTopRelativeRatio = 0.3
-
-        let sorted = hypotheses.sorted { $0.value > $1.value }
-        let excludedTopConfidence = sorted.first {
-            detectionLanguagesAreEquivalent($0.key.rawValue, targetCode)
-        }?.value ?? 0
-        let relativeFloor = excludedTopConfidence * excludedTopRelativeRatio
-
-        for (lang, confidence) in sorted {
-            if detectionLanguagesAreEquivalent(lang.rawValue, targetCode) { continue }
-            if confidence < minimumExclusionConfidence {
-                logger
-                    .debug(
-                        """
-                        detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) \
-                        rejected=\(lang.rawValue, privacy: .public) confidence=\(confidence, privacy: .public)
-                        """
-                    )
-                break
-            }
-            if confidence < relativeFloor {
-                logger
-                    .debug(
-                        """
-                        detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) \
-                        rejected=\(lang.rawValue, privacy: .public) confidence=\(confidence, privacy: .public) \
-                        floor=\(relativeFloor, privacy: .public)
-                        """
-                    )
-                break
-            }
-            let corrected = correctChineseScript(lang, text: text)
-            logger
-                .debug(
-                    """
-                    detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) \
-                    picked=\(corrected.rawValue, privacy: .public) confidence=\(confidence, privacy: .public)
-                    """
-                )
-            return Locale.Language(identifier: corrected.rawValue)
-        }
-
-        if let scriptSourceCode = scriptBasedNonTargetSourceCode(in: text, excludingTargetCode: targetCode) {
-            logger.debug(
-                "detectExcluding(target=\(targetCode, privacy: .public)) → script=\(scriptSourceCode, privacy: .public)"
-            )
-            return Locale.Language(identifier: scriptSourceCode)
-        }
-
-        // No non-target candidate qualifies — return the unfiltered top hypothesis if reliable.
-        if let top = sorted.first, top.value >= threshold {
-            let corrected = correctChineseScript(top.key, text: text)
-            logger
-                .debug(
-                    """
-                    detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) \
-                    fallback=\(corrected.rawValue, privacy: .public) confidence=\(top.value, privacy: .public)
-                    """
-                )
-            return Locale.Language(identifier: corrected.rawValue)
-        }
-        logger
-            .debug(
-                "detectExcluding target=\(targetCode, privacy: .public) chars=\(text.count, privacy: .public) threshold=\(threshold, privacy: .public)"
-            )
-        return nil
+        return resolveAutoSourceCode(text: text, targetCode: targetCode).map(Locale.Language.init(identifier:))
     }
 
     /// Fallback chain when source detection is inconclusive:

@@ -53,9 +53,7 @@ public struct ModelSelectionList: View {
         }
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var isSingleSelection: Bool {
         if case .single = mode {
@@ -67,7 +65,12 @@ public struct ModelSelectionList: View {
     private var enabledIDs: Set<String> {
         switch mode {
         case .enabledModels:
-            return preferences.enabledModelIDs
+            // Without Pro, show what actually runs; locked premium selections stay in storage.
+            return ModelSelectionPolicy.effectiveEnabledIDs(
+                enabledIDs: preferences.enabledModelIDs,
+                availableModels: selectableModels,
+                isPro: entitlement.isPro
+            )
         case let .single(selection, _, _):
             return [selection.wrappedValue.id]
         }
@@ -282,9 +285,13 @@ public struct ModelSelectionList: View {
                 showsModelTags: false
             ) {
                 select(model)
+            } trailingAccessory: {
+                if model.id == ModelConfig.appleTranslateID, isSelected, !isSingleSelection {
+                    installedLanguagesToggle
+                }
             }
-            if model.id == ModelConfig.appleTranslateID, isSelected, !isSingleSelection {
-                installedLanguagesSection
+            if model.id == ModelConfig.appleTranslateID, isSelected, !isSingleSelection, showInstalledLanguages {
+                installedLanguagesList
             }
         } else if model.isFoundationModel {
             let isAvailable = FoundationModelService.availability(for: model).isAvailable
@@ -325,68 +332,74 @@ public struct ModelSelectionList: View {
             .filter { $0 != .appLanguage && installed.contains($0.rawValue) }
     }
 
-    @ViewBuilder
-    private var installedLanguagesSection: some View {
-        let languages = installedLanguages
-        Divider()
-            .padding(.leading, Self.dividerLeadingPadding)
-
-        Button {
+    private var installedLanguagesToggle: some View {
+        let count = installedLanguages.count
+        return Button {
             withAnimation(.easeInOut(duration: 0.25)) {
                 showInstalledLanguages.toggle()
             }
         } label: {
-            HStack(spacing: 8) {
-                Image(systemName: showInstalledLanguages ? "chevron.down" : "chevron.right")
+            HStack(spacing: 4) {
+                ViewThatFits(in: .horizontal) {
+                    Text("\(count) languages downloaded")
+                        .fixedSize(horizontal: true, vertical: false)
+                    Text("\(count) languages")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(colors.textSecondary)
+
+                Image(systemName: "chevron.down")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(colors.textSecondary.opacity(0.55))
-                Text("\(languages.count) languages downloaded")
+                    .foregroundColor(colors.textSecondary.opacity(0.6))
+                    .rotationEffect(.degrees(showInstalledLanguages ? 180 : 0))
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("\(count) languages downloaded"))
+    }
+
+    @ViewBuilder
+    private var installedLanguagesList: some View {
+        let languages = installedLanguages
+        ForEach(languages) { language in
+            Divider()
+                .padding(.leading, Self.dividerLeadingPadding)
+            HStack(spacing: 8) {
+                Text(language.nativeName)
                     .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(colors.textPrimary)
+                Text(language.englishName)
+                    .font(.system(size: 13))
                     .foregroundColor(colors.textSecondary)
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, Self.dividerLeadingPadding)
+            .padding(.trailing, 16)
+            .padding(.vertical, 10)
+        }
+
+        Divider()
+            .padding(.leading, Self.dividerLeadingPadding)
+
+        Button {
+            showDownloadLanguagesGuide = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "questionmark.circle")
+                    .font(.system(size: 14))
+                Text("How to Download More Languages")
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .foregroundColor(colors.accent)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-
-        if showInstalledLanguages {
-            ForEach(languages) { language in
-                Divider()
-                    .padding(.leading, Self.dividerLeadingPadding)
-                HStack(spacing: 8) {
-                    Text(language.nativeName)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                    Text(language.englishName)
-                        .font(.system(size: 13))
-                        .foregroundColor(colors.textSecondary)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-            }
-
-            Divider()
-                .padding(.leading, Self.dividerLeadingPadding)
-
-            Button {
-                showDownloadLanguagesGuide = true
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "questionmark.circle")
-                        .font(.system(size: 14))
-                    Text("How to Download More Languages")
-                        .font(.system(size: 14, weight: .medium))
-                }
-                .foregroundColor(colors.accent)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     private var upgradeButton: some View {
@@ -452,7 +465,7 @@ public struct ModelSelectionList: View {
     }
 
     private func toggle(_ model: ModelConfig, isPro: Bool) {
-        let oldIDs = enabledIDs
+        let oldIDs = preferences.enabledModelIDs
         let result = ModelSelectionPolicy.toggle(
             model,
             enabledIDs: oldIDs,
@@ -478,6 +491,7 @@ public struct ModelSelectionList: View {
         if hasAppleTranslate, !hadAppleTranslate {
             refreshInstalledLanguages()
         } else if hadAppleTranslate, !hasAppleTranslate {
+            showInstalledLanguages = false
             preferences.setAppleTranslateInstalledLanguages([])
         }
     }
@@ -506,10 +520,8 @@ public struct ModelSelectionList: View {
         guard !SnapshotLaunchArguments.isSnapshotMode() else { return }
         Task {
             guard AppleTranslationService.shared.isAvailable else { return }
-            if #available(iOS 17.4, macOS 14.4, *) {
-                let installed = await AppleTranslationService.shared.refreshInstalledLanguages()
-                preferences.setAppleTranslateInstalledLanguages(Set(installed.map(\.rawValue)))
-            }
+            let installed = await AppleTranslationService.shared.refreshInstalledLanguages()
+            preferences.setAppleTranslateInstalledLanguages(Set(installed.map(\.rawValue)))
         }
     }
 

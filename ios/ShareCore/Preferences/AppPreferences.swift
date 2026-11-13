@@ -76,17 +76,15 @@ public final class AppPreferences: ObservableObject {
         @Published public private(set) var realtimeCaptionPrivacyModeEnabled: Bool
     #endif
 
-    #if os(macOS) || os(iOS)
-        @Published public private(set) var realtimeTargetLanguage: TargetLanguageOption
-        @Published public private(set) var realtimeSourceLanguage: SourceLanguageOption
-        @Published public private(set) var realtimeTranslationProvider: RealtimeTranslationProvider
-        @Published public private(set) var realtimeRecognitionEngine: RealtimeRecognitionEngine
-        @Published public private(set) var realtimeRecognitionModelID: String
-        @Published public private(set) var realtimeShowCaptions: Bool
-        @Published public private(set) var realtimeDualInputHistoryRecordingEnabled: Bool
-        @Published public private(set) var realtimeCaptionDisplayMode: RealtimeCaptionDisplayMode
-        @Published public private(set) var realtimeCaptionAppearance: RealtimeCaptionAppearance
-    #endif
+    @Published public private(set) var realtimeTargetLanguage: TargetLanguageOption
+    @Published public private(set) var realtimeSourceLanguage: SourceLanguageOption
+    @Published public private(set) var realtimeTranslationProvider: RealtimeTranslationProvider
+    @Published public private(set) var realtimeRecognitionEngine: RealtimeRecognitionEngine
+    @Published public private(set) var realtimeRecognitionModelID: String
+    @Published public private(set) var realtimeShowCaptions: Bool
+    @Published public private(set) var realtimeDualInputHistoryRecordingEnabled: Bool
+    @Published public private(set) var realtimeCaptionDisplayMode: RealtimeCaptionDisplayMode
+    @Published public private(set) var realtimeCaptionAppearance: RealtimeCaptionAppearance
     #if os(iOS)
         @Published public private(set) var realtimePictureInPictureEnabled: Bool
         @Published public private(set) var realtimePictureInPictureSize: RealtimePictureInPictureSize
@@ -102,9 +100,7 @@ public final class AppPreferences: ObservableObject {
     ) {
         self.defaults = defaults
 
-        #if os(macOS) || os(iOS)
-            RetiredRealtimeAzureMigration.cleanup(defaults: defaults)
-        #endif
+        RetiredRealtimeAzureMigration.cleanup(defaults: defaults)
 
         targetLanguage = AppPreferences.readTargetLanguage(from: defaults)
         sourceLanguage = AppPreferences.readSourceLanguage(from: defaults)
@@ -142,23 +138,21 @@ public final class AppPreferences: ObservableObject {
             realtimeCaptionPrivacyModeEnabled = AppPreferences.readRealtimeCaptionPrivacyModeEnabled(from: defaults)
         #endif
 
-        #if os(macOS) || os(iOS)
-            realtimeTargetLanguage = AppPreferences.readRealtimeTargetLanguage(
-                from: defaults,
-                preferredLanguages: preferredLanguages
-            )
-            realtimeSourceLanguage = AppPreferences.readRealtimeSourceLanguage(from: defaults)
-            realtimeTranslationProvider = AppPreferences.readRealtimeTranslationProvider(from: defaults)
-            realtimeRecognitionEngine = AppPreferences.readRealtimeRecognitionEngine(from: defaults)
-            realtimeRecognitionModelID = AppPreferences.readRealtimeRecognitionModelID(from: defaults)
-            realtimeShowCaptions = AppPreferences.readRealtimeShowCaptions(from: defaults)
-            realtimeDualInputHistoryRecordingEnabled = defaults.bool(
-                forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled
-            )
-            realtimeCaptionDisplayMode = defaults.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
-                .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
-            realtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
-        #endif
+        realtimeTargetLanguage = AppPreferences.readRealtimeTargetLanguage(
+            from: defaults,
+            preferredLanguages: preferredLanguages
+        )
+        realtimeSourceLanguage = AppPreferences.readRealtimeSourceLanguage(from: defaults)
+        realtimeTranslationProvider = AppPreferences.readRealtimeTranslationProvider(from: defaults)
+        realtimeRecognitionEngine = AppPreferences.readRealtimeRecognitionEngine(from: defaults)
+        realtimeRecognitionModelID = AppPreferences.readRealtimeRecognitionModelID(from: defaults)
+        realtimeShowCaptions = AppPreferences.readRealtimeShowCaptions(from: defaults)
+        realtimeDualInputHistoryRecordingEnabled = defaults.bool(
+            forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled
+        )
+        realtimeCaptionDisplayMode = defaults.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
+            .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
+        realtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
         #if os(iOS)
             realtimePictureInPictureEnabled = defaults.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
             realtimePictureInPictureSize = defaults.string(forKey: StorageKeys.realtimePictureInPictureSize)
@@ -272,16 +266,6 @@ public final class AppPreferences: ObservableObject {
         }
     }
 
-    /// Updates the cached premium flag. Called by `StoreManager` on
-    /// transaction events.
-    public func setIsPremium(_ value: Bool) {
-        let currentIsPremium = isPremium
-        guard currentIsPremium != value else { return }
-        logger.info("setIsPremium \(currentIsPremium, privacy: .public)->\(value, privacy: .public)")
-        isPremium = value
-        defaults.set(value, forKey: StorageKeys.isPremium)
-    }
-
     public func setVoiceActionHintDismissed(_ dismissed: Bool) {
         guard voiceActionHintDismissed != dismissed else { return }
 
@@ -380,98 +364,96 @@ public final class AppPreferences: ObservableObject {
         }
     #endif
 
-    #if os(macOS) || os(iOS)
-        public func setRealtimeTargetLanguage(
-            _ option: TargetLanguageOption,
-            reason: String = "AppPreferences.setRealtimeTargetLanguage"
-        ) {
-            guard realtimeTargetLanguage != option else { return }
+    public func setRealtimeTargetLanguage(
+        _ option: TargetLanguageOption,
+        reason: String = "AppPreferences.setRealtimeTargetLanguage"
+    ) {
+        guard realtimeTargetLanguage != option else { return }
 
-            let oldValue = realtimeTargetLanguage.rawValue
-            realtimeTargetLanguage = option
-            defaults.set(option.rawValue, forKey: StorageKeys.realtimeTargetLanguage)
-            logLanguageChange(
-                field: "realtimeTargetLanguage",
-                from: oldValue,
-                to: option.rawValue,
-                reason: reason
-            )
-        }
+        let oldValue = realtimeTargetLanguage.rawValue
+        realtimeTargetLanguage = option
+        defaults.set(option.rawValue, forKey: StorageKeys.realtimeTargetLanguage)
+        logLanguageChange(
+            field: "realtimeTargetLanguage",
+            from: oldValue,
+            to: option.rawValue,
+            reason: reason
+        )
+    }
 
-        public func setRealtimeSourceLanguage(
-            _ option: SourceLanguageOption,
-            reason: String = "AppPreferences.setRealtimeSourceLanguage"
-        ) {
-            guard realtimeSourceLanguage != option else { return }
+    public func setRealtimeSourceLanguage(
+        _ option: SourceLanguageOption,
+        reason: String = "AppPreferences.setRealtimeSourceLanguage"
+    ) {
+        guard realtimeSourceLanguage != option else { return }
 
-            let oldValue = realtimeSourceLanguage.rawValue
-            realtimeSourceLanguage = option
-            defaults.set(option.rawValue, forKey: StorageKeys.realtimeSourceLanguage)
-            logLanguageChange(
-                field: "realtimeSourceLanguage",
-                from: oldValue,
-                to: option.rawValue,
-                reason: reason
-            )
-        }
+        let oldValue = realtimeSourceLanguage.rawValue
+        realtimeSourceLanguage = option
+        defaults.set(option.rawValue, forKey: StorageKeys.realtimeSourceLanguage)
+        logLanguageChange(
+            field: "realtimeSourceLanguage",
+            from: oldValue,
+            to: option.rawValue,
+            reason: reason
+        )
+    }
 
-        public func setRealtimeTranslationProvider(_ provider: RealtimeTranslationProvider) {
-            guard realtimeTranslationProvider != provider else { return }
+    public func setRealtimeTranslationProvider(_ provider: RealtimeTranslationProvider) {
+        guard realtimeTranslationProvider != provider else { return }
 
-            realtimeTranslationProvider = provider
-            defaults.set(provider.rawValue, forKey: StorageKeys.realtimeTranslationProvider)
-        }
+        realtimeTranslationProvider = provider
+        defaults.set(provider.rawValue, forKey: StorageKeys.realtimeTranslationProvider)
+    }
 
-        public func setRealtimeRecognitionEngine(_ engine: RealtimeRecognitionEngine) {
-            guard realtimeRecognitionEngine != engine else { return }
+    public func setRealtimeRecognitionEngine(_ engine: RealtimeRecognitionEngine) {
+        guard realtimeRecognitionEngine != engine else { return }
 
-            realtimeRecognitionEngine = engine
-            defaults.set(engine.rawValue, forKey: StorageKeys.realtimeRecognitionEngine)
-            setRealtimeRecognitionModelID(RecognitionModelStore.descriptor(for: engine).id)
-        }
+        realtimeRecognitionEngine = engine
+        defaults.set(engine.rawValue, forKey: StorageKeys.realtimeRecognitionEngine)
+        setRealtimeRecognitionModelID(RecognitionModelStore.descriptor(for: engine).id)
+    }
 
-        public func setRealtimeRecognitionModelID(_ modelID: String) {
-            let resolvedModelID = AppPreferences.validRealtimeRecognitionModelID(modelID)
-            guard realtimeRecognitionModelID != resolvedModelID else { return }
+    public func setRealtimeRecognitionModelID(_ modelID: String) {
+        let resolvedModelID = AppPreferences.validRealtimeRecognitionModelID(modelID)
+        guard realtimeRecognitionModelID != resolvedModelID else { return }
 
-            realtimeRecognitionModelID = resolvedModelID
-            defaults.set(resolvedModelID, forKey: StorageKeys.realtimeRecognitionModelID)
-        }
+        realtimeRecognitionModelID = resolvedModelID
+        defaults.set(resolvedModelID, forKey: StorageKeys.realtimeRecognitionModelID)
+    }
 
-        public func setRealtimeShowCaptions(_ enabled: Bool) {
-            guard realtimeShowCaptions != enabled else { return }
+    public func setRealtimeShowCaptions(_ enabled: Bool) {
+        guard realtimeShowCaptions != enabled else { return }
 
-            realtimeShowCaptions = enabled
-            defaults.set(enabled, forKey: StorageKeys.realtimeShowCaptions)
-        }
+        realtimeShowCaptions = enabled
+        defaults.set(enabled, forKey: StorageKeys.realtimeShowCaptions)
+    }
 
-        public func setRealtimeDualInputHistoryRecordingEnabled(_ enabled: Bool) {
-            guard realtimeDualInputHistoryRecordingEnabled != enabled else { return }
+    public func setRealtimeDualInputHistoryRecordingEnabled(_ enabled: Bool) {
+        guard realtimeDualInputHistoryRecordingEnabled != enabled else { return }
 
-            realtimeDualInputHistoryRecordingEnabled = enabled
-            defaults.set(enabled, forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled)
-        }
+        realtimeDualInputHistoryRecordingEnabled = enabled
+        defaults.set(enabled, forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled)
+    }
 
-        public func setRealtimeCaptionDisplayMode(_ mode: RealtimeCaptionDisplayMode) {
-            guard realtimeCaptionDisplayMode != mode else { return }
-            realtimeCaptionDisplayMode = mode
-            defaults.set(mode.rawValue, forKey: StorageKeys.realtimeCaptionDisplayMode)
-        }
+    public func setRealtimeCaptionDisplayMode(_ mode: RealtimeCaptionDisplayMode) {
+        guard realtimeCaptionDisplayMode != mode else { return }
+        realtimeCaptionDisplayMode = mode
+        defaults.set(mode.rawValue, forKey: StorageKeys.realtimeCaptionDisplayMode)
+    }
 
-        public func setRealtimeCaptionAppearance(_ appearance: RealtimeCaptionAppearance) {
-            guard realtimeCaptionAppearance != appearance,
-                  let data = try? JSONEncoder().encode(appearance) else { return }
-            realtimeCaptionAppearance = appearance
-            defaults.set(data, forKey: StorageKeys.realtimeCaptionAppearance)
-        }
+    public func setRealtimeCaptionAppearance(_ appearance: RealtimeCaptionAppearance) {
+        guard realtimeCaptionAppearance != appearance,
+              let data = try? JSONEncoder().encode(appearance) else { return }
+        realtimeCaptionAppearance = appearance
+        defaults.set(data, forKey: StorageKeys.realtimeCaptionAppearance)
+    }
 
-        private static func readRealtimeCaptionAppearance(from defaults: UserDefaults) -> RealtimeCaptionAppearance {
-            guard let data = defaults.data(forKey: StorageKeys.realtimeCaptionAppearance),
-                  let appearance = try? JSONDecoder().decode(RealtimeCaptionAppearance.self, from: data)
-            else { return RealtimeCaptionAppearance() }
-            return appearance
-        }
-    #endif
+    private static func readRealtimeCaptionAppearance(from defaults: UserDefaults) -> RealtimeCaptionAppearance {
+        guard let data = defaults.data(forKey: StorageKeys.realtimeCaptionAppearance),
+              let appearance = try? JSONDecoder().decode(RealtimeCaptionAppearance.self, from: data)
+        else { return RealtimeCaptionAppearance() }
+        return appearance
+    }
 
     #if os(iOS)
         public func setRealtimePictureInPictureEnabled(_ enabled: Bool) {
@@ -615,226 +597,101 @@ public final class AppPreferences: ObservableObject {
         isRefreshing = true
         defer { isRefreshing = false }
 
-        let storedResultOrder = AppPreferences.readModelResultOrder(from: defaults)
-        if modelResultOrder != storedResultOrder {
-            modelResultOrder = storedResultOrder
-        }
-
-        let storedListOrder = AppPreferences.readModelListOrder(from: defaults)
-        if modelListOrder != storedListOrder {
-            modelListOrder = storedListOrder
-        }
-
-        let storedWordLookupEnabled = defaults.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true
-        if wordLookupEnabled != storedWordLookupEnabled {
-            wordLookupEnabled = storedWordLookupEnabled
-        }
-
-        let storedDefaultsToSentencePairs = defaults.bool(forKey: StorageKeys.defaultsToSentencePairs)
-        if defaultsToSentencePairs != storedDefaultsToSentencePairs {
-            defaultsToSentencePairs = storedDefaultsToSentencePairs
-        }
-
-        let resolved = AppPreferences.readTargetLanguage(from: defaults)
-        if resolved != targetLanguage {
-            let oldValue = targetLanguage.rawValue
-            targetLanguage = resolved
-            logLanguageChange(
-                field: "targetLanguage",
-                from: oldValue,
-                to: resolved.rawValue,
-                reason: "UserDefaults refresh"
-            )
-        }
-
-        let resolvedSource = AppPreferences.readSourceLanguage(from: defaults)
-        if resolvedSource != sourceLanguage {
-            let oldValue = sourceLanguage.rawValue
-            sourceLanguage = resolvedSource
-            logLanguageChange(
-                field: "sourceLanguage",
-                from: oldValue,
-                to: resolvedSource.rawValue,
-                reason: "UserDefaults refresh"
-            )
-        }
-
-        let storedConfigName = defaults.string(forKey: StorageKeys.currentConfigName)
-        if currentConfigName != storedConfigName {
-            currentConfigName = storedConfigName
-        }
-
-        let storedUseICloud = defaults.bool(forKey: StorageKeys.useICloudForConfig)
-        if useICloudForConfig != storedUseICloud {
-            useICloudForConfig = storedUseICloud
-        }
+        let d = defaults
+        sync(\.modelResultOrder, AppPreferences.readModelResultOrder(from: d))
+        sync(\.modelListOrder, AppPreferences.readModelListOrder(from: d))
+        sync(\.wordLookupEnabled, d.object(forKey: StorageKeys.wordLookupEnabled) as? Bool ?? true)
+        sync(\.defaultsToSentencePairs, d.bool(forKey: StorageKeys.defaultsToSentencePairs))
+        syncLanguage(\.targetLanguage, AppPreferences.readTargetLanguage(from: d), field: "targetLanguage")
+        syncLanguage(\.sourceLanguage, AppPreferences.readSourceLanguage(from: d), field: "sourceLanguage")
+        sync(\.currentConfigName, d.string(forKey: StorageKeys.currentConfigName))
+        sync(\.useICloudForConfig, d.bool(forKey: StorageKeys.useICloudForConfig))
 
         #if os(macOS)
-            let storedTextSelection = defaults.bool(forKey: StorageKeys.textSelectionTranslationEnabled)
-            if textSelectionTranslationEnabled != storedTextSelection {
-                textSelectionTranslationEnabled = storedTextSelection
-            }
-            let storedPopoverHeight = AppPreferences.readMenuBarPopoverHeight(from: defaults)
-            if menuBarPopoverHeight != storedPopoverHeight {
-                menuBarPopoverHeight = storedPopoverHeight
-            }
-            let storedPopoverWidth = AppPreferences.readMenuBarPopoverWidth(from: defaults)
-            if menuBarPopoverWidth != storedPopoverWidth {
-                menuBarPopoverWidth = storedPopoverWidth
-            }
-            let storedSelectionSize = AppPreferences.readSelectionPopupSize(from: defaults)
+            sync(\.textSelectionTranslationEnabled, d.bool(forKey: StorageKeys.textSelectionTranslationEnabled))
+            sync(\.menuBarPopoverHeight, AppPreferences.readMenuBarPopoverHeight(from: d))
+            sync(\.menuBarPopoverWidth, AppPreferences.readMenuBarPopoverWidth(from: d))
+            let storedSelectionSize = AppPreferences.readSelectionPopupSize(from: d)
             if abs(selectionPopupWidth - storedSelectionSize.width) > 0.5 {
                 selectionPopupWidth = storedSelectionSize.width
             }
             if abs(selectionPopupHeight - storedSelectionSize.height) > 0.5 {
                 selectionPopupHeight = storedSelectionSize.height
             }
-            let storedSelectionOrigin = AppPreferences.readSelectionPopupOrigin(from: defaults)
-            if selectionPopupOrigin != storedSelectionOrigin {
-                selectionPopupOrigin = storedSelectionOrigin
-            }
-            let storedRealtimeCaptionWindowMode = AppPreferences.readRealtimeCaptionWindowMode(from: defaults)
-            if realtimeCaptionWindowMode != storedRealtimeCaptionWindowMode {
-                realtimeCaptionWindowMode = storedRealtimeCaptionWindowMode
-            }
-            let storedRealtimeCaptionPrivacyModeEnabled = AppPreferences.readRealtimeCaptionPrivacyModeEnabled(from: defaults)
-            if realtimeCaptionPrivacyModeEnabled != storedRealtimeCaptionPrivacyModeEnabled {
-                realtimeCaptionPrivacyModeEnabled = storedRealtimeCaptionPrivacyModeEnabled
-            }
+            sync(\.selectionPopupOrigin, AppPreferences.readSelectionPopupOrigin(from: d))
+            sync(\.realtimeCaptionWindowMode, AppPreferences.readRealtimeCaptionWindowMode(from: d))
+            sync(
+                \.realtimeCaptionPrivacyModeEnabled,
+                AppPreferences.readRealtimeCaptionPrivacyModeEnabled(from: d)
+            )
         #endif
 
-        #if os(macOS) || os(iOS)
-            let storedRealtimeTargetLanguage = AppPreferences.readRealtimeTargetLanguage(
-                from: defaults,
-                preferredLanguages: Locale.preferredLanguages
-            )
-            if realtimeTargetLanguage != storedRealtimeTargetLanguage {
-                let oldValue = realtimeTargetLanguage.rawValue
-                realtimeTargetLanguage = storedRealtimeTargetLanguage
-                logLanguageChange(
-                    field: "realtimeTargetLanguage",
-                    from: oldValue,
-                    to: storedRealtimeTargetLanguage.rawValue,
-                    reason: "UserDefaults refresh"
-                )
-            }
-            let storedRealtimeSourceLanguage = AppPreferences.readRealtimeSourceLanguage(from: defaults)
-            if realtimeSourceLanguage != storedRealtimeSourceLanguage {
-                let oldValue = realtimeSourceLanguage.rawValue
-                realtimeSourceLanguage = storedRealtimeSourceLanguage
-                logLanguageChange(
-                    field: "realtimeSourceLanguage",
-                    from: oldValue,
-                    to: storedRealtimeSourceLanguage.rawValue,
-                    reason: "UserDefaults refresh"
-                )
-            }
-            let storedRealtimeTranslationProvider = AppPreferences.readRealtimeTranslationProvider(from: defaults)
-            if realtimeTranslationProvider != storedRealtimeTranslationProvider {
-                realtimeTranslationProvider = storedRealtimeTranslationProvider
-            }
-            let storedRealtimeRecognitionEngine = AppPreferences.readRealtimeRecognitionEngine(from: defaults)
-            if realtimeRecognitionEngine != storedRealtimeRecognitionEngine {
-                realtimeRecognitionEngine = storedRealtimeRecognitionEngine
-            }
-            let storedRealtimeRecognitionModelID = AppPreferences.readRealtimeRecognitionModelID(from: defaults)
-            if realtimeRecognitionModelID != storedRealtimeRecognitionModelID {
-                realtimeRecognitionModelID = storedRealtimeRecognitionModelID
-            }
-            let storedRealtimeShowCaptions = AppPreferences.readRealtimeShowCaptions(from: defaults)
-            if realtimeShowCaptions != storedRealtimeShowCaptions {
-                realtimeShowCaptions = storedRealtimeShowCaptions
-            }
-            let storedRealtimeDualInputHistoryRecordingEnabled = defaults.bool(
-                forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled
-            )
-            if realtimeDualInputHistoryRecordingEnabled != storedRealtimeDualInputHistoryRecordingEnabled {
-                realtimeDualInputHistoryRecordingEnabled = storedRealtimeDualInputHistoryRecordingEnabled
-            }
-            let storedCaptionDisplayMode = defaults.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
+        syncLanguage(
+            \.realtimeTargetLanguage,
+            AppPreferences.readRealtimeTargetLanguage(from: d, preferredLanguages: Locale.preferredLanguages),
+            field: "realtimeTargetLanguage"
+        )
+        syncLanguage(
+            \.realtimeSourceLanguage,
+            AppPreferences.readRealtimeSourceLanguage(from: d),
+            field: "realtimeSourceLanguage"
+        )
+        sync(\.realtimeTranslationProvider, AppPreferences.readRealtimeTranslationProvider(from: d))
+        sync(\.realtimeRecognitionEngine, AppPreferences.readRealtimeRecognitionEngine(from: d))
+        sync(\.realtimeRecognitionModelID, AppPreferences.readRealtimeRecognitionModelID(from: d))
+        sync(\.realtimeShowCaptions, AppPreferences.readRealtimeShowCaptions(from: d))
+        sync(
+            \.realtimeDualInputHistoryRecordingEnabled,
+            d.bool(forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled)
+        )
+        sync(
+            \.realtimeCaptionDisplayMode,
+            d.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
                 .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
-            if realtimeCaptionDisplayMode != storedCaptionDisplayMode {
-                realtimeCaptionDisplayMode = storedCaptionDisplayMode
-            }
-            let storedCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
-            if realtimeCaptionAppearance != storedCaptionAppearance {
-                realtimeCaptionAppearance = storedCaptionAppearance
-            }
-            #if os(iOS)
-                let storedRealtimePictureInPictureEnabled = defaults.object(
-                    forKey: StorageKeys.realtimePictureInPictureEnabled
-                ) as? Bool ?? true
-                if realtimePictureInPictureEnabled != storedRealtimePictureInPictureEnabled {
-                    realtimePictureInPictureEnabled = storedRealtimePictureInPictureEnabled
-                }
-                let storedRealtimePictureInPictureSize = defaults.string(
-                    forKey: StorageKeys.realtimePictureInPictureSize
-                ).flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
-                if realtimePictureInPictureSize != storedRealtimePictureInPictureSize {
-                    realtimePictureInPictureSize = storedRealtimePictureInPictureSize
-                }
-            #endif
+        )
+        sync(\.realtimeCaptionAppearance, AppPreferences.readRealtimeCaptionAppearance(from: d))
+        #if os(iOS)
+            sync(
+                \.realtimePictureInPictureEnabled,
+                d.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
+            )
+            sync(
+                \.realtimePictureInPictureSize,
+                d.string(forKey: StorageKeys.realtimePictureInPictureSize)
+                    .flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
+            )
         #endif
 
-        let storedEnabledModels = AppPreferences.readEnabledModelIDs(from: defaults)
-        if enabledModelIDs != storedEnabledModels {
-            enabledModelIDs = storedEnabledModels
-        }
+        sync(\.enabledModelIDs, AppPreferences.readEnabledModelIDs(from: d))
+        sync(\.chatModelID, d.string(forKey: StorageKeys.chatModelID))
+        sync(\.selectedVoiceID, d.string(forKey: StorageKeys.selectedVoiceID) ?? VoiceConfig.defaultVoiceID)
+        sync(\.isPremium, d.bool(forKey: StorageKeys.isPremium))
+        sync(\.hasAcceptedDataSharing, d.bool(forKey: StorageKeys.hasAcceptedDataSharing))
+        sync(\.hasSeenIOSPaywallOnboarding, d.bool(forKey: StorageKeys.hasSeenIOSPaywallOnboarding))
+        sync(\.hasSeenDefaultTranslationOnboarding, d.bool(forKey: StorageKeys.hasSeenDefaultTranslationOnboarding))
+        sync(\.hasCompletedDefaultTranslationTrial, d.bool(forKey: StorageKeys.hasCompletedDefaultTranslationTrial))
+        sync(\.lastDefaultTranslationTrialAt, d.object(forKey: StorageKeys.lastDefaultTranslationTrialAt) as? Date)
+        sync(\.accentTheme, AppPreferences.readAccentTheme(from: d))
+        sync(\.voiceActionHintDismissed, d.bool(forKey: StorageKeys.voiceActionHintDismissed))
+        sync(\.appleTranslateInstalledLanguages, AppPreferences.readInstalledLanguages(from: d))
+    }
 
-        let storedChatModelID = defaults.string(forKey: StorageKeys.chatModelID)
-        if chatModelID != storedChatModelID {
-            chatModelID = storedChatModelID
+    /// Publishes `value` only when it differs, so unchanged keys do not re-render observers.
+    private func sync<Value: Equatable>(_ keyPath: ReferenceWritableKeyPath<AppPreferences, Value>, _ value: Value) {
+        if self[keyPath: keyPath] != value {
+            self[keyPath: keyPath] = value
         }
+    }
 
-        let storedVoiceID = defaults.string(forKey: StorageKeys.selectedVoiceID) ?? VoiceConfig.defaultVoiceID
-        if selectedVoiceID != storedVoiceID {
-            selectedVoiceID = storedVoiceID
-        }
-
-        let storedIsPremium = defaults.bool(forKey: StorageKeys.isPremium)
-        if isPremium != storedIsPremium {
-            isPremium = storedIsPremium
-        }
-
-        let storedHasAcceptedDataSharing = defaults.bool(forKey: StorageKeys.hasAcceptedDataSharing)
-        if hasAcceptedDataSharing != storedHasAcceptedDataSharing {
-            hasAcceptedDataSharing = storedHasAcceptedDataSharing
-        }
-
-        let storedHasSeenIOSPaywallOnboarding = defaults.bool(forKey: StorageKeys.hasSeenIOSPaywallOnboarding)
-        if hasSeenIOSPaywallOnboarding != storedHasSeenIOSPaywallOnboarding {
-            hasSeenIOSPaywallOnboarding = storedHasSeenIOSPaywallOnboarding
-        }
-
-        let storedHasSeenDefaultTranslationOnboarding = defaults.bool(forKey: StorageKeys.hasSeenDefaultTranslationOnboarding)
-        if hasSeenDefaultTranslationOnboarding != storedHasSeenDefaultTranslationOnboarding {
-            hasSeenDefaultTranslationOnboarding = storedHasSeenDefaultTranslationOnboarding
-        }
-
-        let storedHasCompletedDefaultTranslationTrial = defaults.bool(forKey: StorageKeys.hasCompletedDefaultTranslationTrial)
-        if hasCompletedDefaultTranslationTrial != storedHasCompletedDefaultTranslationTrial {
-            hasCompletedDefaultTranslationTrial = storedHasCompletedDefaultTranslationTrial
-        }
-
-        let storedLastDefaultTranslationTrialAt = defaults.object(forKey: StorageKeys.lastDefaultTranslationTrialAt) as? Date
-        if lastDefaultTranslationTrialAt != storedLastDefaultTranslationTrialAt {
-            lastDefaultTranslationTrialAt = storedLastDefaultTranslationTrialAt
-        }
-
-        let storedAccentTheme = AppPreferences.readAccentTheme(from: defaults)
-        if accentTheme != storedAccentTheme {
-            accentTheme = storedAccentTheme
-        }
-
-        let storedVoiceActionHint = defaults.bool(forKey: StorageKeys.voiceActionHintDismissed)
-        if voiceActionHintDismissed != storedVoiceActionHint {
-            voiceActionHintDismissed = storedVoiceActionHint
-        }
-
-        let storedInstalledLangs = AppPreferences.readInstalledLanguages(from: defaults)
-        if appleTranslateInstalledLanguages != storedInstalledLangs {
-            appleTranslateInstalledLanguages = storedInstalledLangs
-        }
+    private func syncLanguage<Value: Equatable & RawRepresentable>(
+        _ keyPath: ReferenceWritableKeyPath<AppPreferences, Value>,
+        _ value: Value,
+        field: String
+    ) where Value.RawValue == String {
+        let oldValue = self[keyPath: keyPath]
+        guard oldValue != value else { return }
+        self[keyPath: keyPath] = value
+        logLanguageChange(field: field, from: oldValue.rawValue, to: value.rawValue, reason: "UserDefaults refresh")
     }
 
     private static func resolveSharedDefaults() -> UserDefaults {
@@ -947,51 +804,49 @@ public final class AppPreferences: ObservableObject {
         }
     #endif
 
-    #if os(macOS) || os(iOS)
-        private static func readRealtimeTargetLanguage(
-            from defaults: UserDefaults,
-            preferredLanguages: [String]
-        ) -> TargetLanguageOption {
-            let stored = defaults.string(forKey: StorageKeys.realtimeTargetLanguage)
-            return TargetLanguageOption(rawValue: stored ?? "")
-                ?? TargetLanguageOption.defaultRealtimeTargetLanguage(preferredLanguages: preferredLanguages)
-        }
+    private static func readRealtimeTargetLanguage(
+        from defaults: UserDefaults,
+        preferredLanguages: [String]
+    ) -> TargetLanguageOption {
+        let stored = defaults.string(forKey: StorageKeys.realtimeTargetLanguage)
+        return TargetLanguageOption(rawValue: stored ?? "")
+            ?? TargetLanguageOption.defaultRealtimeTargetLanguage(preferredLanguages: preferredLanguages)
+    }
 
-        private static func readRealtimeSourceLanguage(from defaults: UserDefaults) -> SourceLanguageOption {
-            let stored = defaults.string(forKey: StorageKeys.realtimeSourceLanguage)
-            return SourceLanguageOption(rawValue: stored ?? "") ?? .english
-        }
+    private static func readRealtimeSourceLanguage(from defaults: UserDefaults) -> SourceLanguageOption {
+        let stored = defaults.string(forKey: StorageKeys.realtimeSourceLanguage)
+        return SourceLanguageOption(rawValue: stored ?? "") ?? .english
+    }
 
-        private static func readRealtimeTranslationProvider(from defaults: UserDefaults) -> RealtimeTranslationProvider {
-            let stored = defaults.string(forKey: StorageKeys.realtimeTranslationProvider)
-            let provider = RealtimeTranslationProvider(rawValue: stored ?? "") ?? .default
-            return provider.isAvailableOnCurrentOS ? provider : .default
-        }
+    private static func readRealtimeTranslationProvider(from defaults: UserDefaults) -> RealtimeTranslationProvider {
+        let stored = defaults.string(forKey: StorageKeys.realtimeTranslationProvider)
+        let provider = RealtimeTranslationProvider(rawValue: stored ?? "") ?? .default
+        return provider.isAvailableOnCurrentOS ? provider : .default
+    }
 
-        private static func readRealtimeRecognitionEngine(from defaults: UserDefaults) -> RealtimeRecognitionEngine {
-            let stored = defaults.string(forKey: StorageKeys.realtimeRecognitionEngine)
-            return RealtimeRecognitionEngine(rawValue: stored ?? "") ?? .default
-        }
+    private static func readRealtimeRecognitionEngine(from defaults: UserDefaults) -> RealtimeRecognitionEngine {
+        let stored = defaults.string(forKey: StorageKeys.realtimeRecognitionEngine)
+        return RealtimeRecognitionEngine(rawValue: stored ?? "") ?? .default
+    }
 
-        private static func readRealtimeRecognitionModelID(from defaults: UserDefaults) -> String {
-            validRealtimeRecognitionModelID(defaults.string(forKey: StorageKeys.realtimeRecognitionModelID))
-        }
+    private static func readRealtimeRecognitionModelID(from defaults: UserDefaults) -> String {
+        validRealtimeRecognitionModelID(defaults.string(forKey: StorageKeys.realtimeRecognitionModelID))
+    }
 
-        private static func validRealtimeRecognitionModelID(_ modelID: String?) -> String {
-            guard let modelID else {
-                return RecognitionModelStore.defaultRealtimeModel.id
-            }
-            return RecognitionModelStore.selectableDescriptor(forModelID: modelID).id
+    private static func validRealtimeRecognitionModelID(_ modelID: String?) -> String {
+        guard let modelID else {
+            return RecognitionModelStore.defaultRealtimeModel.id
         }
+        return RecognitionModelStore.selectableDescriptor(forModelID: modelID).id
+    }
 
-        // Floating captions default to visible; only an explicit user opt-out is persisted.
-        private static func readRealtimeShowCaptions(from defaults: UserDefaults) -> Bool {
-            guard defaults.object(forKey: StorageKeys.realtimeShowCaptions) != nil else {
-                return true
-            }
-            return defaults.bool(forKey: StorageKeys.realtimeShowCaptions)
+    // Floating captions default to visible; only an explicit user opt-out is persisted.
+    private static func readRealtimeShowCaptions(from defaults: UserDefaults) -> Bool {
+        guard defaults.object(forKey: StorageKeys.realtimeShowCaptions) != nil else {
+            return true
         }
-    #endif
+        return defaults.bool(forKey: StorageKeys.realtimeShowCaptions)
+    }
 }
 
 private enum StorageKeys {
@@ -1031,17 +886,15 @@ private enum StorageKeys {
         static let realtimeCaptionWindowMode = "realtime_caption_window_mode"
         static let realtimeCaptionPrivacyModeEnabled = "realtime_caption_privacy_mode_enabled"
     #endif
-    #if os(macOS) || os(iOS)
-        static let realtimeTargetLanguage = "realtime_target_language_code"
-        static let realtimeSourceLanguage = "realtime_source_language_code"
-        static let realtimeTranslationProvider = "realtime_translation_provider"
-        static let realtimeRecognitionEngine = "realtime_recognition_engine"
-        static let realtimeRecognitionModelID = "realtime_recognition_model_id"
-        static let realtimeShowCaptions = "realtime_show_captions"
-        static let realtimeDualInputHistoryRecordingEnabled = "realtime_dual_input_history_recording_enabled"
-        static let realtimeCaptionDisplayMode = "realtime_caption_display_mode"
-        static let realtimeCaptionAppearance = "realtime_caption_appearance"
-    #endif
+    static let realtimeTargetLanguage = "realtime_target_language_code"
+    static let realtimeSourceLanguage = "realtime_source_language_code"
+    static let realtimeTranslationProvider = "realtime_translation_provider"
+    static let realtimeRecognitionEngine = "realtime_recognition_engine"
+    static let realtimeRecognitionModelID = "realtime_recognition_model_id"
+    static let realtimeShowCaptions = "realtime_show_captions"
+    static let realtimeDualInputHistoryRecordingEnabled = "realtime_dual_input_history_recording_enabled"
+    static let realtimeCaptionDisplayMode = "realtime_caption_display_mode"
+    static let realtimeCaptionAppearance = "realtime_caption_appearance"
     #if os(iOS)
         static let realtimePictureInPictureEnabled = "realtime_picture_in_picture_enabled"
         static let realtimePictureInPictureSize = "realtime_picture_in_picture_size"

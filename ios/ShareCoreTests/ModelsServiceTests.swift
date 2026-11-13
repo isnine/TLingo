@@ -30,6 +30,13 @@ struct ModelsServiceTests {
             try ModelsService.validatedModels([ModelConfig(id: " ", displayName: "Blank")])
         }
     }
+
+    @Test("Rejects an empty catalog")
+    func rejectsEmptyCatalog() {
+        #expect(throws: ModelsServiceError.self) {
+            try ModelsService.validatedModels([])
+        }
+    }
 }
 
 private final class ModelsURLProtocol: URLProtocol {

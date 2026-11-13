@@ -12,10 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improved
 
 - [Both] Mark automatically detected source languages with a clear label
+- [Both] Show the models that will actually run in the model picker, keeping premium selections for later
+- [Both] Open the paywall directly from the quick panel when a premium model is locked
+- [Both] Show every text selection action in the toolbar instead of hiding extras
+- [Both] Move Apple Translate's downloaded language count onto its model row
+- [Mac] Keep chat input stable while composing with an input method
 
 ### Fixed
 
 - [Both] Switch free AI models directly without getting stuck in selection alerts
+- [Both] Run the free AI model when a lapsed membership still has premium models selected
+- [Both] Open new chats on a usable model when the saved chat model is premium
+- [Both] Retry from the no-model error card
+- [Both] Keep the cached model list when the server returns an empty catalog
 - [Both] Detect Japanese correctly when source and target languages are automatic
 - [Both] Convert between Traditional and Simplified Chinese locally with Apple Translate
 - [Both] Preserve clearly identifiable Chinese scripts during automatic language detection

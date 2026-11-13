@@ -96,9 +96,7 @@ struct ActionDetailView: View {
         }
     }
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private var headerBar: some View {
         HStack(spacing: 16) {

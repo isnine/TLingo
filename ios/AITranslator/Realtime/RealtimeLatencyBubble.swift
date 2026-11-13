@@ -8,9 +8,7 @@
         let lanes: [(title: String, performsTranslation: Bool, latency: RealtimeLaneLatency)]
         let onClose: () -> Void
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         var body: some View {
             HStack(alignment: .top, spacing: 8) {

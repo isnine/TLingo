@@ -8,8 +8,47 @@
           "text": "Mark automatically detected source languages with a clear label"
         },
         {
+          "kind": "improved",
+          "text": "Show the models that will actually run in the model picker, keeping premium selections for later"
+        },
+        {
+          "kind": "improved",
+          "text": "Open the paywall directly from the quick panel when a premium model is locked"
+        },
+        {
+          "kind": "improved",
+          "text": "Show every text selection action in the toolbar instead of hiding extras"
+        },
+        {
+          "kind": "improved",
+          "text": "Move Apple Translate's downloaded language count onto its model row"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep chat input stable while composing with an input method"
+        },
+        {
           "kind": "fixed",
           "text": "Switch free AI models directly without getting stuck in selection alerts"
+        },
+        {
+          "kind": "fixed",
+          "text": "Run the free AI model when a lapsed membership still has premium models selected"
+        },
+        {
+          "kind": "fixed",
+          "text": "Open new chats on a usable model when the saved chat model is premium"
+        },
+        {
+          "kind": "fixed",
+          "text": "Retry from the no-model error card"
+        },
+        {
+          "kind": "fixed",
+          "text": "Keep the cached model list when the server returns an empty catalog"
         },
         {
           "kind": "fixed",

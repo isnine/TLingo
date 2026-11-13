@@ -195,9 +195,7 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
             }
         }
 
-        private var colors: AppColorPalette {
-            AppColors.palette(for: colorScheme)
-        }
+        @ThemeColors private var colors: AppColorPalette
 
         private let sidebarCardInset: CGFloat = 8
         private let sidebarCardShape = ConcentricRectangle(corners: .concentric(minimum: 12), isUniform: true)

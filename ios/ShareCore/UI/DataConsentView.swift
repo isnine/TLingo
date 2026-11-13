@@ -15,9 +15,7 @@ public struct DataConsentView: View {
     private let onAccept: () -> Void
     private let onDecline: () -> Void
 
-    private var colors: AppColorPalette {
-        AppColors.palette(for: colorScheme)
-    }
+    @ThemeColors private var colors: AppColorPalette
 
     private static let privacyPolicyURL = URL(
         string: "https://tlingo.zanderwang.com/privacy/"

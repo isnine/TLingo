@@ -3,23 +3,21 @@
 //  ShareCoreTests
 //
 
-#if os(macOS) || os(iOS)
-    import Testing
+import Testing
 
-    @testable import ShareCore
+@testable import ShareCore
 
-    @Suite("Realtime language selection options")
-    struct RealtimeLanguageSelectionOptionsTests {
-        @Test("Source options exclude automatic detection")
-        func sourceOptionsExcludeAutomaticDetection() {
-            #expect(!SourceLanguageOption.realtimeSelectionOptions.contains(.auto))
-            #expect(SourceLanguageOption.realtimeSelectionOptions.first == .english)
-        }
-
-        @Test("Target options exclude match language")
-        func targetOptionsExcludeMatchLanguage() {
-            #expect(!TargetLanguageOption.realtimeSelectionOptions.contains(.appLanguage))
-            #expect(TargetLanguageOption.realtimeSelectionOptions.first == .english)
-        }
+@Suite("Realtime language selection options")
+struct RealtimeLanguageSelectionOptionsTests {
+    @Test("Source options exclude automatic detection")
+    func sourceOptionsExcludeAutomaticDetection() {
+        #expect(!SourceLanguageOption.realtimeSelectionOptions.contains(.auto))
+        #expect(SourceLanguageOption.realtimeSelectionOptions.first == .english)
     }
-#endif
+
+    @Test("Target options exclude match language")
+    func targetOptionsExcludeMatchLanguage() {
+        #expect(!TargetLanguageOption.realtimeSelectionOptions.contains(.appLanguage))
+        #expect(TargetLanguageOption.realtimeSelectionOptions.first == .english)
+    }
+}

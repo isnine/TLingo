@@ -8,9 +8,7 @@
 import Foundation
 import os
 import SwiftUI
-#if canImport(Translation)
-    import Translation
-#endif
+import Translation
 
 private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "AppleTranslation")
 
@@ -131,15 +129,7 @@ public final class AppleTranslationService: @unchecked Sendable {
     // MARK: - Availability
 
     /// Check if Apple Translation is available on this device
-    public var isAvailable: Bool {
-        let available: Bool
-        if #available(iOS 17.4, macOS 14.4, *) {
-            available = true
-        } else {
-            available = false
-        }
-        return available
-    }
+    public var isAvailable: Bool { true }
 
     /// Returns the availability status message
     public var availabilityStatus: String {
@@ -153,7 +143,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     // MARK: - Language Availability
 
     /// Check whether a specific language pair is available for translation.
-    @available(iOS 17.4, macOS 14.4, *)
     public func languageAvailabilityStatus(
         source: Locale.Language?,
         target: Locale.Language,
@@ -200,7 +189,6 @@ public final class AppleTranslationService: @unchecked Sendable {
 
     /// Returns the set of `TargetLanguageOption`s whose translation language packs
     /// are installed on this device (checked as pairs with English).
-    @available(iOS 17.4, macOS 14.4, *)
     public func refreshInstalledLanguages() async -> Set<TargetLanguageOption> {
         do {
             return try await Self.withOperationTimeout(operationName: "refreshInstalledLanguages") {
@@ -214,7 +202,6 @@ public final class AppleTranslationService: @unchecked Sendable {
         }
     }
 
-    @available(iOS 17.4, macOS 14.4, *)
     private func refreshInstalledLanguagesWithoutTimeout() async -> Set<TargetLanguageOption> {
         let availability = LanguageAvailability()
         let english = Locale.Language(identifier: "en")
@@ -246,7 +233,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     /// Translate using a directly-initialized session from installed language packs.
     /// Does NOT require `.translationTask()` — safe to call from extension contexts.
     /// Throws `TranslationError.notInstalled` if the language pack is not installed.
-    @available(iOS 17.4, macOS 14.4, *)
     public func translateWithInstalledLanguages(
         text: String,
         source: Locale.Language?,
@@ -266,7 +252,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     }
 
     /// Translate sentence pairs using a directly-initialized session from installed language packs.
-    @available(iOS 17.4, macOS 14.4, *)
     public func translateSentencesWithInstalledLanguages(
         text: String,
         source: Locale.Language?,
@@ -287,7 +272,6 @@ public final class AppleTranslationService: @unchecked Sendable {
         )
     }
 
-    @available(iOS 17.4, macOS 14.4, *)
     public func translateRealtimeSentencesWithInstalledLanguages(
         text: String,
         source: Locale.Language?,
@@ -346,7 +330,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     /// `TranslationSession(installedSource:)` can report `notInstalled` transiently even when
     /// `LanguageAvailability` says the pair is installed. Re-check the status and retry once with a
     /// fresh session; a pair that is genuinely missing still surfaces the original error.
-    @available(iOS 17.4, macOS 14.4, *)
     private func runWithInstalledSession(
         source: Locale.Language,
         target: Locale.Language,
@@ -376,7 +359,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     // MARK: - Translation
 
     /// Translate a single text string using the provided TranslationSession.
-    @available(iOS 17.4, macOS 14.4, *)
     public func translate(
         text: String,
         using session: TranslationSession,
@@ -387,7 +369,6 @@ public final class AppleTranslationService: @unchecked Sendable {
         }
     }
 
-    @available(iOS 17.4, macOS 14.4, *)
     private func translateWithoutTimeout(
         text: String,
         using session: TranslationSession,
@@ -433,7 +414,6 @@ public final class AppleTranslationService: @unchecked Sendable {
     }
 
     /// Translate text as sentence pairs using the provided TranslationSession.
-    @available(iOS 17.4, macOS 14.4, *)
     public func translateSentences(
         text: String,
         using session: TranslationSession,
@@ -448,7 +428,6 @@ public final class AppleTranslationService: @unchecked Sendable {
         }
     }
 
-    @available(iOS 17.4, macOS 14.4, *)
     private func translateSentencesWithoutTimeout(
         text: String,
         using session: TranslationSession,
@@ -699,10 +678,7 @@ public enum AppleTranslationErrorFormatter {
 
     /// True when the Translation framework reports `TranslationError.notInstalled`.
     public static func isNotInstalledError(_ error: Error) -> Bool {
-        if #available(iOS 17.4, macOS 14.4, *) {
-            return TranslationError.notInstalled ~= error
-        }
-        return false
+        TranslationError.notInstalled ~= error
     }
 
     /// Whether the failure means the language pack has to be downloaded. Prefers the structured

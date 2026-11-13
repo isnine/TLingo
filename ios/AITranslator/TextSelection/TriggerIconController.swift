@@ -50,15 +50,13 @@
     // MARK: - TriggerActionToolbar
 
     private struct TriggerActionToolbar: View {
-        static let visibleActionCount = 3
-
         let actions: [TextPopupRequest.ActionSummary]
         let onSelect: (String) -> Void
         let onHover: (Bool) -> Void
 
         var body: some View {
             HStack(spacing: 2) {
-                ForEach(actions.prefix(Self.visibleActionCount), id: \.id) { action in
+                ForEach(actions, id: \.id) { action in
                     Button {
                         onSelect(action.id)
                     } label: {
@@ -68,26 +66,6 @@
                     }
                     .help(action.name)
                     .accessibilityLabel(action.name)
-                }
-                if actions.count > Self.visibleActionCount {
-                    Menu {
-                        ForEach(actions.dropFirst(Self.visibleActionCount), id: \.id) { action in
-                            Button {
-                                onSelect(action.id)
-                            } label: {
-                                Label(action.name, systemImage: action.symbol)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .frame(width: 30, height: 28)
-                            .contentShape(.rect)
-                    }
-                    .menuStyle(.button)
-                    .menuIndicator(.hidden)
-                    .fixedSize()
-                    .help(Text("More Actions"))
-                    .accessibilityLabel(Text("More Actions"))
                 }
             }
             .buttonStyle(.plain)
@@ -100,8 +78,8 @@
             #else
                 .tlingoGlassCapsule(.chrome)
             #endif
-            .padding(2)
-            .onHover(perform: onHover)
+                .padding(2)
+                .onHover(perform: onHover)
         }
     }
 
