@@ -44,7 +44,7 @@ public final class AppPreferences: ObservableObject {
     @Published public private(set) var accentTheme: AccentTheme
     @Published public private(set) var appleTranslateInstalledLanguages: Set<String>
     #if os(macOS)
-        // Shared storage stays compatible; only Direct observes this value to start capture.
+        /// Shared storage stays compatible; only Direct observes this value to start capture.
         @Published public private(set) var textSelectionTranslationEnabled: Bool
         /// User-resizable height for the menu bar quick translate popover.
         /// Height defaults to 420pt and can grow up to 80% of the active
@@ -93,6 +93,7 @@ public final class AppPreferences: ObservableObject {
     private let defaults: UserDefaults
     private var notificationObserver: NSObjectProtocol?
     private var isRefreshing = false
+    private let writingDefaultsDepth = OSAllocatedUnfairLock(initialState: 0)
 
     init(
         defaults: UserDefaults = AppPreferences.resolveSharedDefaults(),
@@ -154,7 +155,8 @@ public final class AppPreferences: ObservableObject {
             .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
         realtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
         #if os(iOS)
-            realtimePictureInPictureEnabled = defaults.object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
+            realtimePictureInPictureEnabled = defaults
+                .object(forKey: StorageKeys.realtimePictureInPictureEnabled) as? Bool ?? true
             realtimePictureInPictureSize = defaults.string(forKey: StorageKeys.realtimePictureInPictureSize)
                 .flatMap(RealtimePictureInPictureSize.init(rawValue:)) ?? .standard
         #endif
@@ -162,10 +164,11 @@ public final class AppPreferences: ObservableObject {
         notificationObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
             object: defaults,
-            queue: .main
+            queue: nil
         ) { [weak self] _ in
+            guard let self, writingDefaultsDepth.withLock({ $0 }) == 0 else { return }
             DispatchQueue.main.async {
-                self?.refreshFromDefaults()
+                self.refreshFromDefaults()
             }
         }
     }
@@ -176,19 +179,66 @@ public final class AppPreferences: ObservableObject {
         }
     }
 
+    func withDefaultsWrite(_ block: () -> Void) {
+        writingDefaultsDepth.withLock { $0 += 1 }
+        defer { writingDefaultsDepth.withLock { $0 -= 1 } }
+        block()
+    }
+
+    private func setPreference<Value: Equatable>(
+        _ keyPath: ReferenceWritableKeyPath<AppPreferences, Value>,
+        to newValue: Value,
+        key: String,
+        encode: (Value) -> Any? = { $0 }
+    ) {
+        guard self[keyPath: keyPath] != newValue else { return }
+        self[keyPath: keyPath] = newValue
+        withDefaultsWrite {
+            if let encoded = encode(newValue) {
+                defaults.set(encoded, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+    }
+
+    private func setEncodedPreference<Value: Equatable & Encodable>(
+        _ keyPath: ReferenceWritableKeyPath<AppPreferences, Value>,
+        to newValue: Value,
+        key: String
+    ) {
+        guard self[keyPath: keyPath] != newValue, let data = try? JSONEncoder().encode(newValue) else { return }
+        self[keyPath: keyPath] = newValue
+        withDefaultsWrite {
+            defaults.set(data, forKey: key)
+        }
+    }
+
+    private func setLanguagePreference<Value: Equatable & RawRepresentable>(
+        _ keyPath: ReferenceWritableKeyPath<AppPreferences, Value>,
+        to option: Value,
+        key: String,
+        field: String,
+        reason: String
+    ) where Value.RawValue == String {
+        let oldValue = self[keyPath: keyPath]
+        guard oldValue != option else { return }
+        self[keyPath: keyPath] = option
+        withDefaultsWrite {
+            defaults.set(option.rawValue, forKey: key)
+        }
+        logLanguageChange(field: field, from: oldValue.rawValue, to: option.rawValue, reason: reason)
+    }
+
     public func setTargetLanguage(
         _ option: TargetLanguageOption,
         reason: String = "AppPreferences.setTargetLanguage"
     ) {
-        guard targetLanguage != option else { return }
-
-        let oldValue = targetLanguage.rawValue
-        targetLanguage = option
-        defaults.set(option.rawValue, forKey: TargetLanguageOption.storageKey)
-        logLanguageChange(
+        setLanguagePreference(
+            \.targetLanguage,
+            to: option,
+            key: TargetLanguageOption.storageKey,
             field: "targetLanguage",
-            from: oldValue,
-            to: option.rawValue,
             reason: reason
         )
     }
@@ -197,41 +247,29 @@ public final class AppPreferences: ObservableObject {
         _ option: SourceLanguageOption,
         reason: String = "AppPreferences.setSourceLanguage"
     ) {
-        guard sourceLanguage != option else { return }
-
-        let oldValue = sourceLanguage.rawValue
-        sourceLanguage = option
-        defaults.set(option.rawValue, forKey: SourceLanguageOption.storageKey)
-        logLanguageChange(
+        setLanguagePreference(
+            \.sourceLanguage,
+            to: option,
+            key: SourceLanguageOption.storageKey,
             field: "sourceLanguage",
-            from: oldValue,
-            to: option.rawValue,
             reason: reason
         )
     }
 
     public func setModelResultOrder(_ order: ModelResultOrder) {
-        guard modelResultOrder != order else { return }
-        modelResultOrder = order
-        defaults.set(order.rawValue, forKey: StorageKeys.modelResultOrder)
+        setPreference(\.modelResultOrder, to: order, key: StorageKeys.modelResultOrder, encode: \.rawValue)
     }
 
     public func setWordLookupEnabled(_ enabled: Bool) {
-        guard wordLookupEnabled != enabled else { return }
-        wordLookupEnabled = enabled
-        defaults.set(enabled, forKey: StorageKeys.wordLookupEnabled)
+        setPreference(\.wordLookupEnabled, to: enabled, key: StorageKeys.wordLookupEnabled)
     }
 
     public func setDefaultsToSentencePairs(_ enabled: Bool) {
-        guard defaultsToSentencePairs != enabled else { return }
-        defaultsToSentencePairs = enabled
-        defaults.set(enabled, forKey: StorageKeys.defaultsToSentencePairs)
+        setPreference(\.defaultsToSentencePairs, to: enabled, key: StorageKeys.defaultsToSentencePairs)
     }
 
     public func setModelListOrder(_ order: ModelListOrder) {
-        guard modelListOrder != order, let data = try? JSONEncoder().encode(order) else { return }
-        modelListOrder = order
-        defaults.set(data, forKey: StorageKeys.modelListOrder)
+        setEncodedPreference(\.modelListOrder, to: order, key: StorageKeys.modelListOrder)
     }
 
     private static func readModelListOrder(from defaults: UserDefaults) -> ModelListOrder {
@@ -256,42 +294,28 @@ public final class AppPreferences: ObservableObject {
     }
 
     public func setCurrentConfigName(_ name: String?) {
-        guard currentConfigName != name else { return }
-
-        currentConfigName = name
-        if let name {
-            defaults.set(name, forKey: StorageKeys.currentConfigName)
-        } else {
-            defaults.removeObject(forKey: StorageKeys.currentConfigName)
-        }
+        setPreference(\.currentConfigName, to: name, key: StorageKeys.currentConfigName, encode: { $0 })
     }
 
     public func setVoiceActionHintDismissed(_ dismissed: Bool) {
-        guard voiceActionHintDismissed != dismissed else { return }
-
-        voiceActionHintDismissed = dismissed
-        defaults.set(dismissed, forKey: StorageKeys.voiceActionHintDismissed)
+        setPreference(\.voiceActionHintDismissed, to: dismissed, key: StorageKeys.voiceActionHintDismissed)
     }
 
     public func setHasSeenIOSPaywallOnboarding(_ seen: Bool) {
-        guard hasSeenIOSPaywallOnboarding != seen else { return }
-
-        hasSeenIOSPaywallOnboarding = seen
-        defaults.set(seen, forKey: StorageKeys.hasSeenIOSPaywallOnboarding)
+        setPreference(\.hasSeenIOSPaywallOnboarding, to: seen, key: StorageKeys.hasSeenIOSPaywallOnboarding)
     }
 
     public func setHasSeenDefaultTranslationOnboarding(_ seen: Bool) {
-        guard hasSeenDefaultTranslationOnboarding != seen else { return }
-
-        hasSeenDefaultTranslationOnboarding = seen
-        defaults.set(seen, forKey: StorageKeys.hasSeenDefaultTranslationOnboarding)
+        setPreference(\.hasSeenDefaultTranslationOnboarding, to: seen, key: StorageKeys.hasSeenDefaultTranslationOnboarding)
     }
 
     public func recordDefaultTranslationTrialInvocation(date: Date = Date()) {
         hasCompletedDefaultTranslationTrial = true
         lastDefaultTranslationTrialAt = date
-        defaults.set(true, forKey: StorageKeys.hasCompletedDefaultTranslationTrial)
-        defaults.set(date, forKey: StorageKeys.lastDefaultTranslationTrialAt)
+        withDefaultsWrite {
+            defaults.set(true, forKey: StorageKeys.hasCompletedDefaultTranslationTrial)
+            defaults.set(date, forKey: StorageKeys.lastDefaultTranslationTrialAt)
+        }
         // Wake the main app immediately. UserDefaults cross-process reads are
         // eventually consistent, so the onboarding view also needs the Darwin
         // notification to refresh on the next runloop instead of waiting for
@@ -306,7 +330,9 @@ public final class AppPreferences: ObservableObject {
                 menuBarPopoverHeight = clamped
             }
             if persist {
-                defaults.set(Double(clamped), forKey: StorageKeys.menuBarPopoverHeight)
+                withDefaultsWrite {
+                    defaults.set(Double(clamped), forKey: StorageKeys.menuBarPopoverHeight)
+                }
             }
         }
 
@@ -316,7 +342,9 @@ public final class AppPreferences: ObservableObject {
                 menuBarPopoverWidth = clamped
             }
             if persist {
-                defaults.set(Double(clamped), forKey: StorageKeys.menuBarPopoverWidth)
+                withDefaultsWrite {
+                    defaults.set(Double(clamped), forKey: StorageKeys.menuBarPopoverWidth)
+                }
             }
         }
 
@@ -332,35 +360,37 @@ public final class AppPreferences: ObservableObject {
 
             selectionPopupWidth = clamped.width
             selectionPopupHeight = clamped.height
-            defaults.set(Double(clamped.width), forKey: StorageKeys.selectionPopupWidth)
-            defaults.set(Double(clamped.height), forKey: StorageKeys.selectionPopupHeight)
+            withDefaultsWrite {
+                defaults.set(Double(clamped.width), forKey: StorageKeys.selectionPopupWidth)
+                defaults.set(Double(clamped.height), forKey: StorageKeys.selectionPopupHeight)
+            }
         }
 
         public func setSelectionPopupOrigin(_ origin: CGPoint?) {
             guard selectionPopupOrigin != origin else { return }
 
             selectionPopupOrigin = origin
-            if let origin {
-                defaults.set(Double(origin.x), forKey: StorageKeys.selectionPopupOriginX)
-                defaults.set(Double(origin.y), forKey: StorageKeys.selectionPopupOriginY)
-            } else {
-                defaults.removeObject(forKey: StorageKeys.selectionPopupOriginX)
-                defaults.removeObject(forKey: StorageKeys.selectionPopupOriginY)
+            withDefaultsWrite {
+                if let origin {
+                    defaults.set(Double(origin.x), forKey: StorageKeys.selectionPopupOriginX)
+                    defaults.set(Double(origin.y), forKey: StorageKeys.selectionPopupOriginY)
+                } else {
+                    defaults.removeObject(forKey: StorageKeys.selectionPopupOriginX)
+                    defaults.removeObject(forKey: StorageKeys.selectionPopupOriginY)
+                }
             }
         }
 
         public func setRealtimeCaptionWindowMode(_ mode: RealtimeCaptionWindowMode) {
-            guard realtimeCaptionWindowMode != mode else { return }
-
-            realtimeCaptionWindowMode = mode
-            defaults.set(mode.rawValue, forKey: StorageKeys.realtimeCaptionWindowMode)
+            setPreference(\.realtimeCaptionWindowMode, to: mode, key: StorageKeys.realtimeCaptionWindowMode, encode: \.rawValue)
         }
 
         public func setRealtimeCaptionPrivacyModeEnabled(_ enabled: Bool) {
-            guard realtimeCaptionPrivacyModeEnabled != enabled else { return }
-
-            realtimeCaptionPrivacyModeEnabled = enabled
-            defaults.set(enabled, forKey: StorageKeys.realtimeCaptionPrivacyModeEnabled)
+            setPreference(
+                \.realtimeCaptionPrivacyModeEnabled,
+                to: enabled,
+                key: StorageKeys.realtimeCaptionPrivacyModeEnabled
+            )
         }
     #endif
 
@@ -368,15 +398,11 @@ public final class AppPreferences: ObservableObject {
         _ option: TargetLanguageOption,
         reason: String = "AppPreferences.setRealtimeTargetLanguage"
     ) {
-        guard realtimeTargetLanguage != option else { return }
-
-        let oldValue = realtimeTargetLanguage.rawValue
-        realtimeTargetLanguage = option
-        defaults.set(option.rawValue, forKey: StorageKeys.realtimeTargetLanguage)
-        logLanguageChange(
+        setLanguagePreference(
+            \.realtimeTargetLanguage,
+            to: option,
+            key: StorageKeys.realtimeTargetLanguage,
             field: "realtimeTargetLanguage",
-            from: oldValue,
-            to: option.rawValue,
             reason: reason
         )
     }
@@ -385,67 +411,65 @@ public final class AppPreferences: ObservableObject {
         _ option: SourceLanguageOption,
         reason: String = "AppPreferences.setRealtimeSourceLanguage"
     ) {
-        guard realtimeSourceLanguage != option else { return }
-
-        let oldValue = realtimeSourceLanguage.rawValue
-        realtimeSourceLanguage = option
-        defaults.set(option.rawValue, forKey: StorageKeys.realtimeSourceLanguage)
-        logLanguageChange(
+        setLanguagePreference(
+            \.realtimeSourceLanguage,
+            to: option,
+            key: StorageKeys.realtimeSourceLanguage,
             field: "realtimeSourceLanguage",
-            from: oldValue,
-            to: option.rawValue,
             reason: reason
         )
     }
 
     public func setRealtimeTranslationProvider(_ provider: RealtimeTranslationProvider) {
-        guard realtimeTranslationProvider != provider else { return }
-
-        realtimeTranslationProvider = provider
-        defaults.set(provider.rawValue, forKey: StorageKeys.realtimeTranslationProvider)
+        setPreference(
+            \.realtimeTranslationProvider,
+            to: provider,
+            key: StorageKeys.realtimeTranslationProvider,
+            encode: \.rawValue
+        )
     }
 
     public func setRealtimeRecognitionEngine(_ engine: RealtimeRecognitionEngine) {
         guard realtimeRecognitionEngine != engine else { return }
 
         realtimeRecognitionEngine = engine
-        defaults.set(engine.rawValue, forKey: StorageKeys.realtimeRecognitionEngine)
+        withDefaultsWrite {
+            defaults.set(engine.rawValue, forKey: StorageKeys.realtimeRecognitionEngine)
+        }
         setRealtimeRecognitionModelID(RecognitionModelStore.descriptor(for: engine).id)
     }
 
     public func setRealtimeRecognitionModelID(_ modelID: String) {
-        let resolvedModelID = AppPreferences.validRealtimeRecognitionModelID(modelID)
-        guard realtimeRecognitionModelID != resolvedModelID else { return }
-
-        realtimeRecognitionModelID = resolvedModelID
-        defaults.set(resolvedModelID, forKey: StorageKeys.realtimeRecognitionModelID)
+        setPreference(
+            \.realtimeRecognitionModelID,
+            to: AppPreferences.validRealtimeRecognitionModelID(modelID),
+            key: StorageKeys.realtimeRecognitionModelID
+        )
     }
 
     public func setRealtimeShowCaptions(_ enabled: Bool) {
-        guard realtimeShowCaptions != enabled else { return }
-
-        realtimeShowCaptions = enabled
-        defaults.set(enabled, forKey: StorageKeys.realtimeShowCaptions)
+        setPreference(\.realtimeShowCaptions, to: enabled, key: StorageKeys.realtimeShowCaptions)
     }
 
     public func setRealtimeDualInputHistoryRecordingEnabled(_ enabled: Bool) {
-        guard realtimeDualInputHistoryRecordingEnabled != enabled else { return }
-
-        realtimeDualInputHistoryRecordingEnabled = enabled
-        defaults.set(enabled, forKey: StorageKeys.realtimeDualInputHistoryRecordingEnabled)
+        setPreference(
+            \.realtimeDualInputHistoryRecordingEnabled,
+            to: enabled,
+            key: StorageKeys.realtimeDualInputHistoryRecordingEnabled
+        )
     }
 
     public func setRealtimeCaptionDisplayMode(_ mode: RealtimeCaptionDisplayMode) {
-        guard realtimeCaptionDisplayMode != mode else { return }
-        realtimeCaptionDisplayMode = mode
-        defaults.set(mode.rawValue, forKey: StorageKeys.realtimeCaptionDisplayMode)
+        setPreference(
+            \.realtimeCaptionDisplayMode,
+            to: mode,
+            key: StorageKeys.realtimeCaptionDisplayMode,
+            encode: \.rawValue
+        )
     }
 
     public func setRealtimeCaptionAppearance(_ appearance: RealtimeCaptionAppearance) {
-        guard realtimeCaptionAppearance != appearance,
-              let data = try? JSONEncoder().encode(appearance) else { return }
-        realtimeCaptionAppearance = appearance
-        defaults.set(data, forKey: StorageKeys.realtimeCaptionAppearance)
+        setEncodedPreference(\.realtimeCaptionAppearance, to: appearance, key: StorageKeys.realtimeCaptionAppearance)
     }
 
     private static func readRealtimeCaptionAppearance(from defaults: UserDefaults) -> RealtimeCaptionAppearance {
@@ -457,17 +481,20 @@ public final class AppPreferences: ObservableObject {
 
     #if os(iOS)
         public func setRealtimePictureInPictureEnabled(_ enabled: Bool) {
-            guard realtimePictureInPictureEnabled != enabled else { return }
-
-            realtimePictureInPictureEnabled = enabled
-            defaults.set(enabled, forKey: StorageKeys.realtimePictureInPictureEnabled)
+            setPreference(
+                \.realtimePictureInPictureEnabled,
+                to: enabled,
+                key: StorageKeys.realtimePictureInPictureEnabled
+            )
         }
 
         public func setRealtimePictureInPictureSize(_ size: RealtimePictureInPictureSize) {
-            guard realtimePictureInPictureSize != size else { return }
-
-            realtimePictureInPictureSize = size
-            defaults.set(size.rawValue, forKey: StorageKeys.realtimePictureInPictureSize)
+            setPreference(
+                \.realtimePictureInPictureSize,
+                to: size,
+                key: StorageKeys.realtimePictureInPictureSize,
+                encode: \.rawValue
+            )
         }
 
     #endif
@@ -475,57 +502,40 @@ public final class AppPreferences: ObservableObject {
     // MARK: - Enabled Models (flat model architecture)
 
     public func setEnabledModelIDs(_ ids: Set<String>) {
-        guard enabledModelIDs != ids else { return }
-
-        enabledModelIDs = ids
-        defaults.set(Array(ids), forKey: StorageKeys.enabledModels)
+        setPreference(\.enabledModelIDs, to: ids, key: StorageKeys.enabledModels, encode: { Array($0) })
     }
 
     public func setChatModelID(_ modelID: String?) {
-        guard chatModelID != modelID else { return }
-
-        chatModelID = modelID
-        if let modelID {
-            defaults.set(modelID, forKey: StorageKeys.chatModelID)
-        } else {
-            defaults.removeObject(forKey: StorageKeys.chatModelID)
-        }
+        setPreference(\.chatModelID, to: modelID, key: StorageKeys.chatModelID, encode: { $0 })
     }
 
     // MARK: - Apple Translate Installed Languages
 
     public func setAppleTranslateInstalledLanguages(_ languages: Set<String>) {
-        guard appleTranslateInstalledLanguages != languages else { return }
-
-        appleTranslateInstalledLanguages = languages
-        defaults.set(Array(languages), forKey: StorageKeys.appleTranslateInstalledLanguages)
+        setPreference(
+            \.appleTranslateInstalledLanguages,
+            to: languages,
+            key: StorageKeys.appleTranslateInstalledLanguages,
+            encode: { Array($0) }
+        )
     }
 
     // MARK: - Voice Selection
 
     public func setSelectedVoiceID(_ voiceID: String) {
-        guard selectedVoiceID != voiceID else { return }
-
-        selectedVoiceID = voiceID
-        defaults.set(voiceID, forKey: StorageKeys.selectedVoiceID)
+        setPreference(\.selectedVoiceID, to: voiceID, key: StorageKeys.selectedVoiceID)
     }
 
     // MARK: - Data Sharing Consent
 
     public func setHasAcceptedDataSharing(_ accepted: Bool) {
-        guard hasAcceptedDataSharing != accepted else { return }
-
-        hasAcceptedDataSharing = accepted
-        defaults.set(accepted, forKey: StorageKeys.hasAcceptedDataSharing)
+        setPreference(\.hasAcceptedDataSharing, to: accepted, key: StorageKeys.hasAcceptedDataSharing)
     }
 
     // MARK: - Accent Theme
 
     public func setAccentTheme(_ theme: AccentTheme) {
-        guard accentTheme != theme else { return }
-
-        accentTheme = theme
-        defaults.set(theme.rawValue, forKey: StorageKeys.accentTheme)
+        setPreference(\.accentTheme, to: theme, key: StorageKeys.accentTheme, encode: \.rawValue)
     }
 
     // MARK: - Satisfaction Prompt
@@ -533,13 +543,13 @@ public final class AppPreferences: ObservableObject {
     public var shouldShowSatisfactionPrompt: Bool {
         let lastDate = defaults.object(forKey: StorageKeys.satisfactionPromptLastResponseDate) as? Date
 
-        let isOldEnough = lastDate.map { Date().timeIntervalSince($0) >= 7 * 24 * 3600 } ?? true
-
-        return isOldEnough
+        return lastDate.map { Date().timeIntervalSince($0) >= 7 * 24 * 3600 } ?? true
     }
 
     public func markSatisfactionPromptResponded() {
-        defaults.set(Date(), forKey: StorageKeys.satisfactionPromptLastResponseDate)
+        withDefaultsWrite {
+            defaults.set(Date(), forKey: StorageKeys.satisfactionPromptLastResponseDate)
+        }
     }
 
     // MARK: - System Review Prompt
@@ -550,12 +560,16 @@ public final class AppPreferences: ObservableObject {
     /// prompt should be requested: the latest consecutive requests all succeeded.
     public func recordTranslationOutcomeForReview(succeeded: Bool) -> Bool {
         guard succeeded else {
-            defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
+            withDefaultsWrite {
+                defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
+            }
             return false
         }
         let streak = defaults.integer(forKey: StorageKeys.systemReviewSuccessStreak) + 1
         guard streak >= Self.systemReviewSuccessStreakThreshold else {
-            defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            withDefaultsWrite {
+                defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            }
             return false
         }
         // StoreKit caps actual display at three times per year; the 7-day gap and streak
@@ -563,11 +577,15 @@ public final class AppPreferences: ObservableObject {
         if let lastDate = defaults.object(forKey: StorageKeys.systemReviewLastRequestDate) as? Date,
            Date().timeIntervalSince(lastDate) < 7 * 24 * 3600
         {
-            defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            withDefaultsWrite {
+                defaults.set(streak, forKey: StorageKeys.systemReviewSuccessStreak)
+            }
             return false
         }
-        defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
-        defaults.set(Date(), forKey: StorageKeys.systemReviewLastRequestDate)
+        withDefaultsWrite {
+            defaults.set(0, forKey: StorageKeys.systemReviewSuccessStreak)
+            defaults.set(Date(), forKey: StorageKeys.systemReviewLastRequestDate)
+        }
         return true
     }
 
@@ -840,7 +858,7 @@ public final class AppPreferences: ObservableObject {
         return RecognitionModelStore.selectableDescriptor(forModelID: modelID).id
     }
 
-    // Floating captions default to visible; only an explicit user opt-out is persisted.
+    /// Floating captions default to visible; only an explicit user opt-out is persisted.
     private static func readRealtimeShowCaptions(from defaults: UserDefaults) -> Bool {
         guard defaults.object(forKey: StorageKeys.realtimeShowCaptions) != nil else {
             return true
@@ -910,6 +928,8 @@ private enum StorageKeys {
         /// A short strip showing only the latest captions.
         case compact
 
-        public var id: String { rawValue }
+        public var id: String {
+            rawValue
+        }
     }
 #endif
