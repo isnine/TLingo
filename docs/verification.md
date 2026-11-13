@@ -34,7 +34,7 @@ Xcode Cloud 会在 post-clone 和 pre-xcodebuild 阶段重新生成该文件；�
 ```text
 project: ios/AITranslator.xcodeproj
 targets: TLingo, TLingoTranslation, TLingoBroadcastUpload, TLingoWidgets, ShareCore, ShareCoreTests, TLingoUITests, TLingoHelper
-schemes: ShareCore, TLingo, TLingoHelper, TLingoBroadcastUpload, TLingoTranslation, TLingoUITests
+schemes: TLingo, TLingoHelper, TLingoTranslation, TLingoUITests
 ```
 
 | Change | Required gate |

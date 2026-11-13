@@ -25,8 +25,7 @@ review_triggers:
 ## 领域文档
 
 - [`language-resolution.md`](./language-resolution.md)：源语言和目标语言解析。
-- [`local-mlx-inference.md`](./local-mlx-inference.md)：本地推理集成。
-- [`Swift Style Guide.md`](./Swift%20Style%20Guide.md)：Swift 代码风格。
+- Swift 代码风格以 `.swiftformat` 与 `.swiftlint.yml` 为准。
 - [`PrivacyPolicy.md`](./PrivacyPolicy.md)、[`TermsOfUse.md`](./TermsOfUse.md)：隐私政策与使用条款。
 
 ## 文档状态

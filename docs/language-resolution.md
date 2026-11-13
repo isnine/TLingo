@@ -3,11 +3,11 @@
 > 本文档梳理 TLingo 在三个翻译引擎（Apple Translate / Microsoft Translate / AI 模型）上对**源语言**与**目标语言**的解析、检测、回退与拒绝策略。
 >
 > 相关代码：
-> - `ShareCore/Utilities/SourceLanguageDetector.swift` — 语言检测核心
-> - `ShareCore/UI/HomeViewModel.swift` — 引擎分诊与短路
-> - `ShareCore/Networking/AppleTranslationService.swift` — Apple Translate 服务封装
-> - `ShareCore/Networking/MicrosoftTranslateService.swift` — Microsoft Translate 服务封装（经 Cloud Worker）
-> - `ShareCore/Networking/LLMService.swift` — AI 模型 LLM 调用
+> - `ios/ShareCore/Utilities/SourceLanguageDetector.swift` — 语言检测核心
+> - `ios/ShareCore/UI/Home/HomeViewModel.swift` — 引擎分诊与短路
+> - `ios/ShareCore/Networking/AppleTranslationService.swift` — Apple Translate 服务封装
+> - `ios/ShareCore/Networking/MicrosoftTranslateService.swift` — Microsoft Translate 服务封装（经 Cloud Worker）
+> - `ios/ShareCore/Networking/LLMService.swift` — AI 模型 LLM 调用
 
 ## 总体原则
 
@@ -42,17 +42,11 @@
 - `"hey"` + target=en → `{en:0.79, tr:0.08, ...}` → tr 过不了绝对门槛 → 回退 top en（后续会被 source==target 短路拒绝）
 - `"你好, hello"` + target=en → `{en:0.7, zh:0.25}` → zh 通过相对门槛 (0.7×0.3=0.21) → 选 zh
 
-### `languagesAreSame(_:_:)` — BCP-47 同语言判定
+### 同语言判定
 
-| 输入 | 结果 |
-|---|---|
-| `en` vs `en` | true（exact） |
-| `en` vs `en-US` | true（base 相同） |
-| `en` vs `en-Latn` | true（Latn 是 en 的默认脚本，被忽略） |
-| `zh-Hans` vs `zh-Hant` | true（多脚本语言被有意视作同语言） |
-| `pt` vs `pt-BR` | true（base 相同） |
-| `sr-Cyrl` vs `sr-Latn` | true（双方都带 script） |
-| `en` vs `fr` | false |
+- `translationLanguagesAreSame`（私有）：翻译语义。同 base（`en` vs `en-US`、`pt` vs `pt-BR`）或仅差默认脚本（`en` vs `en-Latn`）为同语言；`zh-Hans` 与 `zh-Hant` 是不同的翻译语言。
+- `detectionLanguagesAreEquivalent`：检测排除目标语言时使用。在上面基础上，双方都带 script 的同 language code（`zh-Hans` vs `zh-Hant`、`sr-Cyrl` vs `sr-Latn`）也视为等价，避免检测结果因脚本差异绕过排除。
+- `en` vs `fr` 恒为不同。
 
 `defaultScript(forLanguageCode:)` 维护"默认脚本"白名单，避免 `Locale.Language.minimalIdentifier` 在不同 OS 版本上行为不一致。
 
@@ -75,13 +69,13 @@
 resolvesMatch = override == .appLanguage || (override == nil && preferredTarget == .appLanguage)
 sourceCode =
   ├─ 用户固定源语言 → sourcePreference.rawValue
-  ├─ .auto 且自动选择目标 → detectLocaleLanguageConstrained(of:candidateCodes: matchCandidates)
+  ├─ .auto 且自动选择目标 → resolveMatchTarget(sourceCode:candidates: matchCandidates)
   └─ .auto 且具体目标     → detectLocaleLanguage(of:excludingTargetCode: target)
 target = resolveTargetLanguage(preferred:override:sourceCode:matchCandidates:)
 isMatchFallback = resolvesMatch && sourceCode != nil && target != matchCandidates.first
 ```
 
-检测返回的是最简代码（简体中文为 `zh`），`displaySource` 通过 `languagesAreSame` 映射回 `SourceLanguageOption`。UI 上源语言直接显示检测结果；自动选择的目标带 ✦ 标记；`isMatchFallback` 为真时 iPhone 输入栏上方显示"原文是 X，译成 Y"及改选菜单。
+检测返回的是最简代码（简体中文为 `zh`），`displaySource` 通过语言等价判定映射回 `SourceLanguageOption`。UI 上源语言直接显示检测结果；自动选择的目标带 ✦ 标记；`isMatchFallback` 为真时 iPhone 输入栏上方显示"原文是 X，译成 Y"及改选菜单。
 
 ## 三引擎适配
 
@@ -106,7 +100,7 @@ isMatchFallback = resolvesMatch && sourceCode != nil && target != matchCandidate
 | **`source == target` 短路** | 与 Apple Translate 共用 `sameSourceAndTargetResult`，命中则不发请求 |
 | **网络层** | 经 Cloud Worker 的 `translate/microsoft` 端点 |
 
-### 3. AI 模型 (LLM, 通过 Cloudflare Worker → Azure OpenAI)
+### 3. AI 模型 (LLM, 通过 Cloudflare Worker → 云端模型)
 
 | 项 | 行为 |
 |---|---|
@@ -154,14 +148,6 @@ Apple `Locale.Language` API 在不同 macOS 版本对默认脚本的处理不一
 | `AppleTranslation` | `Apple Translate watchdog fired — .translationTask() did not respond in 10s` | macOS bridge 超时 |
 | `AppleTranslation` | `translate: prepareTranslation failed: ...` | 系统 API 抛错（含原始 TranslationError） |
 
-## 单元测试覆盖（建议）
+## 单元测试
 
-抽离 `resolveAutoSourceLanguage(text:targetCode:preferredLanguages:)` 纯函数后，可覆盖：
-
-- `"hey"` + target=en + preferred=[en] → `en`
-- `"你好, hello"` + target=en + preferred=[en, zh-Hans] → `zh-Hans`
-- `"你好, hello"` + target=zh-Hans + preferred=[en, zh-Hans] → `en`
-- `"你好"` + target=en + preferred=[zh-Hant] → `zh-Hant`（脚本纠正）
-- 纯 ASCII 短串 + target=zh-Hans → `en`
-- empty / whitespace → nil
-- `"pt"` 输入 + target=pt-BR → 不应触发"切换"（base 相同）
+见 `ios/ShareCoreTests/SourceLanguageDetectorTests.swift` 与 `HomeViewModelLanguageResolutionTests.swift`。

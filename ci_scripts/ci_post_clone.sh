@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # ci_post_clone.sh
-# Xcode Cloud post-clone script for AITranslator.
+# Xcode Cloud post-clone script for TLingo.
 #
 # Generates the gitignored AppSecrets.swift from Xcode Cloud TLINGO_*
 # secret environment variables.

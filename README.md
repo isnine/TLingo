@@ -22,12 +22,13 @@ cd TLingo
 open ios/AITranslator.xcodeproj
 ```
 
-`generate-app-secrets.sh` writes the gitignored `ios/ShareCore/Configuration/AppSecrets.swift`. Without `TLINGO_*` environment variables it writes placeholders: the app builds and runs, but the hosted TLingo cloud models are unavailable. System translation and your own LLM providers still work. Replace `DEVELOPMENT_TEAM` in `ios/Configuration/*.xcconfig` with your own team to sign.
+`generate-app-secrets.sh` writes the gitignored `ios/ShareCore/Configuration/AppSecrets.swift`. Without `TLINGO_*` environment variables it writes placeholders: the app builds and runs, but the hosted TLingo cloud models are unavailable. System translation and your own LLM providers still work. Set your own signing team on each target in Xcode to sign.
 
 Main schemes:
 
 - `TLingo`
 - `TLingoTranslation`
+- `TLingoHelper`
 - `TLingoUITests`
 
 ## Repository
@@ -35,6 +36,7 @@ Main schemes:
 ```text
 ios/          Apple app, shared framework, and extensions
 ci_scripts/   Xcode Cloud automation
+scripts/      Release notes tooling (release_notes.py)
 docs/         Client architecture, contracts, and workflows
 ```
 

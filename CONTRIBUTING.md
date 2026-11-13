@@ -2,14 +2,7 @@
 
 ## Setup
 
-```bash
-git clone https://github.com/isnine/TLingo.git
-cd TLingo
-./ci_scripts/generate-app-secrets.sh
-open ios/AITranslator.xcodeproj
-```
-
-Read [`AGENTS.md`](AGENTS.md) and [`docs/README.md`](docs/README.md) before changing architecture or workflows. Placeholder secrets disable the hosted cloud features; see [`README.md`](README.md).
+Build setup is in [`README.md`](README.md). Read [`AGENTS.md`](AGENTS.md) and [`docs/README.md`](docs/README.md) before changing architecture or workflows. Placeholder secrets disable the hosted cloud features.
 
 ## Development
 
@@ -35,12 +28,6 @@ the additional gates in `docs/verification.md`.
 
 Commit messages use:
 
-```text
-[Developer] Tooling or configuration
-[Fixed] Bug fix
-[Added] Feature
-[Improved] Enhancement
-[Removed] Removal
-```
+Subjects start with `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by `[iOS]`, `[Mac]`, or `[Both]`. See [`AGENTS.md`](AGENTS.md) for release-note rules.
 
 Do not commit generated build output, `AppSecrets.swift`, or other secrets.
