@@ -405,6 +405,9 @@ public struct LanguageSwitcherView: View {
                 HStack(spacing: 3) {
                     let showDetected = detectedSource != nil && detectedSource != selectedSourceLanguage
                     if showDetected, let detected = detectedSource {
+                        if selectedSourceLanguage == .auto {
+                            languageModeBadge("Detect")
+                        }
                         languageLabel(detected.primaryLabel)
                             .layoutPriority(1)
                     } else {
@@ -459,7 +462,9 @@ public struct LanguageSwitcherView: View {
     private func targetChip(_ text: String, style: LanguageControlStyle = .standalone) -> some View {
         languageControl(style: style) {
             HStack(spacing: 3) {
-                automaticTargetBadge
+                if usesAutomaticTarget {
+                    languageModeBadge("Auto")
+                }
                 languageLabel(text)
                     .layoutPriority(1)
                 if style == .standalone {
@@ -469,18 +474,14 @@ public struct LanguageSwitcherView: View {
         }
     }
 
-    /// Marks an automatically chosen target, so the name reads as "decided for you".
-    @ViewBuilder
-    private var automaticTargetBadge: some View {
-        if usesAutomaticTarget {
-            Text("Auto")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(resolvedColor.opacity(0.7))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 1)
-                .background(resolvedColor.opacity(0.1), in: Capsule())
-                .fixedSize()
-        }
+    private func languageModeBadge(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(resolvedColor.opacity(0.7))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(resolvedColor.opacity(0.1), in: Capsule())
+            .fixedSize()
     }
 
     @ViewBuilder
