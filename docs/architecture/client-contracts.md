@@ -39,12 +39,12 @@ headers = X-Timestamp, X-Signature
 
 `/models` 返回的 `tags` 是有序字符串数组。可选 `tagStyles` 按标签文字匹配，每项可提供 `textColor` 和 `backgroundColor`（`#RRGGBB`）；缺省或无法解析时使用默认颜色。
 
-`gemini-4-argon`、`gemini-3.8-flash` 和 `gemini-4-carbon` 限时免费，带 `Limited Time Free` 标签；不改变免费默认模型或用户已保存的选择。
+`gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash` 和 `gemini-4-carbon` 限时免费，带 `Limited Time Free` 标签；不改变免费默认模型或用户已保存的选择。
 会员目录包含 `deepseek-v4-pro`（DeepSeek-V4-Pro），其 `isPremium: true`、`supportsVision: false`；
 沿用聊天请求及结构化输出契约，不支持图片输入。`deepseek-flash` 继续保留且支持图片。
-目录包含 `gemini-4-carbon`（Gemini 4 Carbon），其 `isPremium: false`、`supportsVision: true`；
-沿用聊天、流式及 JSON Schema 输出契约。Argon 和 Carbon 固定思考级别 `low`，不能保证零思考 token。
-免费目录为 `gemini-4-argon`、`gemini-3.8-flash`、`gemini-4-carbon`（均限时）和默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-argon`、`gemini-3.8-flash`、
+目录包含 `gemini-4-carbon`（Gemini 4 Carbon）和 `gemini-4-hydrogen`（Gemini 4 Hydrogen），其 `isPremium: false`、`supportsVision: true`；
+沿用聊天、流式及 JSON Schema 输出契约。Argon、Carbon 和 Hydrogen 固定思考级别 `low`，不能保证零思考 token。
+免费目录为 `gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash`、`gemini-4-carbon`（均限时）和默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash`、
 `gpt-5-mini`、`gemini-4-carbon`、`gpt-5.6`、`deepseek-flash`、`deepseek-v4-pro`、`qwen/qwen3.7-flash`。
 `gpt-oss-120b`、`z-ai/glm-5.3-flash`、`gemini-3.1-pro-preview` 从目录移除；不改模型路由及
 会员校验，目录刷新前的已保存选择仍可请求，但这些旧选择不保证关闭思考。
@@ -53,7 +53,7 @@ headers = X-Timestamp, X-Signature
 思考策略由服务端强制执行，覆盖旧客户端的推理参数，普通请求和流式请求使用相同策略：
 GPT-5 Mini 使用 `reasoning_effort: none`；Qwen 使用 `reasoning.enabled: false`；
 DeepSeek Flash／Pro 使用 `thinking.type: disabled`；GPT-5.6 使用 `reasoning.effort: none`；
-Gemini 3.8 Flash 使用零思考预算。Argon 和 Carbon 固定 `low`。不改变 JSON Schema 输出契约、HMAC
+Gemini 3.8 Flash 使用零思考预算。Argon、Carbon 和 Hydrogen 固定 `low`。不改变 JSON Schema 输出契约、HMAC
 或客户端的增量解析流程；无需客户端更新即可由新服务端覆盖已有请求设置。
 
 ## 文本流式计时
