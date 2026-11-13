@@ -26,6 +26,17 @@
         {
           "kind": "improved",
           "platforms": [
+            "ios"
+          ],
+          "text": "Collapse and expand translation results in the system translation sheet"
+        },
+        {
+          "kind": "improved",
+          "text": "Copy translated text when replacing the original"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
             "macos"
           ],
           "text": "Keep chat input stable while composing with an input method"

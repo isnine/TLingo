@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Open the paywall directly from the quick panel when a premium model is locked
 - [Both] Show every text selection action in the toolbar instead of hiding extras
 - [Both] Move Apple Translate's downloaded language count onto its model row
+- [iOS] Collapse and expand translation results in the system translation sheet
+- [Both] Copy translated text when replacing the original
 - [Mac] Keep chat input stable while composing with an input method
 
 ### Fixed
