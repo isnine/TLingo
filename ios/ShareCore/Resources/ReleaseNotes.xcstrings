@@ -3626,6 +3626,131 @@
         }
       }
     },
+    "Mark automatically detected source languages with a clear label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "علّم اللغات المصدرية المكتشفة تلقائيًا بتسمية واضحة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markér automatisk registrerede kildesprog med en tydelig etiket"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch erkannte Ausgangssprachen mit einer klaren Kennzeichnung markieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark automatically detected source languages with a clear label"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca los idiomas de origen detectados automáticamente con una etiqueta clara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marquez les langues source détectées automatiquement avec un libellé clair"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tandai bahasa sumber yang terdeteksi otomatis dengan label yang jelas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrassegna le lingue di origine rilevate automaticamente con un'etichetta chiara"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動検出されたソース言語に明確なラベルを付ける"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동으로 감지된 원본 언어를 명확한 라벨로 표시하세요"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tandakan bahasa sumber yang dikesan secara automatik dengan label yang jelas"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merk automatisk registrerte kildespråk med en tydelig etikett"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markeer automatisch gedetecteerde brontalen met een duidelijk label"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oznacz automatycznie wykryte języki źródłowe wyraźną etykietą"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marque os idiomas de origem detectados automaticamente com um rótulo claro"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markera automatiskt identifierade källspråk med en tydlig etikett"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik olarak algılanan kaynak dilleri net bir etiketle işaretleyin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以清晰的標籤標示自動偵測到的來源語言"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用清晰的标签标记自动检测到的源语言"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以清楚的標籤標示自動偵測到的來源語言"
+          }
+        }
+      }
+    },
     "Move model picker to the quick panel footer and show the run hint beside the placeholder" : {
       "extractionState" : "manual",
       "localizations" : {

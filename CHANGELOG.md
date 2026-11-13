@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.7.5] - 2026-11-12
 
+### Improved
+
+- [Both] Mark automatically detected source languages with a clear label
+
 ### Fixed
 
 - [Both] Switch free AI models directly without getting stuck in selection alerts

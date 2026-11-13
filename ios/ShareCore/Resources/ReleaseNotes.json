@@ -4,6 +4,10 @@
       "version": "5.7.5",
       "items": [
         {
+          "kind": "improved",
+          "text": "Mark automatically detected source languages with a clear label"
+        },
+        {
           "kind": "fixed",
           "text": "Switch free AI models directly without getting stuck in selection alerts"
         },
