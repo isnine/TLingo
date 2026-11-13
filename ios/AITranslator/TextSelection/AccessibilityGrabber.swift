@@ -20,13 +20,17 @@
         struct ReplacementTarget {
             fileprivate let element: AXUIElement
             fileprivate let text: String
+            fileprivate let range: CFRange
             let processIdentifier: pid_t
 
             @MainActor
             func selectionIsUnchanged() -> Bool {
                 var current: CFTypeRef?
                 guard AXUIElementCopyAttributeValue(element, kAXSelectedTextAttribute as CFString, &current) == .success,
-                      current as? String == text
+                      current as? String == text,
+                      let currentRange = AccessibilityGrabber.selectionRange(of: element),
+                      currentRange.location == range.location,
+                      currentRange.length == range.length
                 else { return false }
                 let app = AXUIElementCreateApplication(processIdentifier)
                 var focused: CFTypeRef?
@@ -101,10 +105,25 @@
 
             var settable: DarwinBoolean = false
             AXUIElementIsAttributeSettable(focusedElement, kAXSelectedTextAttribute as CFString, &settable)
-            let target = settable.boolValue
-                ? ReplacementTarget(element: focusedElement, text: text, processIdentifier: frontApp.processIdentifier)
-                : nil
+            let target: ReplacementTarget?
+            if settable.boolValue, let range = selectionRange(of: focusedElement) {
+                target = ReplacementTarget(
+                    element: focusedElement, text: text, range: range, processIdentifier: frontApp.processIdentifier
+                )
+            } else {
+                target = nil
+            }
             return .text(text, target)
+        }
+
+        private static func selectionRange(of element: AXUIElement) -> CFRange? {
+            var value: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &value) == .success,
+                  let value, CFGetTypeID(value) == AXValueGetTypeID()
+            else { return nil }
+            var range = CFRange()
+            guard AXValueGetValue(unsafeBitCast(value, to: AXValue.self), .cfRange, &range) else { return nil }
+            return range
         }
 
         /// What a drag started on: the role under the pointer and its window's frame at that moment.
