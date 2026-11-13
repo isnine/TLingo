@@ -10,11 +10,6 @@
     import ApplicationServices
 
     enum AccessibilityGrabber {
-        struct Selection {
-            let text: String
-            fileprivate let element: AXUIElement
-        }
-
         /// Caps every AX call this process makes; the 6 s default let a hung target app freeze
         /// the main thread on each selection.
         static let configureMessagingTimeout: Void = {
@@ -25,11 +20,6 @@
         /// Validates that the click occurred near the focused element to filter stale selections.
         @MainActor
         static func grabSelectedText(near clickPoint: CGPoint? = nil) -> String? {
-            grabSelection(near: clickPoint)?.text
-        }
-
-        @MainActor
-        static func grabSelection(near clickPoint: CGPoint? = nil) -> Selection? {
             _ = AccessibilityGrabber.configureMessagingTimeout
             guard let frontApp = NSWorkspace.shared.frontmostApplication else { return nil }
 
@@ -90,23 +80,7 @@
                 }
             }
 
-            return Selection(text: text, element: focusedElement)
-        }
-
-        static func replaceSelectedText(_ text: String, in selection: Selection) -> Bool {
-            var isSettable: DarwinBoolean = false
-            guard AXUIElementIsAttributeSettable(
-                selection.element,
-                kAXSelectedTextAttribute as CFString,
-                &isSettable
-            ) == .success, isSettable.boolValue
-            else { return false }
-
-            return AXUIElementSetAttributeValue(
-                selection.element,
-                kAXSelectedTextAttribute as CFString,
-                text as CFString
-            ) == .success
+            return text
         }
 
         private static func axValue(from value: CFTypeRef?) -> AXValue? {

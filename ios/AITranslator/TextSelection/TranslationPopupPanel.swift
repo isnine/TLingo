@@ -34,11 +34,17 @@
             contentView?.layer?.masksToBounds = true
         }
 
-        override var canBecomeKey: Bool { true }
+        override var canBecomeKey: Bool {
+            true
+        }
+
+        override var canBecomeMain: Bool {
+            false
+        }
 
         override func sendEvent(_ event: NSEvent) {
-            if event.type == .leftMouseDown {
-                if !isKeyWindow { makeKey() }
+            if event.type == .leftMouseDown, !isKeyWindow {
+                makeKey()
             }
             super.sendEvent(event)
         }

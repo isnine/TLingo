@@ -12,18 +12,6 @@
     enum SelectionTextGrabber {
         struct Selection {
             let text: String
-            let application: NSRunningApplication?
-            let accessibilitySelection: AccessibilityGrabber.Selection?
-
-            func replace(with text: String) async -> Bool {
-                if let accessibilitySelection,
-                   AccessibilityGrabber.replaceSelectedText(text, in: accessibilitySelection)
-                {
-                    return true
-                }
-                guard let application else { return false }
-                return await ClipboardGrabber.replaceSelection(with: text, in: application)
-            }
         }
 
         static func grab(near point: CGPoint?) async -> Selection? {
@@ -31,22 +19,16 @@
             try? await Task.sleep(for: .milliseconds(50))
             guard !Task.isCancelled else { return nil }
 
-            let application = NSWorkspace.shared.frontmostApplication
-
-            if let selection = AccessibilityGrabber.grabSelection(near: point),
-               !selection.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if let text = AccessibilityGrabber.grabSelectedText(near: point),
+               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             {
-                return Selection(
-                    text: selection.text,
-                    application: application,
-                    accessibilitySelection: selection
-                )
+                return Selection(text: text)
             }
 
             if let text = await AppleScriptGrabber.grabFromBrowser(),
                !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             {
-                return Selection(text: text, application: application, accessibilitySelection: nil)
+                return Selection(text: text)
             }
 
             let frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
@@ -57,7 +39,7 @@
                 if let text = await ClipboardGrabber.grabViaClipboard(usingMenuCopy: usingMenuCopy),
                    !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 {
-                    return Selection(text: text, application: application, accessibilitySelection: nil)
+                    return Selection(text: text)
                 }
             }
             return nil

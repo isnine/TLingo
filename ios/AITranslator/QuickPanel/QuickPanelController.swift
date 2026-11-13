@@ -50,9 +50,13 @@
         }
 
         private static func firstTextView(in view: NSView) -> NSTextView? {
-            if let textView = view as? NSTextView { return textView }
+            if let textView = view as? NSTextView {
+                return textView
+            }
             for subview in view.subviews {
-                if let textView = firstTextView(in: subview) { return textView }
+                if let textView = firstTextView(in: subview) {
+                    return textView
+                }
             }
             return nil
         }
@@ -119,7 +123,13 @@
             isReleasedWhenClosed = false
         }
 
-        override var canBecomeKey: Bool { true }
+        override var canBecomeKey: Bool {
+            true
+        }
+
+        override var canBecomeMain: Bool {
+            false
+        }
 
         override func cancelOperation(_: Any?) {
             orderOut(nil)

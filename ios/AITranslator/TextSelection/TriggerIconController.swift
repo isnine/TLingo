@@ -7,9 +7,6 @@
 
 #if os(macOS) && TLINGO_HELPER
     import AppKit
-    #if !TLINGO_HELPER
-        import ShareCore
-    #endif
     import SwiftUI
 
     // MARK: - TriggerIconGlassView
@@ -24,16 +21,7 @@
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
                         .frame(width: TriggerIconPanel.size, height: TriggerIconPanel.size)
-                    #if TLINGO_HELPER
                         .glassEffect(.regular.tint(Color.accentColor.opacity(0.18)).interactive(), in: .circle)
-                    #else
-                        .tlingoGlassCircle(
-                            tint: Color.accentColor.opacity(0.18),
-                            interactive: true,
-                            fallbackTint: Color.primary.opacity(0.10),
-                            fallbackStroke: Color.secondary.opacity(0.36)
-                        )
-                    #endif
                 } else {
                     Circle()
                         .fill(Color.accentColor)
@@ -73,13 +61,9 @@
             .foregroundStyle(.primary)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            #if TLINGO_HELPER
-                .glassEffect(.regular, in: .capsule)
-            #else
-                .tlingoGlassCapsule(.chrome)
-            #endif
-                .padding(2)
-                .onHover(perform: onHover)
+            .glassEffect(.regular, in: .capsule)
+            .padding(2)
+            .onHover(perform: onHover)
         }
     }
 

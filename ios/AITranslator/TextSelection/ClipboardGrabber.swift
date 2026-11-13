@@ -21,7 +21,9 @@
         /// Saves and restores previous clipboard content unless externally modified.
         @MainActor static func grabViaClipboard(usingMenuCopy: Bool = false) async -> String? {
             guard isGrabbing.withLock({ val in
-                if val { return false }
+                if val {
+                    return false
+                }
                 val = true
                 return true
             }) else { return nil }
@@ -49,7 +51,11 @@
                     userCopied.withLock { $0 = true }
                 }
             }
-            defer { if let keyMonitor { NSEvent.removeMonitor(keyMonitor) } }
+            defer {
+                if let keyMonitor {
+                    NSEvent.removeMonitor(keyMonitor)
+                }
+            }
 
             if usingMenuCopy {
                 guard pressMenuBarCopy() else { return nil }
@@ -84,66 +90,13 @@
 
             // Restore previous clipboard only if no external modification
             if !externalModification {
-                pasteboard.clearContents()
-                if let savedItems {
-                    let items = savedItems.map { itemTypes -> NSPasteboardItem in
-                        let item = NSPasteboardItem()
-                        for (type, data) in itemTypes {
-                            item.setData(data, forType: type)
-                        }
-                        return item
-                    }
-                    pasteboard.writeObjects(items)
-                }
+                restorePasteboard(savedItems)
             }
 
             guard let text, !text.isEmpty else {
                 return nil
             }
             return text
-        }
-
-        @MainActor
-        static func replaceSelection(with text: String, in application: NSRunningApplication) async -> Bool {
-            let pasteboard = NSPasteboard.general
-            let savedItems = pasteboard.pasteboardItems?.map { item in
-                item.types.compactMap { type -> (NSPasteboard.PasteboardType, Data)? in
-                    guard let data = item.data(forType: type) else { return nil }
-                    return (type, data)
-                }
-            }
-
-            pasteboard.clearContents()
-            guard pasteboard.setString(text, forType: .string) else {
-                restorePasteboard(savedItems)
-                return false
-            }
-            let replacementCount = pasteboard.changeCount
-
-            guard application.activate(options: []) else {
-                restorePasteboard(savedItems)
-                return false
-            }
-
-            let deadline = Date().addingTimeInterval(0.3)
-            while NSWorkspace.shared.frontmostApplication?.processIdentifier != application.processIdentifier,
-                  Date() < deadline
-            {
-                try? await Task.sleep(for: .milliseconds(20))
-            }
-
-            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier else {
-                restorePasteboard(savedItems)
-                return false
-            }
-
-            simulatePaste()
-            try? await Task.sleep(for: .milliseconds(100))
-
-            if pasteboard.changeCount == replacementCount {
-                restorePasteboard(savedItems)
-            }
-            return true
         }
 
         private static func simulateCopy() {
@@ -191,20 +144,6 @@
             var value: CFTypeRef?
             guard AXUIElementCopyAttributeValue(element, name as CFString, &value) == .success else { return nil }
             return value as? T
-        }
-
-        private static func simulatePaste() {
-            let source = CGEventSource(stateID: .combinedSessionState)
-
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
-            keyDown?.flags = .maskCommand
-            keyDown?.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
-            keyDown?.post(tap: .cgSessionEventTap)
-
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
-            keyUp?.flags = .maskCommand
-            keyUp?.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
-            keyUp?.post(tap: .cgSessionEventTap)
         }
 
         private static func restorePasteboard(
