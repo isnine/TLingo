@@ -1626,6 +1626,131 @@
         }
       }
     },
+    "Convert between Traditional and Simplified Chinese locally with Apple Translate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حوّل بين الصينية التقليدية والمبسطة محليًا باستخدام Apple Translate"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konverter mellem traditionelt og forenklet kinesisk lokalt med Apple Translate"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konvertiere lokal zwischen traditionellem und vereinfachtem Chinesisch mit Apple Translate"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convert between Traditional and Simplified Chinese locally with Apple Translate"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convierte entre chino tradicional y simplificado localmente con Apple Translate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convertissez localement entre le chinois traditionnel et simplifié avec Apple Translate"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konversi antara bahasa Tionghoa Tradisional dan Sederhana secara lokal dengan Apple Translate"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converti localmente tra cinese tradizionale e semplificato con Apple Translate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Translateを使って、繁体字中国語と簡体字中国語をデバイス上で変換できます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Translate를 사용하여 번체 중국어와 간체 중국어를 기기에서 변환하세요"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tukar antara bahasa Cina Tradisional dan Ringkas secara setempat dengan Apple Translate"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konverter mellom tradisjonell og forenklet kinesisk lokalt med Apple Translate"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converteer lokaal tussen traditioneel en vereenvoudigd Chinees met Apple Translate"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konwertuj lokalnie między chińskim tradycyjnym a uproszczonym za pomocą Apple Translate"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converta entre chinês tradicional e simplificado localmente com o Apple Translate"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konvertera mellan traditionell och förenklad kinesiska lokalt med Apple Translate"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Translate ile Geleneksel ve Basitleştirilmiş Çince arasında yerel olarak dönüştürün"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Apple Translate 在本機轉換繁體與簡體中文"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Apple Translate 在本地转换繁体与简体中文"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Apple Translate 在本機轉換繁體與簡體中文"
+          }
+        }
+      }
+    },
     "Customize realtime caption fonts, spacing, and colors" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1747,6 +1872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自訂即時字幕的字型、間距和顏色"
+          }
+        }
+      }
+    },
+    "Detect Japanese correctly when source and target languages are automatic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتشف اليابانية بشكل صحيح عندما تكون لغتا المصدر والهدف تلقائيتين"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrer japansk korrekt, når kilde- og målsproget er automatisk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Japanisch korrekt erkennen, wenn Quell- und Zielsprache automatisch sind"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect Japanese correctly when source and target languages are automatic"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detecta el japonés correctamente cuando los idiomas de origen y destino están en automático"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détectez correctement le japonais lorsque les langues source et cible sont automatiques"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deteksi bahasa Jepang dengan benar saat bahasa sumber dan target otomatis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rileva correttamente il giapponese quando le lingue di origine e di destinazione sono automatiche"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ソース言語とターゲット言語が自動の場合に日本語を正しく検出します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스 및 대상 언어가 자동일 때 일본어를 올바르게 감지합니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kesan bahasa Jepun dengan betul apabila bahasa sumber dan sasaran ialah automatik"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrer japansk korrekt når kilde- og målspråket er automatisk"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detecteer Japans correct wanneer de bron- en doeltalen automatisch zijn"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prawidłowo wykrywaj japoński, gdy język źródłowy i docelowy są ustawione na opcję automatyczną"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detecte japonês corretamente quando os idiomas de origem e destino estiverem definidos como automáticos"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiera japanska korrekt när käll- och målspråket är automatiskt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaynak ve hedef diller otomatik olduğunda Japoncayı doğru algıla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當來源語言和目標語言設為自動時，正確偵測日文"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当源语言和目标语言为自动时，正确检测日语"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當來源語言與目標語言為自動時，正確偵測日文"
           }
         }
       }
@@ -4122,6 +4372,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可直接從「歷史記錄」通知開啟已儲存的 Realtime 工作階段。"
+          }
+        }
+      }
+    },
+    "Preserve clearly identifiable Chinese scripts during automatic language detection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حافظ على أنظمة الكتابة الصينية التي يمكن التعرف عليها بوضوح أثناء الكشف التلقائي عن اللغة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevar tydeligt identificerbare kinesiske skriftsystemer under automatisk sprogregistrering"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klar erkennbare chinesische Schriftsysteme bei der automatischen Sprachidentifizierung beibehalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preserve clearly identifiable Chinese scripts during automatic language detection"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva los sistemas de escritura chinos claramente identificables durante la detección automática de idioma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préservez les systèmes d'écriture chinois clairement identifiables lors de la détection automatique de la langue"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertahankan aksara Tionghoa yang dapat diidentifikasi dengan jelas selama deteksi bahasa otomatis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni i sistemi di scrittura cinesi chiaramente identificabili durante il rilevamento automatico della lingua"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動言語検出時に、明確に識別できる中国語の文字体系を保持します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 언어 감지 중에 명확하게 식별할 수 있는 중국어 문자 체계를 유지합니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan skrip Cina yang boleh dikenal pasti dengan jelas semasa pengesanan bahasa automatik"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold tydelig identifiserbare kinesiske skriftsystemer under automatisk språkgjenkjenning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behoud duidelijk identificeerbare Chinese schriften tijdens automatische taalherkenning"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj wyraźnie rozpoznawalne chińskie systemy pisma podczas automatycznego wykrywania języka"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preserve sistemas de escrita chineses claramente identificáveis durante a detecção automática de idioma"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevara tydligt identifierbara kinesiska skriftsystem vid automatisk språkidentifiering"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik dil algılaması sırasında açıkça tanımlanabilen Çince yazı sistemlerini koruyun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在自動語言偵測期間保留可清楚識別的中文文字系統"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在自动语言检测期间保留清晰可辨的中文文字系统"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在自動語言偵測期間保留可清楚辨識的中文文字系統"
           }
         }
       }

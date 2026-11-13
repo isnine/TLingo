@@ -1,6 +1,23 @@
 {
   "releases": [
     {
+      "version": "5.7.5",
+      "items": [
+        {
+          "kind": "fixed",
+          "text": "Detect Japanese correctly when source and target languages are automatic"
+        },
+        {
+          "kind": "fixed",
+          "text": "Convert between Traditional and Simplified Chinese locally with Apple Translate"
+        },
+        {
+          "kind": "fixed",
+          "text": "Preserve clearly identifiable Chinese scripts during automatic language detection"
+        }
+      ]
+    },
+    {
       "version": "5.7.4",
       "items": [
         {

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.5] - 2026-11-12
+
+### Fixed
+
+- [Both] Detect Japanese correctly when source and target languages are automatic
+- [Both] Convert between Traditional and Simplified Chinese locally with Apple Translate
+- [Both] Preserve clearly identifiable Chinese scripts during automatic language detection
+
 ## [5.7.4] - 2026-11-12
 
 ### Added
