@@ -490,31 +490,19 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
         self.transcriptionModels = transcriptionModels
         self.speakerNames = speakerNames
         if tracks.isEmpty, !segments.isEmpty {
-            let recognitionModel = transcriptionModels.first
             let legacyAudioSource = self.audioRecordings.first(where: { !$0.segments.isEmpty })?.source ??
                 (
                     inputSourceID == .macAudio || inputSource == RealtimeHistoryAudioSource.macAudio.title
                         ? .macAudio
                         : .microphone
                 )
-            // A stable ID keeps every autosave of this session merging into one track.
-            let legacyTrack = RealtimeHistoryTrack(
+            let legacyTrack = Self.makeLegacyTrack(
                 id: requestID,
                 audioSource: legacyAudioSource,
-                recognitionModelID: recognitionModel?.modelID ?? RecognitionModelDescriptor.appleSpeech.id,
-                recognitionModelDisplayName: recognitionModel?.modelDisplayName ??
-                    RecognitionModelDescriptor.appleSpeech.title,
-                translationProviderID: modelID,
-                translationProviderDisplayName: modelDisplayName,
-                segments: segments.map {
-                    RealtimeHistoryTrackSegment(
-                        id: $0.id,
-                        offset: $0.offset,
-                        sourceText: $0.sourceText,
-                        translatedText: $0.translatedText,
-                        relation: .paired
-                    )
-                }
+                transcriptionModels: transcriptionModels,
+                modelID: modelID,
+                modelDisplayName: modelDisplayName,
+                segments: segments
             )
             self.tracks = [legacyTrack]
             self.primaryTrackID = legacyTrack.id
@@ -588,30 +576,48 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
         primaryTrackID = try? container.decode(UUID.self, forKey: .primaryTrackID)
         speakerNames = (try? container.decode([String: String].self, forKey: .speakerNames)) ?? [:]
         if tracks.isEmpty {
-            let recognitionModel = transcriptionModels.first
-            let legacyTrack = RealtimeHistoryTrack(
+            let legacyTrack = Self.makeLegacyTrack(
                 id: requestID,
                 audioSource: primaryAudioSource,
-                recognitionModelID: recognitionModel?.modelID ?? RecognitionModelDescriptor.appleSpeech.id,
-                recognitionModelDisplayName: recognitionModel?.modelDisplayName ??
-                    RecognitionModelDescriptor.appleSpeech.title,
-                translationProviderID: modelID,
-                translationProviderDisplayName: modelDisplayName,
-                segments: segments.map {
-                    RealtimeHistoryTrackSegment(
-                        id: $0.id,
-                        offset: $0.offset,
-                        sourceText: $0.sourceText,
-                        translatedText: $0.translatedText,
-                        relation: .paired
-                    )
-                }
+                transcriptionModels: transcriptionModels,
+                modelID: modelID,
+                modelDisplayName: modelDisplayName,
+                segments: segments
             )
             tracks = [legacyTrack]
             primaryTrackID = legacyTrack.id
         } else if primaryTrackID == nil || !tracks.contains(where: { $0.id == primaryTrackID }) {
             primaryTrackID = tracks.first?.id
         }
+    }
+
+    private static func makeLegacyTrack(
+        id: UUID,
+        audioSource: RealtimeHistoryAudioSource,
+        transcriptionModels: [RealtimeHistoryTranscriptionModel],
+        modelID: String,
+        modelDisplayName: String,
+        segments: [RealtimeHistorySegment]
+    ) -> RealtimeHistoryTrack {
+        let recognitionModel = transcriptionModels.first
+        // A stable ID keeps every autosave of this session merging into one track.
+        return RealtimeHistoryTrack(
+            id: id,
+            audioSource: audioSource,
+            recognitionModelID: recognitionModel?.modelID ?? RecognitionModelDescriptor.appleSpeech.id,
+            recognitionModelDisplayName: recognitionModel?.modelDisplayName ?? RecognitionModelDescriptor.appleSpeech.title,
+            translationProviderID: modelID,
+            translationProviderDisplayName: modelDisplayName,
+            segments: segments.map {
+                RealtimeHistoryTrackSegment(
+                    id: $0.id,
+                    offset: $0.offset,
+                    sourceText: $0.sourceText,
+                    translatedText: $0.translatedText,
+                    relation: .paired
+                )
+            }
+        )
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -657,36 +663,39 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
     }
 
     public var sourceTextForCopy: String {
-        copyItems.map { $0.prefixedCopyText($0.text) }.filter { !$0.isEmpty }.joined(separator: "\n")
+        sourceTextForCopy(items: copyItems)
     }
 
     public func sourceTextForCopy(source: RealtimeHistoryAudioSource) -> String {
-        copyItems(source: source).map { $0.prefixedCopyText($0.text) }.filter { !$0.isEmpty }.joined(separator: "\n")
+        sourceTextForCopy(items: copyItems(source: source))
     }
 
     public var translatedTextForCopy: String {
-        copyItems.map { $0.prefixedCopyText($0.translatedText) }.filter { !$0.isEmpty }.joined(separator: "\n")
+        translatedTextForCopy(items: copyItems)
     }
 
     public func translatedTextForCopy(source: RealtimeHistoryAudioSource) -> String {
-        copyItems(source: source).map { $0.prefixedCopyText($0.translatedText) }.filter { !$0.isEmpty }.joined(separator: "\n")
+        translatedTextForCopy(items: copyItems(source: source))
     }
 
     public var bilingualTextForCopy: String {
-        copyItems.map { item in
-            [
-                item.prefixedCopyText(item.text),
-                item.prefixedCopyText(item.translatedText),
-            ]
-            .filter { !$0.isEmpty }
-            .joined(separator: "\n")
-        }
-        .filter { !$0.isEmpty }
-        .joined(separator: "\n\n")
+        bilingualTextForCopy(items: copyItems)
     }
 
     public func bilingualTextForCopy(source: RealtimeHistoryAudioSource) -> String {
-        copyItems(source: source).map { item in
+        bilingualTextForCopy(items: copyItems(source: source))
+    }
+
+    private func sourceTextForCopy(items: [RealtimeHistoryConversationItem]) -> String {
+        items.map { $0.prefixedCopyText($0.text) }.filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    private func translatedTextForCopy(items: [RealtimeHistoryConversationItem]) -> String {
+        items.map { $0.prefixedCopyText($0.translatedText) }.filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    private func bilingualTextForCopy(items: [RealtimeHistoryConversationItem]) -> String {
+        items.map { item in
             [
                 item.prefixedCopyText(item.text),
                 item.prefixedCopyText(item.translatedText),
@@ -920,7 +929,9 @@ public final class TranslationRecord {
     /// built-in Realtime pseudo-action that isn't part of `AppConfigurationStore.actions`.
     @MainActor
     public static func systemImage(forActionNamed name: String, fallback: String = "bolt.fill") -> String {
-        if name == realtimeActionName { return realtimeSystemImageName }
+        if name == realtimeActionName {
+            return realtimeSystemImageName
+        }
         return AppConfigurationStore.shared.actions
             .first(where: { $0.name == name })?
             .outputType.systemImageName ?? fallback

@@ -4,8 +4,8 @@
     import Combine
     import os
     import ShareCore
-    import Synchronization
     import SwiftUI
+    import Synchronization
     import UIKit
 
     private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "RealtimePiP")
@@ -30,7 +30,7 @@
         /// iPhone Audio is captured by the broadcast extension, so the host plays nothing and would be suspended
         /// in the background, freezing the captions it polls. A silent, mixable engine keeps it running.
         private var backgroundKeepAliveEngine: AVAudioEngine?
-        private var keepAliveObservers: [NSObjectProtocol] = []
+        private var keepAliveCancellables: Set<AnyCancellable> = []
         private var pixelBufferPool: CVPixelBufferPool?
         private var pixelBufferPoolSize: (width: Int, height: Int) = (0, 0)
 
@@ -153,31 +153,38 @@
         /// A call or a non-mixable app stops the silent engine, and the host would then be suspended
         /// and hand recognition to the extension. Restart it whenever the system lets audio run again.
         private func observeKeepAliveInterruptions() {
-            guard keepAliveObservers.isEmpty else { return }
+            guard keepAliveCancellables.isEmpty else { return }
             let center = NotificationCenter.default
-            keepAliveObservers = [
-                center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
-                    let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt ?? 0
-                    guard AVAudioSession.InterruptionType(rawValue: typeValue) == .ended else { return }
-                    MainActor.assumeIsolated {
-                        self?.restartBackgroundKeepAliveIfNeeded(reason: "interruptionEnded")
-                    }
-                },
-                center.addObserver(forName: .AVAudioEngineConfigurationChange, object: nil, queue: .main) { [weak self] notification in
-                    MainActor.assumeIsolated {
-                        guard let self, notification.object as? AVAudioEngine === self.backgroundKeepAliveEngine else { return }
-                        self.restartBackgroundKeepAliveIfNeeded(reason: "configurationChange")
-                    }
-                },
-                center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
-                    MainActor.assumeIsolated {
-                        guard let self, self.backgroundKeepAliveEngine != nil else { return }
-                        // The reset invalidated the engine; build a new one.
-                        self.backgroundKeepAliveEngine = AVAudioEngine()
-                        logger.info("PiP keep-alive restarting reason=mediaServicesReset")
-                        self.startBackgroundKeepAlive()
-                    }
-                },
+            keepAliveCancellables = [
+                center.publisher(for: AVAudioSession.interruptionNotification)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] notification in
+                        let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt ?? 0
+                        guard AVAudioSession.InterruptionType(rawValue: typeValue) == .ended else { return }
+                        MainActor.assumeIsolated {
+                            self?.restartBackgroundKeepAliveIfNeeded(reason: "interruptionEnded")
+                        }
+                    },
+                center.publisher(for: .AVAudioEngineConfigurationChange)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] notification in
+                        MainActor.assumeIsolated {
+                            guard let self,
+                                  notification.object as? AVAudioEngine === self.backgroundKeepAliveEngine else { return }
+                            self.restartBackgroundKeepAliveIfNeeded(reason: "configurationChange")
+                        }
+                    },
+                center.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
+                    .receive(on: DispatchQueue.main)
+                    .sink { [weak self] _ in
+                        MainActor.assumeIsolated {
+                            guard let self, self.backgroundKeepAliveEngine != nil else { return }
+                            // The reset invalidated the engine; build a new one.
+                            self.backgroundKeepAliveEngine = AVAudioEngine()
+                            logger.info("PiP keep-alive restarting reason=mediaServicesReset")
+                            self.startBackgroundKeepAlive()
+                        }
+                    },
             ]
         }
 
@@ -188,10 +195,7 @@
         }
 
         private func removeKeepAliveObservers() {
-            for observer in keepAliveObservers {
-                NotificationCenter.default.removeObserver(observer)
-            }
-            keepAliveObservers.removeAll()
+            keepAliveCancellables.removeAll()
         }
 
         private func renderCurrent(force: Bool) {
@@ -241,7 +245,10 @@
                 background: UIColor(preferences.realtimeCaptionAppearance.captionBackgroundColor(fallback: palette.background)),
                 captions: captions,
                 placeholder: visibleLines.isEmpty
-                    ? Self.placeholderText(Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource), style: style)
+                    ? Self.placeholderText(
+                        Self.emptyPlaceholderText(isRunning: isRunning, inputSource: inputSource),
+                        style: style
+                    )
                     : nil
             )
             guard let pool = pixelBufferPool(for: frame.size),

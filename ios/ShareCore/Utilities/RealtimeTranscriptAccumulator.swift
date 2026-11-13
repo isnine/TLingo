@@ -56,6 +56,22 @@ public struct RealtimeRecognitionSegment: Identifiable, Equatable, Sendable {
         self.speakerID = speakerID
         self.boundaryReason = boundaryReason
     }
+
+    init(
+        id: UUID,
+        alreadyNormalizedText: String,
+        startOffset: TimeInterval,
+        endOffset: TimeInterval,
+        speakerID: String?,
+        boundaryReason: RealtimeRecognitionBoundaryReason
+    ) {
+        self.id = id
+        text = alreadyNormalizedText
+        self.startOffset = startOffset
+        self.endOffset = endOffset
+        self.speakerID = speakerID
+        self.boundaryReason = boundaryReason
+    }
 }
 
 public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
@@ -97,6 +113,23 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         self.stableSegments = stableSegments.filter { !$0.text.isEmpty }
         self.pendingSegment = pendingSegment?.text.isEmpty == false ? pendingSegment : nil
         stableText = self.stableSegments.map(\.text).joined(separator: "\n\n")
+        volatileText = self.pendingSegment?.text ?? ""
+        self.tokenTimings = tokenTimings
+        self.audioOffset = audioOffset
+        self.isTerminal = isTerminal
+    }
+
+    init(
+        precomputedStableText: String,
+        stableSegments: [RealtimeRecognitionSegment],
+        pendingSegment: RealtimeRecognitionSegment? = nil,
+        tokenTimings: [RealtimeRecognitionTokenTiming] = [],
+        audioOffset: TimeInterval? = nil,
+        isTerminal: Bool = false
+    ) {
+        self.stableSegments = stableSegments
+        self.pendingSegment = pendingSegment?.text.isEmpty == false ? pendingSegment : nil
+        stableText = precomputedStableText
         volatileText = self.pendingSegment?.text ?? ""
         self.tokenTimings = tokenTimings
         self.audioOffset = audioOffset

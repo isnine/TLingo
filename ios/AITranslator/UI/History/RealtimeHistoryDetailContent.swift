@@ -1,0 +1,1315 @@
+//
+//  RealtimeHistoryDetailContent.swift
+//  TLingo
+//
+
+import AVFoundation
+import os
+import ShareCore
+import SwiftUI
+import UniformTypeIdentifiers
+
+func primaryRealtimeCaptionSource(for session: RealtimeHistorySession) -> RealtimeHistoryAudioSource {
+    session.primaryAudioSource
+}
+
+let mossRealtimeHistoryModelID = "moss-transcribe-diarize"
+
+// MARK: - Realtime Detail
+
+struct RealtimeHistoryDetailContent: View {
+    private enum TrackDisplayMode: String, CaseIterable, Identifiable {
+        case compare
+        case single
+
+        var id: String {
+            rawValue
+        }
+    }
+
+    let record: TranslationRecord
+    let session: RealtimeHistorySession
+
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var currentSession: RealtimeHistorySession
+    @Binding private var visibleCaptionSource: RealtimeHistoryAudioSource
+    @State private var exportDocument: RealtimeHistoryExportDocument?
+    @State private var isExportPresented = false
+    @State private var exportError: String?
+    @State private var trackDisplayMode: TrackDisplayMode
+    @State private var selectedTrackID: UUID?
+    @State private var playbackTime: TimeInterval = 0
+    @State private var isPlaying = false
+    @State private var scrollTargetSegmentID: UUID?
+    #if os(macOS) && arch(arm64)
+        @State private var reconstructionProgress: RealtimeHistoryMOSSProgress?
+        @State private var reconstructionTask: Task<Void, Never>?
+        @State private var pendingReconstructionSource: RealtimeHistoryAudioSource?
+        @State private var showMOSSDownloadConfirmation = false
+    #endif
+    #if os(macOS)
+        @State private var reconstructionMessage: String?
+        @State private var isSpeakerEditorPresented = false
+        @State private var speakerNameDrafts: [String: String] = [:]
+        @State private var speakerEditorTrackID: UUID?
+        @State private var pendingSpeakerFocusID: String?
+    #endif
+
+    init(
+        record: TranslationRecord,
+        session: RealtimeHistorySession,
+        visibleCaptionSource: Binding<RealtimeHistoryAudioSource>
+    ) {
+        self.record = record
+        self.session = session
+        _currentSession = State(initialValue: session)
+        _visibleCaptionSource = visibleCaptionSource
+        _trackDisplayMode = State(initialValue: .single)
+        _selectedTrackID = State(
+            initialValue: Self.preferredTrackID(
+                in: session,
+                source: primaryRealtimeCaptionSource(for: session)
+            )
+        )
+    }
+
+    @ThemeColors private var colors: AppColorPalette
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    #if !os(macOS)
+                        sessionHeader
+                    #endif
+                    #if os(macOS)
+                        reconstructionError
+                    #endif
+                    #if os(macOS) && arch(arm64)
+                        mossUpgradeBanner
+                    #endif
+                    captionContent
+                }
+                .padding(20)
+            }
+            .onChange(of: scrollTargetSegmentID) { _, segmentID in
+                guard let segmentID else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(segmentID, anchor: .center)
+                }
+            }
+            .onChange(of: selectedTrack?.activeSegmentID(at: playbackTime)) { _, segmentID in
+                guard isPlaying, let segmentID else { return }
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    proxy.scrollTo(segmentID, anchor: .center)
+                }
+            }
+        }
+        #if os(macOS)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            pinnedHeader
+        }
+        #else
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if hasPlayableAudio {
+                floatingAudioTimeline
+            }
+        }
+        #endif
+        .background(colors.background.ignoresSafeArea())
+        .fileExporter(
+            isPresented: $isExportPresented,
+            document: exportDocument,
+            contentType: .folder,
+            defaultFilename: exportFilename
+        ) { result in
+            handleExport(result)
+        }
+        .alert(
+            "Export Failed",
+            isPresented: Binding(
+                get: { exportError != nil },
+                set: {
+                    if !$0 {
+                        exportError = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportError ?? "Unknown error")
+        }
+        #if os(macOS) && arch(arm64)
+        .alert("Download MOSS Model?", isPresented: $showMOSSDownloadConfirmation) {
+            Button("Download") {
+                guard let source = pendingReconstructionSource else { return }
+                startMOSSReconstruction(source: source)
+            }
+            Button("Cancel", role: .cancel) {
+                pendingReconstructionSource = nil
+            }
+        } message: {
+            Text("MOSS Diarization requires a \(RealtimeHistoryMOSSReconstructor.modelSizeDisplayName) download.")
+        }
+        #endif
+        #if os(macOS)
+        .sheet(isPresented: $isSpeakerEditorPresented) {
+            speakerEditor
+                .id(pendingSpeakerFocusID)
+        }
+        #endif
+        #if os(iOS)
+        .navigationTitle("Realtime")
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .onChange(of: session) { _, updatedSession in
+            currentSession = updatedSession
+            if !displayTracks.contains(where: { $0.id == selectedTrackID }) {
+                selectedTrackID = preferredTrackID
+            }
+        }
+        .onDisappear {
+            #if os(macOS) && arch(arm64)
+                reconstructionTask?.cancel()
+                reconstructionTask = nil
+            #endif
+        }
+        #if os(macOS) && arch(arm64)
+        .task(id: currentSession.requestID) {
+            reconstructionProgress = await RealtimeHistoryMOSSReconstructor.shared.progress(for: currentSession.requestID)
+            while !Task.isCancelled, reconstructionProgress != nil {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { break }
+                reconstructionProgress = await RealtimeHistoryMOSSReconstructor.shared.progress(for: currentSession.requestID)
+            }
+        }
+        #endif
+        .onChange(of: visibleCaptionSource) {
+            selectedTrackID = preferredTrackID
+            trackDisplayMode = .single
+        }
+    }
+
+    private var sessionHeader: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HistoryMarkdownText(
+                text: currentSession.displayTitle(fallback: record.sourceText),
+                font: .system(size: 22, weight: .bold),
+                foregroundColor: colors.textPrimary,
+                lineLimit: 1
+            )
+
+            HStack(spacing: 8) {
+                Text(currentSession.metaLine)
+                    .font(.system(size: 12))
+                    .foregroundColor(colors.textSecondary)
+
+                Spacer()
+
+                if !displayTracks.isEmpty {
+                    versionMenu
+
+                    #if os(macOS)
+                        moreMenu
+                    #endif
+                }
+            }
+        }
+    }
+
+    private var versionMenu: some View {
+        Menu {
+            ForEach(displayTracks) { track in
+                Button {
+                    selectedTrackID = track.id
+                    trackDisplayMode = .single
+                } label: {
+                    Label(
+                        versionTitle(for: track),
+                        systemImage: selectedTrack?.id == track.id && trackDisplayMode == .single
+                            ? "checkmark"
+                            : versionIcon(for: track)
+                    )
+                }
+            }
+
+            if displayTracks.count > 1 {
+                Divider()
+                Button {
+                    trackDisplayMode = .compare
+                } label: {
+                    Label(
+                        "Compare Versions",
+                        systemImage: trackDisplayMode == .compare ? "checkmark" : "rectangle.split.2x1"
+                    )
+                }
+            }
+        } label: {
+            Label(
+                trackDisplayMode == .compare ? "Compare Versions" : selectedVersionTitle,
+                systemImage: "doc.text"
+            )
+            .font(.system(size: 12, weight: .semibold))
+            .padding(.horizontal, 9)
+            .frame(height: 26)
+            .background(colors.chipSecondaryBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+
+    #if os(macOS)
+        private var moreMenu: some View {
+            Menu {
+                if let selectedTrack {
+                    let text = copyText(for: selectedTrack)
+                    Button {
+                        PasteboardHelper.copy(text)
+                    } label: {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                    .disabled(text.isEmpty)
+
+                    if selectedTrack.segments.contains(where: { $0.speakerID != nil }) {
+                        Button {
+                            presentSpeakerEditor(for: selectedTrack)
+                        } label: {
+                            Label("Edit Speaker Names", systemImage: "person.2")
+                        }
+                    }
+
+                    Divider()
+                }
+
+                #if arch(arm64)
+                    Button(action: requestMOSSReconstruction) {
+                        Label(hasBuiltCaptions ? "Rebuild" : "Build Caption", systemImage: "text.magnifyingglass")
+                    }
+                #endif
+
+                Button {
+                    exportDocument = RealtimeHistoryExportDocument(session: currentSession)
+                    isExportPresented = true
+                } label: {
+                    Label("Export Realtime History", systemImage: "square.and.arrow.up")
+                }
+                .disabled(!currentSession.audioRecordings.contains(where: \.hasPlayableAudio))
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 28, height: 26)
+                    .background(colors.chipSecondaryBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+            .menuStyle(.borderlessButton)
+            .help("More")
+            .accessibilityLabel("More")
+        }
+    #endif
+
+    private var exportFilename: String {
+        let title = ConfigurationFileManager.sanitizeFilename(
+            currentSession.displayTitle(fallback: record.sourceText)
+        )
+        let date = Self.exportDateFormatter.string(from: currentSession.startedAt)
+        return "TLingo-Realtime-\(title)-\(date)"
+    }
+
+    private static let exportDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmm"
+        return formatter
+    }()
+
+    private func handleExport(_ result: Result<URL, Error>) {
+        if case let .failure(error) = result {
+            exportError = error.localizedDescription
+        }
+    }
+
+    private var primaryCaptionSource: RealtimeHistoryAudioSource {
+        primaryRealtimeCaptionSource(for: currentSession)
+    }
+
+    private var hasPlayableAudio: Bool {
+        currentSession.audioRecordings.contains(where: \.hasPlayableAudio)
+    }
+
+    private var audioTimeline: some View {
+        RealtimeHistoryAudioTimelineView(
+            recordings: currentSession.audioRecordings.filter(\.hasPlayableAudio),
+            selectedSource: $visibleCaptionSource,
+            playbackTime: $playbackTime,
+            isPlaying: $isPlaying,
+            onScrub: scrollToPlaybackTime
+        )
+    }
+
+    #if os(macOS)
+        /// Title and player stay visible while the transcript scrolls underneath.
+        private var pinnedHeader: some View {
+            VStack(alignment: .leading, spacing: 14) {
+                sessionHeader
+                if hasPlayableAudio {
+                    audioTimeline
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(colors.cardBackground)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(colors.divider.opacity(0.6), lineWidth: 0.5)
+                        }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
+            .background(colors.background)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(colors.divider.opacity(0.5))
+                    .frame(height: 0.5)
+            }
+        }
+    #endif
+
+    private var floatingAudioTimeline: some View {
+        audioTimeline
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .glassEffect(.regular, in: .rect(cornerRadius: 14))
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+    }
+
+    private func scrollToPlaybackTime(_ time: TimeInterval) {
+        scrollTargetSegmentID = selectedTrack?.activeSegmentID(at: time) ?? selectedTrack?.closestSegmentID(to: time)
+    }
+
+    #if os(macOS)
+        @ViewBuilder
+        private var reconstructionError: some View {
+            if let reconstructionMessage {
+                Text(reconstructionMessage)
+                    .font(.system(size: 12))
+                    .foregroundStyle(colors.textSecondary)
+            }
+        }
+    #endif
+
+    #if os(macOS) && arch(arm64)
+        private var hasBuiltCaptions: Bool {
+            currentSession.tracks.contains {
+                $0.audioSource == visibleCaptionSource &&
+                    $0.recognitionModelID == mossRealtimeHistoryModelID
+            }
+        }
+
+        @ViewBuilder
+        private var mossUpgradeBanner: some View {
+            if let reconstructionProgress {
+                HStack(spacing: 6) {
+                    progressView(reconstructionProgress)
+                    Text(progressTitle(reconstructionProgress))
+                        .font(.system(size: 12))
+                        .foregroundStyle(colors.textSecondary)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 9)
+                .frame(height: 26)
+                .background(colors.chipSecondaryBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .help(progressTitle(reconstructionProgress))
+                .accessibilityLabel(progressTitle(reconstructionProgress))
+            } else if !hasBuiltCaptions {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Improve with MOSS")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(colors.textPrimary)
+                        Text("Create a more accurate transcript with speaker separation. Your realtime draft stays available.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(colors.textSecondary)
+                    }
+
+                    Spacer(minLength: 16)
+
+                    Button(action: requestMOSSReconstruction) {
+                        Label("Improve", systemImage: "text.magnifyingglass")
+                            .font(.system(size: 12, weight: .semibold))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.white)
+                    .background(colors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .padding(12)
+                .background(colors.chipSecondaryBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+        }
+
+        private var emptyCaptionPrompt: some View {
+            Group {
+                if reconstructionProgress == nil {
+                    Button(action: requestMOSSReconstruction) {
+                        Label("Improve with MOSS", systemImage: "text.magnifyingglass")
+                            .font(.system(size: 14, weight: .semibold))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.white)
+                    .background(colors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 280)
+        }
+
+        @ViewBuilder
+        private func progressView(_ progress: RealtimeHistoryMOSSProgress) -> some View {
+            switch progress {
+            case let .downloading(fraction):
+                ProgressView(value: fraction)
+                    .frame(width: 72)
+            case .loadingModel, .preparingAudio, .transcribing:
+                ProgressView()
+                    .progressViewStyle(.linear)
+                    .frame(width: 72)
+            case let .translating(completed, total, _):
+                ProgressView(value: Double(completed), total: Double(max(total, 1)))
+                    .frame(width: 72)
+            }
+        }
+
+        private func progressTitle(_ progress: RealtimeHistoryMOSSProgress) -> String {
+            switch progress {
+            case let .downloading(fraction):
+                return String(localized: "Downloading \(Int((fraction * 100).rounded()))%")
+            case .loadingModel:
+                return String(localized: "Loading model")
+            case .preparingAudio:
+                return String(localized: "Preparing audio")
+            case .transcribing:
+                return String(localized: "Recognizing speech")
+            case let .translating(completed, total, _):
+                return String(localized: "Translating \(completed) of \(total)")
+            }
+        }
+
+        private func requestMOSSReconstruction() {
+            guard reconstructionProgress == nil else { return }
+            reconstructionMessage = nil
+            let source = visibleCaptionSource
+            Task { @MainActor in
+                if await RealtimeHistoryMOSSReconstructor.shared.isModelCached() {
+                    startMOSSReconstruction(source: source)
+                } else {
+                    pendingReconstructionSource = source
+                    showMOSSDownloadConfirmation = true
+                }
+            }
+        }
+
+        private func startMOSSReconstruction(source: RealtimeHistoryAudioSource) {
+            pendingReconstructionSource = nil
+            reconstructionProgress = .downloading(fraction: 0)
+            reconstructionMessage = nil
+            reconstructionTask = Task { @MainActor in
+                defer {
+                    reconstructionProgress = nil
+                    reconstructionTask = nil
+                }
+                do {
+                    let track = try await RealtimeHistoryMOSSReconstructor.shared.reconstruct(
+                        session: currentSession,
+                        source: source
+                    ) { progress in
+                        reconstructionProgress = progress
+                    }
+                    try Task.checkCancellation()
+                    currentSession = try TranslationHistoryService.shared.saveRealtimeTrack(
+                        requestID: currentSession.requestID,
+                        track: track
+                    )
+                    visibleCaptionSource = source
+                    selectedTrackID = currentSession.tracks.first {
+                        $0.audioSource == source &&
+                            $0.recognitionModelID == mossRealtimeHistoryModelID
+                    }?.id
+                    trackDisplayMode = .single
+                } catch is CancellationError {
+                    return
+                } catch {
+                    historyDetailLogger.error(
+                        "MOSS reconstruction failed: \(String(describing: error), privacy: .public)"
+                    )
+                    reconstructionMessage = error.localizedDescription
+                }
+            }
+        }
+    #endif
+
+    @ViewBuilder
+    private var captionContent: some View {
+        #if os(macOS) && arch(arm64)
+            if !reconstructionSegments.isEmpty {
+                reconstructionTranscriptList
+            } else if trackDisplayMode == .compare,
+                      displayTracks.count > 1
+            {
+                compareTracks
+            } else if selectedTrack?.segments.isEmpty != false {
+                if reconstructionProgress == nil {
+                    emptyCaptionPrompt
+                }
+            } else {
+                transcriptList
+            }
+        #else
+            if trackDisplayMode == .compare,
+               displayTracks.count > 1
+            {
+                compareTracks
+            } else if selectedTrack?.segments.isEmpty != false {
+                #if os(macOS) && arch(arm64)
+                    if reconstructionProgress == nil {
+                        emptyCaptionPrompt
+                    }
+                #endif
+            } else {
+                transcriptList
+            }
+        #endif
+    }
+
+    #if os(macOS) && arch(arm64)
+        private var reconstructionSegments: [RealtimeHistoryTrackSegment] {
+            switch reconstructionProgress {
+            case let .transcribing(segments), let .translating(_, _, segments):
+                return segments
+            case .downloading, .loadingModel, .preparingAudio, nil:
+                return []
+            }
+        }
+
+        private var reconstructionTranscriptList: some View {
+            let previewTrack = RealtimeHistoryTrack(
+                recognitionModelID: mossRealtimeHistoryModelID,
+                recognitionModelDisplayName: RealtimeHistoryMOSSReconstructor.modelDisplayName,
+                translationProviderID: ModelConfig.appleTranslateID,
+                translationProviderDisplayName: ModelConfig.appleTranslate.displayName,
+                segments: reconstructionSegments
+            )
+            return VStack(alignment: .leading, spacing: 10) {
+                ForEach(reconstructionSegments) { segment in
+                    RealtimeTranscriptRow(
+                        segment: displaySegment(from: segment),
+                        duration: segment.duration,
+                        speakerID: segment.speakerID,
+                        speakerName: speakerName(for: segment, track: previewTrack),
+                        alignment: previewAlignment(for: segment, track: previewTrack),
+                        annotation: nil
+                    )
+                }
+            }
+        }
+
+        private func previewAlignment(
+            for segment: RealtimeHistoryTrackSegment,
+            track: RealtimeHistoryTrack
+        ) -> RealtimeTranscriptRow.Alignment {
+            guard let rawSpeakerID = segment.speakerID,
+                  let dominantSpeakers = track.dominantConversationSpeakerIDs
+            else {
+                return .leading
+            }
+            let speakerID = track.conversationSpeakerID(for: rawSpeakerID)
+            return speakerID == dominantSpeakers[1] ? .trailing : .leading
+        }
+    #endif
+
+    private var visibleTranscriptSegments: [RealtimeHistorySegment] {
+        if !displayTracks.isEmpty {
+            return selectedTrack?.segments.map(displaySegment(from:)) ?? currentSession.segments
+        }
+        return currentSession.delayedTranscriptSegments
+            .filter { $0.source == visibleCaptionSource }
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .sorted { $0.offset < $1.offset }
+            .map {
+                RealtimeHistorySegment(
+                    id: $0.id,
+                    offset: $0.offset,
+                    sourceText: $0.text,
+                    translatedText: $0.translatedText
+                )
+            }
+    }
+
+    private var transcriptList: some View {
+        let annotations = record.historyAnnotations
+        return LazyVStack(alignment: .leading, spacing: 10) {
+            if let selectedTrack {
+                // Resolved once per playback tick instead of once per row.
+                let activeSegmentID = selectedTrack.activeSegmentID(at: playbackTime)
+                ForEach(selectedTrack.segments) { segment in
+                    transcriptRow(
+                        segment,
+                        activeSegmentID: activeSegmentID,
+                        annotation: annotations[segment.id.uuidString]
+                    )
+                    .id(segment.id)
+                }
+            } else {
+                ForEach(visibleTranscriptSegments) { segment in
+                    RealtimeTranscriptRow(
+                        segment: segment,
+                        annotation: annotations[segment.id.uuidString]
+                    )
+                }
+            }
+        }
+    }
+
+    private var compareTracks: some View {
+        ScrollView(.horizontal, showsIndicators: true) {
+            HStack(alignment: .top, spacing: 0) {
+                ForEach(displayTracks) { track in
+                    VStack(alignment: .leading, spacing: 12) {
+                        trackHeader(track)
+
+                        let activeSegmentID = track.activeSegmentID(at: playbackTime)
+                        ForEach(track.segments) { segment in
+                            transcriptRow(
+                                segment,
+                                track: track,
+                                activeSegmentID: activeSegmentID,
+                                annotation: record.historyAnnotations[segment.id.uuidString]
+                            )
+                            .id(segment.id)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(width: 560, alignment: .topLeading)
+
+                    if track.id != displayTracks.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+    }
+
+    private func trackHeader(_ track: RealtimeHistoryTrack) -> some View {
+        let text = copyText(for: track)
+        return HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(versionTitle(for: track))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(colors.textPrimary)
+                .lineLimit(2)
+                .help(track.title)
+
+            Button {
+                PasteboardHelper.copy(text)
+            } label: {
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(colors.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .disabled(text.isEmpty)
+            .accessibilityLabel("Copy")
+
+            #if os(macOS)
+                if track.segments.contains(where: { $0.speakerID != nil }) {
+                    Button {
+                        presentSpeakerEditor(for: track)
+                    } label: {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(colors.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit Speaker Names")
+                }
+            #endif
+
+            Spacer()
+        }
+    }
+
+    private var displayTracks: [RealtimeHistoryTrack] {
+        let storedTracks = currentSession.tracks.filter {
+            ($0.audioSource ?? primaryCaptionSource) == visibleCaptionSource
+        }
+        if visibleCaptionSource == primaryCaptionSource {
+            if !storedTracks.isEmpty {
+                return storedTracks
+            }
+            return [primaryFallbackTrack]
+        }
+
+        let sourceSegments = currentSession.delayedTranscriptSegments
+            .filter { $0.source == visibleCaptionSource }
+            .sorted { $0.offset < $1.offset }
+        guard !sourceSegments.isEmpty else { return storedTracks }
+        let fallback = RealtimeHistoryTrack(
+            id: currentSession.requestID,
+            audioSource: visibleCaptionSource,
+            recognitionModelID: currentSession.transcriptionModel(for: visibleCaptionSource)?.modelID ??
+                RecognitionModelDescriptor.appleSpeech.id,
+            recognitionModelDisplayName: currentSession.transcriptionModel(for: visibleCaptionSource)?.modelDisplayName ??
+                RecognitionModelDescriptor.appleSpeech.title,
+            translationProviderID: currentSession.modelID,
+            translationProviderDisplayName: currentSession.modelDisplayName,
+            segments: sourceSegments.map {
+                RealtimeHistoryTrackSegment(
+                    id: $0.id,
+                    offset: $0.offset,
+                    duration: $0.duration,
+                    sourceText: $0.text,
+                    translatedText: $0.translatedText,
+                    relation: $0.translatedText.isEmpty ? .sourceOnly : .paired
+                )
+            }
+        )
+        return [fallback] + storedTracks
+    }
+
+    private var primaryFallbackTrack: RealtimeHistoryTrack {
+        RealtimeHistoryTrack(
+            id: currentSession.primaryTrackID ?? currentSession.requestID,
+            audioSource: primaryCaptionSource,
+            recognitionModelID: currentSession.transcriptionModels.first?.modelID ??
+                RecognitionModelDescriptor.appleSpeech.id,
+            recognitionModelDisplayName: currentSession.transcriptionModels.first?.modelDisplayName ??
+                RecognitionModelDescriptor.appleSpeech.title,
+            translationProviderID: currentSession.modelID,
+            translationProviderDisplayName: currentSession.modelDisplayName,
+            segments: currentSession.segments.map {
+                RealtimeHistoryTrackSegment(
+                    id: $0.id,
+                    offset: $0.offset,
+                    sourceText: $0.sourceText,
+                    translatedText: $0.translatedText,
+                    relation: .paired
+                )
+            }
+        )
+    }
+
+    private var selectedTrack: RealtimeHistoryTrack? {
+        if let selectedTrackID,
+           let track = displayTracks.first(where: { $0.id == selectedTrackID })
+        {
+            return track
+        }
+        return displayTracks.first(where: { $0.id == preferredTrackID }) ?? displayTracks.first
+    }
+
+    private var preferredTrackID: UUID? {
+        Self.preferredTrackID(in: currentSession, source: visibleCaptionSource)
+    }
+
+    private static func preferredTrackID(
+        in session: RealtimeHistorySession,
+        source: RealtimeHistoryAudioSource
+    ) -> UUID? {
+        let tracks = session.tracks.filter {
+            ($0.audioSource ?? session.primaryAudioSource) == source
+        }
+        return tracks.first(where: { $0.recognitionModelID == mossRealtimeHistoryModelID })?.id
+            ?? tracks.first(where: { $0.id == session.primaryTrackID })?.id
+            ?? tracks.first?.id
+    }
+
+    private var selectedVersionTitle: String {
+        selectedTrack.map(versionTitle(for:)) ?? String(localized: "Transcript")
+    }
+
+    private func versionTitle(for track: RealtimeHistoryTrack) -> String {
+        if track.recognitionModelID == mossRealtimeHistoryModelID {
+            return String(localized: "MOSS Optimized")
+        }
+        let realtimeTracks = displayTracks.filter { $0.recognitionModelID != mossRealtimeHistoryModelID }
+        if realtimeTracks.count > 1 {
+            return String(localized: "Realtime Draft · \(track.recognitionModelDisplayName)")
+        }
+        return String(localized: "Realtime Draft")
+    }
+
+    private func versionIcon(for track: RealtimeHistoryTrack) -> String {
+        track.recognitionModelID == mossRealtimeHistoryModelID ? "sparkles" : "waveform"
+    }
+
+    private func copyText(for track: RealtimeHistoryTrack) -> String {
+        let hasTranslation = track.segments.contains {
+            !$0.translatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return track.segments.compactMap { segment in
+            let source = segment.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let translation = segment.translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !source.isEmpty || !translation.isEmpty else { return nil }
+            if hasTranslation {
+                return ["[\(segment.offsetLabel)]", source, translation]
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+            }
+            return "[\(segment.offsetLabel)] \(source)"
+        }
+        .joined(separator: hasTranslation ? "\n\n" : "\n")
+    }
+
+    private func displaySegment(from segment: RealtimeHistoryTrackSegment) -> RealtimeHistorySegment {
+        RealtimeHistorySegment(
+            id: segment.id,
+            offset: segment.offset,
+            sourceText: segment.sourceText,
+            translatedText: segment.translatedText
+        )
+    }
+
+    private func transcriptRow(
+        _ segment: RealtimeHistoryTrackSegment,
+        track: RealtimeHistoryTrack? = nil,
+        activeSegmentID: UUID?,
+        annotation: String?
+    ) -> some View {
+        let track = track ?? selectedTrack
+        let isActive = activeSegmentID == segment.id
+        let spokenWords = isActive ? track.map { spokenWords(for: segment, in: $0) } : nil
+        let onSeek: ((TimeInterval) -> Void)? = { time in
+            playbackTime = time
+        }
+        #if os(macOS)
+            let onRenameSpeaker = segment.speakerID.map { speakerID in
+                { presentSpeakerEditor(for: speakerID, track: track) }
+            }
+        #else
+            let onRenameSpeaker: (() -> Void)? = nil
+        #endif
+        return RealtimeTranscriptRow(
+            segment: displaySegment(from: segment),
+            duration: segment.duration,
+            speakerID: segment.speakerID,
+            speakerName: speakerName(for: segment, track: track),
+            alignment: transcriptAlignment(for: segment, track: track),
+            isActive: isActive,
+            spokenWords: spokenWords,
+            // Only the active row reads the clock; the rest stay unchanged between ticks.
+            playbackTime: isActive ? playbackTime : 0,
+            annotation: annotation,
+            onSeek: onSeek,
+            onRenameSpeaker: onRenameSpeaker
+        )
+    }
+
+    private func spokenWords(
+        for segment: RealtimeHistoryTrackSegment,
+        in track: RealtimeHistoryTrack
+    ) -> RealtimeHistorySpokenWords {
+        RealtimeHistorySpokenWords(
+            text: segment.sourceText,
+            offset: segment.offset,
+            recordedDuration: segment.duration,
+            nextOffset: track.segments.lazy.map(\.offset).filter { $0 > segment.offset }.min()
+        )
+    }
+
+    private func transcriptAlignment(
+        for segment: RealtimeHistoryTrackSegment,
+        track: RealtimeHistoryTrack?
+    ) -> RealtimeTranscriptRow.Alignment {
+        guard let rawSpeakerID = segment.speakerID,
+              let dominantSpeakers = track?.dominantConversationSpeakerIDs
+        else {
+            return .leading
+        }
+        let speakerID = track?.conversationSpeakerID(for: rawSpeakerID) ?? rawSpeakerID
+        return speakerID == dominantSpeakers[1] ? .trailing : .leading
+    }
+
+    private func speakerName(
+        for segment: RealtimeHistoryTrackSegment,
+        track: RealtimeHistoryTrack?
+    ) -> String? {
+        guard let rawSpeakerID = segment.speakerID else { return nil }
+        if let name = currentSession.speakerNames[rawSpeakerID] {
+            return name
+        }
+        let groupedSpeakerID = track?.conversationSpeakerID(for: rawSpeakerID) ?? rawSpeakerID
+        if let name = currentSession.speakerNames[groupedSpeakerID] {
+            return name
+        }
+        guard let dominantSpeakers = track?.dominantConversationSpeakerIDs,
+              let index = dominantSpeakers.firstIndex(of: groupedSpeakerID)
+        else {
+            guard let track,
+                  track.recognitionModelID == mossRealtimeHistoryModelID
+            else {
+                return nil
+            }
+
+            var durationBySpeaker: [String: TimeInterval] = [:]
+            for segment in track.segments {
+                guard let speakerID = segment.speakerID else { continue }
+                let groupedSpeakerID = track.conversationSpeakerID(for: speakerID)
+                durationBySpeaker[groupedSpeakerID, default: 0] += max(segment.duration, 0)
+            }
+            let speakerIDs = durationBySpeaker.sorted {
+                $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value
+            }.map(\.key)
+            guard let index = speakerIDs.firstIndex(of: groupedSpeakerID) else { return nil }
+            return Self.defaultSpeakerName(for: index)
+        }
+        return Self.defaultSpeakerName(for: index)
+    }
+
+    private static func defaultSpeakerName(for index: Int) -> String {
+        var index = index
+        var letters = ""
+        repeat {
+            letters = String(UnicodeScalar(65 + index % 26)!) + letters
+            index = index / 26 - 1
+        } while index >= 0
+        return "Person \(letters)"
+    }
+
+    #if os(macOS)
+        private var speakerIDs: [String] {
+            let track = displayTracks.first { $0.id == speakerEditorTrackID }
+            return Array(Set(track?.segments.compactMap(\.speakerID) ?? [])).sorted()
+        }
+
+        private func presentSpeakerEditor(for track: RealtimeHistoryTrack) {
+            speakerNameDrafts = currentSession.speakerNames
+            speakerEditorTrackID = track.id
+            pendingSpeakerFocusID = nil
+            isSpeakerEditorPresented = true
+        }
+
+        private func presentSpeakerEditor(
+            for speakerID: String,
+            track: RealtimeHistoryTrack?
+        ) {
+            historyDetailLogger.debug(
+                """
+                Speaker rename tapped \
+                id=\(speakerID, privacy: .public) \
+                name=\(currentSession.speakerNames[speakerID] ?? "-", privacy: .public)
+                """
+            )
+            speakerNameDrafts = currentSession.speakerNames
+            speakerEditorTrackID = track?.id
+            pendingSpeakerFocusID = speakerID
+            isSpeakerEditorPresented = true
+        }
+
+        private var speakerEditor: some View {
+            SpeakerNameEditor(
+                speakerIDs: speakerIDs,
+                names: $speakerNameDrafts,
+                initialFocusID: pendingSpeakerFocusID,
+                onCancel: {
+                    isSpeakerEditorPresented = false
+                },
+                onSave: {
+                    do {
+                        currentSession = try TranslationHistoryService.shared.updateRealtimeSpeakerNames(
+                            requestID: currentSession.requestID,
+                            names: speakerNameDrafts
+                        )
+                        isSpeakerEditorPresented = false
+                    } catch {
+                        reconstructionMessage = error.localizedDescription
+                    }
+                }
+            )
+            .onDisappear {
+                speakerEditorTrackID = nil
+                pendingSpeakerFocusID = nil
+            }
+        }
+    #endif
+}
+
+#if os(macOS)
+    private struct SpeakerNameEditor: View {
+        let speakerIDs: [String]
+        @Binding var names: [String: String]
+        let initialFocusID: String?
+        let onCancel: () -> Void
+        let onSave: () -> Void
+
+        @Environment(\.colorScheme) private var colorScheme
+        @FocusState private var focusedSpeakerID: String?
+
+        @ThemeColors private var colors: AppColorPalette
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Speaker Names")
+                    .font(.system(size: 17, weight: .semibold))
+
+                ForEach(speakerIDs, id: \.self) { speakerID in
+                    HStack {
+                        Text("Speaker \(speakerID)")
+                            .foregroundStyle(colors.textSecondary)
+                            .frame(width: 100, alignment: .leading)
+                        TextField(
+                            "Name",
+                            text: Binding(
+                                get: { names[speakerID] ?? "" },
+                                set: { names[speakerID] = $0 }
+                            )
+                        )
+                        .focused($focusedSpeakerID, equals: speakerID)
+                    }
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Cancel", role: .cancel, action: onCancel)
+                    Button("Save", action: onSave)
+                        .keyboardShortcut(.defaultAction)
+                }
+            }
+            .padding(20)
+            .frame(width: 380)
+            .task {
+                historyDetailLogger.debug(
+                    "Speaker editor appeared target=\(initialFocusID ?? "nil", privacy: .public)"
+                )
+                try? await Task.sleep(for: .milliseconds(100))
+                focusedSpeakerID = initialFocusID
+                historyDetailLogger.debug(
+                    "Speaker focus requested id=\(focusedSpeakerID ?? "nil", privacy: .public)"
+                )
+            }
+            .onChange(of: focusedSpeakerID) { _, speakerID in
+                historyDetailLogger.debug(
+                    "Speaker focus changed id=\(speakerID ?? "nil", privacy: .public)"
+                )
+            }
+            .onDisappear {
+                historyDetailLogger.debug(
+                    """
+                    Speaker editor disappeared \
+                    target=\(initialFocusID ?? "nil", privacy: .public) \
+                    focus=\(focusedSpeakerID ?? "nil", privacy: .public)
+                    """
+                )
+            }
+        }
+    }
+#endif
+
+private struct RealtimeTranscriptRow: View {
+    enum Alignment {
+        case leading
+        case trailing
+    }
+
+    let segment: RealtimeHistorySegment
+    let duration: TimeInterval
+    let speakerID: String?
+    let speakerName: String?
+    let alignment: Alignment
+    let isActive: Bool
+    let spokenWords: RealtimeHistorySpokenWords?
+    let playbackTime: TimeInterval
+    let annotation: String?
+    let onSeek: ((TimeInterval) -> Void)?
+    let onRenameSpeaker: (() -> Void)?
+
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovered = false
+
+    private static let seekScheme = "tlingo-seek"
+
+    init(
+        segment: RealtimeHistorySegment,
+        duration: TimeInterval = 0,
+        speakerID: String? = nil,
+        speakerName: String? = nil,
+        alignment: Alignment = .leading,
+        isActive: Bool = false,
+        spokenWords: RealtimeHistorySpokenWords? = nil,
+        playbackTime: TimeInterval = 0,
+        annotation: String?,
+        onSeek: ((TimeInterval) -> Void)? = nil,
+        onRenameSpeaker: (() -> Void)? = nil
+    ) {
+        self.segment = segment
+        self.duration = duration
+        self.speakerID = speakerID
+        self.speakerName = speakerName
+        self.alignment = alignment
+        self.isActive = isActive
+        self.spokenWords = spokenWords
+        self.playbackTime = playbackTime
+        self.annotation = annotation
+        self.onSeek = onSeek
+        self.onRenameSpeaker = onRenameSpeaker
+    }
+
+    @ThemeColors private var colors: AppColorPalette
+
+    /// Diarized conversations keep chat bubbles; plain transcripts read as a timestamped list.
+    private var isBubble: Bool {
+        speakerID != nil
+    }
+
+    private var hasTranslation: Bool {
+        !segment.translatedText.isEmpty
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: isBubble ? 12 : 6) {
+            if alignment == .trailing {
+                Spacer(minLength: 120)
+            } else {
+                timestampButton
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                sourceText
+                if hasTranslation {
+                    HistoryMarkdownText(
+                        text: segment.translatedText,
+                        font: .system(size: 15, weight: .medium),
+                        foregroundColor: colors.textPrimary
+                    )
+                }
+                if let annotation {
+                    Rectangle()
+                        .fill(colors.divider.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 1)
+                        .padding(.vertical, 5)
+                    HistoryMarkdownText(
+                        text: annotation,
+                        font: .system(size: 12),
+                        foregroundColor: colors.textSecondary,
+                        emphasizesStructure: true
+                    )
+                }
+            }
+            .padding(.horizontal, isBubble ? 14 : 10)
+            .padding(.vertical, isBubble ? 13 : 8)
+            .frame(maxWidth: isBubble ? 760 : .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(rowFill)
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // The active row's words are seek links; a row tap would override their time.
+                guard !isActive else { return }
+                onSeek?(segment.offset)
+            }
+            .onHover { isHovered = $0 }
+            .environment(\.openURL, OpenURLAction { url in
+                guard url.scheme == Self.seekScheme, let time = TimeInterval(url.host() ?? "") else {
+                    return .systemAction
+                }
+                onSeek?(time)
+                return .handled
+            })
+
+            if alignment == .leading {
+                Spacer(minLength: 0)
+            } else {
+                timestampButton
+            }
+        }
+    }
+
+    private var rowFill: Color {
+        if isBubble {
+            return isActive ? colors.accent.opacity(0.08) : colors.cardBackground
+        }
+        return isHovered && !isActive && onSeek != nil ? colors.textSecondary.opacity(0.07) : .clear
+    }
+
+    /// Spoken text; while playing, the word under the playhead takes the accent color.
+    private var sourceText: some View {
+        Text(highlightedSource)
+            .font(.system(size: hasTranslation ? 13 : 15))
+            .foregroundStyle(hasTranslation && !isActive ? colors.textSecondary : colors.textPrimary)
+            .lineSpacing(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .contentDirectionAware(segment.sourceText)
+    }
+
+    private var highlightedSource: AttributedString {
+        let text = segment.sourceText
+        var attributed = AttributedString(text)
+        guard isActive, let spokenWords else { return attributed }
+
+        let activeIndex = spokenWords.wordIndex(at: playbackTime)
+        for (index, word) in spokenWords.words.enumerated() {
+            guard let range = Range(word.range, in: attributed) else { continue }
+            if onSeek != nil {
+                attributed[range].link = URL(string: "\(Self.seekScheme)://\(word.startTime)")
+            }
+            // Links default to the tint color; keep unspoken words in the row's text color.
+            attributed[range].foregroundColor = index == activeIndex ? colors.accent : colors.textPrimary
+            if index == activeIndex {
+                attributed[range].underlineStyle = .single
+            }
+        }
+        return attributed
+    }
+
+    private var timestampButton: some View {
+        Group {
+            if let onRenameSpeaker {
+                sideLabelText
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onRenameSpeaker()
+                    }
+            } else {
+                Button {
+                    onSeek?(segment.offset)
+                } label: {
+                    sideLabelText
+                }
+                .buttonStyle(.plain)
+                .disabled(onSeek == nil)
+            }
+        }
+        .accessibilityLabel(onRenameSpeaker == nil ? "Seek" : "Rename Speaker")
+    }
+
+    private var sideLabelText: some View {
+        Text(sideLabel)
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .monospacedDigit()
+            .foregroundColor(isActive ? colors.accent : colors.textSecondary.opacity(isBubble ? 1 : 0.8))
+            .frame(
+                width: isBubble ? 82 : 42,
+                alignment: alignment == .trailing ? .leading : .trailing
+            )
+            .padding(.top, isBubble ? 15 : 10)
+    }
+
+    private var sideLabel: String {
+        guard let speakerID else { return segment.offsetLabel }
+        if let speakerName {
+            return speakerName
+        }
+        return speakerID.hasPrefix("S") ? "SP\(speakerID.dropFirst())" : speakerID
+    }
+}

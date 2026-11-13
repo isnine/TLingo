@@ -12,9 +12,9 @@ struct RealtimeTextTranslationRequest {
 }
 
 struct RealtimeIncrementalTranslationState {
-    // Bounded memory cache that lets re-displayed segments skip re-translation. It may be
-    // smaller than a long session's segment count: display and dedup both fall back to the
-    // currently displayed `sentencePairs`, so eviction only lowers the cache-hit rate.
+    /// Bounded memory cache that lets re-displayed segments skip re-translation. It may be
+    /// smaller than a long session's segment count: display and dedup both fall back to the
+    /// currently displayed `sentencePairs`, so eviction only lowers the cache-hit rate.
     private static let translatedPairCacheLimit = 120
 
     private(set) var translationSourceText = ""
@@ -71,30 +71,34 @@ struct RealtimeIncrementalTranslationState {
         translationSourceText = sourceParts.stableText
         pendingSourceText = sourceParts.pendingText
 
-        updateSourceSegments(previousStableText: previousStableText)
-        if let finalizedPreviewPair = Self.finalizedPreviewPair(
-            previousPendingSource: previousPendingSource,
-            previousPendingTranslation: previousPendingTranslation,
-            previousStableSegments: previousStableSegments,
-            currentStableSegments: sourceSegments
-        ) {
-            RealtimeLog.log(
-                "align",
-                """
-                pending promoted to stable with preview translation \
-                src=\(RealtimeLog.text(finalizedPreviewPair.original)) tr=\(RealtimeLog.text(finalizedPreviewPair.translation))
-                """
+        let stableChanged = sourceParts.stableText != previousStableText
+        var rollbackPreviewTranslation: String?
+        if stableChanged {
+            updateSourceSegments(previousStableText: previousStableText)
+            if let finalizedPreviewPair = Self.finalizedPreviewPair(
+                previousPendingSource: previousPendingSource,
+                previousPendingTranslation: previousPendingTranslation,
+                previousStableSegments: previousStableSegments,
+                currentStableSegments: sourceSegments
+            ) {
+                RealtimeLog.log(
+                    "align",
+                    """
+                    pending promoted to stable with preview translation \
+                    src=\(RealtimeLog.text(finalizedPreviewPair.original)) tr=\(RealtimeLog.text(finalizedPreviewPair.translation))
+                    """
+                )
+                finalizedPreviewPairsBySource[Self.normalizedSourceKey(finalizedPreviewPair.original)] = finalizedPreviewPair
+            }
+            rollbackPreviewTranslation = Self.rollbackPreviewTranslation(
+                previousStableSegments: previousStableSegments,
+                previousSentencePairs: previousSentencePairs,
+                currentStableSegments: sourceSegments,
+                currentPendingSource: pendingSourceText
             )
-            finalizedPreviewPairsBySource[Self.normalizedSourceKey(finalizedPreviewPair.original)] = finalizedPreviewPair
+            pruneFinalizedPreviewPairs(to: sourceSegments)
+            refreshDisplayedSentencePairs(using: sourceSegments)
         }
-        let rollbackPreviewTranslation = Self.rollbackPreviewTranslation(
-            previousStableSegments: previousStableSegments,
-            previousSentencePairs: previousSentencePairs,
-            currentStableSegments: sourceSegments,
-            currentPendingSource: pendingSourceText
-        )
-        pruneFinalizedPreviewPairs(to: sourceSegments)
-        refreshDisplayedSentencePairs(using: sourceSegments)
 
         if let rollbackPreviewTranslation {
             RealtimeLog.warn(
@@ -572,13 +576,11 @@ struct RealtimeIncrementalTranslationState {
         let currentKeys = Set(currentStableSegments.map(normalizedSourceKey))
         for segment in previousStableSegments.reversed() {
             guard !currentKeys.contains(normalizedSourceKey(segment)),
-                  isLikelyRevision(segment, replacement: pending)
+                  isLikelyRevision(segment, replacement: pending),
+                  let pair = previousSentencePairs.last(where: {
+                      normalizedSourceKey($0.original) == normalizedSourceKey(segment)
+                  })
             else {
-                continue
-            }
-            guard let pair = previousSentencePairs.last(where: {
-                normalizedSourceKey($0.original) == normalizedSourceKey(segment)
-            }) else {
                 continue
             }
             let translation = pair.translation.trimmingCharacters(in: .whitespacesAndNewlines)

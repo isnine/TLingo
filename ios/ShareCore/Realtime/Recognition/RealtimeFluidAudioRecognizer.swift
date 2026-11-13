@@ -149,14 +149,11 @@
         ]
 
         private(set) var stableSegments: [RealtimeRecognitionSegment] = []
+        private(set) var stableText = ""
         private(set) var pendingSegment: RealtimeRecognitionSegment?
         private var currentSegmentStartOffset: TimeInterval = 0
         private var committedModelWordCount = 0
         private var lastPartialText = ""
-
-        var stableText: String {
-            stableSegments.map(\.text).joined(separator: "\n\n")
-        }
 
         var pendingText: String {
             pendingSegment?.text ?? ""
@@ -205,13 +202,14 @@
             for (index, completedSegment) in completedSegments.enumerated() {
                 let startOffset = currentSegmentStartOffset + segmentDuration * Double(index)
                 let endOffset = currentSegmentStartOffset + segmentDuration * Double(index + 1)
-                stableSegments.append(RealtimeRecognitionSegment(
+                let segment = RealtimeRecognitionSegment(
                     id: index == 0 ? previousPendingID ?? UUID() : UUID(),
                     text: completedSegment.0,
                     startOffset: startOffset,
                     endOffset: endOffset,
                     boundaryReason: completedSegment.1
-                ))
+                )
+                appendStableSegment(segment)
                 committedModelWordCount += completedSegment.0.split(whereSeparator: \.isWhitespace).count
             }
             if !completedSegments.isEmpty {
@@ -250,6 +248,7 @@
 
         mutating func reset() {
             stableSegments.removeAll()
+            stableText = ""
             pendingSegment = nil
             currentSegmentStartOffset = 0
             committedModelWordCount = 0
@@ -259,6 +258,16 @@
         mutating func beginEngineGeneration() {
             committedModelWordCount = 0
             lastPartialText = ""
+        }
+
+        private mutating func appendStableSegment(_ segment: RealtimeRecognitionSegment) {
+            guard !segment.text.isEmpty else { return }
+            stableSegments.append(segment)
+            if stableText.isEmpty {
+                stableText = segment.text
+            } else {
+                stableText += "\n\n" + segment.text
+            }
         }
 
         private mutating func commitPending(
@@ -273,11 +282,12 @@
                 text=\(RealtimeLog.text(pendingSegment.text))
                 """
             )
-            stableSegments.append(RealtimeRecognitionSegment(
+            appendStableSegment(RealtimeRecognitionSegment(
                 id: pendingSegment.id,
-                text: pendingSegment.text,
+                alreadyNormalizedText: pendingSegment.text,
                 startOffset: pendingSegment.startOffset,
                 endOffset: endOffset,
+                speakerID: pendingSegment.speakerID,
                 boundaryReason: boundaryReason
             ))
             self.pendingSegment = nil
@@ -355,7 +365,9 @@
 
         weak var delegate: RealtimeFluidAudioRecognizerDelegate?
 
-        var sampleRate: Int { 16000 }
+        var sampleRate: Int {
+            16000
+        }
 
         private let stateLock = NSLock()
         private let conversionLock = NSLock()
@@ -493,7 +505,10 @@
             if lagBucket > lastReportedLagBucket || (lagBucket == 0 && lastReportedLagBucket > 0) {
                 lastReportedLagBucket = lagBucket
                 // Recognition falling behind delays captions and can end in a backlog failure.
-                RealtimeLog.warn("fluid", "processing lag \(String(format: "%.1f", lagSeconds))s chunks=\(pendingSampleChunks.count)")
+                RealtimeLog.warn(
+                    "fluid",
+                    "processing lag \(String(format: "%.1f", lagSeconds))s chunks=\(pendingSampleChunks.count)"
+                )
             }
             maximumInputRMS = max(maximumInputRMS, rms)
             maximumInputAmplitude = max(maximumInputAmplitude, peak)
@@ -514,6 +529,7 @@
 
         func stop() async {
             let resources = stateLock.withLock {
+                isStopping = true
                 isPaused = true
                 return StopResources(
                     processingTask: processingTask,
@@ -719,20 +735,21 @@
         ) {
             let state = stateLock.withLock {
                 (
-                    !isStopping && sessionID == activeSessionID,
+                    (!isStopping || isTerminal) && sessionID == activeSessionID,
+                    transcriptState.stableText,
                     transcriptState.stableSegments,
                     transcriptState.pendingSegment,
                     Double(processedSampleCount) / Double(sampleRate)
                 )
             }
-            guard state.0 else { return }
+            guard state.0, !state.2.isEmpty || state.3 != nil else { return }
             let snapshot = RealtimeRecognitionSnapshot(
-                stableSegments: state.1,
-                pendingSegment: state.2,
-                audioOffset: state.3,
+                precomputedStableText: state.1,
+                stableSegments: state.2,
+                pendingSegment: state.3,
+                audioOffset: state.4,
                 isTerminal: isTerminal
             )
-            guard !snapshot.visibleText.isEmpty else { return }
             delegate?.realtimeFluidAudioRecognizer(
                 self,
                 sessionID: sessionID,

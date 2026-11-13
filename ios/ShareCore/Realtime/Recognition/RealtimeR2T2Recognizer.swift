@@ -25,13 +25,15 @@
         private static let finalMaxTokens = 64
         private static let eosTokenIDs: Set<Int> = [151_645, 151_643]
         private static let asrTextTag = "<asr_text>"
-        // Each step has a different window shape, so MLX's buffer cache otherwise grows past 10 GB.
+        /// Each step has a different window shape, so MLX's buffer cache otherwise grows past 10 GB.
         private static let mlxCacheLimit = 512 * 1024 * 1024
 
         var onResult: ((UUID, RealtimeRecognitionResult) -> Void)?
         var onFailure: ((UUID, Error) -> Void)?
 
-        var sampleRate: Int { 16000 }
+        var sampleRate: Int {
+            16000
+        }
 
         private let lock = NSLock()
         private let conversionLock = NSLock()
@@ -60,6 +62,12 @@
 
         func start(model descriptor: RecognitionModelDescriptor, locale: Locale, sessionID: UUID) async throws {
             await stop()
+            lock.withLock {
+                isStopping = false
+                isPaused = false
+                hasReportedFailure = false
+                activeSessionID = sessionID
+            }
             let cacheURL = await RecognitionModelStore.shared.cachedModelURL(for: descriptor)
             guard descriptor.runtime == .mlxStreaming,
                   let snapshotURL = Self.snapshotDirectory(in: cacheURL)
@@ -68,13 +76,15 @@
             }
             Memory.cacheLimit = Self.mlxCacheLimit
             let model = try await Qwen3ASRModel.fromModelDirectory(snapshotURL)
-            self.model = model
-            forcedLanguage = Self.forcedLanguage(for: locale, supportedLanguages: model.config.supportLanguages)
-            lock.withLock {
-                isStopping = false
-                isPaused = false
-                hasReportedFailure = false
-                activeSessionID = sessionID
+            let forcedLanguage = Self.forcedLanguage(for: locale, supportedLanguages: model.config.supportLanguages)
+            let accepted = lock.withLock { () -> Bool in
+                guard activeSessionID == sessionID, !isStopping else { return false }
+                self.model = model
+                self.forcedLanguage = forcedLanguage
+                return true
+            }
+            guard accepted else {
+                throw CancellationError()
             }
         }
 

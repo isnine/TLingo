@@ -164,7 +164,9 @@ public final class TranslationHistoryService {
                 results.append(newResult)
                 existing.modelResults = results
             }
-            if let conversationMessages { existing.conversationMessages = conversationMessages }
+            if let conversationMessages {
+                existing.conversationMessages = conversationMessages
+            }
         } else {
             let record = TranslationRecord(
                 requestID: requestID,
@@ -350,6 +352,15 @@ public final class TranslationHistoryService {
     }
 
     // MARK: - Fetch
+
+    public func fetchRecord(id: UUID) -> TranslationRecord? {
+        guard let persistentContext else { return nil }
+        var descriptor = FetchDescriptor<TranslationRecord>(
+            predicate: #Predicate { $0.id == id }
+        )
+        descriptor.fetchLimit = 1
+        return try? persistentContext.fetch(descriptor).first
+    }
 
     public func fetchAll() -> [TranslationRecord] {
         guard let persistentContext else { return [] }

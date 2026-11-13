@@ -87,7 +87,9 @@
                     }
                 }
                 .onChange(of: store.isRunning) { _, isRunning in
-                    if isRunning { isLatencyBubbleDismissed = false }
+                    if isRunning {
+                        isLatencyBubbleDismissed = false
+                    }
                 }
                 .overlay(alignment: .trailing) {
                     if isInspectorPresented {
@@ -105,13 +107,11 @@
                         RealtimeCaptionModeMenu(store: store) {
                             isCaptionAppearancePresented = true
                         }
-                        .popover(isPresented: $isCaptionAppearancePresented) {
-                            RealtimeCaptionAppearanceEditor(
-                                preferences: preferences,
-                                mode: store.resolvedCaptionDisplayMode
-                            )
-                            .frame(width: 380, height: 560)
-                        }
+                        .realtimeCaptionAppearancePopover(
+                            isPresented: $isCaptionAppearancePresented,
+                            preferences: preferences,
+                            mode: store.resolvedCaptionDisplayMode
+                        )
                     }
 
                     ToolbarItem {

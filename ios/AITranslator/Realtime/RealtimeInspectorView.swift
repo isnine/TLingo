@@ -29,13 +29,11 @@
                     Button("Caption Appearance…", systemImage: "textformat.size") {
                         isCaptionAppearancePresented = true
                     }
-                    .popover(isPresented: $isCaptionAppearancePresented) {
-                        RealtimeCaptionAppearanceEditor(
-                            preferences: preferences,
-                            mode: store.resolvedCaptionDisplayMode
-                        )
-                        .frame(width: 380, height: 560)
-                    }
+                    .realtimeCaptionAppearancePopover(
+                        isPresented: $isCaptionAppearancePresented,
+                        preferences: preferences,
+                        mode: store.resolvedCaptionDisplayMode
+                    )
                 }
 
                 Section {

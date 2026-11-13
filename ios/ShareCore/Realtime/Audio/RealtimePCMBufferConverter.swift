@@ -23,6 +23,10 @@ final class RealtimePCMBufferConverter {
         self.targetFormat = targetFormat
     }
 
+    init(targetFormat: AVAudioFormat) {
+        self.targetFormat = targetFormat
+    }
+
     func pcmBuffer(from sampleBuffer: CMSampleBuffer) -> AVAudioPCMBuffer? {
         guard let sourceBuffer = sourcePCMBuffer(from: sampleBuffer) else { return nil }
         return pcmBuffer(from: sourceBuffer)

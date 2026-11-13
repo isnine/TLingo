@@ -38,7 +38,7 @@
         }
 
         private var notchSize: CGSize {
-            RealtimeNotchCaptionLayout.size(isCompact: !store.isRunning || store.isPaused)
+            RealtimeNotchCaptionLayout.size(isCompact: !store.isRunning || (store.isPaused && captionLines.isEmpty))
         }
 
         var body: some View {
@@ -192,33 +192,11 @@
         }
 
         private var captionDisplayModeMenu: some View {
-            RealtimeCaptionModeMenu(store: store) {
-                isCaptionAppearancePresented = true
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.visible)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.white)
-            .tint(.white)
-            .fixedSize()
-            .padding(.horizontal, 9)
-            .frame(height: 28)
-            .background {
-                Capsule()
-                    .fill(Color.black.opacity(0.42))
-            }
-            .overlay {
-                Capsule()
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
-            .popover(isPresented: $isCaptionAppearancePresented) {
-                RealtimeCaptionAppearanceEditor(
-                    preferences: preferences,
-                    mode: store.resolvedCaptionDisplayMode
-                )
-                .frame(width: 380, height: 560)
-            }
+            RealtimeFloatingCaptionModeButton(
+                store: store,
+                preferences: preferences,
+                isCaptionAppearancePresented: $isCaptionAppearancePresented
+            )
         }
 
         private var closeCaptionButton: some View {
@@ -425,6 +403,40 @@
             if targetScreenHasBuiltInNotch != hasBuiltInNotch {
                 targetScreenHasBuiltInNotch = hasBuiltInNotch
             }
+        }
+    }
+
+    struct RealtimeFloatingCaptionModeButton: View {
+        @ObservedObject var store: RealtimeSessionStore
+        @ObservedObject var preferences: AppPreferences
+        @Binding var isCaptionAppearancePresented: Bool
+
+        var body: some View {
+            RealtimeCaptionModeMenu(store: store) {
+                isCaptionAppearancePresented = true
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.visible)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .tint(.white)
+            .fixedSize()
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background {
+                Capsule()
+                    .fill(Color.black.opacity(0.42))
+            }
+            .overlay {
+                Capsule()
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
+            .realtimeCaptionAppearancePopover(
+                isPresented: $isCaptionAppearancePresented,
+                preferences: preferences,
+                mode: store.resolvedCaptionDisplayMode
+            )
         }
     }
 #endif

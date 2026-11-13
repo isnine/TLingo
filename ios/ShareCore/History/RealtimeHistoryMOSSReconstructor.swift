@@ -43,7 +43,12 @@
         private let fileManager: FileManager
         private let cacheURL: URL
         private var downloadTask: Task<Void, Error>?
+        private var activeRequestID: UUID?
         public private(set) var currentProgress: RealtimeHistoryMOSSProgress?
+
+        public func progress(for requestID: UUID) -> RealtimeHistoryMOSSProgress? {
+            activeRequestID == requestID ? currentProgress : nil
+        }
 
         public init(
             cacheURL: URL? = nil,
@@ -117,7 +122,11 @@
             source: RealtimeHistoryAudioSource,
             progress: @escaping @MainActor @Sendable (RealtimeHistoryMOSSProgress) -> Void
         ) async throws -> RealtimeHistoryTrack {
-            defer { currentProgress = nil }
+            activeRequestID = session.requestID
+            defer {
+                activeRequestID = nil
+                currentProgress = nil
+            }
             guard let recording = session.audioRecordings.first(where: {
                 $0.source == source && $0.hasPlayableAudio
             }) else {

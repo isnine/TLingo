@@ -578,8 +578,7 @@
         }
 
         private static func normalizedSourceKey(_ text: String) -> String {
-            text.trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         }
 
         private func syncIndependentHistory(

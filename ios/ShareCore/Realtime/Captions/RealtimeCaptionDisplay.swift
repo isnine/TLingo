@@ -43,7 +43,9 @@ public enum RealtimeCaptionDisplayMode: String, CaseIterable, Identifiable, Send
     case translationOnly
     case bilingual
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var title: String {
         switch self {
@@ -108,7 +110,8 @@ public enum RealtimeCaptionDisplay {
     public static func latestCaptionGroup(_ lines: [RealtimeCaptionLine]) -> [RealtimeCaptionLine] {
         guard let last = lines.last else { return [] }
         guard let translationIndex = lines.lastIndex(where: { $0.kind == .translation }),
-              translationIndex > 0, lines[translationIndex - 1].kind == .source else {
+              translationIndex > 0, lines[translationIndex - 1].kind == .source
+        else {
             return [last]
         }
         return Array(lines[(translationIndex - 1) ... translationIndex])
@@ -561,8 +564,7 @@ public enum RealtimeCaptionDisplay {
     }
 
     private static func normalized(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
     private static func sourceLines(from text: String, idPrefix: String) -> [RealtimeCaptionLine] {

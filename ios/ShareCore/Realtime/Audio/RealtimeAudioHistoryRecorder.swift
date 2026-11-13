@@ -78,6 +78,9 @@ final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
         defer { lock.unlock() }
 
         finalizeCurrentSegmentLocked()
+        if segments.isEmpty, let directoryURL {
+            try? fileManager.removeItem(at: directoryURL)
+        }
         isActive = false
         isPaused = false
     }
@@ -102,8 +105,7 @@ final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
         lock.lock()
         let canRecord = isActive && !isPaused
         lock.unlock()
-        guard canRecord else { return false }
-        guard let pcmBuffer = sampleBufferConverter?.pcmBuffer(from: sampleBuffer) else { return false }
+        guard canRecord, let pcmBuffer = sampleBufferConverter?.pcmBuffer(from: sampleBuffer) else { return false }
         return append(pcmBuffer)
     }
 

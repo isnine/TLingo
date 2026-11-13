@@ -87,7 +87,6 @@
         case unsupportedRecognitionModel(String)
         case unsupportedSourceLanguage(String, String)
         case importedAudioRequired(String)
-        case missingAzureConfiguration
         case starting
         case stopping
 
@@ -140,10 +139,6 @@
                 )
             case let .importedAudioRequired(modelName):
                 return String(localized: "\(modelName) requires imported audio. Import an audio file or choose another model.")
-            case .missingAzureConfiguration:
-                return String(
-                    localized: "Add a valid Azure endpoint and API key in Realtime Options before starting."
-                )
             case .starting:
                 return String(localized: "Starting realtime translation")
             case .stopping:

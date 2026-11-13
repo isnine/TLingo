@@ -320,50 +320,76 @@
             }
             let adjustedResult: RealtimeRecognitionResult
             if let snapshot = result.snapshot {
-                let adjustedTimings = snapshot.tokenTimings.map {
-                    RealtimeRecognitionTokenTiming(
-                        token: $0.token,
-                        startTime: timeline.baseOffset + $0.startTime,
-                        endTime: timeline.baseOffset + $0.endTime,
-                        confidence: $0.confidence
-                    )
-                }
-                let adjustedSegments = snapshot.stableSegments.map { segment in
-                    RealtimeRecognitionSegment(
-                        id: segment.id,
-                        text: segment.text,
-                        startOffset: timeline.baseOffset + segment.startOffset,
-                        endOffset: timeline.baseOffset + segment.endOffset,
-                        speakerID: segment.speakerID,
-                        boundaryReason: segment.boundaryReason
-                    )
-                }
-                let adjustedPending = snapshot.pendingSegment.map { segment in
-                    RealtimeRecognitionSegment(
-                        id: segment.id,
-                        text: segment.text,
-                        startOffset: timeline.baseOffset + segment.startOffset,
-                        endOffset: timeline.baseOffset + segment.endOffset,
-                        speakerID: segment.speakerID,
-                        boundaryReason: segment.boundaryReason
-                    )
-                }
-                adjustedResult = RealtimeRecognitionResult(
-                    snapshot: adjustedSegments.isEmpty && adjustedPending == nil
-                        ? RealtimeRecognitionSnapshot(
+                let adjustedSnapshot: RealtimeRecognitionSnapshot
+                if timeline.baseOffset == 0 {
+                    if snapshot.stableSegments.isEmpty, snapshot.pendingSegment == nil {
+                        adjustedSnapshot = RealtimeRecognitionSnapshot(
+                            stableText: snapshot.stableText,
+                            volatileText: snapshot.volatileText,
+                            tokenTimings: snapshot.tokenTimings,
+                            audioOffset: timeline.audioOffset,
+                            isTerminal: snapshot.isTerminal
+                        )
+                    } else {
+                        adjustedSnapshot = RealtimeRecognitionSnapshot(
+                            precomputedStableText: snapshot.stableText,
+                            stableSegments: snapshot.stableSegments,
+                            pendingSegment: snapshot.pendingSegment,
+                            tokenTimings: snapshot.tokenTimings,
+                            audioOffset: timeline.audioOffset,
+                            isTerminal: snapshot.isTerminal
+                        )
+                    }
+                } else {
+                    let adjustedTimings = snapshot.tokenTimings.map {
+                        RealtimeRecognitionTokenTiming(
+                            token: $0.token,
+                            startTime: timeline.baseOffset + $0.startTime,
+                            endTime: timeline.baseOffset + $0.endTime,
+                            confidence: $0.confidence
+                        )
+                    }
+                    let adjustedSegments = snapshot.stableSegments.map { segment in
+                        RealtimeRecognitionSegment(
+                            id: segment.id,
+                            alreadyNormalizedText: segment.text,
+                            startOffset: timeline.baseOffset + segment.startOffset,
+                            endOffset: timeline.baseOffset + segment.endOffset,
+                            speakerID: segment.speakerID,
+                            boundaryReason: segment.boundaryReason
+                        )
+                    }
+                    let adjustedPending = snapshot.pendingSegment.map { segment in
+                        RealtimeRecognitionSegment(
+                            id: segment.id,
+                            alreadyNormalizedText: segment.text,
+                            startOffset: timeline.baseOffset + segment.startOffset,
+                            endOffset: timeline.baseOffset + segment.endOffset,
+                            speakerID: segment.speakerID,
+                            boundaryReason: segment.boundaryReason
+                        )
+                    }
+                    if adjustedSegments.isEmpty, adjustedPending == nil {
+                        adjustedSnapshot = RealtimeRecognitionSnapshot(
                             stableText: snapshot.stableText,
                             volatileText: snapshot.volatileText,
                             tokenTimings: adjustedTimings,
                             audioOffset: timeline.audioOffset,
                             isTerminal: snapshot.isTerminal
                         )
-                        : RealtimeRecognitionSnapshot(
+                    } else {
+                        adjustedSnapshot = RealtimeRecognitionSnapshot(
+                            precomputedStableText: snapshot.stableText,
                             stableSegments: adjustedSegments,
                             pendingSegment: adjustedPending,
                             tokenTimings: adjustedTimings,
                             audioOffset: timeline.audioOffset,
                             isTerminal: snapshot.isTerminal
-                        ),
+                        )
+                    }
+                }
+                adjustedResult = RealtimeRecognitionResult(
+                    snapshot: adjustedSnapshot,
                     confidence: result.confidence
                 )
             } else {

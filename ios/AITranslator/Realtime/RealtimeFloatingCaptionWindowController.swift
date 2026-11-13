@@ -44,7 +44,12 @@
             let mode = preferences.realtimeCaptionWindowMode
             let shouldReposition = window == nil || configuredMode != mode
             let panel = window ?? makeWindow()
-            panel.contentView = NSHostingView(rootView: RealtimeFloatingCaptionWindowView(store: store))
+            let rootView = RealtimeFloatingCaptionWindowView(store: store)
+            if let hostingView = panel.contentView as? NSHostingView<RealtimeFloatingCaptionWindowView> {
+                hostingView.rootView = rootView
+            } else {
+                panel.contentView = NSHostingView(rootView: rootView)
+            }
             configure(panel)
             if shouldReposition {
                 positionForCurrentMode(panel)

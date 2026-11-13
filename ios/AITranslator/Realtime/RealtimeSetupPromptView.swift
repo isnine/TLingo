@@ -186,8 +186,6 @@
                 return "memorychip"
             case .missingLanguageSelection:
                 return "globe"
-            case .missingAzureConfiguration:
-                return "key"
             default:
                 return "exclamationmark.triangle.fill"
             }

@@ -105,12 +105,11 @@ public enum RealtimeHistoryAudioPostProcessor {
         progressGate.advance()
         try Task.checkCancellation()
 
-        let updated = sessionByReplacingTranscriptSegments(
+        return sessionByReplacingTranscriptSegments(
             in: session,
             source: .microphone,
             with: translatedSegments
         )
-        return updated
     }
 
     public static func transcribeAudioFile(
@@ -569,42 +568,11 @@ private extension RealtimeHistoryAudioPostProcessor {
             guard case let .fluidAudio(fluidAudioModel) = model.download else {
                 throw RealtimeHistoryAudioPostProcessorError.unsupportedRecognitionModel(model.title)
             }
-
-            let modelDirectory = await RecognitionModelStore.shared.cachedModelURL(for: model)
-            switch fluidAudioModel {
-            case .parakeetEOU320, .parakeetEOU1280:
-                let manager = StreamingEouAsrManager(
-                    chunkSize: fluidAudioModel == .parakeetEOU320 ? .ms320 : .ms1280
-                )
-                try await manager.loadModels(to: modelDirectory)
-                return .eou(manager)
-            case .nemotronStreaming560, .nemotronStreaming1120, .nemotronStreaming2240:
-                let chunkSize: NemotronChunkSize = switch fluidAudioModel {
-                case .nemotronStreaming560: .ms560
-                case .nemotronStreaming1120: .ms1120
-                default: .ms2240
-                }
-                let manager = StreamingNemotronAsrManager(
-                    requestedChunkSize: chunkSize
-                )
-                try await manager.loadModels(
-                    from: modelDirectory.appendingPathComponent(chunkSize.repo.folderName, isDirectory: true)
-                )
-                return .standard(manager)
-            case .nemotronMultilingual2240:
-                let manager = StreamingNemotronMultilingualAsrManager()
-                try await manager.loadModels(
-                    from: modelDirectory
-                        .appendingPathComponent(Repo.nemotronMultilingual.folderName, isDirectory: true)
-                        .appendingPathComponent("multilingual/2240ms", isDirectory: true)
-                )
-                await manager.setLanguage(
-                    language == .auto
-                        ? "auto"
-                        : RealtimeFluidAudioLanguageMapper.nemotronLanguageCode(language.rawValue)
-                )
-                return .multilingual(manager)
-            }
+            return try await RealtimeFluidAudioEngineCache.load(
+                fluidAudioModel,
+                descriptor: model,
+                language: language
+            )
         }
 
         private static func forEachAudioBuffer(

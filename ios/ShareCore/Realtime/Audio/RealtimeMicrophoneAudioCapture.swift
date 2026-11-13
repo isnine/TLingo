@@ -13,7 +13,7 @@ protocol RealtimeMicrophoneAudioCaptureDelegate: AnyObject {
 
 final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
     #if os(iOS)
-        // 1024-frame buffers at 48 kHz: ~43 ms, fast enough for the listening indicator.
+        /// 1024-frame buffers at 48 kHz: ~43 ms, fast enough for the listening indicator.
         private static let audioLevelReportInterval = 2
     #else
         private static let audioLevelReportInterval = 8
@@ -35,13 +35,12 @@ final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
         /// Conversion state for one installed tap. Only the audio thread touches it,
         /// so start, stop and restart on the main thread never race the tap.
         private final class TapState: @unchecked Sendable {
-            let targetFormat: AVAudioFormat
-            var converter: AVAudioConverter?
+            let converter: RealtimePCMBufferConverter
             var conversionFailureCount = 0
             var audioSampleCount = 0
 
             init(targetFormat: AVAudioFormat) {
-                self.targetFormat = targetFormat
+                converter = RealtimePCMBufferConverter(targetFormat: targetFormat)
             }
         }
 
@@ -203,9 +202,9 @@ final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
     }
 
     #if os(iOS)
-        // `.measurement` disables the system's gain control, so distant speech arrived far too quiet.
-        // Voice processing is left off: its noise suppression erased faint or distant speech
-        // entirely, and capture never plays audio, so its echo cancellation is not needed.
+        /// `.measurement` disables the system's gain control, so distant speech arrived far too quiet.
+        /// Voice processing is left off: its noise suppression erased faint or distant speech
+        /// entirely, and capture never plays audio, so its echo cancellation is not needed.
         private func configureAudioSession(allowsPlayback: Bool) throws {
             let audioSession = AVAudioSession.sharedInstance()
             let options: AVAudioSession.CategoryOptions = allowsPlayback
@@ -219,10 +218,7 @@ final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
 
         private func startAudioEngine(sampleRate: Int) throws {
             let inputNode = audioEngine.inputNode
-            guard let inputFormat = validInputFormat(for: inputNode) else {
-                throw RealtimeCaptureError.microphoneUnavailable
-            }
-            guard let targetFormat = AVAudioFormat(
+            guard let inputFormat = validInputFormat(for: inputNode), let targetFormat = AVAudioFormat(
                 commonFormat: .pcmFormatInt16,
                 sampleRate: Double(sampleRate),
                 channels: 1,
@@ -335,7 +331,7 @@ final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
         }
 
         private func handleInputBuffer(_ buffer: AVAudioPCMBuffer, state: TapState) {
-            guard let convertedBuffer = convertedPCMBuffer(from: buffer, state: state) else {
+            guard let convertedBuffer = state.converter.pcmBuffer(from: buffer) else {
                 // Dropped audio never reaches the recognizer, so speech silently goes missing.
                 state.conversionFailureCount += 1
                 if state.conversionFailureCount == 1 || state.conversionFailureCount % 50 == 0 {
@@ -356,38 +352,6 @@ final class RealtimeMicrophoneAudioCapture: NSObject, @unchecked Sendable {
                     level: realtimeAudioLevel(from: convertedBuffer)
                 )
             }
-        }
-
-        private func convertedPCMBuffer(from inputBuffer: AVAudioPCMBuffer, state: TapState) -> AVAudioPCMBuffer? {
-            let targetFormat = state.targetFormat
-            if state.converter?.inputFormat != inputBuffer.format {
-                state.converter = AVAudioConverter(from: inputBuffer.format, to: targetFormat)
-            }
-            guard let converter = state.converter else { return nil }
-            let sampleRateRatio = targetFormat.sampleRate / inputBuffer.format.sampleRate
-            let frameCapacity = AVAudioFrameCount((Double(inputBuffer.frameLength) * sampleRateRatio).rounded(.up)) + 1
-            guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity) else {
-                return nil
-            }
-
-            var didProvideInput = false
-            let inputBlock: AVAudioConverterInputBlock = { _, outputStatus in
-                if didProvideInput {
-                    outputStatus.pointee = .noDataNow
-                    return nil
-                }
-
-                didProvideInput = true
-                outputStatus.pointee = .haveData
-                return inputBuffer
-            }
-
-            var conversionError: NSError?
-            let status = converter.convert(to: outputBuffer, error: &conversionError, withInputFrom: inputBlock)
-            guard status != .error, conversionError == nil, outputBuffer.frameLength > 0 else {
-                return nil
-            }
-            return outputBuffer
         }
     #endif
 }

@@ -28,8 +28,7 @@
 
         func prewarm(_ descriptor: RecognitionModelDescriptor) {
             installObserversIfNeeded()
-            guard !isInBackground, let model = Self.fluidAudioModel(descriptor) else { return }
-            guard slot?.model != model else { return }
+            guard !isInBackground, let model = Self.fluidAudioModel(descriptor), slot?.model != model else { return }
             slot = startLoading(model, descriptor: descriptor)
             RealtimeLog.log("fluid", "prewarm started model=\(model.rawValue)")
         }
@@ -155,9 +154,10 @@
             UserDefaults.standard.set(durations, forKey: loadDurationsKey)
         }
 
-        private static func load(
+        static func load(
             _ model: RecognitionFluidAudioModel,
-            descriptor: RecognitionModelDescriptor
+            descriptor: RecognitionModelDescriptor,
+            language: SourceLanguageOption? = nil
         ) async throws -> RealtimeFluidAudioStreamingEngine {
             let modelDirectory = await RecognitionModelStore.shared.cachedModelURL(for: descriptor)
             switch model {
@@ -187,6 +187,13 @@
                     .appendingPathComponent("multilingual/2240ms", isDirectory: true)
                 let manager = StreamingNemotronMultilingualAsrManager()
                 try await manager.loadModels(from: variantDirectory)
+                if let language {
+                    await manager.setLanguage(
+                        language == .auto
+                            ? "auto"
+                            : RealtimeFluidAudioLanguageMapper.nemotronLanguageCode(language.rawValue)
+                    )
+                }
                 return .multilingual(manager)
             }
         }

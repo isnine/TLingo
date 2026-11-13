@@ -903,9 +903,15 @@
         }
 
         private var captureStage: CaptureStage {
-            if !isCapturingIPhoneAudio, !hasCaption { return .startCapture }
-            if !isCaptureReady, !hasPlayedSampleClip, !hasCaption { return .waitForCapture }
-            if !hasPlayedSampleClip, !hasCaption { return .playClip }
+            if !isCapturingIPhoneAudio, !hasCaption {
+                return .startCapture
+            }
+            if !isCaptureReady, !hasPlayedSampleClip, !hasCaption {
+                return .waitForCapture
+            }
+            if !hasPlayedSampleClip, !hasCaption {
+                return .playClip
+            }
             return .watchCaptions
         }
 
@@ -951,7 +957,11 @@
                     .fill(AppColors.Palette(colorScheme: .light, accentTheme: preferences.accentTheme).textPrimary)
                 Button {
                     hasPlayedSampleClip = true
-                    sampleClipPlayer.speak(Self.sampleClipPhrase, languageCode: "en-US")
+                    if let phrase = OnboardingPracticePhrase.phrase(for: sourceLanguage) {
+                        sampleClipPlayer.speak(phrase, languageCode: sourceLanguage.rawValue)
+                    } else {
+                        sampleClipPlayer.speak(Self.sampleClipPhrase, languageCode: "en-US")
+                    }
                 } label: {
                     Image(systemName: sampleClipPlayer.isPlaying ? "waveform" : "play.fill")
                         .font(.system(size: 20))
@@ -1237,9 +1247,11 @@
         }
 
         private func prepare() {
-            if originalInputSource == nil {
-                originalInputSource = store.inputSource
+            guard originalInputSource == nil else {
+                refreshPermissionStatus()
+                return
             }
+            originalInputSource = store.inputSource
             // Onboarding starts from English into the app language (or the next non-English system language).
             preferences.setRealtimeSourceLanguage(.english, reason: "RealtimeOnboarding.prepare")
             preferences.setRealtimeTargetLanguage(
