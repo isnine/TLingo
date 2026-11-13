@@ -151,19 +151,3 @@ public struct RealtimeCaptionAppearanceEditor: View {
         .accessibilityLabel(Text(title))
     }
 }
-
-public extension View {
-    func realtimeCaptionAppearancePopover(
-        isPresented: Binding<Bool>,
-        preferences: AppPreferences,
-        mode: RealtimeCaptionDisplayMode
-    ) -> some View {
-        popover(isPresented: isPresented) {
-            RealtimeCaptionAppearanceEditor(
-                preferences: preferences,
-                mode: mode
-            )
-            .frame(width: 380, height: 560)
-        }
-    }
-}

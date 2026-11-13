@@ -107,11 +107,13 @@
                         RealtimeCaptionModeMenu(store: store) {
                             isCaptionAppearancePresented = true
                         }
-                        .realtimeCaptionAppearancePopover(
-                            isPresented: $isCaptionAppearancePresented,
-                            preferences: preferences,
-                            mode: store.resolvedCaptionDisplayMode
-                        )
+                        .popover(isPresented: $isCaptionAppearancePresented) {
+                            RealtimeCaptionAppearanceEditor(
+                                preferences: preferences,
+                                mode: store.resolvedCaptionDisplayMode
+                            )
+                            .frame(width: 380, height: 560)
+                        }
                     }
 
                     ToolbarItem {

@@ -432,11 +432,13 @@
                     .stroke(Color.white.opacity(0.22), lineWidth: 1)
             }
             .shadow(color: .black.opacity(0.5), radius: 6, x: 0, y: 2)
-            .realtimeCaptionAppearancePopover(
-                isPresented: $isCaptionAppearancePresented,
-                preferences: preferences,
-                mode: store.resolvedCaptionDisplayMode
-            )
+            .popover(isPresented: $isCaptionAppearancePresented) {
+                RealtimeCaptionAppearanceEditor(
+                    preferences: preferences,
+                    mode: store.resolvedCaptionDisplayMode
+                )
+                .frame(width: 380, height: 560)
+            }
         }
     }
 #endif
