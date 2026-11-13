@@ -48,6 +48,7 @@ For small changes, compile-check with a single Debug build of the most relevant 
 ## Release Guardrails
 
 - App Store iOS and macOS releases are built and distributed only by Xcode Cloud, which owns App Store build numbers.
+- TLingo is distributed only through the App Store using the `TLingo` scheme and Xcode Cloud `Release` workflow. Do not recreate the retired Direct channel. The independent `TLingoHelper` target is not a TLingo distribution channel.
 - When replacing a version in `WAITING_FOR_REVIEW` or `IN_REVIEW`, withdraw the selected candidate and reuse its `MARKETING_VERSION`; update the existing `CHANGELOG.md` section and localized in-app and App Store notes before pushing. Do not bump the marketing version merely to replace its build. Check iOS and macOS independently.
 - Routine version bumps update `MARKETING_VERSION`. Update `CHANGELOG.md` before creating a `v*` tag.
 - Commit subjects start with `[Added]`, `[Improved]`, `[Fixed]`, or `[Chore]`, optionally followed by `[iOS]`, `[Mac]`, or `[Both]`. Platform tags only filter release notes and are never shown to users. Only the first three reach users. From `5.7.5` onward every CHANGELOG item must carry an explicit platform tag; older sections keep the implicit both behavior.

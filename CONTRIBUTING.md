@@ -28,7 +28,8 @@ swiftformat --lint <touched-swift-files>
 swiftlint lint <touched-swift-files>
 ```
 
-Use the relevant `TLingo` or `TLingo-Direct` build for Apple changes.
+Use the `TLingo` scheme for the relevant Apple platform. For Helper changes, use
+the additional gates in `docs/verification.md`.
 
 ## Commits
 
