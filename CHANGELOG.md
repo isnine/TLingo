@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [iOS] Collapse and expand translation results in the system translation sheet
 - [Both] Copy translated text when replacing the original
 - [Mac] Keep chat input stable while composing with an input method
+- [Mac] Replace editable selected text with the translation from the selection popup
 
 ### Fixed
 
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Convert between Traditional and Simplified Chinese locally with Apple Translate
 - [Both] Preserve clearly identifiable Chinese scripts during automatic language detection
 - [Mac] Keep notch captions visible while realtime translation is paused
+- [Mac] Avoid showing the selection trigger when dragging controls or windows
 
 ### Changed
 

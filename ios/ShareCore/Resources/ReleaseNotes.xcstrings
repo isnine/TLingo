@@ -1251,6 +1251,131 @@
         }
       }
     },
+    "Avoid showing the selection trigger when dragging controls or windows" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجنب إظهار مشغل التحديد عند سحب عناصر التحكم أو النوافذ"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undgå at vise markeringsudløseren ved træk af knapper eller vinduer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auslöser für Auswahl beim Ziehen von Steuerelementen oder Fenstern nicht anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avoid showing the selection trigger when dragging controls or windows"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evitar mostrar el activador de selección al arrastrar controles o ventanas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éviter d'afficher le déclencheur de sélection lors du glissement de commandes ou de fenêtres"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hindari menampilkan pemicu pilihan saat menyeret kontrol atau jendela"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evita di mostrare l'attivatore di selezione quando trascini controlli o finestre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コントロールやウィンドウをドラッグしたときに選択トリガーを表示しない"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컨트롤이나 창을 드래그할 때 선택 트리거 표시하지 않기"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elak daripada memaparkan pencetus pilihan apabila menyeret kawalan atau tetingkap"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unngå å vise markeringsutløseren ved flytting av kontroller eller vinduer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selectietrigger niet weergeven bij slepen van bedieningselementen of vensters"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie pokazuj wyzwalacza zaznaczenia podczas przeciągania kontrolek lub okien"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evitar exibir o acionador de seleção ao arrastar controles ou janelas"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undvik att visa markeringsutlösaren när du drar kontroller eller fönster"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denetimleri veya pencereleri sürüklerken seçim tetikleyicisini göstermekten kaçın"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖曳控制項或視窗時避免顯示選取觸發器"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖动控件或窗口时，不再误显示划词按钮"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖曳控制項或視窗時避免顯示選取觸發器"
+          }
+        }
+      }
+    },
     "Checked and downloaded Apple Translate language packs before Realtime starts, with clearer setup guidance." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6622,6 +6747,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在即時工作階段之間記住字幕顯示模式"
+          }
+        }
+      }
+    },
+    "Replace editable selected text with the translation from the selection popup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استبدال النص المحدد القابل للتعديل بالترجمة من النافذة المنبثقة للتحديد"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstat redigerbar markeret tekst med oversættelsen fra markeringspop op-vinduet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeitbaren markierten Text durch die Übersetzung aus dem Auswahl-Popup ersetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace editable selected text with the translation from the selection popup"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar el texto editable seleccionado con la traducción de la ventana emergente de selección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer le texte modifiable sélectionné par la traduction du pop-up de sélection"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganti teks terpilih yang dapat diedit dengan terjemahan dari pop-up pilihan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisci il testo modificabile selezionato con la traduzione dal popup di selezione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集可能な選択テキストを選択ポップアップの翻訳に置き換える"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "편집 가능한 선택한 텍스트를 선택 팝업의 번역으로 교체"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gantikan teks terpilih yang boleh diedit dengan terjemahan daripada pop timbul pilihan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstatt redigerbar merket tekst med oversettelsen fra markerings-popupen"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerkbare geselecteerde tekst vervangen door de vertaling uit de selectie-pop-up"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zastąp edytowalny zaznaczony tekst tłumaczeniem z wyskakującego okienka zaznaczenia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Substituir o texto selecionável editável pela tradução do pop-up de seleção"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersätt redigerbar markerad text med översättningen från markeringsrutan"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzenlenebilir seçili metni seçim açılır penceresindeki çeviriyle değiştir"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以選取彈出視窗中的翻譯取代可編輯的已選文字"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过划词翻译弹窗，将译文替换到可编辑的原文中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以選取彈出式視窗中的翻譯取代可編輯的選取文字"
           }
         }
       }
