@@ -50,10 +50,6 @@ struct AITranslatorApp: App {
             if secret.isEmpty {
                 logger.warning("Cloud secret is empty!")
             }
-            // Also write args to /tmp (stdout is unreliable when launched via open)
-            let dbg = "/tmp/tlingo_launch_args.txt"
-            let args = ProcessInfo.processInfo.arguments.joined(separator: "\n") + "\n"
-            try? args.write(toFile: dbg, atomically: true, encoding: .utf8)
         #endif
     }
 
@@ -353,11 +349,9 @@ struct AITranslatorApp: App {
                         """
                     )
             }
-            for url in urls {
-                // Other deep links (e.g. tlingo://translate) are delivered by
-                // SwiftUI's onOpenURL on RootTabView, which owns the destination
-                // route. Submitting here too would translate the same URL twice.
-            }
+            // Other deep links (e.g. tlingo://translate) are delivered by
+            // SwiftUI's onOpenURL on RootTabView, which owns the destination
+            // route. Submitting here too would translate the same URL twice.
         }
 
         private func receiveTextPopupURL(_ url: URL) -> String? {

@@ -8,6 +8,7 @@ import Combine
 import Foundation
 import os
 import SwiftUI
+import Translation
 
 private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "HomeViewModel")
 #if canImport(UIKit)
@@ -16,7 +17,6 @@ private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", categor
 #if canImport(AppKit)
     import AppKit
 #endif
-import Translation
 
 @MainActor
 public final class HomeViewModel: ObservableObject {
@@ -125,7 +125,11 @@ public final class HomeViewModel: ObservableObject {
 
             /// The provider cannot handle the selected languages, so retrying would not help.
             public var isUnsupported: Bool {
-                if case let .failure(_, _, _, isUnsupported) = self { isUnsupported } else { false }
+                if case let .failure(_, _, _, isUnsupported) = self {
+                    isUnsupported
+                } else {
+                    false
+                }
             }
 
             public var latencyBreakdown: LatencyBreakdown? {
@@ -181,7 +185,9 @@ public final class HomeViewModel: ObservableObject {
         /// When this run first showed output; fixes its slot in first-result order.
         public var firstOutputAt: Date?
 
-        public var id: String { model.id }
+        public var id: String {
+            model.id
+        }
 
         public var modelDisplayName: String {
             if case let .success(result) = status, let name = result.providerDisplayName {
@@ -259,13 +265,13 @@ public final class HomeViewModel: ObservableObject {
         attachedImages.removeAll()
     }
 
-    @Published public private(set) var actions: [ActionConfig]
-    @Published public private(set) var models: [ModelConfig] = []
-    @Published public private(set) var isLoadingModels = false
+    @Published public internal(set) var actions: [ActionConfig]
+    @Published public internal(set) var models: [ModelConfig] = []
+    @Published public internal(set) var isLoadingModels = false
     /// Cached catalogs can be stale, so enabled model IDs are reconciled only against a server response.
-    private var hasFetchedModels = false
+    var hasFetchedModels = false
     @Published public var selectedActionID: ActionConfig.ID?
-    @Published public private(set) var modelRuns: [ModelRunViewState] = []
+    @Published public internal(set) var modelRuns: [ModelRunViewState] = []
 
     public var isWordLookupFallback: Bool {
         activeRequestContext?.isWordLookup == true
@@ -293,8 +299,16 @@ public final class HomeViewModel: ObservableObject {
         )
         return runs.enumerated().sorted { lhs, rhs in
             // Failures sink to the end in every order so the leading result is usable.
-            let leftFailed = if case .failure = lhs.element.status { true } else { false }
-            let rightFailed = if case .failure = rhs.element.status { true } else { false }
+            let leftFailed = if case .failure = lhs.element.status {
+                true
+            } else {
+                false
+            }
+            let rightFailed = if case .failure = rhs.element.status {
+                true
+            } else {
+                false
+            }
             if leftFailed != rightFailed {
                 return !leftFailed
             }
@@ -318,7 +332,7 @@ public final class HomeViewModel: ObservableObject {
         }.map(\.element)
     }
 
-    @Published public private(set) var isLoadingConfiguration: Bool = true
+    @Published public internal(set) var isLoadingConfiguration: Bool = true
 
     /// When set, `refreshConfiguration()` will select this action after loading.
     public internal(set) var pendingDeepLinkActionName: String?
@@ -326,15 +340,15 @@ public final class HomeViewModel: ObservableObject {
     /// Non-nil when the target used for the current request differs from
     /// the persisted target preference, either because Match resolved to a
     /// concrete language or because the user picked a one-shot override.
-    @Published public private(set) var resolvedTargetLanguage: TargetLanguageOption?
+    @Published public internal(set) var resolvedTargetLanguage: TargetLanguageOption?
 
     /// The detected (or user-pinned) source language, refreshed live while typing and on each request.
-    @Published public private(set) var detectedSourceLanguage: SourceLanguageOption?
+    @Published public internal(set) var detectedSourceLanguage: SourceLanguageOption?
 
     /// True when the automatic target skipped the first language because the source already is that language.
-    @Published public private(set) var isMatchTargetFallback = false
+    @Published public internal(set) var isMatchTargetFallback = false
 
-    private var languagePreviewTask: Task<Void, Never>?
+    var languagePreviewTask: Task<Void, Never>?
 
     // MARK: - Apple Translation Bridge
 
@@ -356,18 +370,18 @@ public final class HomeViewModel: ObservableObject {
     /// Detected source language for the pending Apple Translate request.
     /// Used by HomeView to set `TranslationSession.Configuration.source`
     /// so the system does not show a "Choose Language" prompt.
-    public private(set) var appleTranslateSourceLanguage: Locale.Language?
+    public internal(set) var appleTranslateSourceLanguage: Locale.Language?
 
     /// Context captured when an Apple Translate request is pending, so that the
     /// `.translationTask()` callback in HomeView can relay it back.
-    public private(set) var pendingAppleTranslateText: String?
-    public private(set) var pendingAppleTranslateAction: ActionConfig?
-    public private(set) var pendingAppleTranslateRequestID: UUID?
-    private var pendingAppleTranslateResolvedTarget: TargetLanguageOption?
+    public internal(set) var pendingAppleTranslateText: String?
+    public internal(set) var pendingAppleTranslateAction: ActionConfig?
+    public internal(set) var pendingAppleTranslateRequestID: UUID?
+    var pendingAppleTranslateResolvedTarget: TargetLanguageOption?
 
     /// When non-nil, bypasses automatic language detection and uses this
     /// target language for the current translation.
-    private var targetLanguageOverride: TargetLanguageOption?
+    var targetLanguageOverride: TargetLanguageOption?
 
     /// Optional handler invoked on macOS to route Apple Translate requests through a
     /// real NSWindow (required for TranslationSession to work outside an NSPopover).
@@ -376,16 +390,16 @@ public final class HomeViewModel: ObservableObject {
 
     /// True when the last Apple Translate run stopped because its language pack is not
     /// downloaded. The result card then offers a Download button instead of Retry.
-    @Published public private(set) var appleTranslateNeedsLanguageDownload = false
+    @Published public internal(set) var appleTranslateNeedsLanguageDownload = false
 
     /// Set by the Download button so the next Apple Translate run may present the
     /// system download sheet; otherwise a missing pack fails without any system UI.
-    private var allowsAppleTranslateDownloadPrompt = false
+    var allowsAppleTranslateDownloadPrompt = false
 
     // MARK: - TTS Playback State
 
-    @Published public private(set) var speakingModels: Set<String> = []
-    @Published public private(set) var isSpeakingInputText: Bool = false
+    @Published public internal(set) var speakingModels: Set<String> = []
+    @Published public internal(set) var isSpeakingInputText: Bool = false
     /// Set to `true` when the user triggers an action but has not yet accepted data sharing consent.
     @Published public var showDataConsentRequest: Bool = false
     /// Set to `true` when the satisfaction prompt toast should be displayed.
@@ -393,8 +407,8 @@ public final class HomeViewModel: ObservableObject {
     /// Set to `true` when the system App Store review prompt should be requested directly.
     @Published public var requestSystemReview: Bool = false
     /// Incremented each time a translation request completes with at least one success.
-    @Published public private(set) var successfulTranslationCount: Int = 0
-    private let ttsService: TTSPreviewService
+    @Published public internal(set) var successfulTranslationCount: Int = 0
+    let ttsService: TTSPreviewService
 
     public let placeholderHint: String = NSLocalizedString(
         "Enter text and choose an action to get started",
@@ -405,26 +419,25 @@ public final class HomeViewModel: ObservableObject {
         comment: "Placeholder text for the main input editor"
     )
 
-    private let configurationStore: AppConfigurationStore
-    private let llmService: LLMService
-    private let preferences: AppPreferences
-    private let premiumAccess: @MainActor () -> Bool
-    private var cancellables = Set<AnyCancellable>()
-    private var currentRequestTask: Task<Void, Never>?
-    /// Apple and Microsoft Translate runs started outside `currentRequestTask`.
-    private var serviceTasks: [Task<Void, Never>] = []
-    private var activeRequestContext: RequestContext?
-    private var requestGenerationTracker = RequestGenerationTracker()
+    let configurationStore: AppConfigurationStore
+    let llmService: LLMService
+    let preferences: AppPreferences
+    let premiumAccess: @MainActor () -> Bool
+    var cancellables = Set<AnyCancellable>()
+    var currentRequestTask: Task<Void, Never>?
+    var appleTranslateWatchdogTask: Task<Void, Never>?
+    var activeRequestContext: RequestContext?
+    var requestGenerationTracker = RequestGenerationTracker()
 
     // Per-run retry support (so tapping retry on one card doesn't re-run every model)
-    private var perRunTasks: [String: Task<Void, Never>] = [:]
-    private var allActions: [ActionConfig]
-    public private(set) var currentRequestInputText: String = ""
-    private var currentRequestImages: [ImageAttachment] = []
+    var perRunTasks: [String: Task<Void, Never>] = [:]
+    var allActions: [ActionConfig]
+    public internal(set) var currentRequestInputText: String = ""
+    var currentRequestImages: [ImageAttachment] = []
     /// When true, `performSelectedAction()` will be called automatically once models finish loading.
-    private var pendingAutoAction: Bool = false
+    var pendingAutoAction: Bool = false
 
-    private struct RequestContext {
+    struct RequestContext {
         let generation: UUID
         let historyRequestID: UUID
         let text: String
@@ -457,8 +470,8 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
-    private var pendingAppleTranslateContext: RequestContext?
-    private var pendingAppleTranslateRunToken: UUID?
+    var pendingAppleTranslateContext: RequestContext?
+    var pendingAppleTranslateRunToken: UUID?
 
     // MARK: - Snapshot Mode
 
@@ -572,238 +585,10 @@ public final class HomeViewModel: ObservableObject {
         .store(in: &cancellables)
     }
 
-    // MARK: - Snapshot Mock Data
-
-    /// Populates the view model with realistic-looking mock data for
-    /// Fastlane App Store screenshot capture.
-    private func populateSnapshotData() {
-        let fixture = SnapshotLaunchArguments.fixture() ?? .multiModelTranslation
-        let snapshotLocale = SnapshotLocaleCatalog.current()
-
-        let translateAction = ActionConfig(
-            name: NSLocalizedString("Translate", comment: ""),
-            prompt: SnapshotFixtureData.translatePrompt(for: fixture),
-            outputType: .translate
-        )
-        let grammarAction = ActionConfig(
-            name: NSLocalizedString("Grammar Check", comment: ""),
-            prompt: "Check grammar",
-            outputType: .grammarCheck
-        )
-        let polishAction = ActionConfig(
-            name: NSLocalizedString("Polish Writing", comment: ""),
-            prompt: "Polish the writing",
-            outputType: .diff
-        )
-
-        allActions = [translateAction, grammarAction, polishAction]
-        actions = [translateAction, grammarAction, polishAction]
-        models = SnapshotFixtureData.cloudModels(for: fixture)
-
-        if let actionName = SnapshotLaunchArguments.value(after: "-SNAPSHOT_ACTION") {
-            switch actionName.lowercased() {
-            case "grammar": selectedActionID = grammarAction.id
-            case "polish": selectedActionID = polishAction.id
-            default: selectedActionID = translateAction.id
-            }
-        } else {
-            selectedActionID = translateAction.id
-        }
-
-        preferences.setSourceLanguage(.english, reason: "Snapshot fixture")
-        preferences.setTargetLanguage(snapshotLocale.targetLanguage, reason: "Snapshot fixture")
-        preferences.setAppleTranslateInstalledLanguages([
-            SourceLanguageOption.english.rawValue,
-            snapshotLocale.targetLanguage.rawValue,
-        ])
-
-        switch fixture {
-        case .offlineAppleTranslation:
-            preferences.setEnabledModelIDs(SnapshotFixtureData.enabledModelIDs(for: fixture))
-        case .multiModelTranslation, .realtimeBilingualLive, .realtimeAppleValidation,
-             .aiModels, .macRealtimeMultiLane,
-             .macRichConversation, .macHistoryChat:
-            let enabledIDs = SnapshotFixtureData.enabledModelIDs(for: .multiModelTranslation)
-            if !enabledIDs.isEmpty {
-                preferences.setEnabledModelIDs(enabledIDs)
-            }
-        }
-
-        let wantsGrammarCheck = selectedActionID == grammarAction.id
-        inputText = wantsGrammarCheck
-            ? SnapshotLocaleCatalog.grammarSourceText
-            : SnapshotFixtureData.inputText
-
-        currentRequestInputText = inputText
-
-        let wantsDiff = (selectedActionID == polishAction.id)
-        if wantsDiff {
-            let polishedResults = SnapshotLocaleCatalog.writingPolishedResults
-            let modelIDs = ["gpt-5.4", "DeepSeek-V4-Pro", "Kimi-K2.6"]
-            preferences.setEnabledModelIDs(Set(modelIDs))
-            modelRuns = modelIDs.enumerated().compactMap { index, modelID in
-                guard let model = SnapshotFixtureData.cloudModels.first(where: { $0.id == modelID }),
-                      let text = polishedResults[modelID]
-                else {
-                    return nil
-                }
-                return ModelRunViewState(
-                    model: model,
-                    status: .success(ModelRunViewState.SuccessResult(
-                        text: text,
-                        copyText: text,
-                        duration: 0.9 + TimeInterval(index) * 0.2,
-                        diff: TextDiffBuilder.build(original: inputText, revised: text)
-                    ))
-                )
-            }
-            return
-        }
-
-        if wantsGrammarCheck {
-            let result = "\(SnapshotLocaleCatalog.grammarCorrectedText)\n\n\(snapshotLocale.grammarExplanation)"
-            let model = SnapshotFixtureData.cloudModels.first { $0.id == "gpt-5-nano" } ?? ModelConfig.appleTranslate
-            modelRuns = [
-                ModelRunViewState(
-                    model: model,
-                    status: .success(ModelRunViewState.SuccessResult(
-                        text: result,
-                        copyText: result,
-                        duration: 0.9
-                    ))
-                ),
-            ]
-            return
-        }
-
-        modelRuns = SnapshotFixtureData.resultModels(for: fixture).enumerated().map { index, model in
-            let text = SnapshotFixtureData.resultText(for: model, fixture: fixture)
-            return ModelRunViewState(
-                model: model,
-                status: .success(ModelRunViewState.SuccessResult(
-                    text: text,
-                    copyText: text,
-                    duration: 0.8 + TimeInterval(index) * 0.2
-                ))
-            )
-        }
-    }
-
-    /// Creates a pre-built ``ConversationSession`` for snapshot mode,
-    /// so the conversation sheet can be presented immediately without
-    /// needing to tap a UI button.
-    ///
-    /// Builds a 4-message conversation:
-    /// 1. User (locale language): "The quick brown fox..." pangram
-    /// 2. Assistant (English): English translation
-    /// 3. User (locale language): "Make it shorter"
-    /// 4. Assistant (English): Shortened version
-    public func createSnapshotConversationSession() -> ConversationSession? {
-        guard let firstRun = modelRuns.first,
-              let action = selectedAction else { return nil }
-
-        let fixture = SnapshotLaunchArguments.fixture() ?? .multiModelTranslation
-        let messages = fixture == .macRichConversation
-            ? SnapshotFixtureData.macConversationMessages()
-            : [
-                ChatMessage(role: "user", content: SnapshotFixtureData.inputText),
-                ChatMessage(
-                    role: "assistant",
-                    content: SnapshotFixtureData.resultText(for: firstRun.model, fixture: .multiModelTranslation)
-                ),
-            ]
-        let conversationModel = fixture == .macRichConversation
-            ? (SnapshotFixtureData.cloudModels.first(where: { $0.id == "gpt-5.4" }) ?? firstRun.model)
-            : firstRun.model
-        let conversationModels = fixture == .macRichConversation
-            ? SnapshotFixtureData.cloudModels
-            : models
-
-        return ConversationSession(
-            model: conversationModel,
-            action: action,
-            availableModels: conversationModels,
-            messages: messages
-        )
-    }
-
-    public var defaultAction: ActionConfig? {
-        actions.first
-    }
-
-    // MARK: - State Snapshot (cross-window sync)
-
-    /// A minimal snapshot of the user-visible translation state, used to hand off
-    /// in-flight translation context (input + selected action + results) from one
-    /// HomeViewModel instance to another (e.g. menu bar popover → main window).
-    public struct StateSnapshot {
-        public let inputText: String
-        public let currentRequestInputText: String
-        public let selectedActionID: ActionConfig.ID?
-        public let modelRuns: [ModelRunViewState]
-
-        public init(
-            inputText: String,
-            currentRequestInputText: String,
-            selectedActionID: ActionConfig.ID?,
-            modelRuns: [ModelRunViewState]
-        ) {
-            self.inputText = inputText
-            self.currentRequestInputText = currentRequestInputText
-            self.selectedActionID = selectedActionID
-            self.modelRuns = modelRuns
-        }
-    }
-
-    public func captureStateSnapshot() -> StateSnapshot {
-        StateSnapshot(
-            inputText: inputText,
-            currentRequestInputText: currentRequestInputText,
-            selectedActionID: selectedActionID,
-            modelRuns: modelRuns
-        )
-    }
-
-    /// Adopt a snapshot from another HomeViewModel. Cancels any in-flight requests,
-    /// overwrites input/action/results, but does NOT trigger a new translation.
-    public func adoptStateSnapshot(_ snapshot: StateSnapshot) {
-        cancelActiveRequest(clearResults: true)
-        // Assign inputText first — its didSet calls cancelActiveRequest(clearResults: true)
-        // which would wipe modelRuns if assigned afterwards.
-        inputText = snapshot.inputText
-        clearUserEditMark()
-        currentRequestInputText = snapshot.currentRequestInputText
-        if let id = snapshot.selectedActionID {
-            selectedActionID = id
-        }
-        // Source ViewModel owned the in-flight URLSession tasks; once we adopt
-        // the snapshot here those tasks keep streaming into the *source* and
-        // never update us. Materialize any non-terminal run as a cancellation
-        // so the UI doesn't show a perpetual spinner.
-        modelRuns = snapshot.modelRuns.map { run in
-            switch run.status {
-            case .idle, .running, .streaming, .streamingSentencePairs:
-                let elapsed: TimeInterval = {
-                    switch run.status {
-                    case let .running(start),
-                         let .streaming(_, start),
-                         let .streamingSentencePairs(_, start):
-                        return Date().timeIntervalSince(start)
-                    default:
-                        return 0
-                    }
-                }()
-                var copy = run
-                copy.status = .failure(
-                    message: NSLocalizedString("Cancelled", comment: "Run cancelled by handoff to main window"),
-                    duration: elapsed,
-                    responseBody: nil
-                )
-                return copy
-            case .success, .failure:
-                return run
-            }
-        }
+    deinit {
+        currentRequestTask?.cancel()
+        appleTranslateWatchdogTask?.cancel()
+        perRunTasks.values.forEach { $0.cancel() }
     }
 
     /// Models the next run uses, as the composer's model button names them.
@@ -892,14 +677,14 @@ public final class HomeViewModel: ObservableObject {
 
     /// Direct translation services only translate, so prompt-based actions need an AI model.
     public func requiresAIModelSelection(for action: ActionConfig) -> Bool {
-        guard !action.supportsAppleTranslate, onboardingTrialModels.isEmpty, !models.isEmpty else { return false }
-        guard preferences.enabledModelIDs.contains(where: ModelConfig.isDirectTranslationID) else { return false }
+        guard !action.supportsAppleTranslate, onboardingTrialModels.isEmpty, !models.isEmpty,
+              preferences.enabledModelIDs.contains(where: ModelConfig.isDirectTranslationID) else { return false }
         return getEnabledModels().allSatisfy(\.isDirectTranslation)
     }
 
     /// The usable IDs and catalog models for a stored selection. The request path and the
     /// composer's model button both resolve through here so they cannot disagree.
-    private func resolveSelection(
+    func resolveSelection(
         storedIDs: Set<String>,
         isPremium: Bool
     ) -> (enabledIDs: Set<String>, catalogModels: [ModelConfig]) {
@@ -930,7 +715,7 @@ public final class HomeViewModel: ObservableObject {
     /// and the request fan-out. Direct translation services only apply to translation actions.
     /// In SwiftUI contexts the view layer provides an Apple session via `.translationTask()`; in
     /// non-SwiftUI contexts (e.g. the extension) the installed-language-pack path is used instead.
-    private func modelsForRun(
+    func modelsForRun(
         enabledIDs: Set<String>,
         catalogModels: [ModelConfig],
         allowModelFallback: Bool = false
@@ -960,7 +745,7 @@ public final class HomeViewModel: ObservableObject {
         return available
     }
 
-    private func getEnabledModels(
+    func getEnabledModels(
         cachedIsPremium: Bool? = nil,
         allowModelFallback: Bool = false
     ) -> [ModelConfig] {
@@ -990,7 +775,7 @@ public final class HomeViewModel: ObservableObject {
         return available
     }
 
-    private func loadModels() {
+    func loadModels() {
         // Display cached models immediately if available, then refresh in background.
         if let cached = ModelsService.shared.getCachedModels(), !cached.isEmpty {
             models = cached
@@ -1035,7 +820,7 @@ public final class HomeViewModel: ObservableObject {
 
     /// `prunesMissing` drops selections the catalog does not contain. Only this view model's own
     /// fetch may do that: elsewhere the catalog can be older than the one the picker just loaded.
-    private func updateEnabledModels(prunesMissing: Bool = false) {
+    func updateEnabledModels(prunesMissing: Bool = false) {
         let availableIDs = Set(models.map { $0.id })
         guard hasFetchedModels, !availableIDs.isEmpty else { return }
 
@@ -1086,7 +871,7 @@ public final class HomeViewModel: ObservableObject {
         )
     }
 
-    private func performSelectedActionWithCurrentEntitlement(
+    func performSelectedActionWithCurrentEntitlement(
         refreshEntitlement: Bool,
         allowModelFallback: Bool,
         submittedAt: ContinuousClock.Instant
@@ -1223,11 +1008,11 @@ public final class HomeViewModel: ObservableObject {
             }
             return
         }
-        guard let index = modelRuns.firstIndex(where: { $0.id == runID }) else { return }
-
-        guard !context.text.isEmpty || !context.images.isEmpty else { return }
-
-        guard let runContext = requestContext(for: modelRuns[index].presentation, base: context) else { return }
+        guard let index = modelRuns.firstIndex(where: { $0.id == runID }), !context.text.isEmpty || !context.images.isEmpty,
+              let runContext = requestContext(
+                  for: modelRuns[index].presentation,
+                  base: context
+              ) else { return }
         startSingleRun(at: index, context: runContext)
     }
 
@@ -1297,7 +1082,7 @@ public final class HomeViewModel: ObservableObject {
         startSingleRun(at: index, context: runContext, keepsResultOrder: true)
     }
 
-    private func requestContext(
+    func requestContext(
         for presentation: ModelRunViewState.Presentation,
         base context: RequestContext
     ) -> RequestContext? {
@@ -1312,7 +1097,7 @@ public final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func startSingleRun(at index: Int, context: RequestContext, keepsResultOrder: Bool = false) {
+    func startSingleRun(at index: Int, context: RequestContext, keepsResultOrder: Bool = false) {
         let runID = modelRuns[index].id
         let model = modelRuns[index].model
 
@@ -1355,7 +1140,8 @@ public final class HomeViewModel: ObservableObject {
         if let timing = modelRuns.first(where: { $0.id == runID })?.timingTrace?.snapshot(),
            var record = NetworkRequestLogger.shared.records.first(where: {
                $0.requestHeaders.contains { $0.key.caseInsensitiveCompare("X-Request-ID") == .orderedSame
-                   && $0.value == timing.requestID }
+                   && $0.value == timing.requestID
+               }
            })
         {
             record.translationTiming = timing
@@ -1378,1137 +1164,5 @@ public final class HomeViewModel: ObservableObject {
         }
 
         selectedDebugNetworkRecord = nil
-    }
-
-    /// Manually override the target language for the next translation and re-execute.
-    /// Used by the language switcher menu. Target is never automatically redirected,
-    /// so `resolvedTargetLanguage` stays nil — the override is consumed once on the next request.
-    public func overrideTargetLanguage(
-        _ language: TargetLanguageOption,
-        refreshEntitlement: Bool = true,
-        allowModelFallback: Bool = false
-    ) {
-        setTargetLanguageOverride(language, reason: "Manual one-shot target override")
-        setResolvedTargetLanguage(nil, reason: "Manual one-shot target override")
-        performSelectedAction(
-            refreshEntitlement: refreshEntitlement,
-            allowModelFallback: allowModelFallback
-        )
-    }
-
-    /// Called when the user picks a new source language — clears the detected source until the preview refreshes.
-    public func clearDetectedSourceLanguage() {
-        setDetectedSourceLanguage(nil, reason: "User changed source language")
-    }
-
-    public func swapInputLanguages() {
-        let source = preferences.sourceLanguage
-        let target = preferences.targetLanguage
-        let matchCandidates = TargetLanguageOption.matchCandidates
-        let resolution = inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : Self.resolveLanguages(
-            text: inputText,
-            sourcePreference: source,
-            preferredTarget: target,
-            override: nil,
-            matchCandidates: matchCandidates
-        )
-        let concreteSource = source == .auto ? resolution?.displaySource ?? detectedSourceLanguage : source
-        let concreteTarget: TargetLanguageOption? = if target == .appLanguage {
-            resolution?.target ?? resolvedTargetLanguage ?? Self.resolveTargetLanguage(
-                preferred: target,
-                override: nil,
-                sourceCode: concreteSource?.rawValue,
-                matchCandidates: matchCandidates
-            ).target
-        } else {
-            nil
-        }
-        let result = LanguageDirectionSwap.swapped(
-            source: source,
-            target: target,
-            resolvedSource: concreteSource,
-            resolvedTarget: concreteTarget
-        )
-        logger.notice(
-            "Input keyboard swap requested source=\(source.rawValue, privacy: .public) target=\(target.rawValue, privacy: .public) resolvedSource=\(concreteSource?.rawValue ?? "nil", privacy: .public) resolvedTarget=\(concreteTarget?.rawValue ?? "nil", privacy: .public) nextSource=\(result.source.rawValue, privacy: .public) nextTarget=\(result.target.rawValue, privacy: .public)"
-        )
-        preferences.setSourceLanguage(result.source, reason: "Input keyboard swap")
-        preferences.setTargetLanguage(result.target, reason: "Input keyboard swap")
-        if result.source != source {
-            clearDetectedSourceLanguage()
-        }
-        logger.notice(
-            "Input keyboard swap completed source=\(self.preferences.sourceLanguage.rawValue, privacy: .public) target=\(self.preferences.targetLanguage.rawValue, privacy: .public)"
-        )
-    }
-
-    private func setResolvedTargetLanguage(_ language: TargetLanguageOption?, reason: String) {
-        guard resolvedTargetLanguage != language else { return }
-
-        let oldValue = resolvedTargetLanguage?.rawValue
-        resolvedTargetLanguage = language
-        logLanguageChange(
-            field: "resolvedTargetLanguage",
-            from: oldValue,
-            to: language?.rawValue,
-            reason: reason
-        )
-    }
-
-    private func setTargetLanguageOverride(_ language: TargetLanguageOption?, reason: String) {
-        guard targetLanguageOverride != language else { return }
-
-        let oldValue = targetLanguageOverride?.rawValue
-        targetLanguageOverride = language
-        logLanguageChange(
-            field: "targetLanguageOverride",
-            from: oldValue,
-            to: language?.rawValue,
-            reason: reason
-        )
-    }
-
-    private func setDetectedSourceLanguage(_ language: SourceLanguageOption?, reason: String) {
-        guard detectedSourceLanguage != language else { return }
-
-        let oldValue = detectedSourceLanguage?.rawValue
-        detectedSourceLanguage = language
-        logLanguageChange(
-            field: "detectedSourceLanguage",
-            from: oldValue,
-            to: language?.rawValue,
-            reason: reason
-        )
-    }
-
-    private func logLanguageChange(field: String, from oldValue: String?, to newValue: String?, reason: String) {
-        let message = LanguageChangeLog.message(
-            scope: "HomeViewModel",
-            field: field,
-            from: oldValue,
-            to: newValue,
-            reason: reason
-        )
-        logger.debug("\(message, privacy: .public)")
-    }
-
-    public func toggleDiffDisplay(for runID: String) {
-        guard let index = modelRuns.firstIndex(where: { $0.id == runID }) else {
-            return
-        }
-        modelRuns[index].showDiff.toggle()
-    }
-
-    public func hasDiff(for runID: String) -> Bool {
-        guard let run = modelRuns.first(where: { $0.id == runID }) else {
-            return false
-        }
-        switch run.status {
-        case let .success(result):
-            return result.diff != nil
-        default:
-            return false
-        }
-    }
-
-    public func isDiffShown(for runID: String) -> Bool {
-        guard let run = modelRuns.first(where: { $0.id == runID }) else {
-            return false
-        }
-        return run.showDiff
-    }
-
-    // MARK: - TTS Playback
-
-    /// Speaks the result text for a specific run
-    public func speakResult(_ text: String, runID: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        guard !speakingModels.contains(runID) else { return }
-
-        speakingModels.insert(runID)
-
-        Task { [weak self] in
-            guard let self else { return }
-            await self.ttsService.speak(text: trimmed, textID: runID)
-            await MainActor.run { [weak self] in
-                self?.speakingModels.remove(runID)
-            }
-        }
-    }
-
-    /// Speaks the current input text
-    public func speakInputText() {
-        let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        guard !isSpeakingInputText else { return }
-
-        isSpeakingInputText = true
-
-        Task { [weak self] in
-            guard let self else { return }
-            await self.ttsService.speak(text: trimmed, textID: "input")
-            await MainActor.run { [weak self] in
-                self?.isSpeakingInputText = false
-            }
-        }
-    }
-
-    /// Check if a specific run is currently being spoken
-    public func isSpeaking(runID: String) -> Bool {
-        speakingModels.contains(runID)
-    }
-
-    /// Stop any current TTS playback
-    public func stopSpeaking() {
-        ttsService.stopPlayback()
-        speakingModels.removeAll()
-        isSpeakingInputText = false
-    }
-
-    // MARK: - Continue Conversation
-
-    /// Creates a ``ConversationSession`` from a completed model run,
-    /// reconstructing the original prompt messages so the conversation
-    /// starts with full context.
-    public func createConversation(from run: ModelRunViewState) -> ConversationSession? {
-        guard let action = activeRequestContext?.action ?? selectedAction else { return nil }
-
-        // Extract the assistant's response text from the success state
-        let assistantText: String
-        switch run.status {
-        case let .success(result):
-            assistantText = result.copyText
-        default:
-            return nil
-        }
-
-        // Reconstruct the original messages using the same logic as LLMService
-        var chatMessages: [ChatMessage] = []
-
-        let text = activeRequestContext?.text ?? currentRequestInputText
-        let languages = run.requestLanguages ?? activeRequestContext?.languages ?? ResolvedLanguagePair(
-            target: resolvedTargetLanguage ?? preferences.targetLanguage,
-            sourceCode: detectedSourceLanguage?.rawValue
-        )
-        let promptMessages = action.promptMessages(
-            text: text,
-            targetLanguage: languages.targetLanguageDescriptor,
-            sourceLanguage: languages.sourceLanguageDescriptor
-        )
-        if let system = promptMessages.system {
-            chatMessages.append(ChatMessage(role: "system", content: system))
-        }
-        chatMessages.append(ChatMessage(
-            role: "user",
-            content: promptMessages.user,
-            images: activeRequestContext?.images ?? currentRequestImages
-        ))
-
-        // Add the assistant's response
-        chatMessages.append(ChatMessage(role: "assistant", content: assistantText))
-
-        return ConversationSession(
-            model: run.model,
-            action: action,
-            availableModels: conversationModels,
-            messages: chatMessages
-        )
-    }
-
-    /// Creates a conversation from a completed run with a pre-filled follow-up message.
-    /// Used when the user taps a suggested action chip.
-    public func createConversationWithFollowUp(from run: ModelRunViewState, followUp: String) -> ConversationSession? {
-        guard var session = createConversation(from: run) else { return nil }
-        session.pendingInput = followUp
-        return session
-    }
-
-    /// Creates a conversation session with the selected text as context,
-    /// without any prior translation results. Used by the extension's Chat button.
-    public func createContextConversation(contextText: String) -> ConversationSession? {
-        guard let action = selectedAction else { return nil }
-        guard let model = getEnabledModels().first(where: { !$0.isDirectTranslation }) else {
-            modelRuns = [
-                ModelRunViewState(
-                    model: ModelConfig(id: "error", displayName: "Error"),
-                    status: .failure(
-                        message: String(localized: "This action needs an AI model. Select one in Models."),
-                        duration: 0
-                    )
-                ),
-            ]
-            return nil
-        }
-
-        let trimmed = contextText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        var chatMessages: [ChatMessage] = []
-        if !trimmed.isEmpty {
-            chatMessages.append(ChatMessage(
-                role: "system",
-                content: "The user has selected the following text. Use it as context for the conversation:\n\n\(trimmed)"
-            ))
-        }
-
-        return ConversationSession(
-            model: model,
-            action: action,
-            availableModels: conversationModels,
-            messages: chatMessages
-        )
-    }
-
-    deinit {
-        currentRequestTask?.cancel()
-        perRunTasks.values.forEach { $0.cancel() }
-    }
-
-    /// Result of `consumeResolvedTarget`: the resolved target language and
-    /// the detected/pinned source language code (for reuse by Apple/Microsoft/LLM engines).
-    struct ResolvedLanguagePair {
-        let target: TargetLanguageOption
-        /// BCP 47 source code (e.g. "en", "zh-Hans"), or nil when detection failed.
-        let sourceCode: String?
-
-        var targetLanguageDescriptor: String { target.promptDescriptor }
-
-        /// Human-readable source descriptor for LLM prompts, e.g. "日本語 (Japanese)".
-        /// Empty when source is unknown (auto-detect failed).
-        var sourceLanguageDescriptor: String {
-            sourceCode.flatMap(HomeViewModel.sourceLanguageOption(for:))?.promptDescriptor ?? ""
-        }
-    }
-
-    nonisolated static func sourceLanguageOption(for code: String) -> SourceLanguageOption? {
-        SourceLanguageOption(rawValue: code) ?? SourceLanguageOption.allCases.first {
-            $0 != .auto && SourceLanguageDetector.languagesAreSame($0.rawValue, code)
-        }
-    }
-
-    struct TargetLanguageResolution {
-        let target: TargetLanguageOption
-        let displayTarget: TargetLanguageOption?
-    }
-
-    nonisolated static func resolveTargetLanguage(
-        preferred: TargetLanguageOption,
-        override: TargetLanguageOption?,
-        sourceCode: String?,
-        matchCandidates: [TargetLanguageOption] = TargetLanguageOption.matchCandidates
-    ) -> TargetLanguageResolution {
-        if let override, override != .appLanguage {
-            return TargetLanguageResolution(
-                target: override,
-                displayTarget: override == preferred ? nil : override
-            )
-        }
-
-        if preferred == .appLanguage || override == .appLanguage {
-            let resolved = SourceLanguageDetector.resolveMatchTarget(sourceCode: sourceCode, candidates: matchCandidates)
-            return TargetLanguageResolution(target: resolved, displayTarget: resolved)
-        }
-
-        return TargetLanguageResolution(target: preferred, displayTarget: nil)
-    }
-
-    /// Consumes `targetLanguageOverride` if set, otherwise returns the user's preferred target.
-    /// Manual target languages are never automatically redirected. Only Match resolves
-    /// to a concrete target based on the detected source language.
-    /// Source language detection biases away from the target so mixed-language input
-    /// (e.g. "你好, hello") picks the *other* language when the user is in `.auto` mode.
-    private func consumeResolvedTarget(for text: String) -> ResolvedLanguagePair {
-        let preferredTarget = preferences.targetLanguage
-        let overrideTarget = targetLanguageOverride
-        if overrideTarget != nil {
-            setTargetLanguageOverride(nil, reason: "Consumed one-shot target override")
-        }
-        languagePreviewTask?.cancel()
-        let resolution = Self.resolveLanguages(
-            text: text,
-            sourcePreference: preferences.sourceLanguage,
-            preferredTarget: preferredTarget,
-            override: overrideTarget
-        )
-        applyLanguageResolution(resolution, reason: "Request")
-        return ResolvedLanguagePair(target: resolution.target, sourceCode: resolution.sourceCode)
-    }
-
-    struct LanguageResolution: Equatable {
-        /// BCP 47 source code used for the request, or nil when detection is inconclusive.
-        let sourceCode: String?
-        /// Source shown in the UI: the detected language, or the pinned preference.
-        let displaySource: SourceLanguageOption?
-        let target: TargetLanguageOption
-        let displayTarget: TargetLanguageOption?
-        let isMatchFallback: Bool
-    }
-
-    /// Resolves the language pair for `text` without touching view-model state, so the live
-    /// preview while typing and the actual request always agree.
-    /// Detection biases away from the target so mixed-language input (e.g. "你好, hello")
-    /// picks the *other* language when the source is `.auto`.
-    nonisolated static func resolveLanguages(
-        text: String,
-        sourcePreference: SourceLanguageOption,
-        preferredTarget: TargetLanguageOption,
-        override: TargetLanguageOption?,
-        matchCandidates: [TargetLanguageOption] = TargetLanguageOption.matchCandidates
-    ) -> LanguageResolution {
-        let resolvesMatch = override == .appLanguage || (override == nil && preferredTarget == .appLanguage)
-
-        let sourceCode: String?
-        if sourcePreference != .auto {
-            sourceCode = sourcePreference.rawValue
-        } else if resolvesMatch {
-            sourceCode = SourceLanguageDetector.detectLocaleLanguage(of: text)?.minimalIdentifier
-        } else {
-            let target = override ?? preferredTarget
-            sourceCode = SourceLanguageDetector.detectLocaleLanguage(
-                of: text,
-                excludingTargetCode: target.rawValue
-            )?.minimalIdentifier
-        }
-
-        let displaySource: SourceLanguageOption? = if sourcePreference != .auto {
-            sourcePreference
-        } else {
-            // Detection returns minimal codes ("zh" for zh-Hans), so match by language equivalence.
-            sourceCode.flatMap(sourceLanguageOption(for:))
-        }
-
-        let resolved = resolveTargetLanguage(
-            preferred: preferredTarget,
-            override: override,
-            sourceCode: sourceCode,
-            matchCandidates: matchCandidates
-        )
-        let isMatchFallback = resolvesMatch && sourceCode != nil && resolved.target != matchCandidates.first
-
-        return LanguageResolution(
-            sourceCode: sourceCode,
-            displaySource: displaySource,
-            target: resolved.target,
-            displayTarget: resolved.displayTarget,
-            isMatchFallback: isMatchFallback
-        )
-    }
-
-    private func applyLanguageResolution(_ resolution: LanguageResolution?, reason: String) {
-        setDetectedSourceLanguage(resolution?.displaySource, reason: "\(reason): source=\(resolution?.sourceCode ?? "nil")")
-        setResolvedTargetLanguage(resolution?.displayTarget, reason: "\(reason): target resolved")
-        if isMatchTargetFallback != (resolution?.isMatchFallback ?? false) {
-            isMatchTargetFallback = resolution?.isMatchFallback ?? false
-        }
-    }
-
-    /// Debounced so language detection runs once the user pauses typing.
-    private func scheduleLanguagePreviewRefresh() {
-        languagePreviewTask?.cancel()
-        languagePreviewTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 250_000_000)
-            guard !Task.isCancelled else { return }
-            self?.refreshLanguagePreview()
-        }
-    }
-
-    private func refreshLanguagePreview() {
-        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
-            applyLanguageResolution(nil, reason: "Live preview cleared")
-            return
-        }
-        applyLanguageResolution(
-            Self.resolveLanguages(
-                text: text,
-                sourcePreference: preferences.sourceLanguage,
-                preferredTarget: preferences.targetLanguage,
-                override: targetLanguageOverride
-            ),
-            reason: "Live preview"
-        )
-    }
-
-    /// If user chose source==target (or auto-detected source matches target), Apple Translate
-    /// physically can't translate — return a localized error result instead of calling the API.
-    private func sameSourceAndTargetResult(
-        sourceCode: String?,
-        target: TargetLanguageOption,
-        modelID: String = ModelConfig.appleTranslateID
-    ) -> ModelExecutionResult? {
-        let targetCode = target == .appLanguage ? TargetLanguageOption.appLanguageIdentifier : target.rawValue
-        guard let sourceCode,
-              SourceLanguageDetector.languagesAreSame(sourceCode, targetCode)
-        else {
-            return nil
-        }
-        logger.error("\(modelID, privacy: .public): source==target (\(sourceCode, privacy: .public)), short-circuiting")
-        return ModelExecutionResult(
-            modelID: modelID,
-            duration: 0,
-            response: .failure(LocalProviderError.sameSourceAndTarget(
-                language: target.englishName,
-                languagePair: AppleTranslationErrorFormatter.languagePairDescription(sourceCode: sourceCode, target: target)
-            ))
-        )
-    }
-
-    private func isRunStillValid(_ context: RequestContext, runID: String, runToken: UUID) -> Bool {
-        requestGenerationTracker.accepts(
-            generation: context.generation,
-            runID: runID,
-            token: runToken
-        )
-    }
-
-    private func executeRequest(
-        context: RequestContext,
-        models: [ModelConfig],
-        runTokens: [String: UUID],
-        taskOwner: RequestTaskOwner
-    ) async {
-        defer {
-            finishRequestTask(taskOwner, context: context)
-        }
-        guard !Task.isCancelled else { return }
-
-        // Separate direct translation services from cloud LLM models.
-        let cloudModels = models.filter { !$0.isDirectTranslation }
-        let hasAppleTranslate = models.contains { $0.id == ModelConfig.appleTranslateID }
-        logger
-            .debug(
-                "executeRequest: \(models.count, privacy: .public) models, apple=\(hasAppleTranslate, privacy: .public)"
-            )
-
-        if hasAppleTranslate {
-            guard runTokens[ModelConfig.appleTranslateID] != nil else { return }
-            startAppleTranslate(context: context, runTokens: runTokens)
-        }
-        for model in models where model.id == ModelConfig.microsoftTranslateID {
-            startMicrosoftTranslate(model: model, context: context, runTokens: runTokens)
-        }
-
-        guard !cloudModels.isEmpty else { return }
-        await runCloudModels(cloudModels, context: context, runTokens: runTokens)
-    }
-
-    private func clearPendingAppleTranslate() {
-        pendingAppleTranslateText = nil
-        pendingAppleTranslateAction = nil
-        pendingAppleTranslateRequestID = nil
-        pendingAppleTranslateResolvedTarget = nil
-        pendingAppleTranslateContext = nil
-        pendingAppleTranslateRunToken = nil
-        appleTranslateSourceLanguage = nil
-        appleTranslateTargetLanguage = nil
-    }
-
-    private func applyDirectFailure(
-        _ error: LocalProviderError,
-        modelID: String = ModelConfig.appleTranslateID,
-        duration: TimeInterval = 0,
-        context: RequestContext,
-        runToken: UUID
-    ) {
-        let result = ModelExecutionResult(modelID: modelID, duration: duration, response: .failure(error))
-        apply(result: result, context: context, runToken: runToken, allowDiff: false)
-    }
-
-    /// Translates with the installed language packs (no SwiftUI session) and records the result.
-    private func translateWithInstalledPack(
-        context: RequestContext,
-        source: Locale.Language?,
-        target: Locale.Language,
-        runToken: UUID
-    ) async throws {
-        let result: ModelExecutionResult
-        if context.action.outputType == .sentencePairs {
-            result = try await AppleTranslationService.shared.translateSentencesWithInstalledLanguages(
-                text: context.text, source: source, target: target
-            )
-        } else {
-            result = try await AppleTranslationService.shared.translateWithInstalledLanguages(
-                text: context.text, source: source, target: target
-            )
-        }
-        guard isRunStillValid(context, runID: result.modelID, runToken: runToken) else { return }
-        apply(result: result, context: context, runToken: runToken, allowDiff: false)
-        saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-    }
-
-    private func failAppleTranslate(
-        _ error: Error,
-        label: String,
-        context: RequestContext,
-        source: Locale.Language?,
-        runToken: UUID
-    ) {
-        let resolvedTarget = context.languages.target
-        logger
-            .error(
-                "\(label, privacy: .public) failed: \(String(describing: error), privacy: .public), source=\(source?.minimalIdentifier ?? "auto", privacy: .public), target=\(resolvedTarget.localeLanguage.minimalIdentifier, privacy: .public)"
-            )
-        guard isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken) else { return }
-        applyDirectFailure(
-            .translationFailed(AppleTranslationErrorFormatter.describe(error, source: source, target: resolvedTarget)),
-            context: context,
-            runToken: runToken
-        )
-    }
-
-    private func startAppleTranslate(context: RequestContext, runTokens: [String: UUID]) {
-        guard let runToken = runTokens[ModelConfig.appleTranslateID] else { return }
-        let action = context.action
-        let resolved = context.languages
-        let resolvedTarget = resolved.target
-        let allowsDownloadPrompt = allowsAppleTranslateDownloadPrompt
-        allowsAppleTranslateDownloadPrompt = false
-        appleTranslateNeedsLanguageDownload = false
-
-        guard action.supportsAppleTranslate else {
-            // Unsupported action — show inline error immediately.
-            logger.error("Apple Translate: action '\(action.name, privacy: .public)' does not support Apple Translate")
-            applyDirectFailure(.unsupportedAction, context: context, runToken: runToken)
-            return
-        }
-        if let shortCircuit = sameSourceAndTargetResult(sourceCode: resolved.sourceCode, target: resolvedTarget) {
-            apply(result: shortCircuit, context: context, runToken: runToken, allowDiff: false)
-            return
-        }
-
-        let sourceLocale: Locale.Language? = resolved.sourceCode.map { Locale.Language(identifier: $0) }
-        let targetLocale = resolvedTarget.localeLanguage
-
-        guard supportsAppleTranslate else {
-            // Non-SwiftUI context (e.g. extension): use TranslationSession(installedSource:target:)
-            // directly. Only works if language packs are already installed.
-            serviceTasks.append(Task { [weak self] in
-                guard let self else { return }
-                do {
-                    try await self.translateWithInstalledPack(
-                        context: context, source: sourceLocale, target: targetLocale, runToken: runToken
-                    )
-                } catch {
-                    self.failAppleTranslate(
-                        error,
-                        label: "Apple Translate (non-SwiftUI path)",
-                        context: context,
-                        source: sourceLocale,
-                        runToken: runToken
-                    )
-                }
-            })
-            return
-        }
-
-        // SwiftUI context: prefer the direct TranslationSession(installedSource:target:) path when the
-        // language pack is already installed; fall back to .translationTask() only for a download.
-        serviceTasks.append(Task { [weak self] in
-            guard let self else { return }
-            do {
-                let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
-                    source: sourceLocale, target: targetLocale
-                )
-                guard !Task.isCancelled,
-                      self.isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken)
-                else { return }
-                if status == .installed {
-                    // Language pack already on device — skip SwiftUI bridge entirely.
-                    try await self.translateWithInstalledPack(
-                        context: context, source: sourceLocale, target: targetLocale, runToken: runToken
-                    )
-                } else if status == .supported, !allowsDownloadPrompt {
-                    // Ask in the result card before the system download sheet appears.
-                    self.appleTranslateNeedsLanguageDownload = true
-                    self.applyDirectFailure(
-                        .translationFailed(
-                            AppleTranslationErrorFormatter.withLanguagePair(
-                                String(
-                                    localized: "Apple Translate needs to download this language pair before translating."
-                                ),
-                                source: sourceLocale,
-                                target: resolvedTarget
-                            )
-                        ),
-                        context: context,
-                        runToken: runToken
-                    )
-                } else if status == .unsupported {
-                    // No download can fix this; .translationTask would only wait out the watchdog.
-                    self.applyDirectFailure(
-                        .unsupportedLanguage(
-                            AppleTranslationErrorFormatter.withLanguagePair(
-                                String(localized: "Apple Translate does not support the selected language pair."),
-                                source: sourceLocale,
-                                target: resolvedTarget
-                            )
-                        ),
-                        context: context,
-                        runToken: runToken
-                    )
-                } else {
-                    await self.requestAppleTranslationDownload(
-                        context: context,
-                        source: sourceLocale,
-                        status: status,
-                        runToken: runToken
-                    )
-                }
-            } catch {
-                self.failAppleTranslate(
-                    error,
-                    label: "Apple Translate",
-                    context: context,
-                    source: sourceLocale,
-                    runToken: runToken
-                )
-            }
-        })
-    }
-
-    /// Language pack not installed: hand off to `.translationTask()` (which shows the download UI)
-    /// and fail the run if it never responds.
-    private func requestAppleTranslationDownload(
-        context: RequestContext,
-        source sourceLocale: Locale.Language?,
-        status: LanguageAvailability.Status,
-        runToken: UUID
-    ) async {
-        let resolvedTarget = context.languages.target
-        pendingAppleTranslateText = context.text
-        pendingAppleTranslateAction = context.action
-        pendingAppleTranslateRequestID = context.historyRequestID
-        pendingAppleTranslateResolvedTarget = resolvedTarget
-        pendingAppleTranslateContext = context
-        pendingAppleTranslateRunToken = runToken
-        appleTranslateSourceLanguage = sourceLocale
-        appleTranslateTargetLanguage = resolvedTarget
-        logger
-            .debug(
-                "Apple Translate: published target=\(resolvedTarget.englishName, privacy: .public), starting \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s timeout watchdog"
-            )
-        appleTranslationRequestHandler?(sourceLocale, resolvedTarget)
-
-        try? await Task.sleep(for: .seconds(AppleTranslationService.operationTimeoutSeconds))
-        guard !Task.isCancelled,
-              pendingAppleTranslateContext?.generation == context.generation,
-              pendingAppleTranslateRunToken == runToken
-        else { return }
-        logger
-            .error(
-                "Apple Translate watchdog fired — .translationTask() did not respond in \(AppleTranslationService.operationTimeoutSeconds, privacy: .public)s, source=\(sourceLocale?.minimalIdentifier ?? "auto", privacy: .public), target=\(resolvedTarget.rawValue, privacy: .public), status=\(String(describing: status), privacy: .public)"
-            )
-        clearPendingAppleTranslate()
-        guard isRunStillValid(context, runID: ModelConfig.appleTranslateID, runToken: runToken) else { return }
-        applyDirectFailure(
-            .translationFailed(
-                AppleTranslationErrorFormatter.withLanguagePair(
-                    "Apple Translate timed out after \(AppleTranslationService.operationTimeoutSeconds) seconds. Language pack may not be available.",
-                    source: sourceLocale,
-                    target: resolvedTarget
-                )
-            ),
-            duration: TimeInterval(AppleTranslationService.operationTimeoutSeconds),
-            context: context,
-            runToken: runToken
-        )
-    }
-
-    private func startMicrosoftTranslate(model: ModelConfig, context: RequestContext, runTokens: [String: UUID]) {
-        guard let runToken = runTokens[model.id] else { return }
-        let resolved = context.languages
-        let resolvedTarget = resolved.target
-        guard context.action.supportsAppleTranslate else {
-            applyDirectFailure(.unsupportedAction, modelID: model.id, context: context, runToken: runToken)
-            return
-        }
-        if let shortCircuit = sameSourceAndTargetResult(
-            sourceCode: resolved.sourceCode,
-            target: resolvedTarget,
-            modelID: model.id
-        ) {
-            apply(result: shortCircuit, context: context, runToken: runToken, allowDiff: false)
-            return
-        }
-        guard let targetCode = MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue) else {
-            applyDirectFailure(
-                .unsupportedLanguage(
-                    AppleTranslationErrorFormatter.withLanguagePair(
-                        String(localized: "Microsoft Translate does not support the selected language."),
-                        sourceCode: resolved.sourceCode,
-                        target: resolvedTarget
-                    )
-                ),
-                modelID: model.id,
-                context: context,
-                runToken: runToken
-            )
-            return
-        }
-        // An unsupported source is left to Microsoft's own detection.
-        let sourceCode: String? = resolved.sourceCode.flatMap(MicrosoftTranslateService.translatorCode(for:))
-        let timingTrace = modelRuns.first { $0.id == model.id }?.timingTrace
-        let text = context.text
-        serviceTasks.append(Task { [weak self] in
-            guard let self else { return }
-            let result = await MicrosoftTranslateService.shared.translate(
-                text: text, sourceCode: sourceCode, targetCode: targetCode, timingTrace: timingTrace
-            )
-            guard self.isRunStillValid(context, runID: result.modelID, runToken: runToken) else { return }
-            self.apply(result: result, context: context, runToken: runToken, allowDiff: false)
-            self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-        })
-    }
-
-    /// Runs cloud LLM models through `LLMService`, streaming partial output into their runs.
-    private func runCloudModels(
-        _ cloudModels: [ModelConfig],
-        context: RequestContext,
-        runTokens: [String: UUID]
-    ) async {
-        let text = context.text
-        let action = context.action
-        let resolved = context.languages
-        let coalescers = Dictionary(uniqueKeysWithValues: cloudModels.map { model in
-            (model.id, StreamingUpdateCoalescer { [weak self] update in
-                guard let self, let token = runTokens[model.id],
-                      self.isRunStillValid(context, runID: model.id, runToken: token),
-                      let index = self.modelRuns.firstIndex(where: { $0.id == model.id })
-                else { return }
-                let now = Date()
-                let startDate = self.modelRuns[index].startDate ?? now
-                self.modelRuns[index].timingTrace?.mark(.firstUIUpdate)
-                if self.modelRuns[index].firstOutputAt == nil {
-                    self.modelRuns[index].firstOutputAt = now
-                }
-                switch update {
-                case let .text(text):
-                    self.modelRuns[index].markdownStreamSource.yield(text)
-                    self.modelRuns[index].status = .streaming(text: text, start: startDate)
-                case let .sentencePairs(pairs):
-                    self.modelRuns[index].status = .streamingSentencePairs(pairs: pairs, start: startDate)
-                }
-            })
-        })
-        defer { coalescers.values.forEach { $0.cancel() } }
-
-        let results = await llmService.perform(
-            text: text,
-            with: action,
-            models: cloudModels,
-            images: context.images,
-            targetLanguageDescriptor: resolved.targetLanguageDescriptor,
-            sourceLanguageDescriptor: resolved.sourceLanguageDescriptor,
-            onboardingTrial: !onboardingTrialModels.isEmpty,
-            refreshEntitlement: context.refreshEntitlement,
-            cachedIsPremium: context.cachedIsPremium,
-            timingTraces: Dictionary(uniqueKeysWithValues: modelRuns.compactMap { run in
-                run.timingTrace.map { (run.id, $0) }
-            }),
-            partialHandler: { [weak self] modelID, update in
-                guard let self else { return }
-                guard let runToken = runTokens[modelID],
-                      self.isRunStillValid(context, runID: modelID, runToken: runToken)
-                else { return }
-                coalescers[modelID]?.append(update)
-            },
-            completionHandler: { [weak self] result in
-                guard let self else { return }
-                guard let runToken = runTokens[result.modelID],
-                      self.isRunStillValid(context, runID: result.modelID, runToken: runToken)
-                else { return }
-                coalescers[result.modelID]?.flush()
-                self.modelRuns.first { $0.id == result.modelID }?.markdownStreamSource.finish()
-                self.apply(
-                    result: result,
-                    context: context,
-                    runToken: runToken,
-                    allowDiff: context.showsDiff
-                )
-                self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-            }
-        )
-
-        guard !Task.isCancelled else { return }
-        let validResults = results.filter { result in
-            guard let runToken = runTokens[result.modelID] else { return false }
-            return isRunStillValid(context, runID: result.modelID, runToken: runToken)
-        }
-        guard !validResults.isEmpty else { return }
-
-        recordTranslationOutcome(validResults)
-    }
-
-    private func recordTranslationOutcome(_ validResults: [ModelExecutionResult]) {
-        let successFlags = validResults.map { result in
-            if case .success = result.response { return true }
-            return false
-        }
-        let hasSuccess = successFlags.contains(true)
-        let shouldRequestReview = preferences.recordTranslationOutcomeForReview(
-            succeeded: !successFlags.contains(false)
-        )
-        if hasSuccess {
-            successfulTranslationCount += 1
-            if shouldRequestReview {
-                // Skip the custom prompt so two review surfaces never stack.
-                preferences.markSatisfactionPromptResponded()
-                requestSystemReview = true
-            } else if preferences.shouldShowSatisfactionPrompt {
-                showSatisfactionPrompt = true
-            }
-        }
-    }
-
-    private var conversationModels: [ModelConfig] {
-        ModelConfig.appleIntelligenceModels.filter {
-            FoundationModelService.availability(for: $0).isAvailable
-        } + models
-    }
-
-    private func finishRequestTask(_ owner: RequestTaskOwner, context: RequestContext) {
-        let generationMatches = activeRequestContext?.generation == context.generation
-        let retryMatches: Bool
-        if case let .retry(runID, runToken) = owner {
-            retryMatches = requestGenerationTracker.accepts(
-                generation: context.generation,
-                runID: runID,
-                token: runToken
-            )
-        } else {
-            retryMatches = false
-        }
-
-        switch Self.taskCleanup(
-            for: owner,
-            generationMatches: generationMatches,
-            retryMatches: retryMatches
-        ) {
-        case .none:
-            break
-        case .primary:
-            currentRequestTask = nil
-        case let .retry(runID):
-            perRunTasks[runID] = nil
-        }
-    }
-
-    private func cancelActiveRequest(clearResults: Bool, resetsLanguages: Bool = true) {
-        currentRequestTask?.cancel()
-        currentRequestTask = nil
-        for task in serviceTasks {
-            task.cancel()
-        }
-        serviceTasks.removeAll()
-        for task in perRunTasks.values {
-            task.cancel()
-        }
-        perRunTasks.removeAll()
-        activeRequestContext = nil
-        requestGenerationTracker.cancel()
-        clearPendingAppleTranslate()
-        if resetsLanguages {
-            setDetectedSourceLanguage(nil, reason: "Active request cancelled")
-        }
-        if clearResults {
-            if !modelRuns.isEmpty { modelRuns = [] }
-            if resetsLanguages {
-                setTargetLanguageOverride(nil, reason: "Active request cancelled and results cleared")
-            }
-        }
-    }
-
-    // MARK: - Apple Translation Execution
-
-    /// Called from HomeView's `.translationTask()` callback once a TranslationSession is available.
-    public func executeAppleTranslation(session: TranslationSession) async {
-        logger
-            .debug(
-                "executeAppleTranslation: hasText=\(self.pendingAppleTranslateText != nil, privacy: .public), hasAction=\(self.pendingAppleTranslateAction != nil, privacy: .public)"
-            )
-        guard let text = pendingAppleTranslateText,
-              let action = pendingAppleTranslateAction,
-              let context = pendingAppleTranslateContext,
-              let runToken = pendingAppleTranslateRunToken
-        else {
-            logger
-                .error(
-                    "executeAppleTranslation: missing pending state, aborting (text=\(self.pendingAppleTranslateText != nil, privacy: .public), action=\(self.pendingAppleTranslateAction != nil, privacy: .public), requestID=\(self.pendingAppleTranslateRequestID != nil, privacy: .public))"
-                )
-            return
-        }
-
-        // Clear pending state.
-        let resolvedTarget = pendingAppleTranslateResolvedTarget ?? preferences.targetLanguage
-        let sourceLocale = appleTranslateSourceLanguage
-        clearPendingAppleTranslate()
-
-        // The session is only valid inside the `.translationTask` closure, so run inline.
-        do {
-            let result: ModelExecutionResult
-            if action.outputType == .sentencePairs {
-                result = try await AppleTranslationService.shared.translateSentences(
-                    text: text, using: session
-                )
-            } else {
-                result = try await AppleTranslationService.shared.translate(
-                    text: text, using: session
-                )
-            }
-            guard isRunStillValid(
-                context,
-                runID: result.modelID,
-                runToken: runToken
-            ) else { return }
-            apply(result: result, context: context, runToken: runToken, allowDiff: false)
-            saveHistoryIfSuccessful(result, context: context, runToken: runToken)
-        } catch {
-            logger.error("executeAppleTranslation failed: \(String(describing: error), privacy: .public)")
-            guard isRunStillValid(
-                context,
-                runID: ModelConfig.appleTranslateID,
-                runToken: runToken
-            ) else { return }
-            let failResult = ModelExecutionResult(
-                modelID: ModelConfig.appleTranslateID,
-                duration: 0,
-                response: .failure(LocalProviderError.translationFailed(AppleTranslationErrorFormatter.describe(
-                    error,
-                    source: sourceLocale,
-                    target: resolvedTarget
-                )))
-            )
-            apply(result: failResult, context: context, runToken: runToken, allowDiff: false)
-        }
-    }
-
-    private func saveHistoryIfSuccessful(
-        _ result: ModelExecutionResult,
-        context: RequestContext,
-        runToken: UUID
-    ) {
-        guard onboardingTrialModels.isEmpty,
-              isRunStillValid(context, runID: result.modelID, runToken: runToken),
-              case let .success(message) = result.response,
-              let run = modelRuns.first(where: { $0.id == result.modelID })
-        else {
-            return
-        }
-
-        TranslationHistoryService.shared.save(
-            requestID: context.historyRequestID,
-            sourceText: context.text,
-            resultText: message,
-            actionName: context.action.name,
-            targetLanguage: context.languages.target.englishName,
-            modelID: result.modelID,
-            modelDisplayName: run.modelDisplayName,
-            duration: result.duration
-        )
-    }
-
-    private func apply(
-        result: ModelExecutionResult,
-        context: RequestContext,
-        runToken: UUID,
-        allowDiff: Bool
-    ) {
-        guard isRunStillValid(context, runID: result.modelID, runToken: runToken) else {
-            return
-        }
-        guard let index = modelRuns.firstIndex(where: { $0.id == result.modelID }) else {
-            return
-        }
-
-        let latencyBreakdown: ModelRunViewState.LatencyBreakdown?
-        if let upstream = result.upstreamTTFB, let clientAzure = result.clientToAzureLatency {
-            latencyBreakdown = .init(upstreamTTFB: upstream, clientToAzure: clientAzure, networkMetrics: result.networkMetrics)
-        } else {
-            latencyBreakdown = nil
-        }
-
-        switch result.response {
-        case let .success(message):
-            if modelRuns[index].firstOutputAt == nil {
-                modelRuns[index].firstOutputAt = Date()
-            }
-            let diffTarget = result.diffSource ?? message
-            if allowDiff {
-                Task {
-                    let diff = await Task.detached(priority: .userInitiated) {
-                        TextDiffBuilder.build(original: context.text, revised: diffTarget)
-                    }.value
-                    guard self.isRunStillValid(
-                        context,
-                        runID: result.modelID,
-                        runToken: runToken
-                    ), let currentIndex = self.modelRuns.firstIndex(where: { $0.id == result.modelID })
-                    else { return }
-                    self.modelRuns[currentIndex].status = .success(ModelRunViewState.SuccessResult(
-                        text: message,
-                        copyText: diffTarget,
-                        duration: result.duration,
-                        diff: diff,
-                        supplementalTexts: result.supplementalTexts,
-                        sentencePairs: result.sentencePairs,
-                        latencyBreakdown: latencyBreakdown,
-                        suggestedActions: result.suggestedActions,
-                        providerDisplayName: result.providerDisplayName
-                    ))
-                    self.modelRuns[currentIndex].timingTrace?.mark(.resultApplied)
-                }
-            } else {
-                modelRuns[index].status = .success(ModelRunViewState.SuccessResult(
-                    text: message,
-                    copyText: diffTarget,
-                    duration: result.duration,
-                    diff: nil,
-                    supplementalTexts: result.supplementalTexts,
-                    sentencePairs: result.sentencePairs,
-                    latencyBreakdown: latencyBreakdown,
-                    suggestedActions: result.suggestedActions,
-                    providerDisplayName: result.providerDisplayName
-                ))
-                modelRuns[index].timingTrace?.mark(.resultApplied)
-            }
-
-        case let .failure(error):
-            let responseBody: String?
-            if let llmError = error as? LLMServiceError,
-               case let .httpError(_, body) = llmError
-            {
-                responseBody = body
-            } else {
-                responseBody = nil
-            }
-            let isUnsupported = if case .unsupportedLanguage = error as? LocalProviderError { true } else { false }
-            modelRuns[index].status = .failure(
-                message: error.localizedDescription,
-                duration: result.duration,
-                responseBody: responseBody,
-                isUnsupported: isUnsupported
-            )
-            modelRuns[index].timingTrace?.mark(.resultApplied)
-            let failedRun = modelRuns.remove(at: index)
-            modelRuns.append(failedRun)
-        }
-    }
-
-    private func refreshActions() {
-        actions = allActions
-        logger.debug("refreshActions() — \(self.allActions.count, privacy: .public) total")
-
-        guard !allActions.isEmpty else {
-            selectedActionID = nil
-            return
-        }
-
-        if let selectedID = selectedActionID,
-           allActions.contains(where: { $0.id == selectedID })
-        {
-            return
-        }
-
-        selectedActionID = allActions.first?.id
     }
 }

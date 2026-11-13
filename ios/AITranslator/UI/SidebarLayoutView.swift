@@ -15,7 +15,9 @@ private enum SidebarHistoryKind: CaseIterable, Identifiable {
     case chat
     case realtime
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var sortOrder: Int {
         switch self {
@@ -116,7 +118,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
     let tag: (UUID) -> SelectionValue
     let onShowMore: () -> Void
 
-    @ViewBuilder
     var body: some View {
         if !records.isEmpty {
             Section {
@@ -489,8 +490,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
                         refreshHistory()
                         if let record = historyRecords.first(where: { $0.requestID == requestID }) {
                             selection = .historyRecord(record.id)
-                        } else {
-                            selection = .tab(.history)
                         }
                     }
                     .toolbar {

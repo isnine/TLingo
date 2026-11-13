@@ -55,7 +55,9 @@ struct RootTabView: View {
         case settings
         case debug
 
-        var id: String { rawValue }
+        var id: String {
+            rawValue
+        }
 
         var title: LocalizedStringKey {
             switch self {
@@ -147,6 +149,9 @@ extension RootTabView {
                             )
                     #endif
                     if DeepLink.isRealtimeURL(url) {
+                        #if os(macOS)
+                            AppDelegate.shared?.openMainWindow()
+                        #endif
                         NotificationCenter.default.post(
                             name: .deepLinkRealtimeRequested,
                             object: nil,
@@ -180,7 +185,6 @@ extension RootTabView {
             UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
         }
 
-        @ViewBuilder
         var body: some View {
             if usesSidebar {
                 SidebarLayoutView(
@@ -250,11 +254,11 @@ extension RootTabView {
                 }, onPremiumRequired: {
                     showFeaturePaywall = true
                 }, viewModel: homeViewModel)
-                .navigationDestination(isPresented: $showHistory) {
-                    HistoryView(
-                        initialFilter: historyOpeningRequestID == nil ? .text : .realtime,
-                        openingRequestID: historyOpeningRequestID
-                    )
+                    .navigationDestination(isPresented: $showHistory) {
+                        HistoryView(
+                            initialFilter: historyOpeningRequestID == nil ? .text : .realtime,
+                            openingRequestID: historyOpeningRequestID
+                        )
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
                                 NavigationLink {
@@ -266,7 +270,7 @@ extension RootTabView {
                                 .accessibilityIdentifier("history_vocabulary_button")
                             }
                         }
-                }
+                    }
             }
             .realtimeSavedNotice(store: realtimeStore, onOpenHistory: openSavedRealtimeHistory)
             .fullScreenCover(isPresented: $showRealtime, onDismiss: stopRealtimeAfterDismiss) {

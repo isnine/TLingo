@@ -7,10 +7,8 @@
 
 import os
 import StoreKit
-import SwiftStreamingMarkdown
 import SwiftUI
-
-private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "HomeView")
+import Translation
 #if canImport(UIKit)
     import UIKit
 #endif
@@ -20,9 +18,8 @@ private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", categor
 #if os(iOS)
     import TranslationUIProvider
 #endif
-import UniformTypeIdentifiers
-import WebKit
-import Translation
+
+private let logger = os.Logger(subsystem: "com.zanderwang.AITranslator", category: "HomeView")
 
 #if os(iOS)
     public typealias AppTranslationContext = TranslationUIProviderContext
@@ -31,54 +28,54 @@ import Translation
 #endif
 
 public struct HomeView: View {
-    @Environment(\.homeInputRouteID) private var homeInputRouteID
-    @State private var inputReceiverID = UUID()
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.requestReview) private var requestReview
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.homeInputRouteID) var homeInputRouteID
+    @State var inputReceiverID = UUID()
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.requestReview) var requestReview
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
     #if os(iOS)
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+        @Environment(\.horizontalSizeClass) var horizontalSizeClass
     #endif
-    @StateObject private var viewModel: HomeViewModel
-    @ObservedObject private var preferences = AppPreferences.shared
-    @ObservedObject private var entitlement = Entitlement.shared
-    @State private var hasTriggeredAutoRequest = false
+    @StateObject var viewModel: HomeViewModel
+    @ObservedObject var preferences = AppPreferences.shared
+    @ObservedObject var entitlement = Entitlement.shared
+    @State var hasTriggeredAutoRequest = false
     /// The waveform alone reads as voice input, so it carries a label until first use.
-    @AppStorage("home.hasUsedRealtimeButton") private var hasUsedRealtimeButton = false
-    @State private var recentTextRecords: [HomeRecentRecord] = []
-    @State private var isInputExpanded: Bool
-    @State private var showingProviderInfo: String?
-    @State private var isFallbackTargetPickerPresented = false
-    @State private var activeConversationSession: ConversationSession?
-    @State private var isConversationInspectorPresented = false
-    @State private var showSatisfactionToast = false
-    @State private var showModelSelectionSheet = false
-    @State private var showAIModelRequiredAlert = false
-    @State private var feedbackDraft: FeedbackMailDraft?
-    @State private var pendingPremiumPresentation = false
-    @State private var bottomComposerActionChipsHeight: CGFloat = 0
-    @State private var bottomComposerLanguageSelectorHeight: CGFloat = 0
-    @State private var bottomComposerWordLookupHintHeight: CGFloat = 0
-    @State private var bottomComposerEditorContentHeight: CGFloat = 0
-    @State private var isComparingResults = false
+    @AppStorage("home.hasUsedRealtimeButton") var hasUsedRealtimeButton = false
+    @State var recentTextRecords: [HomeRecentRecord] = []
+    @State var isInputExpanded: Bool
+    @State var showingProviderInfo: String?
+    @State var isFallbackTargetPickerPresented = false
+    @State var activeConversationSession: ConversationSession?
+    @State var isConversationInspectorPresented = false
+    @State var showSatisfactionToast = false
+    @State var showModelSelectionSheet = false
+    @State var showAIModelRequiredAlert = false
+    @State var feedbackDraft: FeedbackMailDraft?
+    @State var pendingPremiumPresentation = false
+    @State var bottomComposerActionChipsHeight: CGFloat = 0
+    @State var bottomComposerLanguageSelectorHeight: CGFloat = 0
+    @State var bottomComposerWordLookupHintHeight: CGFloat = 0
+    @State var bottomComposerEditorContentHeight: CGFloat = 0
+    @State var isComparingResults = false
     /// Settled content height per result row, and the height held while a row reloads,
     /// so switching to sentence pairs never collapses the row before new content streams in.
-    @State private var resultContentHeights: [String: CGFloat] = [:]
-    @State private var heldResultHeights: [String: CGFloat] = [:]
+    @State var resultContentHeights: [String: CGFloat] = [:]
+    @State var heldResultHeights: [String: CGFloat] = [:]
     /// Flat panel and its collapsed preview block, measured to size previews to the visible area.
-    @State private var flatResultsPanelHeight: CGFloat = 0
-    @State private var collapsedResultsSize: CGSize = .zero
+    @State var flatResultsPanelHeight: CGFloat = 0
+    @State var collapsedResultsSize: CGSize = .zero
     #if os(iOS)
-        @State private var selectedResult: SelectedResult?
-        @State private var resultDetailDetent: PresentationDetent = .medium
+        @State var selectedResult: SelectedResult?
+        @State var resultDetailDetent: PresentationDetent = .medium
     #endif
-    @State private var appleTranslationConfig: TranslationSession.Configuration?
-    @State private var appleTranslationConfigLanguagePair: (source: String?, target: String)?
+    @State var appleTranslationConfig: TranslationSession.Configuration?
+    @State var appleTranslationConfigLanguagePair: (source: String?, target: String)?
     #if os(macOS)
-        @State private var showDataConsent = false
+        @State var showDataConsent = false
     #endif
 
-    private var usesConversationInspectorPresentation: Bool {
+    var usesConversationInspectorPresentation: Bool {
         #if os(macOS)
             return true
         #elseif os(iOS)
@@ -88,7 +85,7 @@ public struct HomeView: View {
         #endif
     }
 
-    private var usesNativeNavigationChrome: Bool {
+    var usesNativeNavigationChrome: Bool {
         #if os(iOS)
             return usesNativeNavigationHeader && !openFromExtension
         #else
@@ -96,13 +93,13 @@ public struct HomeView: View {
         #endif
     }
 
-    private var isConversationInspectorVisible: Bool {
+    var isConversationInspectorVisible: Bool {
         usesConversationInspectorPresentation
             && activeConversationSession != nil
             && isConversationInspectorPresented
     }
 
-    private var conversationInspectorBinding: Binding<Bool> {
+    var conversationInspectorBinding: Binding<Bool> {
         Binding(
             get: {
                 isConversationInspectorVisible
@@ -114,7 +111,7 @@ public struct HomeView: View {
     }
 
     #if os(iOS)
-        private var conversationSheetBinding: Binding<ConversationSession?> {
+        var conversationSheetBinding: Binding<ConversationSession?> {
             Binding(
                 get: {
                     usesConversationInspectorPresentation ? nil : activeConversationSession
@@ -134,7 +131,7 @@ public struct HomeView: View {
         #endif
     }
 
-    private var usesSimplifiedTextLayout: Bool {
+    var usesSimplifiedTextLayout: Bool {
         #if os(iOS)
             return !openFromExtension
         #else
@@ -142,14 +139,14 @@ public struct HomeView: View {
         #endif
     }
 
-    private var usesBottomComposerLayout: Bool {
+    var usesBottomComposerLayout: Bool {
         HomeTextLayoutPolicy.usesBottomComposerLayout(
             openFromExtension: openFromExtension,
             idiom: currentTextLayoutIdiom
         )
     }
 
-    private var satisfactionPromptPlacement: HomeSatisfactionPromptPlacement {
+    var satisfactionPromptPlacement: HomeSatisfactionPromptPlacement {
         HomeTextLayoutPolicy.satisfactionPromptPlacement(
             usesBottomComposerLayout: usesBottomComposerLayout,
             hasResults: !viewModel.modelRuns.isEmpty,
@@ -157,19 +154,19 @@ public struct HomeView: View {
         )
     }
 
-    private var satisfactionPromptChrome: HomeSatisfactionPromptChrome {
+    var satisfactionPromptChrome: HomeSatisfactionPromptChrome {
         HomeTextLayoutPolicy.satisfactionPromptChrome(for: satisfactionPromptPlacement)
     }
 
-    private var shouldShowSatisfactionOverlay: Bool {
+    var shouldShowSatisfactionOverlay: Bool {
         showSatisfactionToast && satisfactionPromptChrome == .toast
     }
 
-    private var shouldShowInlineSatisfactionPrompt: Bool {
+    var shouldShowInlineSatisfactionPrompt: Bool {
         showSatisfactionToast && satisfactionPromptChrome == .resultCell
     }
 
-    private var languageSelectorPlacement: HomeLanguageSelectorPlacement {
+    var languageSelectorPlacement: HomeLanguageSelectorPlacement {
         HomeTextLayoutPolicy.languageSelectorPlacement(
             usesBottomComposerLayout: usesBottomComposerLayout,
             usesSimplifiedTextLayout: usesSimplifiedTextLayout,
@@ -177,15 +174,15 @@ public struct HomeView: View {
         )
     }
 
-    private var shouldShowLanguageSelectorAboveInput: Bool {
+    var shouldShowLanguageSelectorAboveInput: Bool {
         languageSelectorPlacement == .aboveInput
     }
 
-    private var shouldShowLanguageSelectorInsideInput: Bool {
+    var shouldShowLanguageSelectorInsideInput: Bool {
         languageSelectorPlacement == .insideInput
     }
 
-    private var bottomComposerPlacement: HomeBottomComposerPlacement {
+    var bottomComposerPlacement: HomeBottomComposerPlacement {
         HomeTextLayoutPolicy.bottomComposerPlacement(
             usesBottomComposerLayout: usesBottomComposerLayout,
             hasResults: !viewModel.modelRuns.isEmpty,
@@ -194,18 +191,18 @@ public struct HomeView: View {
         )
     }
 
-    private var shouldCenterEmptyComposer: Bool {
+    var shouldCenterEmptyComposer: Bool {
         bottomComposerPlacement == .centeredEmptyState
     }
 
     /// iPhone app chrome: language pair in the navigation bar, results as a flat panel,
     /// and the realtime entry sharing the send button slot.
-    private var usesPhoneComposerChrome: Bool {
+    var usesPhoneComposerChrome: Bool {
         usesNativeNavigationChrome && currentTextLayoutIdiom == .phone
     }
 
     /// iPhone and Mac show results as a flat panel with per-row sentence pairs; iPad keeps cards.
-    private var usesFlatResultsPanel: Bool {
+    var usesFlatResultsPanel: Bool {
         #if os(macOS)
             return true
         #else
@@ -213,7 +210,7 @@ public struct HomeView: View {
         #endif
     }
 
-    private var currentTextLayoutIdiom: HomeTextLayoutIdiom {
+    var currentTextLayoutIdiom: HomeTextLayoutIdiom {
         #if os(macOS)
             return .mac
         #elseif os(iOS)
@@ -226,7 +223,7 @@ public struct HomeView: View {
     /// Whether to show the "…" Manage Actions button at the end of the action chips.
     /// On macOS the sidebar no longer exposes an Actions tab, so Home is the entry
     /// point (mirroring iPhone). On iOS it follows the simplified text layout.
-    private var showsManageActionsButton: Bool {
+    var showsManageActionsButton: Bool {
         #if os(macOS)
             return true
         #else
@@ -234,28 +231,28 @@ public struct HomeView: View {
         #endif
     }
 
-    private let context: AppTranslationContext?
-    private let onHistoryTap: (() -> Void)?
-    private let onManageActionsTap: (() -> Void)?
-    private let onSettingsTap: (() -> Void)?
-    private let onShowSidebarTap: (() -> Void)?
-    private let onRealtimeTap: (() -> Void)?
-    private let onPremiumRequired: (() -> Void)?
-    private let usesNativeNavigationHeader: Bool
-    private let showsOnlyResults: Bool
-    private let onResultReplace: ((String) -> Void)?
-    private let onResultConversation: ((ConversationSession) -> Void)?
+    let context: AppTranslationContext?
+    let onHistoryTap: (() -> Void)?
+    let onManageActionsTap: (() -> Void)?
+    let onSettingsTap: (() -> Void)?
+    let onShowSidebarTap: (() -> Void)?
+    let onRealtimeTap: (() -> Void)?
+    let onPremiumRequired: (() -> Void)?
+    let usesNativeNavigationHeader: Bool
+    let showsOnlyResults: Bool
+    let onResultReplace: ((String) -> Void)?
+    let onResultConversation: ((ConversationSession) -> Void)?
 
-    @ThemeColors private var colors: AppColorPalette
+    @ThemeColors var colors: AppColorPalette
 
     /// Hides the keyboard on iOS
-    private func hideKeyboard() {
+    func hideKeyboard() {
         #if os(iOS)
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
     }
 
-    private var initialContextInput: String? {
+    var initialContextInput: String? {
         #if os(iOS)
             guard let inputText = context?.inputText else { return nil }
             return String(inputText.characters)
@@ -307,7 +304,7 @@ public struct HomeView: View {
     }
 
     /// Compact hosts reuse the result UI while keeping input, consent and request routing in the host.
-    private var embeddedResultsContent: some View {
+    var embeddedResultsContent: some View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
@@ -332,7 +329,7 @@ public struct HomeView: View {
         }
     }
 
-    private var fullHomeContent: some View {
+    var fullHomeContent: some View {
         ZStack {
             homeContentLayout.erasedForLaunch()
 
@@ -625,7 +622,7 @@ public struct HomeView: View {
     }
 
     @ViewBuilder
-    private var homeContentLayout: some View {
+    var homeContentLayout: some View {
         if usesBottomComposerLayout {
             bottomComposerTextLayout
         } else {
@@ -633,7 +630,7 @@ public struct HomeView: View {
         }
     }
 
-    private var stackedTextLayout: some View {
+    var stackedTextLayout: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 if !openFromExtension {
@@ -667,7 +664,7 @@ public struct HomeView: View {
         #endif
     }
 
-    private var bottomComposerTextLayout: some View {
+    var bottomComposerTextLayout: some View {
         GeometryReader { geometry in
             ScrollView {
                 if !shouldCenterEmptyComposer {
@@ -731,17 +728,17 @@ public struct HomeView: View {
         }
     }
 
-    private var bottomComposerResultsTopPadding: CGFloat {
+    var bottomComposerResultsTopPadding: CGFloat {
         usesPhoneComposerChrome ? 8 : 28
     }
 
-    private var bottomComposerResultsBottomPadding: CGFloat {
+    var bottomComposerResultsBottomPadding: CGFloat {
         16
     }
 
     /// Both placements share this single view tree. Swapping trees when an edit clears the results
     /// would rebuild the text view and drop its focus and IME composition (e.g. Pinyin).
-    private func bottomComposerDock(availableHeight: CGFloat, isCentered: Bool) -> some View {
+    func bottomComposerDock(availableHeight: CGFloat, isCentered: Bool) -> some View {
         VStack(spacing: 14) {
             if isCentered {
                 #if os(macOS)
@@ -800,7 +797,7 @@ public struct HomeView: View {
     }
 
     #if os(iOS)
-        private var keyboardDismissingSpacer: some View {
+        var keyboardDismissingSpacer: some View {
             Spacer(minLength: 0)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -809,7 +806,7 @@ public struct HomeView: View {
         }
     #endif
 
-    private func bottomComposerContent(availableHeight: CGFloat) -> some View {
+    func bottomComposerContent(availableHeight: CGFloat) -> some View {
         let heights = bottomComposerHeights(availableHeight: availableHeight)
 
         return VStack(alignment: .leading, spacing: bottomComposerDockSpacing) {
@@ -842,7 +839,7 @@ public struct HomeView: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private var bottomComposerContentMaxWidth: CGFloat {
+    var bottomComposerContentMaxWidth: CGFloat {
         #if os(macOS)
             return 820
         #else
@@ -850,19 +847,19 @@ public struct HomeView: View {
         #endif
     }
 
-    private var bottomComposerDockSpacing: CGFloat {
+    var bottomComposerDockSpacing: CGFloat {
         10
     }
 
-    private var bottomComposerDockTopPadding: CGFloat {
+    var bottomComposerDockTopPadding: CGFloat {
         10
     }
 
-    private var bottomComposerDockBottomPadding: CGFloat {
+    var bottomComposerDockBottomPadding: CGFloat {
         16
     }
 
-    private var bottomComposerInputHeight: CGFloat {
+    var bottomComposerInputHeight: CGFloat {
         #if os(macOS)
             return 104
         #else
@@ -870,7 +867,7 @@ public struct HomeView: View {
         #endif
     }
 
-    private func bottomComposerHeights(availableHeight: CGFloat) -> HomeBottomComposerHeights {
+    func bottomComposerHeights(availableHeight: CGFloat) -> HomeBottomComposerHeights {
         HomeTextLayoutPolicy.bottomComposerHeights(
             availableHeight: availableHeight,
             chromeHeight: bottomComposerChromeHeight,
@@ -881,7 +878,7 @@ public struct HomeView: View {
         )
     }
 
-    private var bottomComposerChromeHeight: CGFloat {
+    var bottomComposerChromeHeight: CGFloat {
         let measuredRows = [
             viewModel.isWordLookupFallback ? bottomComposerWordLookupHintHeight : 0,
             bottomComposerActionChipsHeight,
@@ -894,25 +891,25 @@ public struct HomeView: View {
             + bottomComposerDockBottomPadding
     }
 
-    private func updateBottomComposerActionChipsHeight(_ height: CGFloat) {
+    func updateBottomComposerActionChipsHeight(_ height: CGFloat) {
         updateMeasuredHeight(height, current: bottomComposerActionChipsHeight) {
             bottomComposerActionChipsHeight = $0
         }
     }
 
-    private func updateBottomComposerLanguageSelectorHeight(_ height: CGFloat) {
+    func updateBottomComposerLanguageSelectorHeight(_ height: CGFloat) {
         updateMeasuredHeight(height, current: bottomComposerLanguageSelectorHeight) {
             bottomComposerLanguageSelectorHeight = $0
         }
     }
 
-    private func updateBottomComposerEditorContentHeight(_ height: CGFloat) {
+    func updateBottomComposerEditorContentHeight(_ height: CGFloat) {
         updateMeasuredHeight(height, current: bottomComposerEditorContentHeight) {
             bottomComposerEditorContentHeight = $0
         }
     }
 
-    private func updateMeasuredHeight(
+    func updateMeasuredHeight(
         _ height: CGFloat,
         current: CGFloat,
         assign: (CGFloat) -> Void
@@ -923,7 +920,7 @@ public struct HomeView: View {
         assign(roundedHeight)
     }
 
-    private var satisfactionToastAlignment: Alignment {
+    var satisfactionToastAlignment: Alignment {
         #if os(macOS)
             .bottomTrailing
         #else
@@ -931,13 +928,13 @@ public struct HomeView: View {
         #endif
     }
 
-    private func dismissSatisfactionToast() {
+    func dismissSatisfactionToast() {
         withAnimation(.easeInOut(duration: 0.25)) {
             showSatisfactionToast = false
         }
     }
 
-    private func composeFeedbackEmail() {
+    func composeFeedbackEmail() {
         let draft = FeedbackMail.makeDraft()
         #if os(iOS)
             feedbackDraft = draft
@@ -948,9 +945,10 @@ public struct HomeView: View {
         #endif
     }
 
-    private var satisfactionPrompt: some View {
+    func satisfactionPrompt(style: SatisfactionPromptView.Style) -> some View {
         SatisfactionPromptView(
             colors: colors,
+            style: style,
             onSatisfied: {
                 dismissSatisfactionToast()
                 AppPreferences.shared.markSatisfactionPromptResponded()
@@ -970,8 +968,8 @@ public struct HomeView: View {
         }
     }
 
-    private var satisfactionPromptOverlay: some View {
-        satisfactionPrompt
+    var satisfactionPromptOverlay: some View {
+        satisfactionPrompt(style: .toast)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         #if os(macOS)
             .padding(20)
@@ -981,114 +979,11 @@ public struct HomeView: View {
         #endif
     }
 
-    private var satisfactionPromptResultCell: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(colors.accent)
-                    .frame(width: 28, height: 28)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Was TLingo helpful today?")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(colors.textPrimary)
-
-                    Text("Share quick feedback so the translation experience keeps improving.")
-                        .font(.system(size: 13))
-                        .foregroundColor(colors.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 12)
-
-                Button {
-                    dismissSatisfactionToast()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(colors.textSecondary)
-                        .frame(width: 28, height: 28)
-                        .background(
-                            Circle()
-                                .fill(colors.inputBackground.opacity(colorScheme == .dark ? 0.70 : 0.85))
-                        )
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Dismiss")
-            }
-
-            HStack(spacing: 10) {
-                Button {
-                    dismissSatisfactionToast()
-                    AppPreferences.shared.markSatisfactionPromptResponded()
-                    requestReview()
-                } label: {
-                    Label("Love it", systemImage: "heart.fill")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(colors.onAccent)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(colors.accentFill)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    dismissSatisfactionToast()
-                    AppPreferences.shared.markSatisfactionPromptResponded()
-                    composeFeedbackEmail()
-                } label: {
-                    Label("Feedback", systemImage: "envelope")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(colors.inputBackground.opacity(colorScheme == .dark ? 0.70 : 0.86))
-                        )
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .stroke(colors.divider, lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    dismissSatisfactionToast()
-                } label: {
-                    Text("Later")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(colors.textSecondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.88)
-        }
-        .padding(TLingoSpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(providerResultCardBackground)
-        .overlay(
-            RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
-                .stroke(colors.divider, lineWidth: 1)
-        )
-        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
-        .task(id: showSatisfactionToast) {
-            guard showSatisfactionToast else { return }
-            try? await Task.sleep(for: .seconds(10))
-            dismissSatisfactionToast()
-        }
+    var satisfactionPromptResultCell: some View {
+        satisfactionPrompt(style: .resultCard)
     }
 
-    private var configurationLoadingOverlay: some View {
+    var configurationLoadingOverlay: some View {
         LoadingOverlay(
             message: "Loading configuration...",
             backgroundColor: colors.background.opacity(0.9),
@@ -1097,2249 +992,5 @@ public struct HomeView: View {
             accentColor: colors.accent,
             ignoresSafeArea: true
         )
-    }
-
-    private var header: some View {
-        HStack {
-            #if !os(macOS)
-                if let onShowSidebarTap {
-                    Button(action: onShowSidebarTap) {
-                        Image(systemName: "sidebar.left")
-                            .font(.system(size: 20))
-                            .foregroundColor(colors.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Show Sidebar")
-                    .accessibilityIdentifier("ipad_show_sidebar_button")
-                }
-            #endif
-
-            Text("TLingo")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundColor(colors.textPrimary)
-            Spacer()
-            #if !os(macOS)
-                HStack(spacing: 18) {
-                    if let onHistoryTap {
-                        Button(action: onHistoryTap) {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 20))
-                                .foregroundColor(colors.textSecondary)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("History")
-                        .accessibilityIdentifier("home_history_button")
-                    }
-
-                    if let onSettingsTap {
-                        Button(action: onSettingsTap) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 20))
-                                .foregroundColor(colors.textSecondary)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Settings")
-                        .accessibilityIdentifier("tab_settings")
-                    }
-                }
-            #endif
-        }
-    }
-
-    @ViewBuilder
-    private var topLanguageSelector: some View {
-        if shouldShowLanguageSelectorAboveInput {
-            let languageDependencies = viewModel.selectedAction?.languageDependencies ?? .none
-
-            HStack {
-                if languageDependencies.usesSourceLanguage || !languageDependencies.usesTargetLanguage {
-                    Spacer(minLength: 0)
-                }
-                LanguageSwitcherView(
-                    globeFont: .system(size: 13),
-                    textFont: .system(size: 15, weight: .semibold),
-                    chevronFont: .system(size: 8, weight: .semibold),
-                    foregroundColor: colors.textPrimary,
-                    showsControlBackgrounds: false,
-                    languageDependencies: languageDependencies,
-                    resolvedTarget: viewModel.resolvedTargetLanguage,
-                    onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
-                    detectedSource: viewModel.detectedSourceLanguage,
-                    onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
-                )
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
-        }
-    }
-
-    @ViewBuilder
-    private var inputComposerBackground: some View {
-        #if os(macOS)
-            // Solid card on the app ground, matching the design canvas.
-            RoundedRectangle(cornerRadius: TLingoRadius.large, style: .continuous)
-                .fill(colors.cardBackground)
-                .overlay {
-                    RoundedRectangle(cornerRadius: TLingoRadius.large, style: .continuous)
-                        .stroke(colors.divider, lineWidth: 1)
-                }
-        #else
-            Color.clear
-                .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
-        #endif
-    }
-
-    private var inputEditorMinHeight: CGFloat {
-        usesBottomComposerLayout ? 44 : 140
-    }
-
-    private var inputEditorMaxHeight: CGFloat {
-        usesBottomComposerLayout ? 56 : 160
-    }
-
-    private var inputComposerBottomPadding: CGFloat {
-        usesBottomComposerLayout ? 42 : 48
-    }
-
-    private func inputComposer(editorHeight: CGFloat? = nil) -> some View {
-        let isCollapsed = openFromExtension && !isInputExpanded
-
-        return ZStack {
-            inputComposerBackground
-
-            VStack(alignment: .leading, spacing: 0) {
-                if isCollapsed {
-                    collapsedInputSummary
-                } else {
-                    expandedInputEditor(editorHeight: editorHeight)
-                }
-
-                if !isCollapsed {
-                    Spacer(minLength: 0)
-                }
-            }
-            .padding(.bottom, isCollapsed ? 0 : inputComposerBottomPadding)
-
-            VStack {
-                Spacer()
-                inputComposerControls(isCollapsed: isCollapsed)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, isCollapsed ? 0 : 12)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .animation(.easeInOut(duration: 0.2), value: isInputExpanded)
-        .animation(.easeInOut(duration: 0.25), value: viewModel.resolvedTargetLanguage)
-    }
-
-    @ViewBuilder
-    private func inputComposerControls(isCollapsed: Bool) -> some View {
-        if #available(iOS 26.0, macOS 26.0, *) {
-            GlassEffectContainer(spacing: 10) {
-                inputComposerControlsContent(isCollapsed: isCollapsed)
-            }
-        } else {
-            inputComposerControlsContent(isCollapsed: isCollapsed)
-        }
-    }
-
-    private func inputComposerControlsContent(isCollapsed: Bool) -> some View {
-        HStack {
-            if openFromExtension && !isCollapsed {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isInputExpanded = false
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Collapse")
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .tlingoGlassCapsule(.control, interactive: true)
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(colors.textSecondary)
-            }
-
-            if !isCollapsed {
-                if shouldShowLanguageSelectorInsideInput {
-                    LanguageSwitcherView(
-                        globeFont: .system(size: 12),
-                        textFont: .system(size: 13, weight: .medium),
-                        foregroundColor: colors.accent,
-                        languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
-                        resolvedTarget: viewModel.resolvedTargetLanguage,
-                        onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
-                        detectedSource: viewModel.detectedSourceLanguage,
-                        onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
-                    )
-                }
-
-                #if os(iOS)
-                    if usesPhoneComposerChrome {
-                        modelSelectionButton
-                        Spacer()
-                        imageTextInputButton
-                        inputSpeakButton
-                        phonePrimaryInputButton
-                    } else {
-                        defaultInputTrailingControls
-                    }
-                #else
-                    defaultInputTrailingControls
-                #endif
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var defaultInputTrailingControls: some View {
-        Spacer()
-
-        if shouldShowModelSelectionInsideInput {
-            modelSelectionButton
-        }
-
-        #if os(iOS)
-            imageTextInputButton
-        #endif
-        inputSpeakButton
-        inputSendButton
-    }
-
-    private var modelSelectionButton: some View {
-        Button {
-            showModelSelectionSheet = true
-        } label: {
-            modelSelectionButtonLabel
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Models")
-        .accessibilityIdentifier("home_model_picker")
-    }
-
-    private var resultOrderPicker: some View {
-        Picker("Result Order", selection: Binding(
-            get: { preferences.modelResultOrder },
-            set: { preferences.setModelResultOrder($0) }
-        )) {
-            ForEach(ModelResultOrder.allCases, id: \.self) { order in
-                Text(order.title).tag(order)
-            }
-        }
-        // Lists the options directly in the enclosing menu instead of a nested submenu.
-        .pickerStyle(.inline)
-    }
-
-    private var resultOrderMenu: some View {
-        Menu {
-            resultOptionsMenuContent(showsResultOrder: true)
-        } label: {
-            Label("Result Options", systemImage: "slider.horizontal.3")
-        }
-        .accessibilityIdentifier("home_result_order")
-        .accessibilityValue(preferences.modelResultOrder.title)
-    }
-
-    /// Result preferences offered next to the results; they mirror the Translation settings.
-    @ViewBuilder
-    private func resultOptionsMenuContent(showsResultOrder: Bool) -> some View {
-        if showsResultOrder {
-            resultOrderPicker
-        }
-        Section {
-            Toggle("Look Up Single Words", isOn: Binding(
-                get: { preferences.wordLookupEnabled },
-                set: { preferences.setWordLookupEnabled($0) }
-            ))
-            Toggle("Sentence by Sentence by Default", isOn: Binding(
-                get: { preferences.defaultsToSentencePairs },
-                set: { preferences.setDefaultsToSentencePairs($0) }
-            ))
-        }
-    }
-
-    @ViewBuilder
-    private var modelSelectionButtonLabel: some View {
-        #if os(macOS)
-            HStack(spacing: 5) {
-                Text(modelSelectionTitle)
-                    .font(.system(size: 13))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
-                    .opacity(0.6)
-            }
-            .foregroundColor(colors.textPrimary)
-            .padding(.horizontal, 10)
-            .frame(height: 28)
-            .tlingoGlassCapsule(.control, interactive: true)
-            .frame(maxWidth: 200, alignment: .trailing)
-        #else
-            modelSelectionButtonLegacyLabel
-        #endif
-    }
-
-    @ViewBuilder
-    private var modelSelectionButtonLegacyLabel: some View {
-        HStack(spacing: 5) {
-            // Lead with the icon and name the model, so the label says which one is used.
-            Image(systemName: "cpu")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(colors.textSecondary)
-            Text(modelSelectionTitle)
-                .font(.system(size: 13, weight: .semibold))
-                .lineLimit(1)
-                .truncationMode(.tail)
-            Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 8, weight: .semibold))
-                .opacity(0.65)
-        }
-        .foregroundColor(colors.textPrimary)
-        .frame(width: usesPhoneComposerChrome ? nil : 170, alignment: .trailing)
-        .frame(minHeight: 32)
-        .contentShape(Rectangle())
-    }
-
-    private var shouldShowModelSelectionInsideInput: Bool {
-        #if os(macOS)
-            return true
-        #else
-            return usesSimplifiedTextLayout
-        #endif
-    }
-
-    private var modelSelectionTitle: String {
-        let selected = selectedDisplayModels
-        guard !selected.isEmpty else {
-            return String(localized: "Models")
-        }
-        return selected.count == 1 ? selected[0].displayName : "\(selected[0].displayName) +\(selected.count - 1)"
-    }
-
-    private func presentPendingPremiumIfNeeded() {
-        guard pendingPremiumPresentation else { return }
-        pendingPremiumPresentation = false
-        onPremiumRequired?()
-    }
-
-    private func presentConversation(_ session: ConversationSession) {
-        if showsOnlyResults {
-            onResultConversation?(session)
-            return
-        }
-        activeConversationSession = session
-        isConversationInspectorPresented = usesConversationInspectorPresentation
-    }
-
-    private func toggleConversationInspector() {
-        guard activeConversationSession != nil else { return }
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isConversationInspectorPresented.toggle()
-        }
-    }
-
-    private var conversationInspectorToggleButton: some View {
-        let isPresented = activeConversationSession != nil && isConversationInspectorPresented
-
-        return Button {
-            toggleConversationInspector()
-        } label: {
-            Image(systemName: "sidebar.right")
-        }
-        .help(isPresented ? "Hide Conversation Inspector" : "Show Conversation Inspector")
-        .accessibilityLabel(isPresented ? "Hide Conversation Inspector" : "Show Conversation Inspector")
-        .accessibilityIdentifier("home_conversation_inspector_toggle")
-    }
-
-    private var selectedDisplayModels: [ModelConfig] {
-        viewModel.selectedDisplayModels(
-            enabledIDs: preferences.enabledModelIDs,
-            isPro: entitlement.isPro || HomeViewModel.isSnapshotMode
-        )
-    }
-
-    private var inputSendButton: some View {
-        Button(action: performInputActionIfPossible) {
-            inputSendButtonLabel
-        }
-        .buttonStyle(inputSendButtonStyle)
-        #if !os(macOS)
-            .tint(colors.accent)
-        #endif
-            .disabled(!viewModel.canSend)
-            .opacity(viewModel.canSend ? 1.0 : 0.5)
-    }
-
-    @ViewBuilder
-    private var inputSendButtonLabel: some View {
-        #if os(macOS)
-            Image(systemName: "arrow.up")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(viewModel.canSend ? colors.onAccent : colors.textSecondary.opacity(0.45))
-                .frame(width: 32, height: 32)
-                .tlingoGlassCircle(viewModel.canSend ? .prominent : .control, interactive: viewModel.canSend)
-        #else
-            HStack(spacing: 6) {
-                Text("Send")
-                    .font(.system(size: 15, weight: .semibold))
-                Image(systemName: "paperplane.fill")
-                    .font(.system(size: 15, weight: .semibold))
-            }
-        #endif
-    }
-
-    private var inputSendButtonStyle: some PrimitiveButtonStyle {
-        #if os(macOS)
-            return .plain
-        #else
-            return .glassProminent
-        #endif
-    }
-
-    @ViewBuilder
-    private var inputSpeakButton: some View {
-        let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-
-        if hasText || viewModel.isSpeakingInputText {
-            Button {
-                if viewModel.isSpeakingInputText {
-                    viewModel.stopSpeaking()
-                } else {
-                    viewModel.speakInputText()
-                }
-            } label: {
-                if viewModel.isSpeakingInputText {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 14))
-                } else {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.system(size: 14))
-                }
-            }
-            .buttonStyle(.glass)
-            .tint(viewModel.isSpeakingInputText ? colors.error : colors.textPrimary)
-            .buttonBorderShape(.circle)
-        }
-    }
-
-    private var collapsedInputSummary: some View {
-        let displayText = viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isInputExpanded = true
-            }
-        } label: {
-            HStack(spacing: 12) {
-                Text(displayText.isEmpty ? viewModel.inputPlaceholder : displayText)
-                    .font(.system(size: 15))
-                    .foregroundColor(displayText.isEmpty ? colors.textSecondary : colors.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .tlingoGlassSurface(.control, cornerRadius: TLingoRadius.medium, interactive: true)
-            .contentShape(RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func expandedInputEditor(editorHeight: CGFloat? = nil) -> some View {
-        let contentHeightChangeHandler: ((CGFloat) -> Void)? = usesBottomComposerLayout ? { height in
-            updateBottomComposerEditorContentHeight(height)
-        } : nil
-
-        return VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                #if !os(macOS)
-                    if viewModel.inputText.isEmpty {
-                        Text(viewModel.inputPlaceholder)
-                            .foregroundColor(colors.textSecondary)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                    }
-                #endif
-
-                #if os(macOS)
-                    AutoPasteTextEditor(
-                        text: $viewModel.inputText,
-                        placeholder: viewModel.inputPlaceholder,
-                        onPaste: { pastedText in
-                            applyPastedTextIfNeeded(pastedText)
-                        },
-                        onImagePaste: { _ in },
-                        onContentHeightChange: contentHeightChangeHandler,
-                        onSubmit: performInputActionIfPossible,
-                        onSwapLanguages: { viewModel.swapInputLanguages() }
-                    )
-                    .frame(minHeight: editorHeight ?? inputEditorMinHeight, maxHeight: editorHeight ?? inputEditorMaxHeight)
-                    .padding(12)
-                #elseif os(iOS)
-                    AutoPasteTextEditor(
-                        text: $viewModel.inputText,
-                        placeholder: viewModel.inputPlaceholder,
-                        onPaste: { pastedText in
-                            applyPastedTextIfNeeded(pastedText)
-                        },
-                        onImagePaste: { _ in },
-                        onContentHeightChange: contentHeightChangeHandler,
-                        onSubmit: performInputActionIfPossible,
-                        onSwapLanguages: { viewModel.swapInputLanguages() }
-                    )
-                    .frame(minHeight: editorHeight ?? inputEditorMinHeight, maxHeight: editorHeight ?? inputEditorMaxHeight)
-                    .padding(12)
-                    .padding(.trailing, usesPhoneComposerChrome ? 24 : 0)
-                    .overlay(alignment: .topTrailing) {
-                        if usesPhoneComposerChrome, !viewModel.inputText.isEmpty {
-                            clearInputButton
-                        }
-                    }
-                #else
-                    TextEditor(text: $viewModel.inputText)
-                        .scrollContentBackground(.hidden)
-                        .foregroundColor(colors.textPrimary)
-                        .padding(12)
-                        .frame(minHeight: editorHeight ?? inputEditorMinHeight, maxHeight: editorHeight ?? inputEditorMaxHeight)
-                        .onPasteCommand(of: [.plainText]) { providers in
-                            handlePasteCommand(providers: providers)
-                        }
-                #endif
-            }
-        }
-    }
-
-    #if os(iOS)
-        // MARK: - iPhone chrome
-
-        private var navigationBarLanguageSelector: some View {
-            LanguageSwitcherView(
-                globeFont: .system(size: 13),
-                textFont: .system(size: 16, weight: .semibold),
-                chevronFont: .system(size: 9, weight: .semibold),
-                foregroundColor: colors.textPrimary,
-                showsControlBackgrounds: false,
-                languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
-                resolvedTarget: viewModel.resolvedTargetLanguage,
-                onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
-                detectedSource: viewModel.detectedSourceLanguage,
-                onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
-            )
-        }
-
-        @ViewBuilder
-        private var phoneSettingsButton: some View {
-            if let onSettingsTap {
-                Button("Settings", systemImage: "gearshape", action: onSettingsTap)
-                    .tint(.primary)
-                    .accessibilityIdentifier("tab_settings")
-            }
-        }
-
-        /// Main app only, and only while the input is empty so it never competes with speak and send.
-        @ViewBuilder
-        private var imageTextInputButton: some View {
-            if context == nil, viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                ImageTextInputButton(tint: colors.textPrimary) { text in
-                    viewModel.inputText = text
-                    isInputExpanded = true
-                }
-            }
-        }
-
-        private var clearInputButton: some View {
-            Button {
-                viewModel.inputText = ""
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 17))
-                    .foregroundStyle(colors.textSecondary.opacity(0.7))
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 10)
-            .padding(.trailing, 8)
-            .accessibilityLabel("Clear Text")
-            .accessibilityIdentifier("home_clear_input_button")
-        }
-
-        /// The input's trailing slot, like Messages: voice while empty, send once text exists.
-        /// Sending the same text again re-runs it; per-result retry lives on each result row.
-        @ViewBuilder
-        private var phonePrimaryInputButton: some View {
-            let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-
-            if !hasText, let onRealtimeTap {
-                Button {
-                    hasUsedRealtimeButton = true
-                    onRealtimeTap()
-                } label: {
-                    if hasUsedRealtimeButton {
-                        phonePrimaryInputButtonIcon("waveform")
-                    } else {
-                        Label("Live Translate", systemImage: "waveform")
-                            .font(.system(size: 15, weight: .semibold))
-                            .frame(height: 22)
-                    }
-                }
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(hasUsedRealtimeButton ? .circle : .capsule)
-                .tint(colors.accent)
-                .accessibilityLabel("Realtime Translation")
-                .accessibilityIdentifier("home_realtime_button")
-            } else {
-                Button(action: performInputActionIfPossible) {
-                    phonePrimaryInputButtonIcon("arrow.up")
-                }
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(.circle)
-                .tint(colors.accent)
-                .disabled(!viewModel.canSend)
-                .accessibilityLabel("Send")
-                .accessibilityIdentifier("home_send_button")
-            }
-        }
-
-        private func phonePrimaryInputButtonIcon(_ systemName: String) -> some View {
-            Image(systemName: systemName)
-                .font(.system(size: 16, weight: .bold))
-                .frame(width: 22, height: 22)
-        }
-
-        /// Empty Home offers a way to continue: the latest translations and the clipboard.
-        private var phoneEmptyStateSuggestions: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                if !recentTextRecords.isEmpty {
-                    HStack {
-                        Text("Recent")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(colors.textSecondary)
-                        Spacer()
-                        if let onHistoryTap {
-                            Button("Show All", action: onHistoryTap)
-                                .font(.subheadline)
-                                .accessibilityIdentifier("home_recent_show_all")
-                        }
-                    }
-                    .padding(.horizontal, 4)
-
-                    VStack(spacing: 0) {
-                        ForEach(recentTextRecords) { record in
-                            if record.id != recentTextRecords.first?.id {
-                                Divider()
-                                    .padding(.leading, 16)
-                            }
-                            Button {
-                                viewModel.inputText = record.sourceText
-                                isInputExpanded = true
-                            } label: {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(record.sourceText)
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundStyle(colors.textPrimary)
-                                    if let result = record.resultText {
-                                        Text(result)
-                                            .font(.subheadline)
-                                            .foregroundStyle(colors.textSecondary)
-                                    }
-                                }
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 11)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous))
-                }
-
-                PasteButton(payloadType: String.self) { strings in
-                    guard let text = strings.first?.trimmingCharacters(in: .whitespacesAndNewlines),
-                          !text.isEmpty
-                    else { return }
-                    Task { @MainActor in
-                        viewModel.inputText = text
-                        isInputExpanded = true
-                        performInputActionIfPossible()
-                    }
-                }
-                .labelStyle(.titleAndIcon)
-                .buttonBorderShape(.capsule)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 6)
-            }
-            // `.task` runs after the first frame commits, so opening the history store doesn't delay launch.
-            .task { refreshRecentTextRecords() }
-            .onReceive(NotificationCenter.default.publisher(for: .translationRecordSaved)) { _ in
-                refreshRecentTextRecords()
-            }
-        }
-
-        private func refreshRecentTextRecords() {
-            let pageSize = 20
-            // Repeated lookups of the same text show once.
-            var seen = Set<String>()
-            var recents: [HomeRecentRecord] = []
-            var offset = 0
-            pages: while offset < 500 {
-                let records = TranslationHistoryService.shared.fetchTextRecords(offset: offset, limit: pageSize)
-                for record in records {
-                    let recent = HomeRecentRecord(record)
-                    guard seen.insert(recent.sourceText).inserted else { continue }
-                    recents.append(recent)
-                    if recents.count == 3 { break pages }
-                }
-                guard records.count == pageSize else { break }
-                offset += pageSize
-            }
-            if recents != recentTextRecords {
-                recentTextRecords = recents
-            }
-        }
-
-        private var shouldShowMatchFallbackHint: Bool {
-            usesPhoneComposerChrome
-                && viewModel.isMatchTargetFallback
-                && viewModel.selectedAction?.languageDependencies.usesTargetLanguage == true
-        }
-
-        /// Explains why the automatic target skipped the first language, with a one-tap override.
-        private func matchFallbackHint(source: SourceLanguageOption, target: TargetLanguageOption) -> some View {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.turn.down.right")
-                    .font(.system(size: 11, weight: .semibold))
-                Text("Source is \(source.primaryLabel), translating to \(target.primaryLabel)")
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-
-                Spacer(minLength: 8)
-
-                Button {
-                    isFallbackTargetPickerPresented = true
-                } label: {
-                    HStack(spacing: 3) {
-                        Text("Change")
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 9, weight: .semibold))
-                    }
-                    .foregroundColor(colors.accent)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home_match_fallback_change")
-                .sheet(isPresented: $isFallbackTargetPickerPresented) {
-                    LanguagePickerView(
-                        selectedCode: Binding(
-                            get: { target.rawValue },
-                            set: { code in
-                                guard let option = TargetLanguageOption(rawValue: code), option != target else { return }
-                                viewModel.overrideTargetLanguage(option)
-                            }
-                        ),
-                        isPresented: $isFallbackTargetPickerPresented,
-                        availableOptions: TargetLanguageOption.selectionOptions.filter { $0 != .appLanguage }
-                    )
-                    .presentationDetents([.medium, .large])
-                }
-            }
-            .font(.system(size: 13))
-            .foregroundColor(colors.textSecondary)
-            .padding(.horizontal, 4)
-        }
-    #endif
-
-    private var wordLookupFallbackHint: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "arrow.turn.down.right")
-                .font(.system(size: 11, weight: .semibold))
-            Text("Switched to word lookup")
-
-            Spacer(minLength: 8)
-
-            Menu {
-                resultOptionsMenuContent(showsResultOrder: viewModel.modelRuns.count > 1)
-            } label: {
-                HStack(spacing: 3) {
-                    Text("Result Options")
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 9, weight: .semibold))
-                }
-                .foregroundColor(colors.accent)
-            }
-            #if os(macOS)
-            .menuStyle(.borderlessButton)
-            #endif
-            .fixedSize()
-            .accessibilityIdentifier("home_word_lookup_options")
-        }
-        .font(.system(size: 13))
-        .foregroundColor(colors.textSecondary)
-        .padding(.horizontal, 4)
-        .accessibilityIdentifier("home_word_lookup_fallback_hint")
-    }
-
-    // MARK: - Flat result panel
-
-    /// The first result stays in place while the remaining models expand below it.
-    private func flatResultsPanel(viewportHeight: CGFloat) -> some View {
-        let runs = viewModel.displayedModelRuns
-        let showsComparison = isComparingResults && runs.count > 1
-
-        return VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
-            if let primaryRun = runs.first {
-                flatResultRow(for: primaryRun)
-                if runs.count > 1 {
-                    let remainingRuns = Array(runs.dropFirst())
-                    VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
-                        if showsComparison {
-                            comparisonHeader(remainingModelCount: remainingRuns.count)
-                            ForEach(remainingRuns) { run in
-                                flatResultRow(for: run)
-                            }
-                        } else {
-                            collapsedResults(
-                                remainingRuns,
-                                lineLimits: collapsedPreviewLineLimits(for: remainingRuns, viewportHeight: viewportHeight)
-                            )
-                        }
-                    }
-                    .animation(.easeInOut(duration: 0.2), value: showsComparison)
-                }
-            }
-
-            // The word lookup hint above the results already offers Result Options.
-            if !runs.isEmpty, !viewModel.isWordLookupFallback {
-                resultOptionsFooter(showsResultOrder: runs.count > 1)
-            }
-
-            if shouldShowInlineSatisfactionPrompt {
-                satisfactionPromptResultCell
-                    .padding(.top, 6)
-            }
-        }
-        .onHeightChange { height in
-            updateMeasuredHeight(height, current: flatResultsPanelHeight) {
-                flatResultsPanelHeight = $0
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func flatResultRow(for run: HomeViewModel.ModelRunViewState) -> some View {
-        let runID = run.id
-        let isLoading = isRunLoading(run)
-        let row = VStack(alignment: .leading, spacing: 8) {
-            flatResultHeader(for: run)
-            content(for: run, textPreset: .compact, showsInlineActions: false)
-                .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
-                // Outgoing content fades inside the row instead of overlapping the next one.
-                .clipped()
-                .onHeightChange { height in
-                    guard heldResultHeights[runID] == nil else { return }
-                    updateMeasuredHeight(height, current: resultContentHeights[runID] ?? 0) {
-                        resultContentHeights[runID] = $0
-                    }
-                }
-        }
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .flatResultCard(colors: colors)
-        .onChange(of: isLoading) { _, loading in
-            guard !loading, heldResultHeights[runID] != nil else { return }
-            withAnimation(.smooth(duration: 0.35)) {
-                heldResultHeights[runID] = nil
-            }
-        }
-
-        #if os(iOS)
-            if isSuccessfulRun(run) {
-                row
-                    .contentShape(Rectangle())
-                    .gesture(
-                        TapGesture()
-                            .onEnded {
-                                presentResultDetail(runID: runID)
-                            },
-                        including: .gesture
-                    )
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction(named: Text("Open Result")) {
-                        presentResultDetail(runID: runID)
-                    }
-            } else {
-                row
-            }
-        #else
-            // macOS has no result detail sheet; the text stays selectable in place.
-            row
-        #endif
-    }
-
-    private func flatResultHeader(for run: HomeViewModel.ModelRunViewState) -> some View {
-        HStack(spacing: 8) {
-            Text(run.modelDisplayName)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(colors.textSecondary)
-                .lineLimit(1)
-
-            switch run.status {
-            case .idle, .running, .streaming, .streamingSentencePairs:
-                ProgressView()
-                    .controlSize(.mini)
-            case .failure:
-                Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
-            case .success:
-                EmptyView()
-            }
-
-            if DeveloperMode.isEnabled {
-                providerInfoButton(runID: run.id)
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 16) {
-                if viewModel.canShowSentencePairs(for: run) {
-                    sentencePairsToggle(for: run)
-                }
-
-                switch run.status {
-                case let .success(result):
-                    speakResultButton(text: result.copyText, runID: run.id)
-                    // On iPhone the conversation entry lives in the result detail sheet.
-                    actionButtons(
-                        copyText: result.copyText,
-                        runID: run.id,
-                        showsChat: !usesPhoneComposerChrome && (!showsOnlyResults || onResultConversation != nil)
-                    )
-                case .failure where !run.status.isUnsupported:
-                    retryButton(runID: run.id)
-                default:
-                    EmptyView()
-                }
-            }
-        }
-    }
-
-    /// Switches this row between the whole translation and sentence pairs; other rows stay as they are.
-    private func sentencePairsToggle(for run: HomeViewModel.ModelRunViewState) -> some View {
-        let isOn = run.presentation == .sentencePairs
-
-        return Button {
-            toggleSentencePairs(runID: run.id)
-        } label: {
-            Image(systemName: "rectangle.split.1x2")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isOn ? colors.onAccent : colors.textSecondary)
-                .frame(width: 28, height: 22)
-                .background {
-                    if isOn {
-                        Capsule(style: .continuous)
-                            .fill(colors.accentFill)
-                    }
-                }
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Sentence by Sentence")
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-        .accessibilityIdentifier("home_sentence_pairs_toggle")
-    }
-
-    /// Content swaps without a cross-fade; only the row height animates, from the held height
-    /// to the new content once it is ready.
-    private func toggleSentencePairs(runID: String) {
-        heldResultHeights[runID] = resultContentHeights[runID]
-        viewModel.toggleSentencePairs(runID: runID)
-        // A cached result is ready now; release the hold after one frame so the height animates.
-        if let run = viewModel.modelRuns.first(where: { $0.id == runID }), !isRunLoading(run) {
-            DispatchQueue.main.async {
-                withAnimation(.smooth(duration: 0.3)) {
-                    heldResultHeights[runID] = nil
-                }
-            }
-        }
-    }
-
-    private func isRunLoading(_ run: HomeViewModel.ModelRunViewState) -> Bool {
-        switch run.status {
-        case .idle, .running, .streaming, .streamingSentencePairs:
-            return true
-        case .success, .failure:
-            return false
-        }
-    }
-
-    private func speakResultButton(text: String, runID: String) -> some View {
-        let isSpeaking = viewModel.isSpeaking(runID: runID)
-
-        return Button {
-            if isSpeaking {
-                viewModel.stopSpeaking()
-            } else {
-                viewModel.speakResult(text, runID: runID)
-            }
-        } label: {
-            Image(systemName: isSpeaking ? "stop.fill" : "speaker.wave.2")
-                .font(.system(size: 14))
-                .foregroundColor(isSpeaking ? colors.accent : colors.textSecondary)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isSpeaking ? "Stop Speaking" : "Speak")
-    }
-
-    private static let collapsedPreviewFontSize: CGFloat = 14
-    private static let collapsedPreviewLabelFontSize: CGFloat = 12
-    private static let collapsedPreviewLabelWidthRange: ClosedRange<CGFloat> = 72 ... 150
-    private static let collapsedPreviewColumnSpacing: CGFloat = 12
-    private static let collapsedResultsRowSpacing: CGFloat = 10
-    private static let collapsedResultsVerticalPadding: CGFloat = 14
-    private static let flatResultCardSpacing: CGFloat = 10
-
-    private func collapsedResults(
-        _ runs: [HomeViewModel.ModelRunViewState],
-        lineLimits: [String: Int]
-    ) -> some View {
-        let labelWidth = collapsedPreviewLabelWidth(for: runs)
-        let finishedCount = runs.filter(isFinishedRun).count
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isComparingResults = true
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: Self.collapsedResultsRowSpacing) {
-                HStack(spacing: 4) {
-                    Text("\(runs.count) more models")
-                    if finishedCount < runs.count {
-                        ProgressView()
-                            .controlSize(.mini)
-                        Text(verbatim: "\(finishedCount)/\(runs.count)")
-                            .font(.system(size: 12).monospacedDigit())
-                    }
-                    Spacer()
-                    Text("Compare")
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(colors.textSecondary)
-
-                ForEach(runs) { run in
-                    HStack(alignment: .firstTextBaseline, spacing: Self.collapsedPreviewColumnSpacing) {
-                        Text(run.modelDisplayName)
-                            .font(.system(size: Self.collapsedPreviewLabelFontSize, weight: .medium))
-                            .foregroundColor(colors.textSecondary)
-                            .lineLimit(1)
-                            .frame(width: labelWidth, alignment: .leading)
-                        Group {
-                            if isAwaitingFirstOutput(run) {
-                                AnimatedEllipsis()
-                            } else {
-                                Text(resultPreview(for: run))
-                            }
-                        }
-                        .font(.system(size: Self.collapsedPreviewFontSize))
-                        .foregroundColor(colors.textPrimary.opacity(0.8))
-                        .lineLimit(lineLimits[run.id] ?? 1)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-            }
-            .padding(.vertical, Self.collapsedResultsVerticalPadding)
-            .contentShape(Rectangle())
-            .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
-                guard abs(size.width - collapsedResultsSize.width) > 0.5
-                    || abs(size.height - collapsedResultsSize.height) > 0.5
-                else { return }
-                collapsedResultsSize = size
-            }
-            // Outside the measurement so preview line limits see only the text columns.
-            .flatResultCard(colors: colors)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home_compare_results_button")
-    }
-
-    private func resultOptionsFooter(showsResultOrder: Bool) -> some View {
-        HStack {
-            Spacer()
-            Menu {
-                resultOptionsMenuContent(showsResultOrder: showsResultOrder)
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "slider.horizontal.3")
-                    Text("Result Options")
-                }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(colors.textSecondary)
-            }
-            #if os(macOS)
-            .menuStyle(.borderlessButton)
-            #endif
-            .fixedSize()
-            .accessibilityIdentifier("home_result_order")
-            .accessibilityValue(preferences.modelResultOrder.title)
-        }
-        .padding(.top, 4)
-    }
-
-    private func comparisonHeader(remainingModelCount: Int) -> some View {
-        HStack(spacing: 14) {
-            Text("\(remainingModelCount) more models")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(colors.textSecondary)
-
-            Spacer()
-
-            // Result order lives in the result options menu below the results.
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isComparingResults = false
-                }
-            } label: {
-                Image(systemName: "chevron.up")
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(colors.accent)
-            .accessibilityLabel("Collapse")
-        }
-        .padding(.top, 4)
-        .padding(.horizontal, 4)
-    }
-
-    /// Model output is Markdown, so previews render its inline styling instead of raw markers.
-    private func resultPreview(for run: HomeViewModel.ModelRunViewState) -> AttributedString {
-        let text: String
-        switch run.status {
-        case .idle, .running:
-            text = String(localized: "Generating...")
-        case let .streaming(streamedText, _):
-            if streamedText.isEmpty {
-                text = String(localized: "Generating...")
-            } else {
-                return MarkdownPreviewText.attributed(from: streamedText)
-            }
-        case let .streamingSentencePairs(pairs, _):
-            text = pairs.isEmpty
-                ? String(localized: "Translating...")
-                : pairs.map(\.translation).joined(separator: " ")
-        case let .success(result):
-            return MarkdownPreviewText.attributed(from: result.copyText)
-        case .failure:
-            text = run.status.isUnsupported ? String(localized: "Not Supported") : String(localized: "Request Failed")
-        }
-        return AttributedString(text.replacingOccurrences(of: "\n", with: " "))
-    }
-
-    private func isAwaitingFirstOutput(_ run: HomeViewModel.ModelRunViewState) -> Bool {
-        switch run.status {
-        case .idle, .running: true
-        case let .streaming(text, _): text.isEmpty
-        case let .streamingSentencePairs(pairs, _): pairs.isEmpty
-        case .success, .failure: false
-        }
-    }
-
-    private func isFinishedRun(_ run: HomeViewModel.ModelRunViewState) -> Bool {
-        switch run.status {
-        case .success, .failure: true
-        case .idle, .running, .streaming, .streamingSentencePairs: false
-        }
-    }
-
-    /// Sizes the model-name column to the widest name so names like "Microsoft Translator" are not truncated.
-    private func collapsedPreviewLabelWidth(for runs: [HomeViewModel.ModelRunViewState]) -> CGFloat {
-        #if os(macOS)
-            let font = NSFont.systemFont(ofSize: Self.collapsedPreviewLabelFontSize, weight: .medium)
-        #else
-            let font = UIFont.systemFont(ofSize: Self.collapsedPreviewLabelFontSize, weight: .medium)
-        #endif
-        let widest = runs.map { ($0.modelDisplayName as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
-        let range = Self.collapsedPreviewLabelWidthRange
-        return min(max(range.lowerBound, widest.rounded(.up)), range.upperBound)
-    }
-
-    /// On Mac, collapsed previews grow to fill the visible area below the primary result,
-    /// so comparing models rarely needs scrolling. iPhone keeps one line per preview.
-    private func collapsedPreviewLineLimits(
-        for runs: [HomeViewModel.ModelRunViewState],
-        viewportHeight: CGFloat
-    ) -> [String: Int] {
-        #if os(macOS)
-            let font = NSFont.systemFont(ofSize: Self.collapsedPreviewFontSize)
-            let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
-            let textWidth = collapsedResultsSize.width - collapsedPreviewLabelWidth(for: runs)
-                - Self.collapsedPreviewColumnSpacing
-            guard textWidth > 0, lineHeight > 0, flatResultsPanelHeight > 0, collapsedResultsSize.height > 0 else {
-                return [:]
-            }
-
-            // Everything in the panel except the collapsed block keeps its height whatever the line limits are.
-            let fixedHeight = flatResultsPanelHeight - collapsedResultsSize.height
-            let blockChromeHeight = Self.collapsedResultsVerticalPadding * 2 + lineHeight
-                + Self.collapsedResultsRowSpacing * CGFloat(runs.count)
-            let previewHeight = viewportHeight - fixedHeight - blockChromeHeight
-            let lineBudget = previewHeight.isFinite ? Int((previewHeight / lineHeight).rounded(.down)) : 0
-
-            let neededLines = runs.map { run in
-                let text = String(resultPreview(for: run).characters) as NSString
-                let height = text.boundingRect(
-                    with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
-                    options: [.usesLineFragmentOrigin, .usesFontLeading],
-                    attributes: [.font: font]
-                ).height
-                return max(1, Int((height / lineHeight).rounded(.up)))
-            }
-            let limits = HomeTextLayoutPolicy.collapsedPreviewLineLimits(
-                neededLines: neededLines,
-                lineBudget: lineBudget
-            )
-            return Dictionary(zip(runs.map(\.id), limits)) { first, _ in first }
-        #else
-            return [:]
-        #endif
-    }
-
-    private func performInputActionIfPossible() {
-        guard viewModel.canSend else { return }
-        hideKeyboard()
-        viewModel.performSelectedAction()
-    }
-
-    private var actionChips: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                actionChipsStack { actionID in
-                    scrollActionChip(actionID, proxy: proxy)
-                }
-                .fixedSize(horizontal: true, vertical: false)
-                .padding(.vertical, 4)
-            }
-            // Bleed past the container's 20pt padding to the screen edge on iPhone,
-            // while resting content stays aligned with the rows above and below.
-            .contentMargins(.horizontal, actionChipsEdgeBleed, for: .scrollContent)
-            .padding(.horizontal, -actionChipsEdgeBleed)
-            .mask {
-                // Fade at the trailing screen edge so cut-off chips read as scrollable.
-                if actionChipsEdgeBleed > 0 {
-                    HStack(spacing: 0) {
-                        Color.black
-                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                            .frame(width: actionChipsEdgeBleed * 2)
-                    }
-                } else {
-                    Color.black
-                }
-            }
-            .onChange(of: viewModel.selectedActionID) { _, actionID in
-                scrollActionChip(actionID, proxy: proxy)
-            }
-        }
-    }
-
-    /// Wide layouts center a width-limited column, so bleeding there would overshoot it.
-    private var actionChipsEdgeBleed: CGFloat {
-        #if os(iOS)
-            horizontalSizeClass == .compact ? 20 : 0
-        #else
-            0
-        #endif
-    }
-
-    private func actionChipsStack(onActionSelected: @escaping (ActionConfig.ID) -> Void) -> some View {
-        HStack(spacing: TLingoSpacing.sm) {
-            ForEach(viewModel.actions) { action in
-                let isSelected = action.id == viewModel.selectedAction?.id
-
-                Button {
-                    onActionSelected(action.id)
-                    if viewModel.selectAction(action) {
-                        if viewModel.requiresAIModelSelection(for: action) {
-                            showAIModelRequiredAlert = true
-                        } else {
-                            viewModel.performSelectedAction()
-                        }
-                    }
-                } label: {
-                    Text(action.displayName)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(isSelected ? colors.chipPrimaryText : colors.textPrimary)
-                        .lineLimit(1)
-                        .padding(.horizontal, TLingoSpacing.md)
-                        .padding(.vertical, 10)
-                        .background {
-                            Capsule(style: .continuous)
-                                .fill(
-                                    isSelected
-                                        ? colors.chipPrimaryBackground
-                                        : (
-                                            colorScheme == .dark
-                                                ? colors.chipSecondaryBackground.opacity(0.72)
-                                                : colors.cardBackground.opacity(0.78)
-                                        )
-                                )
-                        }
-                        .contentShape(Capsule(style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .id(action.id)
-            }
-
-            if let onManageActionsTap, showsManageActionsButton {
-                manageActionsButton(action: onManageActionsTap)
-            }
-        }
-    }
-
-    private func scrollActionChip(_ actionID: ActionConfig.ID?, proxy: ScrollViewProxy) {
-        guard let actionID else { return }
-        withAnimation(.easeInOut(duration: 0.22)) {
-            proxy.scrollTo(actionID, anchor: .center)
-        }
-    }
-
-    private func manageActionsButton(action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(colors.textPrimary)
-                .frame(width: 40, height: 40)
-                .background {
-                    Circle()
-                        .fill(
-                            colorScheme == .dark
-                                ? colors.chipSecondaryBackground.opacity(0.72)
-                                : colors.cardBackground.opacity(0.78)
-                        )
-                }
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Manage Actions")
-        .accessibilityIdentifier("home_manage_actions_button")
-    }
-
-    private var hintLabel: some View {
-        Text(viewModel.placeholderHint)
-            .font(.system(size: 14))
-            .foregroundColor(colors.textSecondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, 8)
-    }
-
-    @ViewBuilder
-    private var providerResultCardBackground: some View {
-        RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
-            .fill(colors.cardBackground)
-    }
-
-    private var providerResultsSection: some View {
-        VStack(spacing: 16) {
-            ForEach(viewModel.displayedModelRuns) { run in
-                providerResultCard(for: run)
-            }
-
-            if shouldShowInlineSatisfactionPrompt {
-                satisfactionPromptResultCell
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func providerResultCard(for run: HomeViewModel.ModelRunViewState) -> some View {
-        let runID = run.id
-        let cardContent = VStack(alignment: .leading, spacing: 12) {
-            content(for: run)
-
-            // Bottom info bar
-            bottomInfoBar(for: run)
-        }
-        .padding(16)
-
-        #if os(iOS)
-            if isSuccessfulRun(run) {
-                cardContent
-                    .background(providerResultCardBackground)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        TapGesture()
-                            .onEnded {
-                                presentResultDetail(runID: runID)
-                            },
-                        including: .gesture
-                    )
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction(named: Text("Open Result")) {
-                        presentResultDetail(runID: runID)
-                    }
-            } else {
-                cardContent
-                    .background(providerResultCardBackground)
-            }
-        #else
-            cardContent
-                .background(providerResultCardBackground)
-        #endif
-    }
-
-    private func isSuccessfulRun(_ run: HomeViewModel.ModelRunViewState) -> Bool {
-        if case .success = run.status {
-            return true
-        }
-        return false
-    }
-
-    #if os(iOS)
-        private struct SelectedResult: Identifiable {
-            let id: String
-        }
-
-        private func presentResultDetail(runID: String) {
-            resultDetailDetent = .medium
-            selectedResult = SelectedResult(id: runID)
-        }
-
-        @ViewBuilder
-        private func resultDetailSheet(for runID: String) -> some View {
-            NavigationStack {
-                if let run = viewModel.modelRuns.first(where: { $0.id == runID }),
-                   case let .success(result) = run.status
-                {
-                    TranslationResultDetailView(
-                        sourceText: resultDetailSourceText,
-                        actionName: viewModel.selectedAction?.displayName,
-                        actionIcon: viewModel.selectedAction?.outputType.systemImageName,
-                        modelDisplayName: run.modelDisplayName,
-                        durationText: run.durationText,
-                        result: result
-                    )
-                } else {
-                    Text("Result unavailable")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(colors.textSecondary)
-                        .navigationTitle("Result")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar(.visible, for: .navigationBar)
-                }
-            }
-        }
-
-        private var resultDetailSourceText: String {
-            let requestText = viewModel.currentRequestInputText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !requestText.isEmpty {
-                return viewModel.currentRequestInputText
-            }
-            return viewModel.inputText
-        }
-    #endif
-
-    @ViewBuilder
-    private func bottomInfoBar(
-        for run: HomeViewModel.ModelRunViewState
-    ) -> some View {
-        let runID = run.id
-
-        switch run.status {
-        case .idle, .running:
-            EmptyView()
-
-        case let .streaming(_, start):
-            HStack(spacing: 8) {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .controlSize(.small)
-                    .tint(colors.accent)
-                Text(run.modelDisplayName)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-                AnimatedEllipsis()
-                    .font(.system(size: 13))
-                    .foregroundColor(colors.textSecondary)
-                Spacer()
-                liveTimer(start: start)
-            }
-
-        case let .streamingSentencePairs(_, start):
-            HStack(spacing: 8) {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .controlSize(.small)
-                    .tint(colors.accent)
-                Text(run.modelDisplayName)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-                AnimatedEllipsis()
-                    .font(.system(size: 13))
-                    .foregroundColor(colors.textSecondary)
-                Spacer()
-                liveTimer(start: start)
-            }
-
-        case let .success(result):
-            HStack(spacing: 12) {
-                // Status + Duration + Model Name + Info
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(colors.success)
-                        .font(.system(size: 14))
-
-                    if let duration = run.durationText {
-                        Text(duration)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(colors.textSecondary)
-                    }
-
-                    Text(run.modelDisplayName)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(colors.textSecondary)
-
-                    providerInfoButton(runID: runID)
-                }
-
-                Spacer()
-
-                // Action buttons (only show here when no supplementalTexts, i.e., plain text mode)
-                if result.sentencePairs.isEmpty && result.supplementalTexts.isEmpty {
-                    actionButtons(copyText: result.copyText, runID: runID)
-                }
-            }
-
-        case .failure:
-            HStack(spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
-                        .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
-                        .font(.system(size: 14))
-
-                    if let duration = run.durationText {
-                        Text(duration)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(colors.textSecondary)
-                    }
-
-                    Text(run.modelDisplayName)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(colors.textSecondary)
-
-                    providerInfoButton(runID: runID)
-                }
-
-                Spacer()
-
-                // Retry button (retry only this run)
-                if !run.status.isUnsupported {
-                    retryButton(runID: runID)
-                }
-            }
-        }
-    }
-
-    /// Retries one run, or asks for the Apple Translate language download when that is what failed.
-    private func retryButton(runID: String) -> some View {
-        let downloadsLanguage = runID == ModelConfig.appleTranslateID && viewModel.appleTranslateNeedsLanguageDownload
-        return Button {
-            if downloadsLanguage {
-                viewModel.downloadAppleTranslateLanguage(runID: runID)
-            } else {
-                viewModel.retryRun(runID: runID)
-            }
-        } label: {
-            Group {
-                if downloadsLanguage {
-                    Label("Download", systemImage: "arrow.down.circle")
-                } else {
-                    Label("Retry", systemImage: "arrow.clockwise")
-                }
-            }
-            .font(.system(size: 13, weight: .medium))
-            .foregroundColor(colors.accent)
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func actionButtons(copyText: String, runID: String, showsChat: Bool = true) -> some View {
-        // Full action buttons for bottom bar (plain text mode)
-        diffToggleButton(for: runID)
-        compactCopyButton(for: copyText)
-        if let draft = viewModel.vocabularyDraft(forRunID: runID) {
-            VocabularySaveButton(draft: draft, iconSize: 14)
-        }
-        if showsChat {
-            chatButton(for: runID)
-        }
-        #if os(macOS)
-            if let onResultReplace {
-                Button {
-                    onResultReplace(copyText)
-                } label: {
-                    Label("Replace", systemImage: "arrow.left.arrow.right")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(colors.accent)
-            }
-        #elseif os(iOS)
-            if let context, context.allowsReplacement {
-                Button {
-                    context.finish(translation: AttributedString(copyText))
-                } label: {
-                    Label("Replace", systemImage: "arrow.left.arrow.right")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(colors.accent)
-            }
-        #endif
-    }
-
-    @ViewBuilder
-    private func diffToggleButton(for runID: String) -> some View {
-        if viewModel.hasDiff(for: runID) {
-            let isShowingDiff = viewModel.isDiffShown(for: runID)
-            Button {
-                viewModel.toggleDiffDisplay(for: runID)
-            } label: {
-                Image(systemName: isShowingDiff ? "eye.slash" : "eye")
-                    .font(.system(size: 14))
-                    .foregroundColor(isShowingDiff ? colors.accent : colors.textSecondary)
-            }
-            .buttonStyle(.plain)
-            .help(isShowingDiff ? "Hide changes" : "Show changes")
-        }
-    }
-
-    @ViewBuilder
-    private func providerInfoButton(runID: String) -> some View {
-        Button {
-            if DeveloperMode.isEnabled {
-                // Developer mode: jump straight to the recorded request details
-                // (provider meta is still available via logs).
-                viewModel.presentDebugRequestDetails(for: runID)
-            } else {
-                showingProviderInfo = showingProviderInfo == runID ? nil : runID
-            }
-        } label: {
-            if DeveloperMode.isEnabled {
-                Image(systemName: "exclamationmark.circle")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-            } else {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-            }
-        }
-        .buttonStyle(.plain)
-        .popover(isPresented: providerInfoBinding(for: runID)) {
-            if let run = viewModel.modelRuns.first(where: { $0.id == runID }) {
-                providerInfoPopover(for: run)
-                    .presentationCompactAdaptation(.popover)
-            }
-        }
-    }
-
-    private func providerInfoBinding(for runID: String) -> Binding<Bool> {
-        Binding(
-            get: { showingProviderInfo == runID },
-            set: { isPresented in
-                if !isPresented, showingProviderInfo == runID {
-                    showingProviderInfo = nil
-                }
-            }
-        )
-    }
-
-    @ViewBuilder
-    private func providerInfoPopover(for run: HomeViewModel.ModelRunViewState) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(run.modelDisplayName)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(colors.textPrimary)
-            if let duration = run.durationText {
-                Text(
-                    String(
-                        format: NSLocalizedString("Duration: %@", comment: "Provider run duration"),
-                        duration
-                    )
-                )
-                .font(.system(size: 12))
-                .foregroundColor(colors.textSecondary)
-            }
-            if let breakdown = run.status.latencyBreakdown {
-                Divider()
-                HStack(spacing: 4) {
-                    Text("Client → Azure:")
-                        .font(.system(size: 11))
-                        .foregroundColor(colors.textSecondary)
-                    Text(breakdown.clientToAzureText)
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundColor(colors.textPrimary)
-                }
-                HStack(spacing: 4) {
-                    Text("Azure → Model:")
-                        .font(.system(size: 11))
-                        .foregroundColor(colors.textSecondary)
-                    Text(breakdown.upstreamText)
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundColor(colors.textPrimary)
-                }
-            }
-        }
-        .fixedSize()
-        .padding(12)
-    }
-
-    private func liveTimer(start: Date) -> some View {
-        TimelineView(.periodic(from: start, by: 1.0)) { timeline in
-            let elapsed = timeline.date.timeIntervalSince(start)
-            Text(String(format: "%.0fs", elapsed))
-                .font(.system(size: 12, weight: .medium).monospacedDigit())
-                .foregroundColor(colors.textSecondary)
-        }
-    }
-
-    private func skeletonPlaceholder() -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(0 ..< 3, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(colors.skeleton)
-                    .frame(height: 10)
-                    .frame(maxWidth: index == 2 ? 180 : .infinity)
-                    .shimmer()
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func compactCopyButton(for text: String) -> some View {
-        Button {
-            copyToPasteboard(text)
-        } label: {
-            Image(systemName: "doc.on.doc")
-                .font(.system(size: 14))
-                .foregroundColor(colors.textSecondary)
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func chatButton(for runID: String) -> some View {
-        if let run = viewModel.modelRuns.first(where: { $0.id == runID }),
-           !run.model.isDirectTranslation
-        {
-            Button {
-                if let session = viewModel.createConversation(from: run) {
-                    presentConversation(session)
-                }
-            } label: {
-                Image(systemName: "text.bubble")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-            }
-            .buttonStyle(.plain)
-            .help("Continue conversation")
-            .accessibilityIdentifier("chat_button")
-        }
-    }
-
-    @ViewBuilder
-    private func suggestedActionChips(actions: [String], runID: String) -> some View {
-        SuggestedActionChips(actions: actions) { action in
-            if let run = viewModel.modelRuns.first(where: { $0.id == runID }),
-               let session = viewModel.createConversationWithFollowUp(from: run, followUp: action)
-            {
-                presentConversation(session)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func content(
-        for run: HomeViewModel.ModelRunViewState,
-        textPreset: MarkdownContentPreset = .compact,
-        showsInlineActions: Bool = true
-    ) -> some View {
-        switch run.status {
-        case .idle, .running:
-            skeletonPlaceholder()
-
-        case let .streaming(text, _):
-            if text.isEmpty {
-                skeletonPlaceholder()
-            } else {
-                StreamedMarkdownView(
-                    source: run.markdownStreamSource,
-                    config: MarkdownTypography.renderConfig(
-                        preset: .compact,
-                        textColor: colors.textPrimary,
-                        secondaryTextColor: colors.textSecondary,
-                        accentColor: colors.accent,
-                        animatesText: true
-                    )
-                )
-                .contentDirectionAware(text)
-            }
-
-        case let .streamingSentencePairs(pairs, _):
-            if pairs.isEmpty {
-                skeletonPlaceholder()
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(pair.original)
-                                .font(.system(size: 14))
-                                .foregroundColor(colors.textSecondary)
-                                .textSelection(.enabled)
-                            Text(pair.translation)
-                                .font(.system(size: 14))
-                                .foregroundColor(colors.textPrimary)
-                                .textSelection(.enabled)
-                        }
-                        .padding(.vertical, 8)
-                        .transition(.opacity)
-
-                        if index < pairs.count - 1 {
-                            Divider()
-                        }
-                    }
-                }
-                .animation(.easeOut(duration: 0.2), value: pairs.count)
-            }
-
-        case let .success(result):
-            let showDiff = run.showDiff
-            let runID = run.id
-            VStack(alignment: .leading, spacing: 12) {
-                if !result.sentencePairs.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(result.sentencePairs.enumerated()), id: \.offset) { index, pair in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(pair.original)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(colors.textSecondary)
-                                    .textSelection(.enabled)
-                                Text(pair.translation)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(colors.textPrimary)
-                                    .textSelection(.enabled)
-                            }
-                            .padding(.vertical, 8)
-
-                            if index < result.sentencePairs.count - 1 {
-                                Divider()
-                            }
-                        }
-                    }
-                } else if let diff = result.diff, showDiff {
-                    StyledDiffView(diff: diff)
-                } else {
-                    let mainText = !result.supplementalTexts.isEmpty ? result.copyText : result.text
-                    MarkdownContentView(text: mainText, preset: textPreset)
-                }
-
-                // Suggested action chips
-                if !result.suggestedActions.isEmpty, !showsOnlyResults || onResultConversation != nil {
-                    suggestedActionChips(actions: result.suggestedActions, runID: runID)
-                }
-
-                // Action buttons above divider (only when supplementalTexts exist)
-                if showsInlineActions, result.sentencePairs.isEmpty, !result.supplementalTexts.isEmpty {
-                    HStack(spacing: 12) {
-                        Spacer()
-                        actionButtons(copyText: result.copyText, runID: runID)
-                    }
-                }
-
-                if !result.supplementalTexts.isEmpty {
-                    Divider()
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(result.supplementalTexts.enumerated()), id: \.offset) { entry in
-                            CompactMarkdownContent(text: entry.element)
-                        }
-                    }
-                }
-            }
-
-        case let .failure(message, _, _, isUnsupported):
-            VStack(alignment: .leading, spacing: 10) {
-                Text(isUnsupported ? String(localized: "Not Supported") : String(localized: "Request Failed"))
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(isUnsupported ? colors.textSecondary : colors.error)
-                Text(message)
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-                    .textSelection(.enabled)
-            }
-        }
-    }
-
-    private func copyToPasteboard(_ text: String) {
-        PasteboardHelper.copy(text)
-    }
-
-    private func handlePasteCommand(providers: [NSItemProvider]) {
-        if let clipboardText = readImmediatePasteboardText() {
-            Task { @MainActor in
-                applyPastedTextIfNeeded(clipboardText)
-            }
-            return
-        }
-
-        guard !providers.isEmpty else { return }
-
-        let plainTextIdentifier = UTType.plainText.identifier
-
-        for provider in providers {
-            if provider.hasItemConformingToTypeIdentifier(plainTextIdentifier) {
-                provider.loadItem(forTypeIdentifier: plainTextIdentifier, options: nil) { item, _ in
-                    guard let text = Self.coerceLoadedItemToString(item) else { return }
-                    Task { @MainActor in
-                        applyPastedTextIfNeeded(text)
-                    }
-                }
-                return
-            }
-
-            if provider.canLoadObject(ofClass: NSString.self) {
-                provider.loadObject(ofClass: NSString.self) { object, _ in
-                    guard let text = object as? String else { return }
-                    Task { @MainActor in
-                        applyPastedTextIfNeeded(text)
-                    }
-                }
-                return
-            }
-        }
-    }
-
-    private func readImmediatePasteboardText() -> String? {
-        #if canImport(AppKit)
-            if let text = NSPasteboard.general.string(forType: .string) {
-                return text
-            }
-        #endif
-        #if canImport(UIKit)
-            if let text = UIPasteboard.general.string {
-                return text
-            }
-        #endif
-        return nil
-    }
-
-    @MainActor
-    private func applyPastedTextIfNeeded(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        viewModel.inputText = text
-        isInputExpanded = true
-        viewModel.performSelectedAction()
-    }
-
-    private static func coerceLoadedItemToString(_ item: NSSecureCoding?) -> String? {
-        switch item {
-        case let data as Data:
-            return String(data: data, encoding: .utf8)
-        case let string as String:
-            return string
-        case let attributed as NSAttributedString:
-            return attributed.string
-        default:
-            return nil
-        }
-    }
-}
-
-#if os(iOS)
-    private struct TranslationResultDetailView: View {
-        @Environment(\.colorScheme) private var colorScheme
-
-        let sourceText: String
-        let actionName: String?
-        let actionIcon: String?
-        let modelDisplayName: String
-        let durationText: String?
-        let result: HomeViewModel.ModelRunViewState.SuccessResult
-
-        @ThemeColors private var colors: AppColorPalette
-
-        private var resultText: String {
-            result.supplementalTexts.isEmpty ? result.text : result.copyText
-        }
-
-        var body: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    sourceSection
-                    resultSection
-                    supplementalSection
-                }
-                .padding(20)
-            }
-            .background(colors.background.ignoresSafeArea())
-            .navigationTitle("Result")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        PasteboardHelper.copy(result.copyText)
-                    } label: {
-                        Label("Copy", systemImage: "doc.on.doc")
-                    }
-                }
-            }
-        }
-
-        private var sourceSection: some View {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(sourceText)
-                    .font(.system(size: 16))
-                    .foregroundStyle(colors.textPrimary)
-                    .textSelection(.enabled)
-
-                metadataRow
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(sectionBackground)
-        }
-
-        private var metadataRow: some View {
-            HStack(spacing: 8) {
-                if let actionName, !actionName.isEmpty {
-                    MetadataChipView(actionName, icon: actionIcon ?? "bolt.fill")
-                }
-                MetadataChipView(modelDisplayName, icon: "cpu")
-                if let durationText {
-                    MetadataChipView(durationText, icon: "timer")
-                }
-            }
-        }
-
-        @ViewBuilder
-        private var resultSection: some View {
-            if !result.sentencePairs.isEmpty {
-                detailSection(title: "Translation") {
-                    sentencePairsView
-                }
-            } else if let diff = result.diff {
-                detailSection(title: "Result") {
-                    diffView(diff)
-                }
-            } else {
-                detailSection(title: "Result") {
-                    CompactMarkdownContent(text: resultText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        }
-
-        @ViewBuilder
-        private var supplementalSection: some View {
-            if !result.supplementalTexts.isEmpty {
-                detailSection(title: "More") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(Array(result.supplementalTexts.enumerated()), id: \.offset) { entry in
-                            CompactMarkdownContent(text: entry.element)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                }
-            }
-        }
-
-        private var sentencePairsView: some View {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(result.sentencePairs.enumerated()), id: \.offset) { index, pair in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(pair.original)
-                            .font(.system(size: 14))
-                            .foregroundStyle(colors.textSecondary)
-                            .textSelection(.enabled)
-                        Text(pair.translation)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(colors.textPrimary)
-                            .textSelection(.enabled)
-                    }
-                    .padding(.vertical, 8)
-
-                    if index < result.sentencePairs.count - 1 {
-                        Divider()
-                    }
-                }
-            }
-        }
-
-        private func diffView(_ diff: TextDiffBuilder.Presentation) -> some View {
-            StyledDiffView(diff: diff)
-        }
-
-        private func detailSection<Content: View>(
-            title: String,
-            @ViewBuilder content: () -> Content
-        ) -> some View {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(colors.textSecondary)
-                content()
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(sectionBackground)
-        }
-
-        private var sectionBackground: some View {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(colors.cardBackground)
-        }
-    }
-#endif
-
-// MARK: - Shimmer Animation
-
-private struct ShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = 0
-
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        gradient: Gradient(colors: [.clear, .white.opacity(0.4), .clear]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 0.6)
-                    .offset(x: -geometry.size.width * 0.3 + phase * geometry.size.width * 1.6)
-                }
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .onAppear {
-                withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                    phase = 1
-                }
-            }
-    }
-}
-
-private struct ViewHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func homeNavigationChrome(usesNativeNavigationHeader: Bool, colors: AppColorPalette) -> some View {
-        #if os(macOS)
-            toolbarBackground(.hidden, for: .windowToolbar)
-        #elseif os(iOS)
-            if usesNativeNavigationHeader {
-                navigationTitle("Text")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar(.visible, for: .navigationBar)
-                    .toolbarBackground(colors.background, for: .navigationBar)
-                    .toolbarBackground(.visible, for: .navigationBar)
-            } else {
-                toolbar(.hidden, for: .navigationBar)
-            }
-        #else
-            self
-        #endif
-    }
-
-    /// Cuts HomeView's modifier chain at stable seams. Without it the fully nested type makes the Swift
-    /// runtime demangle huge metadata names on the first frame (~200 ms on an iPhone 15 Plus).
-    func erasedForLaunch() -> AnyView {
-        AnyView(self)
-    }
-
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
-    }
-
-    func onHeightChange(_ action: @escaping (CGFloat) -> Void) -> some View {
-        background(
-            GeometryReader { geometry in
-                Color.clear.preference(key: ViewHeightPreferenceKey.self, value: geometry.size.height)
-            }
-        )
-        .onPreferenceChange(ViewHeightPreferenceKey.self, perform: action)
-    }
-}
-
-#Preview {
-    HomeView(context: nil)
-        .preferredColorScheme(.dark)
-}
-
-#if os(macOS)
-    public extension Notification.Name {
-        /// Notification posted by AppleTranslationWindowManager to register a HomeViewModel
-        /// with the hidden translation window bridge. userInfo["register"] is (HomeViewModel) -> Void.
-        static let appleTranslationViewModelRegister = Notification.Name("appleTranslationViewModelRegister")
-    }
-#endif
-
-/// A lightweight snapshot so Home doesn't hold SwiftData models.
-private struct HomeRecentRecord: Identifiable, Equatable {
-    let id: UUID
-    let sourceText: String
-    let resultText: String?
-
-    init(_ record: TranslationRecord) {
-        id = record.id
-        sourceText = record.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Results are Markdown; the preview shows the first line as plain text.
-        resultText = record.modelResults.first?.resultText
-            .split(separator: "\n", omittingEmptySubsequences: true)
-            .first
-            .map { line in
-                let plain = (try? AttributedString(markdown: String(line))).map { String($0.characters) }
-                return (plain ?? String(line)).trimmingCharacters(in: .whitespacesAndNewlines)
-            }
-    }
-}
-
-private extension View {
-    /// Each flat result sits on its own card so results separate by spacing instead of dividers.
-    func flatResultCard(colors: AppColorPalette) -> some View {
-        padding(.horizontal, 14)
-            .background(
-                RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
-                    .fill(colors.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: TLingoRadius.medium, style: .continuous)
-                            .stroke(colors.divider, lineWidth: 1)
-                    )
-            )
     }
 }

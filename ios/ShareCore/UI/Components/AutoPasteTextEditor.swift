@@ -17,11 +17,16 @@ private let languageShortcutLogger = os.Logger(
     struct AutoPasteTextEditor: NSViewRepresentable {
         @Binding var text: String
         let placeholder: String
-        let onPaste: (String) -> Void
+        var onPaste: (String) -> Void = { _ in }
         var onImagePaste: (([NSImage]) -> Void)?
         var onContentHeightChange: ((CGFloat) -> Void)?
         var onSubmit: (() -> Void)?
         var onSwapLanguages: (() -> Void)?
+        var fontSize: CGFloat?
+        var textContainerInset = NSSize(width: 16, height: 12)
+        var showsVerticalScroller = true
+        var hidePlaceholderWhenFocused = false
+        var autoFocus = false
 
         func makeCoordinator() -> Coordinator {
             Coordinator(parent: self)
@@ -32,8 +37,11 @@ private let languageShortcutLogger = os.Logger(
             textView.delegate = context.coordinator
             textView.isRichText = false
             textView.drawsBackground = false
-            textView.textContainerInset = NSSize(width: 16, height: 12)
+            textView.textContainerInset = textContainerInset
             textView.textContainer?.lineFragmentPadding = 0
+            if let fontSize {
+                textView.font = NSFont.systemFont(ofSize: fontSize)
+            }
             textView.minSize = NSSize(width: 0, height: 0)
             textView.maxSize = NSSize(
                 width: CGFloat.greatestFiniteMagnitude,
@@ -46,6 +54,7 @@ private let languageShortcutLogger = os.Logger(
             textView.onImagePaste = onImagePaste
             textView.onSubmit = onSubmit
             textView.onSwapLanguages = onSwapLanguages
+            textView.hidePlaceholderWhenFocused = hidePlaceholderWhenFocused
             textView.languageShortcutContext = "main"
             textView.placeholderAttributedString = makePlaceholderAttributedString()
 
@@ -57,10 +66,15 @@ private let languageShortcutLogger = os.Logger(
 
             let scrollView = NSScrollView()
             scrollView.drawsBackground = false
-            scrollView.hasVerticalScroller = true
+            scrollView.hasVerticalScroller = showsVerticalScroller
             scrollView.autohidesScrollers = true
             scrollView.contentView.drawsBackground = false
             scrollView.documentView = textView
+            if autoFocus {
+                DispatchQueue.main.async {
+                    textView.window?.makeFirstResponder(textView)
+                }
+            }
             return scrollView
         }
 
@@ -80,6 +94,7 @@ private let languageShortcutLogger = os.Logger(
             textView.onImagePaste = onImagePaste
             textView.onSubmit = onSubmit
             textView.onSwapLanguages = onSwapLanguages
+            textView.hidePlaceholderWhenFocused = hidePlaceholderWhenFocused
             if textView.placeholderAttributedString?.string != placeholder {
                 textView.placeholderAttributedString = makePlaceholderAttributedString()
             }
@@ -156,11 +171,15 @@ private let languageShortcutLogger = os.Logger(
         }
 
         private func makePlaceholderAttributedString() -> NSAttributedString {
-            NSAttributedString(
+            var attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: NSColor.secondaryLabelColor,
+            ]
+            if let fontSize {
+                attributes[.font] = NSFont.systemFont(ofSize: fontSize)
+            }
+            return NSAttributedString(
                 string: placeholder,
-                attributes: [
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                ]
+                attributes: attributes
             )
         }
     }
@@ -221,6 +240,7 @@ private let languageShortcutLogger = os.Logger(
         var onPaste: ((String) -> Void)?
         var onImagePaste: (([NSImage]) -> Void)?
         var onSubmit: (() -> Void)?
+        var hidePlaceholderWhenFocused = false
         var placeholderAttributedString: NSAttributedString? {
             didSet { needsDisplay = true }
         }
@@ -297,6 +317,7 @@ private let languageShortcutLogger = os.Logger(
         override func draw(_ dirtyRect: NSRect) {
             super.draw(dirtyRect)
             guard string.isEmpty,
+                  !hidePlaceholderWhenFocused || window?.firstResponder !== self,
                   let placeholder = placeholderAttributedString
             else {
                 return
@@ -314,13 +335,17 @@ private let languageShortcutLogger = os.Logger(
 
         override func becomeFirstResponder() -> Bool {
             let result = super.becomeFirstResponder()
-            if result { needsDisplay = true }
+            if result {
+                needsDisplay = true
+            }
             return result
         }
 
         override func resignFirstResponder() -> Bool {
             let result = super.resignFirstResponder()
-            if result { needsDisplay = true }
+            if result {
+                needsDisplay = true
+            }
             return result
         }
 

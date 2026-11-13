@@ -125,7 +125,7 @@ public struct ConversationInputBar: View {
     @ViewBuilder
     private var textEditor: some View {
         #if os(macOS)
-            ConversationPasteTextEditor(
+            AutoPasteTextEditor(
                 text: $text,
                 placeholder: placeholder,
                 onImagePaste: { nsImages in
@@ -136,7 +136,12 @@ public struct ConversationInputBar: View {
                     if canSend {
                         onSend()
                     }
-                }
+                },
+                fontSize: 13,
+                textContainerInset: NSSize(width: 4, height: 2),
+                showsVerticalScroller: false,
+                hidePlaceholderWhenFocused: true,
+                autoFocus: focusOnAppear
             )
             .frame(height: editorHeight, alignment: .topLeading)
             .padding(.leading, 12)
@@ -282,269 +287,27 @@ public struct ConversationInputBar: View {
 
     // MARK: - Send / Stop Button
 
+    @ViewBuilder
     private var actionButton: some View {
-        Group {
-            if isStreaming {
-                Button(action: onStop) {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(colors.onAccent)
-                        .frame(width: 32, height: 32)
-                        .tlingoGlassCircle(.destructive, interactive: true)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Button(action: onSend) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(canSend ? colors.onAccent : colors.textSecondary.opacity(0.45))
-                        .frame(width: 32, height: 32)
-                        .tlingoGlassCircle(canSend ? .prominent : .control, interactive: canSend)
-                }
-                .buttonStyle(.plain)
-                .disabled(!canSend)
+        if isStreaming {
+            Button(action: onStop) {
+                Image(systemName: "stop.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(colors.onAccent)
+                    .frame(width: 32, height: 32)
+                    .tlingoGlassCircle(.destructive, interactive: true)
             }
+            .buttonStyle(.plain)
+        } else {
+            Button(action: onSend) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(canSend ? colors.onAccent : colors.textSecondary.opacity(0.45))
+                    .frame(width: 32, height: 32)
+                    .tlingoGlassCircle(canSend ? .prominent : .control, interactive: canSend)
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSend)
         }
     }
 }
-
-// MARK: - macOS Paste-Aware Text Editor for Conversation Input
-
-#if os(macOS)
-    /// A lightweight NSViewRepresentable text editor that supports image paste and drag & drop
-    /// for use inside ConversationInputBar.
-    private struct ConversationPasteTextEditor: NSViewRepresentable {
-        @Binding var text: String
-        let placeholder: String
-        var onImagePaste: (([NSImage]) -> Void)?
-        var onContentHeightChange: ((CGFloat) -> Void)?
-        var onSubmit: (() -> Void)?
-
-        func makeCoordinator() -> Coordinator {
-            Coordinator(parent: self)
-        }
-
-        func makeNSView(context: Context) -> NSScrollView {
-            let textView = ConversationPasteTextView()
-            textView.delegate = context.coordinator
-            textView.isRichText = false
-            textView.drawsBackground = false
-            textView.textContainerInset = NSSize(width: 4, height: 2)
-            textView.textContainer?.lineFragmentPadding = 0
-            textView.font = NSFont.systemFont(ofSize: 13)
-            textView.isHorizontallyResizable = false
-            textView.textContainer?.widthTracksTextView = true
-            textView.string = text
-            textView.onImagePaste = onImagePaste
-            textView.onSubmit = onSubmit
-            textView.placeholderString = placeholder
-
-            textView.registerForDraggedTypes([.fileURL, .tiff, .png, NSPasteboard.PasteboardType("public.jpeg")])
-
-            context.coordinator.textView = textView
-
-            let scrollView = NSScrollView()
-            scrollView.drawsBackground = false
-            scrollView.hasVerticalScroller = false
-            scrollView.contentView.drawsBackground = false
-            scrollView.documentView = textView
-            return scrollView
-        }
-
-        func updateNSView(_ nsView: NSScrollView, context: Context) {
-            guard let textView = nsView.documentView as? ConversationPasteTextView else { return }
-            context.coordinator.update(parent: self)
-            if textView.string != text {
-                textView.string = text
-            }
-            textView.onImagePaste = onImagePaste
-            textView.onSubmit = onSubmit
-            context.coordinator.reportContentHeight(for: textView)
-        }
-
-        final class Coordinator: NSObject, NSTextViewDelegate {
-            private var parent: ConversationPasteTextEditor
-            private var lastReportedContentHeight: CGFloat = 0
-            private var eventMonitor: Any?
-            weak var textView: ConversationPasteTextView?
-
-            init(parent: ConversationPasteTextEditor) {
-                self.parent = parent
-                super.init()
-                eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                    guard let self, let textView = self.textView else { return event }
-                    guard textView.window?.isKeyWindow == true,
-                          textView.window?.firstResponder === textView else { return event }
-
-                    let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-
-                    let isReturnKey = event.keyCode == 36 || event.keyCode == 76
-                    if isReturnKey, flags == .shift {
-                        textView.onSubmit?()
-                        return nil
-                    }
-                    if isReturnKey, flags == .command {
-                        textView.onSubmit?()
-                        return nil
-                    }
-
-                    // Intercept Cmd+V for image paste
-                    if flags == .command,
-                       event.charactersIgnoringModifiers == "v"
-                    {
-                        textView.paste(nil)
-                        return nil
-                    }
-                    return event
-                }
-            }
-
-            func update(parent: ConversationPasteTextEditor) {
-                self.parent = parent
-            }
-
-            deinit {
-                if let monitor = eventMonitor {
-                    NSEvent.removeMonitor(monitor)
-                }
-            }
-
-            func textDidChange(_ notification: Notification) {
-                guard let textView = notification.object as? NSTextView else { return }
-                // Publish only committed text so IME composition doesn't trigger re-renders.
-                guard !textView.hasMarkedText() else {
-                    reportContentHeight(for: textView)
-                    return
-                }
-                let updated = textView.string
-                if parent.text != updated {
-                    parent.text = updated
-                }
-                reportContentHeight(for: textView)
-            }
-
-            func reportContentHeight(for textView: NSTextView) {
-                guard let layoutManager = textView.layoutManager,
-                      let textContainer = textView.textContainer
-                else { return }
-
-                layoutManager.ensureLayout(for: textContainer)
-                let usedRect = layoutManager.usedRect(for: textContainer)
-                let height = ceil(usedRect.height + textView.textContainerInset.height * 2)
-                guard abs(height - lastReportedContentHeight) > 0.5 else { return }
-                lastReportedContentHeight = height
-                DispatchQueue.main.async { [parent] in
-                    parent.onContentHeightChange?(height)
-                }
-            }
-        }
-    }
-
-    private final class ConversationPasteTextView: NSTextView {
-        var onImagePaste: (([NSImage]) -> Void)?
-        var onSubmit: (() -> Void)?
-        var placeholderString: String? {
-            didSet { needsDisplay = true }
-        }
-
-        override func paste(_ sender: Any?) {
-            // Only handle image paste when this text view has focus.
-            // Prevents images from appearing in the wrong input field
-            // when multiple text views coexist.
-            guard window?.firstResponder === self else {
-                super.paste(sender)
-                return
-            }
-
-            let pb = NSPasteboard.general
-            if let image = pb.imageFromData() {
-                onImagePaste?([image])
-                return
-            }
-            let urlImages = pb.imagesFromFileURLs()
-            if !urlImages.isEmpty {
-                onImagePaste?(urlImages)
-                return
-            }
-
-            super.paste(sender)
-        }
-
-        override func keyDown(with event: NSEvent) {
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let isReturnKey = event.keyCode == 36 || event.keyCode == 76
-            if isReturnKey, flags == .shift {
-                onSubmit?()
-                return
-            }
-            if isReturnKey, flags == .command {
-                onSubmit?()
-                return
-            }
-            super.keyDown(with: event)
-        }
-
-        // MARK: - Drag & Drop
-
-        override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
-            if sender.draggingPasteboard.containsImage {
-                return .copy
-            }
-            return super.draggingEntered(sender)
-        }
-
-        override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
-            let pb = sender.draggingPasteboard
-
-            let urlImages = pb.imagesFromFileURLs()
-            if !urlImages.isEmpty {
-                onImagePaste?(urlImages)
-                return true
-            }
-
-            if let image = pb.imageFromData() {
-                onImagePaste?([image])
-                return true
-            }
-
-            return super.performDragOperation(sender)
-        }
-
-        // MARK: - Placeholder
-
-        override func draw(_ dirtyRect: NSRect) {
-            super.draw(dirtyRect)
-            guard string.isEmpty,
-                  window?.firstResponder !== self,
-                  let placeholder = placeholderString
-            else {
-                return
-            }
-            let attrs: [NSAttributedString.Key: Any] = [
-                .foregroundColor: NSColor.secondaryLabelColor,
-                .font: font ?? NSFont.systemFont(ofSize: 13),
-            ]
-            let inset = textContainerInset
-            let padding = textContainer?.lineFragmentPadding ?? 0
-            let origin = CGPoint(x: inset.width + padding, y: inset.height)
-            NSAttributedString(string: placeholder, attributes: attrs).draw(at: origin)
-        }
-
-        override func becomeFirstResponder() -> Bool {
-            let result = super.becomeFirstResponder()
-            if result { needsDisplay = true }
-            return result
-        }
-
-        override func resignFirstResponder() -> Bool {
-            let result = super.resignFirstResponder()
-            if result { needsDisplay = true }
-            return result
-        }
-
-        override func didChangeText() {
-            super.didChangeText()
-            needsDisplay = true
-        }
-    }
-#endif
