@@ -5,6 +5,9 @@ public enum TextPopupRequest {
     public static let protocolVersion = 1
     public static let capabilityKey = "TLingoTextPopupProtocolVersion"
     public static let maximumURLBytes = 48 * 1024
+    /// Posted by TLingo with the request ID as the object once the result is on the pasteboard.
+    /// A sandboxed sender cannot attach a payload, so the text travels on the pasteboard.
+    public static let replaceNotification = Notification.Name("com.zanderwang.TLingo.textPopupReplace")
 
     public struct Translation: Equatable, Sendable {
         public let id: UUID
@@ -13,13 +16,23 @@ public enum TextPopupRequest {
         public let screenY: Double
         /// Runs this action instead of the selected one. Older TLingo builds ignore it.
         public let actionID: String?
+        /// The sender can write a result back over the selection. Older TLingo builds ignore it.
+        public let allowsReplacement: Bool
 
-        public init(id: UUID = UUID(), text: String, screenX: Double, screenY: Double, actionID: String? = nil) {
+        public init(
+            id: UUID = UUID(),
+            text: String,
+            screenX: Double,
+            screenY: Double,
+            actionID: String? = nil,
+            allowsReplacement: Bool = false
+        ) {
             self.id = id
             self.text = text
             self.screenX = screenX
             self.screenY = screenY
             self.actionID = actionID
+            self.allowsReplacement = allowsReplacement
         }
     }
 
@@ -84,6 +97,9 @@ public enum TextPopupRequest {
                 guard !actionID.isEmpty else { throw RequestError.invalidRequest }
                 items.append(URLQueryItem(name: "action", value: actionID))
             }
+            if request.allowsReplacement {
+                items.append(URLQueryItem(name: "replace", value: "1"))
+            }
         case let .dismiss(id):
             items += [
                 URLQueryItem(name: "request", value: id.uuidString),
@@ -113,7 +129,8 @@ public enum TextPopupRequest {
         guard let identifier = values["request"], let id = UUID(uuidString: identifier)
         else { throw RequestError.invalidRequest }
         if values["dismiss"] == "1" {
-            guard values["text"] == nil, values["action"] == nil else { throw RequestError.invalidRequest }
+            guard values["text"] == nil, values["action"] == nil,
+                  values["replace"] == nil else { throw RequestError.invalidRequest }
             return .dismiss(id)
         }
         guard values["dismiss"] == nil,
@@ -123,7 +140,14 @@ public enum TextPopupRequest {
               values["action"] != ""
         else { throw RequestError.invalidRequest }
         return .translate(
-            Translation(id: id, text: text, screenX: screenX, screenY: screenY, actionID: values["action"])
+            Translation(
+                id: id,
+                text: text,
+                screenX: screenX,
+                screenY: screenY,
+                actionID: values["action"],
+                allowsReplacement: values["replace"] == "1"
+            )
         )
     }
 

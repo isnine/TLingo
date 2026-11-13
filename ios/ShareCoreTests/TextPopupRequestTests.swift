@@ -64,6 +64,13 @@ struct TextPopupRequestTests {
         #expect(throws: TextPopupRequest.RequestError.self) { try TextPopupRequest.parse(invalidDismissal) }
     }
 
+    @Test func carriesReplacementFlagOnlyWhenSet() throws {
+        let plain = TextPopupRequest.Translation(text: "Hello", screenX: 1, screenY: 2)
+        #expect(try !TextPopupRequest.url(for: .translate(plain)).absoluteString.contains("replace"))
+        let request = TextPopupRequest.Translation(text: "Hello", screenX: 1, screenY: 2, allowsReplacement: true)
+        #expect(try TextPopupRequest.parse(TextPopupRequest.url(for: .translate(request))) == .translate(request))
+    }
+
     @Test func carriesOptionalActionAndListsActions() throws {
         let request = TextPopupRequest.Translation(text: "Hello", screenX: 1, screenY: 2, actionID: "polish")
         #expect(try TextPopupRequest.parse(TextPopupRequest.url(for: .translate(request))) == .translate(request))

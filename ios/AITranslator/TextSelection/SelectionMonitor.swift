@@ -22,6 +22,7 @@
         private nonisolated(unsafe) var mouseDownMonitor: Any?
         private nonisolated(unsafe) var localMonitor: Any?
         private var mouseDownPoint: CGPoint?
+        private var dragOrigin: AccessibilityGrabber.DragOrigin?
         private var isSuppressed = false
         private nonisolated(unsafe) var suppressTask: Task<Void, Never>?
 
@@ -54,6 +55,7 @@
                 let screenPoint = NSEvent.mouseLocation
                 Task { @MainActor in
                     self?.mouseDownPoint = screenPoint
+                    self?.dragOrigin = AccessibilityGrabber.dragOrigin(at: screenPoint)
                     self?.onMouseDown?(screenPoint)
                 }
             }
@@ -78,6 +80,7 @@
                 Task { @MainActor in
                     if eventType == .leftMouseDown {
                         self?.mouseDownPoint = screenPoint
+                        self?.dragOrigin = nil
                         self?.onMouseDown?(screenPoint)
                     } else {
                         self?.handleMouseUp(at: screenPoint, clickCount: clickCount, isShiftClick: isShiftClick)
@@ -119,7 +122,7 @@
         private func handleMouseUp(at point: CGPoint, clickCount: Int, isShiftClick: Bool) {
             guard !isSuppressed,
                   !Self.ignoredBundleIDs.union(ignoredApplications)
-                  .contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
+                      .contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
             else { return }
 
             var dragDistance: CGFloat = 0
@@ -129,6 +132,8 @@
                 dragDistance = sqrt(dx * dx + dy * dy)
             }
             mouseDownPoint = nil
+            let origin = dragOrigin
+            dragOrigin = nil
 
             let wasDragOrMultiClick = clickCount >= 2 || dragDistance > 5
             guard wasDragOrMultiClick || isShiftClick else { return }
@@ -138,17 +143,19 @@
                 try? await Task.sleep(for: .milliseconds(50))
                 guard !Task.isCancelled, !self.isSuppressed else { return }
 
-                if let text = AccessibilityGrabber.grabSelectedText(near: point),
-                   !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                {
-                    self.onTextSelected?(point)
-                    return
-                }
-
-                // AX unavailable (Chrome / Electron / etc). Require a deliberate drag
-                // to avoid showing the icon for stray double-clicks on empty space.
-                if dragDistance > 20 {
-                    self.onTextSelected?(point)
+                switch AccessibilityGrabber.selectionState(near: point) {
+                case let .text(text, _):
+                    if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        self.onTextSelected?(point)
+                    }
+                case .empty:
+                    break
+                case .unavailable:
+                    // AX unavailable (Chrome / Electron / etc). Require a deliberate drag that
+                    // could have selected text; window drags and controls never do.
+                    if dragDistance > 20, origin?.mayHaveSelectedText != false {
+                        self.onTextSelected?(point)
+                    }
                 }
             }
         }

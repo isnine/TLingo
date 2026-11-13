@@ -12,6 +12,8 @@
     enum SelectionTextGrabber {
         struct Selection {
             let text: String
+            /// Set only when the text came from an editable element that accepts an in-place write.
+            var replacementTarget: AccessibilityGrabber.ReplacementTarget?
         }
 
         static func grab(near point: CGPoint?) async -> Selection? {
@@ -19,10 +21,10 @@
             try? await Task.sleep(for: .milliseconds(50))
             guard !Task.isCancelled else { return nil }
 
-            if let text = AccessibilityGrabber.grabSelectedText(near: point),
+            if case let .text(text, target) = AccessibilityGrabber.selectionState(near: point),
                !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             {
-                return Selection(text: text)
+                return Selection(text: text, replacementTarget: target)
             }
 
             if let text = await AppleScriptGrabber.grabFromBrowser(),

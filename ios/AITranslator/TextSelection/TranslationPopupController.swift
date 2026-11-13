@@ -44,7 +44,7 @@
             let replace: ((String) -> Void)? = onReplace.map { operation in
                 { [weak self, weak newPanel] text in
                     Task { @MainActor in
-                        // Hide the key panel before Direct synthesizes a paste.
+                        // Hide the key panel so the source app owns keyboard focus for the write.
                         newPanel?.orderOut(nil)
                         guard await operation(text) else {
                             newPanel?.makeKeyAndOrderFront(nil)

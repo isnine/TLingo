@@ -819,11 +819,13 @@ extension HomeView {
                     copyToPasteboard(copyText)
                     onResultReplace(copyText)
                 } label: {
-                    Label("Replace", systemImage: "arrow.left.arrow.right")
-                        .font(.system(size: 13, weight: .medium))
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 14))
+                        .foregroundColor(colors.textSecondary)
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(colors.accent)
+                .help("Replace")
+                .accessibilityLabel("Replace")
             }
         #elseif os(iOS)
             if let context, context.allowsReplacement {

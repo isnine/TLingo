@@ -403,7 +403,17 @@ struct AITranslatorApp: App {
                 text: request.text,
                 near: CGPoint(x: request.screenX, y: request.screenY),
                 requestID: request.id,
-                actionID: request.actionID
+                actionID: request.actionID,
+                onReplace: request.allowsReplacement ? { _ in
+                    // ReplaceButton already copied the result; the sender performs the write.
+                    DistributedNotificationCenter.default().postNotificationName(
+                        TextPopupRequest.replaceNotification,
+                        object: request.id.uuidString,
+                        userInfo: nil,
+                        deliverImmediately: true
+                    )
+                    return true
+                } : nil
             )
         }
 

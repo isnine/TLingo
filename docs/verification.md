@@ -50,7 +50,7 @@ schemes: TLingo, TLingoHelper, TLingoTranslation, TLingoUITests
 Helper protocol changes also require `TextPopupRequestTests` and `DeepLinkTests`.
 Verify cold launch, menu-bar-only operation, multi-screen positioning, Escape,
 permission denial/revocation, absent/incompatible TLingo, encoded URL length limits,
-and the absence of a Replace action. The Helper never updates or installs TLingo.
+and replacement only for an unchanged editable selection. The Helper never updates or installs TLingo.
 
 完整逻辑测试：
 

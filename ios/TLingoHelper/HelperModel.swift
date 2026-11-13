@@ -42,6 +42,8 @@ final class HelperModel: ObservableObject {
     private var openPopup: (id: UUID, application: NSRunningApplication)?
     private var escapeMonitor: Any?
     private var actionsTask: Task<Void, Never>?
+    /// Outlives `openPopup`, which the click on Replace itself clears.
+    private var pendingReplacement: (id: UUID, target: AccessibilityGrabber.ReplacementTarget)?
 
     private enum Keys {
         static let enabled = "selectionEnabled"
@@ -49,7 +51,9 @@ final class HelperModel: ObservableObject {
     }
 
     var state: State {
-        if !isEnabled { return .paused }
+        if !isEnabled {
+            return .paused
+        }
         return isAccessibilityGranted ? .ready : .needsAccessibility
     }
 
@@ -87,8 +91,13 @@ final class HelperModel: ObservableObject {
             )
         }
         triggerIconController.onTranslateRequested = { [weak self] selection, actionID in
-            self?.translate(selection.text, actionID: actionID)
+            self?.translate(selection, actionID: actionID)
         }
+        DistributedNotificationCenter.default()
+            .publisher(for: TextPopupRequest.replaceNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.replaceSelection(requestID: $0.object as? String) }
+            .store(in: &cancellables)
 
         // AX trust has no change notification, and revocation must stop monitoring promptly.
         Timer.publish(every: 1.5, on: .main, in: .common)
@@ -168,6 +177,7 @@ final class HelperModel: ObservableObject {
             selectionMonitor.stop()
             triggerIconController.dismissSilently()
             forgetOpenPopup()
+            pendingReplacement = nil
         }
     }
 
@@ -194,9 +204,16 @@ final class HelperModel: ObservableObject {
         }
     }
 
-    private func translate(_ text: String, actionID: String?) {
+    private func translate(_ selection: SelectionTextGrabber.Selection, actionID: String?) {
         let point = NSEvent.mouseLocation
-        let request = TextPopupRequest.Translation(text: text, screenX: point.x, screenY: point.y, actionID: actionID)
+        let request = TextPopupRequest.Translation(
+            text: selection.text,
+            screenX: point.x,
+            screenY: point.y,
+            actionID: actionID,
+            allowsReplacement: selection.replacementTarget != nil
+        )
+        pendingReplacement = selection.replacementTarget.map { (request.id, $0) }
         let previous = sendTask
         notice.show(String(localized: "Opening TLingo and sending selected text…"), near: point, isProgress: true)
         let feedbackID = notice.presentationID
@@ -222,6 +239,30 @@ final class HelperModel: ObservableObject {
             } catch {
                 showNotice(error.localizedDescription, near: point)
             }
+        }
+    }
+
+    /// The request ID proves the notification came from the popup this selection opened.
+    private func replaceSelection(requestID: String?) {
+        guard let pending = pendingReplacement, pending.id.uuidString == requestID else { return }
+        pendingReplacement = nil
+        forgetOpenPopup()
+        guard AXIsProcessTrusted(), let text = NSPasteboard.general.string(forType: .string),
+              pending.target.selectionIsUnchanged()
+        else {
+            showNotice(String(localized: "Couldn't replace the selected text. The result was copied instead."))
+            return
+        }
+        if pending.target.replace(with: text) {
+            return
+        }
+        // Some editable elements reject AX writes but accept a paste while their app is frontmost.
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier == pending.target.processIdentifier,
+           pending.target.selectionIsUnchanged()
+        {
+            ClipboardGrabber.simulatePaste()
+        } else {
+            showNotice(String(localized: "Couldn't replace the selected text. The result was copied instead."))
         }
     }
 

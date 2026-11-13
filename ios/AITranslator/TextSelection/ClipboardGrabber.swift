@@ -100,14 +100,22 @@
         }
 
         private static func simulateCopy() {
+            postCommandKey(0x08) // 'c'
+        }
+
+        static func simulatePaste() {
+            postCommandKey(0x09) // 'v'
+        }
+
+        private static func postCommandKey(_ key: CGKeyCode) {
             let source = CGEventSource(stateID: .combinedSessionState)
 
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
+            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
             keyDown?.flags = .maskCommand
             keyDown?.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
             keyDown?.post(tap: .cgSessionEventTap)
 
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
+            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)
             keyUp?.flags = .maskCommand
             keyUp?.setIntegerValueField(.eventSourceUserData, value: syntheticEventTag)
             keyUp?.post(tap: .cgSessionEventTap)

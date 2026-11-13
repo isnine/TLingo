@@ -85,6 +85,35 @@
         }
       }
     },
+    "Couldn't replace the selected text. The result was copied instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't replace the selected text. The result was copied instead."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法取代所選文字，已改為複製結果。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法替换所选文字，已改为复制结果。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法取代所選文字，已改為複製結果。"
+          }
+        }
+      }
+    },
     "Grant Access…" : {
       "localizations" : {
         "zh-Hans" : {
