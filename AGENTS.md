@@ -17,6 +17,7 @@ Repository-specific instructions for coding agents. Canonical architecture and w
 - [iOS invariants](docs/architecture/ios-invariants.md)
 - [Client contracts](docs/architecture/client-contracts.md)
 - [Verification matrix](docs/verification.md)
+- [Design system](design-system/README.md)
 
 When code and docs disagree, verify the code and update the canonical document in the same change.
 

@@ -25,6 +25,7 @@ review_triggers:
 ## 领域文档
 
 - [`language-resolution.md`](./language-resolution.md)：源语言和目标语言解析。
+- [`../design-system/README.md`](../design-system/README.md)：设计系统、色彩与组件规范。
 - Swift 代码风格以 `.swiftformat` 与 `.swiftlint.yml` 为准。
 - [`PrivacyPolicy.md`](./PrivacyPolicy.md)、[`TermsOfUse.md`](./TermsOfUse.md)：隐私政策与使用条款。
 
