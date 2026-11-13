@@ -35,7 +35,6 @@ struct PaywallAppStoreContent: View {
     private var defaultProduct: Product? {
         if let annual = storeManager.annualProduct, isUpgrade(annual) { return annual }
         if let lifetime = storeManager.lifetimeProduct, isUpgrade(lifetime) { return lifetime }
-        if let monthly = storeManager.monthlyProduct, isUpgrade(monthly) { return monthly }
         return nil
     }
 
@@ -96,13 +95,12 @@ struct PaywallAppStoreContent: View {
         VStack(spacing: 0) {
             let annual = storeManager.annualProduct.flatMap { isUpgrade($0) ? $0 : nil }
             let lifetime = storeManager.lifetimeProduct.flatMap { isUpgrade($0) ? $0 : nil }
-            let monthly = storeManager.monthlyProduct.flatMap { isUpgrade($0) ? $0 : nil }
 
             if let annual {
                 productRow(
                     product: annual,
                     title: "Annual",
-                    subtitle: annualSubtitle(annual: annual, monthly: monthly),
+                    subtitle: annualSubtitle(annual: annual),
                     priceLabel: annual.displayPrice,
                     periodLabel: "/ year",
                     badge: "BEST VALUE"
@@ -119,19 +117,6 @@ struct PaywallAppStoreContent: View {
                     priceLabel: lifetime.displayPrice,
                     periodLabel: nil,
                     badge: "BEST VALUE"
-                )
-            }
-
-            if lifetime != nil || annual != nil, monthly != nil { sectionDivider }
-
-            if let monthly {
-                productRow(
-                    product: monthly,
-                    title: "Monthly",
-                    subtitle: String(localized: "Billed monthly · cancel anytime"),
-                    priceLabel: monthly.displayPrice,
-                    periodLabel: "/ month",
-                    badge: nil
                 )
             }
         }
@@ -154,30 +139,9 @@ struct PaywallAppStoreContent: View {
             .padding(.leading, 56)
     }
 
-    private func annualSubtitle(annual: Product, monthly: Product?) -> String {
+    private func annualSubtitle(annual: Product) -> String {
         let perMonth = (annual.price / 12).formatted(annual.priceFormatStyle)
-        guard let monthly else {
-            return String(localized: "\(perMonth)/mo, billed annually")
-        }
-
-        let annualizedMonthly = monthly.price * 12
-        guard annualizedMonthly > annual.price else {
-            return String(localized: "\(perMonth)/mo, billed annually")
-        }
-
-        let savings = NSDecimalNumber(decimal: annualizedMonthly - annual.price)
-            .dividing(by: NSDecimalNumber(decimal: annualizedMonthly))
-            .multiplying(by: 100)
-            .rounding(accordingToBehavior: NSDecimalNumberHandler(
-                roundingMode: .down,
-                scale: 0,
-                raiseOnExactness: false,
-                raiseOnOverflow: false,
-                raiseOnUnderflow: false,
-                raiseOnDivideByZero: false
-            ))
-            .intValue
-        return String(localized: "\(perMonth)/mo, billed annually · save \(savings)%")
+        return String(localized: "\(perMonth)/mo, billed annually")
     }
 
     private func subscribeButtonTitle(for product: Product?) -> String {
@@ -188,8 +152,6 @@ struct PaywallAppStoreContent: View {
         switch product.id {
         case SubscriptionProduct.annual.rawValue:
             return String(localized: "Continue Annual")
-        case SubscriptionProduct.monthly.rawValue:
-            return String(localized: "Continue Monthly")
         case LifetimeProduct.lifetime.rawValue:
             return String(localized: "Unlock Lifetime")
         default:
