@@ -3001,6 +3001,131 @@
         }
       }
     },
+    "Keep notch captions visible while realtime translation is paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إبقاء التسميات التوضيحية في النتوء مرئية أثناء إيقاف الترجمة الفورية مؤقتًا"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold undertekster i hakket synlige, mens realtidsoversættelse er sat på pause"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notch-Untertitel eingeblendet lassen, während die Echtzeitübersetzung pausiert ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep notch captions visible while realtime translation is paused"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener visibles los subtítulos del notch mientras la traducción en tiempo real esté en pausa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder les sous-titres de l’encoche visibles lorsque la traduction en temps réel est en pause"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tetap tampilkan takarir notch saat terjemahan langsung dijeda"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni visibili i sottotitoli nel notch quando la traduzione in tempo reale è in pausa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム翻訳の一時停止中もノッチの字幕を表示したままにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 번역 일시정지 중에도 노치 자막 표시 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan sari kata takuk kelihatan semasa terjemahan masa nyata dijeda"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold undertekster i skjermhakket synlige mens sanntidsoversettelse er satt på pause"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notch-ondertiteling zichtbaar houden terwijl livevertaling is gepauzeerd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pozostaw napisy w wycięciu widoczne, gdy tłumaczenie w czasie rzeczywistym jest wstrzymane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter legendas do notch visíveis enquanto a tradução em tempo real estiver pausada"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll undertexter i sensorpanelen synliga medan realtidsöversättning är pausad"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerçek zamanlı çeviri duraklatıldığında çentik altyazılarını görünür tut"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即時翻譯暫停時，保持瀏海字幕顯示"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时翻译暂停时保持刘海字幕可见"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即時翻譯暫停時保持瀏海字幕顯示"
+          }
+        }
+      }
+    },
     "Keep the cached model list when the server returns an empty catalog" : {
       "extractionState" : "manual",
       "localizations" : {

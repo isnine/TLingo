@@ -61,6 +61,13 @@
         {
           "kind": "fixed",
           "text": "Preserve clearly identifiable Chinese scripts during automatic language detection"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep notch captions visible while realtime translation is paused"
         }
       ]
     },
