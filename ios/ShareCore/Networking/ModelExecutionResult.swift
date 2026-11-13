@@ -15,6 +15,7 @@ public struct ModelExecutionResult {
     public let supplementalTexts: [String]
     public let sentencePairs: [SentencePair]
     public let suggestedActions: [String]
+    public let providerDisplayName: String?
 
     // Optional network timing breakdown (best-effort; may be unavailable).
     public let upstreamTTFB: TimeInterval?
@@ -29,6 +30,7 @@ public struct ModelExecutionResult {
         supplementalTexts: [String] = [],
         sentencePairs: [SentencePair] = [],
         suggestedActions: [String] = [],
+        providerDisplayName: String? = nil,
         upstreamTTFB: TimeInterval? = nil,
         clientToAzureLatency: TimeInterval? = nil,
         networkMetrics: NetworkTimingMetrics? = nil
@@ -40,6 +42,7 @@ public struct ModelExecutionResult {
         self.supplementalTexts = supplementalTexts
         self.sentencePairs = sentencePairs
         self.suggestedActions = suggestedActions
+        self.providerDisplayName = providerDisplayName
         self.upstreamTTFB = upstreamTTFB
         self.clientToAzureLatency = clientToAzureLatency
         self.networkMetrics = networkMetrics

@@ -89,6 +89,19 @@ struct SourceLanguageDetectorTests {
 
     // MARK: - Chinese script correction
 
+    @Test("Explicit Chinese script is preserved despite the opposite system preference", arguments: [
+        ("為什麼我是好的\n為什麼在大陸都是好的..", "zh-Hans", "zh-Hant"),
+        ("为什么我是好的\n为什么在大陆都是好的..", "zh-Hant", "zh-Hans"),
+    ])
+    func explicitChineseScriptIgnoresPreference(text: String, preference: String, expected: String) {
+        let result = SourceLanguageDetector.resolveAutoSourceCode(
+            text: text,
+            targetCode: "en",
+            preferredLanguages: [preference]
+        )
+        #expect(result == expected)
+    }
+
     @Test("Pure Chinese with preferredLanguages=[zh-Hant] → zh-Hant")
     func chineseText_traditionalPreference() {
         let result = SourceLanguageDetector.resolveAutoSourceCode(

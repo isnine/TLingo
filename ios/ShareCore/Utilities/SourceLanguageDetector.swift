@@ -91,7 +91,7 @@ public enum SourceLanguageDetector {
         let isReliable = best.value >= effectiveThreshold
 
         if isReliable {
-            let corrected = correctChineseScript(best.key)
+            let corrected = correctChineseScript(best.key, text: text)
             logger
                 .debug(
                     """
@@ -122,30 +122,6 @@ public enum SourceLanguageDetector {
     public static func detectLocaleLanguage(of text: String) -> Locale.Language? {
         guard let detected = detectLanguage(of: text) else { return nil }
         return Locale.Language(identifier: detected.rawValue)
-    }
-
-    /// Detects source language with NLLanguageRecognizer constrained to the given candidates only.
-    /// Used in Match mode to improve short-text accuracy.
-    public static func detectLocaleLanguageConstrained(
-        of text: String,
-        candidateCodes: [String]
-    ) -> Locale.Language? {
-        let constraints = candidateCodes.compactMap { nlLanguage(forCode: $0) }
-        guard !constraints.isEmpty else { return detectLocaleLanguage(of: text) }
-
-        let recognizer = NLLanguageRecognizer()
-        recognizer.languageConstraints = constraints
-        recognizer.languageHints = languageHints.filter { constraints.contains($0.key) }
-        recognizer.processString(text)
-
-        let hypotheses = recognizer.languageHypotheses(withMaximum: maxHypotheses)
-        let sorted = hypotheses.sorted { $0.value > $1.value }
-        let isShort = isShortText(text)
-        let threshold = isShort ? shortTextThreshold : defaultThreshold
-
-        guard let top = sorted.first, top.value >= threshold else { return nil }
-        let corrected = correctChineseScript(top.key)
-        return Locale.Language(identifier: corrected.rawValue)
     }
 
     /// Picks the best target from `candidates` that differs from `sourceCode`.
@@ -183,7 +159,7 @@ public enum SourceLanguageDetector {
     ) -> String? {
         guard let targetCode, !targetCode.isEmpty else {
             guard let detected = detectLanguage(of: text) else { return nil }
-            let corrected = correctChineseScript(detected, preferredLanguages: preferredLanguages)
+            let corrected = correctChineseScript(detected, text: text, preferredLanguages: preferredLanguages)
             return corrected.rawValue
         }
 
@@ -210,7 +186,7 @@ public enum SourceLanguageDetector {
             if detectionLanguagesAreEquivalent(lang.rawValue, targetCode) { continue }
             if confidence < minimumExclusionConfidence { break }
             if confidence < relativeFloor { break }
-            let corrected = correctChineseScript(lang, preferredLanguages: preferredLanguages)
+            let corrected = correctChineseScript(lang, text: text, preferredLanguages: preferredLanguages)
             return corrected.rawValue
         }
 
@@ -223,7 +199,7 @@ public enum SourceLanguageDetector {
         }
 
         if let top = sorted.first, top.value >= threshold {
-            let corrected = correctChineseScript(top.key, preferredLanguages: preferredLanguages)
+            let corrected = correctChineseScript(top.key, text: text, preferredLanguages: preferredLanguages)
             return corrected.rawValue
         }
         return nil
@@ -288,7 +264,7 @@ public enum SourceLanguageDetector {
                     )
                 break
             }
-            let corrected = correctChineseScript(lang)
+            let corrected = correctChineseScript(lang, text: text)
             logger
                 .debug(
                     """
@@ -308,7 +284,7 @@ public enum SourceLanguageDetector {
 
         // No non-target candidate qualifies — return the unfiltered top hypothesis if reliable.
         if let top = sorted.first, top.value >= threshold {
-            let corrected = correctChineseScript(top.key)
+            let corrected = correctChineseScript(top.key, text: text)
             logger
                 .debug(
                     """
@@ -359,17 +335,23 @@ public enum SourceLanguageDetector {
 
     // MARK: - Private Helpers
 
-    /// Reconciles zh-Hans / zh-Hant detection against the user's
-    /// `preferredLanguages`. NLLanguageRecognizer cannot reliably
-    /// distinguish scripts for short Han text like "你好"; if the detected
-    /// script is absent from the user's preferred list but the other script
-    /// is present, swap to what the user actually has.
+    /// Preserves unambiguous Chinese character forms before consulting
+    /// `preferredLanguages` for text whose script cannot be distinguished.
     static func correctChineseScript(
         _ detected: NLLanguage,
+        text: String,
         preferredLanguages: [String] = Locale.preferredLanguages
     ) -> NLLanguage {
         guard detected == .simplifiedChinese || detected == .traditionalChinese else {
             return detected
+        }
+        let simplified = text.applyingTransform(ChineseScriptConverter.simplifiedTransform, reverse: false)
+        let traditional = text.applyingTransform(ChineseScriptConverter.traditionalTransform, reverse: false)
+        if simplified == text, let traditional, traditional != text {
+            return .simplifiedChinese
+        }
+        if traditional == text, let simplified, simplified != text {
+            return .traditionalChinese
         }
         var hasHans = false
         var hasHant = false
@@ -425,7 +407,7 @@ public enum SourceLanguageDetector {
             return nil
         }
 
-        let corrected = correctChineseScript(.simplifiedChinese, preferredLanguages: preferredLanguages)
+        let corrected = correctChineseScript(.simplifiedChinese, text: text, preferredLanguages: preferredLanguages)
         let code = corrected.rawValue
         guard !detectionLanguagesAreEquivalent(code, targetCode) else {
             return nil
@@ -560,15 +542,5 @@ public enum SourceLanguageDetector {
             base += "-" + script.identifier
         }
         return base
-    }
-
-    /// Maps a BCP 47 code to `NLLanguage` by matching against `supportedNLLanguages`.
-    private static func nlLanguage(forCode code: String) -> NLLanguage? {
-        let language = NLLanguage(rawValue: code)
-        if supportedNLLanguages.contains(language) { return language }
-        let base = baseLanguage(code)
-        let baseLanguage = NLLanguage(rawValue: base)
-        if supportedNLLanguages.contains(baseLanguage) { return baseLanguage }
-        return nil
     }
 }

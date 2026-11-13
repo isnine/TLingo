@@ -159,6 +159,9 @@ public final class AppleTranslationService: @unchecked Sendable {
         target: Locale.Language,
         strategy: AppleTranslationAvailabilityStrategy = .automatic
     ) async throws -> LanguageAvailability.Status {
+        if ChineseScriptConverter(source: source, target: target) != nil {
+            return .installed
+        }
         let availability: LanguageAvailability
         if #available(iOS 26.4, macOS 26.4, *), strategy == .lowLatency {
             availability = LanguageAvailability(preferredStrategy: .lowLatency)
@@ -250,6 +253,9 @@ public final class AppleTranslationService: @unchecked Sendable {
         target: Locale.Language
     ) async throws -> ModelExecutionResult {
         let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        if let result = try localChineseScriptResult(text: text, source: resolvedSource, target: target) {
+            return result
+        }
         return try await runWithInstalledSession(
             source: resolvedSource,
             target: target,
@@ -267,6 +273,11 @@ public final class AppleTranslationService: @unchecked Sendable {
         target: Locale.Language
     ) async throws -> ModelExecutionResult {
         let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        if let result = try localChineseScriptResult(
+            text: text, source: resolvedSource, target: target, sentencePairs: true
+        ) {
+            return result
+        }
         return try await runWithInstalledSession(
             source: resolvedSource,
             target: target,
@@ -286,6 +297,11 @@ public final class AppleTranslationService: @unchecked Sendable {
             return try await translateSentencesWithInstalledLanguages(text: text, source: source, target: target)
         }
         let resolvedSource = Self.resolveInstalledSource(text: text, source: source)
+        if let result = try localChineseScriptResult(
+            text: text, source: resolvedSource, target: target, sentencePairs: true
+        ) {
+            return result
+        }
         return try await runWithInstalledSession(
             source: resolvedSource,
             target: target,
@@ -301,6 +317,30 @@ public final class AppleTranslationService: @unchecked Sendable {
         source
             ?? SourceLanguageDetector.detectLocaleLanguage(of: text)
             ?? SourceLanguageDetector.fallbackSourceLanguage()
+    }
+
+    private func localChineseScriptResult(
+        text: String,
+        source: Locale.Language,
+        target: Locale.Language,
+        sentencePairs: Bool = false
+    ) throws -> ModelExecutionResult? {
+        guard let converter = ChineseScriptConverter(source: source, target: target) else { return nil }
+        try Task.checkCancellation()
+        let start = Date()
+        let pairs = try sentencePairs ? splitIntoSentences(text).map {
+            try SentencePair(original: $0, translation: converter.convert($0))
+        } : []
+        let translated = try sentencePairs
+            ? pairs.map(\.translation).joined(separator: "\n")
+            : converter.convert(text)
+        return ModelExecutionResult(
+            modelID: ModelConfig.appleTranslateID,
+            duration: Date().timeIntervalSince(start),
+            response: .success(translated),
+            sentencePairs: pairs,
+            providerDisplayName: String(localized: "Local Chinese script conversion")
+        )
     }
 
     /// `TranslationSession(installedSource:)` can report `notInstalled` transiently even when

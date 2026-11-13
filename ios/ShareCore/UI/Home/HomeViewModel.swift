@@ -81,6 +81,7 @@ public final class HomeViewModel: ObservableObject {
             public var sentencePairs: [SentencePair]
             public var latencyBreakdown: LatencyBreakdown?
             public var suggestedActions: [String]
+            public let providerDisplayName: String?
 
             public init(
                 text: String,
@@ -90,7 +91,8 @@ public final class HomeViewModel: ObservableObject {
                 supplementalTexts: [String] = [],
                 sentencePairs: [SentencePair] = [],
                 latencyBreakdown: LatencyBreakdown? = nil,
-                suggestedActions: [String] = []
+                suggestedActions: [String] = [],
+                providerDisplayName: String? = nil
             ) {
                 self.text = text
                 self.copyText = copyText
@@ -100,6 +102,7 @@ public final class HomeViewModel: ObservableObject {
                 self.sentencePairs = sentencePairs
                 self.latencyBreakdown = latencyBreakdown
                 self.suggestedActions = suggestedActions
+                self.providerDisplayName = providerDisplayName
             }
         }
 
@@ -182,7 +185,12 @@ public final class HomeViewModel: ObservableObject {
 
         public var id: String { model.id }
 
-        public var modelDisplayName: String { model.displayName }
+        public var modelDisplayName: String {
+            if case let .success(result) = status, let name = result.providerDisplayName {
+                return name
+            }
+            return model.displayName
+        }
 
         public var durationText: String? {
             guard let duration = status.duration else { return nil }
@@ -1762,10 +1770,7 @@ public final class HomeViewModel: ObservableObject {
         if sourcePreference != .auto {
             sourceCode = sourcePreference.rawValue
         } else if resolvesMatch {
-            sourceCode = SourceLanguageDetector.detectLocaleLanguageConstrained(
-                of: text,
-                candidateCodes: matchCandidates.map(\.rawValue)
-            )?.minimalIdentifier
+            sourceCode = SourceLanguageDetector.detectLocaleLanguage(of: text)?.minimalIdentifier
         } else {
             let target = override ?? preferredTarget
             sourceCode = SourceLanguageDetector.detectLocaleLanguage(
@@ -2541,7 +2546,8 @@ public final class HomeViewModel: ObservableObject {
                         supplementalTexts: result.supplementalTexts,
                         sentencePairs: result.sentencePairs,
                         latencyBreakdown: latencyBreakdown,
-                        suggestedActions: result.suggestedActions
+                        suggestedActions: result.suggestedActions,
+                        providerDisplayName: result.providerDisplayName
                     ))
                     self.modelRuns[currentIndex].timingTrace?.mark(.resultApplied)
                 }
@@ -2554,7 +2560,8 @@ public final class HomeViewModel: ObservableObject {
                     supplementalTexts: result.supplementalTexts,
                     sentencePairs: result.sentencePairs,
                     latencyBreakdown: latencyBreakdown,
-                    suggestedActions: result.suggestedActions
+                    suggestedActions: result.suggestedActions,
+                    providerDisplayName: result.providerDisplayName
                 ))
                 modelRuns[index].timingTrace?.mark(.resultApplied)
             }

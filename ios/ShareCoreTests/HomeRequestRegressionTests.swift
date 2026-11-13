@@ -4,6 +4,42 @@ import Testing
 
 @MainActor
 struct HomeRequestRegressionTests {
+    @Test("Apple Chinese script conversion completes and retries without a session or download", arguments: [false, true])
+    func appleScriptConversionUsesLocalPath(supportsAppleTranslate: Bool) async throws {
+        let harness = try HomeRequestHarness()
+        defer { harness.cleanup() }
+        harness.preferences.setHasAcceptedDataSharing(true)
+        harness.preferences.setEnabledModelIDs([ModelConfig.appleTranslateID])
+        harness.preferences.setSourceLanguage(.auto)
+        harness.preferences.setTargetLanguage(.simplifiedChinese)
+        let model = harness.makeModel(models: [], supportsAppleTranslate: supportsAppleTranslate)
+        model.appleTranslationRequestHandler = { _, _ in
+            Issue.record("Local conversion must not request a TranslationSession")
+        }
+        model.inputText = "為什麼我是好的\n為什麼在大陸都是好的.."
+        model.performSelectedAction(refreshEntitlement: false)
+
+        for isRetry in [false, true] {
+            if isRetry {
+                model.retryRun(runID: ModelConfig.appleTranslateID)
+            }
+            for _ in 0 ..< 100 {
+                if model.modelRuns.first?.isRunning == false {
+                    break
+                }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            let run = try #require(model.modelRuns.first)
+            guard case let .success(result) = run.status else {
+                Issue.record("Expected a successful local conversion, got \(run.status)")
+                return
+            }
+            #expect(result.text == "为什么我是好的\n为什么在大陆都是好的..")
+            #expect(run.modelDisplayName == String(localized: "Local Chinese script conversion"))
+            #expect(model.appleTranslateNeedsLanguageDownload == false)
+        }
+    }
+
     @Test("Trial setup failures deliver one terminal result per model")
     func trialSetupFailuresAreTerminal() async {
         let session = URLSession(configuration: CoreBlockedURLProtocol.configuration)
@@ -202,14 +238,18 @@ private struct HomeRequestHarness {
         session = URLSession(configuration: CoreBlockedURLProtocol.configuration)
     }
 
-    func makeModel(models: [ModelConfig], trialModels: [ModelConfig] = []) -> HomeViewModel {
+    func makeModel(
+        models: [ModelConfig],
+        trialModels: [ModelConfig] = [],
+        supportsAppleTranslate: Bool = false
+    ) -> HomeViewModel {
         HomeViewModel(
             configurationStore: AppConfigurationStore(snapshot: true, preferences: preferences),
             llmService: LLMService(urlSession: session, trialDeviceID: { _ in
                 throw LLMServiceError.trialUnavailable
             }),
             preferences: preferences,
-            supportsAppleTranslate: false,
+            supportsAppleTranslate: supportsAppleTranslate,
             onboardingTrialModels: trialModels,
             initialModels: models,
             premiumAccess: { false }

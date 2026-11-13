@@ -10,6 +10,38 @@ import Testing
 
 @Suite("HomeViewModel target language resolution")
 struct HomeViewModelLanguageResolutionTests {
+    @Test("Automatic target preferences do not exclude Japanese source text", arguments: [false, true])
+    func automaticTargetDetectsJapanese(usesOverride: Bool) {
+        let result = HomeViewModel.resolveLanguages(
+            text: "2時まで仕事してその後準備して6時に山中湖ってあたまおかしすぎるって",
+            sourcePreference: .auto,
+            preferredTarget: usesOverride ? .english : .appLanguage,
+            override: usesOverride ? .appLanguage : nil,
+            matchCandidates: [.simplifiedChinese, .englishUnitedStates]
+        )
+
+        #expect(result.sourceCode == "ja")
+        #expect(result.displaySource == .japanese)
+        #expect(result.target == .simplifiedChinese)
+        #expect(result.isMatchFallback == false)
+    }
+
+    @Test("A manually selected source still wins over detection")
+    func manualSourceWinsOverDetection() throws {
+        let source = try #require(SourceLanguageOption(rawValue: "en"))
+        let result = HomeViewModel.resolveLanguages(
+            text: "2時まで仕事してその後準備して6時に山中湖ってあたまおかしすぎるって",
+            sourcePreference: source,
+            preferredTarget: .appLanguage,
+            override: nil,
+            matchCandidates: [.simplifiedChinese, .englishUnitedStates]
+        )
+
+        #expect(result.sourceCode == "en")
+        #expect(result.displaySource == source)
+        #expect(result.target == .simplifiedChinese)
+    }
+
     @Test("Manual target is not marked as redirected even when it matches source")
     func manualTargetDoesNotRedirect() {
         let result = HomeViewModel.resolveTargetLanguage(
