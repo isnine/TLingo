@@ -81,6 +81,12 @@ extension HomeView {
                     resolvedTarget: viewModel.resolvedTargetLanguage,
                     onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
                     detectedSource: viewModel.detectedSourceLanguage,
+                    suggestedSources: viewModel.suggestedSourceLanguages,
+                    suggestedSourceOverride: viewModel.sourceLanguageOverride,
+                    onSuggestedSource: { viewModel.selectSuggestedSource($0) },
+                    alternativeTarget: viewModel.alternativeTargetLanguage,
+                    onAlternativeTarget: { viewModel.selectAlternativeTarget($0) },
+                    hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                     onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
                 )
                 Spacer(minLength: 0)
@@ -193,6 +199,12 @@ extension HomeView {
                         resolvedTarget: viewModel.resolvedTargetLanguage,
                         onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
                         detectedSource: viewModel.detectedSourceLanguage,
+                        suggestedSources: viewModel.suggestedSourceLanguages,
+                        suggestedSourceOverride: viewModel.sourceLanguageOverride,
+                        onSuggestedSource: { viewModel.selectSuggestedSource($0) },
+                        alternativeTarget: viewModel.alternativeTargetLanguage,
+                        onAlternativeTarget: { viewModel.selectAlternativeTarget($0) },
+                        hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                         onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
                     )
                 }
@@ -201,6 +213,22 @@ extension HomeView {
                     if usesPhoneComposerChrome {
                         modelSelectionButton
                         Spacer()
+                        if viewModel.selectedAction?.languageDependencies.usesTargetLanguage == true,
+                           let alternative = viewModel.alternativeTargetLanguage
+                        {
+                            Button {
+                                viewModel.selectAlternativeTarget(alternative)
+                            } label: {
+                                Text("Translate to \(alternative.primaryLabel)")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(colors.accent)
+                            .accessibilityLabel(Text("Translate to \(alternative.primaryLabel)"))
+                            .accessibilityIdentifier("language_switcher_alternative_target")
+                        }
                         imageTextInputButton
                         inputSpeakButton
                         phonePrimaryInputButton
@@ -544,6 +572,10 @@ extension HomeView {
                 resolvedTarget: viewModel.resolvedTargetLanguage,
                 onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
                 detectedSource: viewModel.detectedSourceLanguage,
+                suggestedSources: viewModel.suggestedSourceLanguages,
+                suggestedSourceOverride: viewModel.sourceLanguageOverride,
+                onSuggestedSource: { viewModel.selectSuggestedSource($0) },
+                hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                 onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
             )
         }

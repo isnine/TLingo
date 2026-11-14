@@ -223,6 +223,10 @@ public final class HomeViewModel: ObservableObject {
     @Published public var inputText: String = "" {
         didSet {
             guard inputText != oldValue else { return }
+            if inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                sourceLanguageOverride = nil
+                currentTextTarget = nil
+            }
             // Keep the one-shot target and detected source while typing; the
             // debounced preview re-resolves them for the new text.
             cancelActiveRequest(clearResults: true, resetsLanguages: false)
@@ -344,6 +348,9 @@ public final class HomeViewModel: ObservableObject {
 
     /// The detected (or user-pinned) source language, refreshed live while typing and on each request.
     @Published public internal(set) var detectedSourceLanguage: SourceLanguageOption?
+    @Published public internal(set) var suggestedSourceLanguages: [SourceLanguageOption] = []
+    @Published public internal(set) var alternativeTargetLanguage: TargetLanguageOption?
+    @Published public internal(set) var sourceLanguageOverride: SourceLanguageOption?
 
     /// True when the automatic target skipped the first language because the source already is that language.
     @Published public internal(set) var isMatchTargetFallback = false
@@ -382,6 +389,8 @@ public final class HomeViewModel: ObservableObject {
     /// When non-nil, bypasses automatic language detection and uses this
     /// target language for the current translation.
     var targetLanguageOverride: TargetLanguageOption?
+    var currentTextTarget: TargetLanguageOption?
+    public var hasCurrentTextTarget: Bool { currentTextTarget != nil }
 
     /// Optional handler invoked on macOS to route Apple Translate requests through a
     /// real NSWindow (required for TranslationSession to work outside an NSPopover).
@@ -563,15 +572,21 @@ public final class HomeViewModel: ObservableObject {
 
         isLoadingConfiguration = false
 
-        Publishers.Merge(
-            preferences.$sourceLanguage.dropFirst().map { _ in () },
-            preferences.$targetLanguage.dropFirst().map { _ in () }
-        )
-        .receive(on: RunLoop.main)
-        .sink { [weak self] in
-            self?.scheduleLanguagePreviewRefresh()
-        }
-        .store(in: &cancellables)
+        preferences.$sourceLanguage.dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.sourceLanguageOverride = nil
+                self?.scheduleLanguagePreviewRefresh()
+            }
+            .store(in: &cancellables)
+
+        preferences.$targetLanguage.dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.currentTextTarget = nil
+                self?.scheduleLanguagePreviewRefresh()
+            }
+            .store(in: &cancellables)
 
         Publishers.Merge3(
             preferences.$modelResultOrder.dropFirst().map { _ in () },

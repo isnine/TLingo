@@ -535,6 +535,8 @@ extension HomeViewModel {
             }
             if resetsLanguages {
                 setTargetLanguageOverride(nil, reason: "Active request cancelled and results cleared")
+                sourceLanguageOverride = nil
+                currentTextTarget = nil
             }
         }
     }

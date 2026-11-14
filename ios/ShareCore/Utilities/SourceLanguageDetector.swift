@@ -71,6 +71,51 @@ public enum SourceLanguageDetector {
         detectWithConfidence(of: text).language
     }
 
+    public static func suggestedSourceLanguages(of text: String) -> [SourceLanguageOption] {
+        let cleaned = text.replacingOccurrences(
+            of: #"(?i)\b(?:https?://|www\.)\S+|`[^`]*`"#,
+            with: " ",
+            options: .regularExpression
+        )
+        let recognizer = NLLanguageRecognizer()
+        recognizer.languageConstraints = supportedNLLanguages
+        recognizer.languageHints = languageHints
+        recognizer.processString(cleaned)
+        let hypotheses = recognizer.languageHypotheses(withMaximum: maxHypotheses)
+        let topConfidence = hypotheses.values.max() ?? 0
+        var suggestions: [SourceLanguageOption] = []
+        for (language, confidence) in hypotheses.sorted(by: { $0.value > $1.value }) {
+            guard confidence >= 0.15, confidence >= topConfidence * 0.3 else { continue }
+            let corrected = correctChineseScript(language, text: cleaned)
+            guard let option = SourceLanguageOption(rawValue: corrected.rawValue),
+                  !suggestions.contains(where: { detectionLanguagesAreEquivalent($0.rawValue, option.rawValue) })
+            else { continue }
+            suggestions.append(option)
+        }
+        let hasEnglishPhrase = cleaned.range(
+            of: #"\b[a-zA-Z]{3,}(?:[ \t]+[a-zA-Z]{2,}){1,}\b"#,
+            options: .regularExpression
+        ) != nil
+        if hasEnglishPhrase, hanScalarCount(in: cleaned) >= scriptFallbackMinimumHanScalars {
+            let chinese = correctChineseScript(.simplifiedChinese, text: cleaned)
+            if let option = SourceLanguageOption(rawValue: chinese.rawValue),
+               !suggestions.contains(where: { detectionLanguagesAreEquivalent($0.rawValue, option.rawValue) })
+            {
+                if suggestions.count >= 3 { suggestions.removeLast() }
+                suggestions.append(option)
+            }
+            if !suggestions.contains(where: { detectionLanguagesAreEquivalent($0.rawValue, "en") }) {
+                if suggestions.count >= 3 {
+                    suggestions.removeAll {
+                        !detectionLanguagesAreEquivalent($0.rawValue, chinese.rawValue)
+                    }
+                }
+                suggestions.append(.english)
+            }
+        }
+        return Array(suggestions.prefix(3))
+    }
+
     /// Full detection with confidence scoring.
     public static func detectWithConfidence(of text: String) -> LanguageDetectionResult {
         let recognizer = NLLanguageRecognizer()

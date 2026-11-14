@@ -257,6 +257,12 @@
                     resolvedTarget: viewModel.resolvedTargetLanguage,
                     onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
                     detectedSource: viewModel.detectedSourceLanguage,
+                    suggestedSources: viewModel.suggestedSourceLanguages,
+                    suggestedSourceOverride: viewModel.sourceLanguageOverride,
+                    onSuggestedSource: { viewModel.selectSuggestedSource($0) },
+                    alternativeTarget: viewModel.alternativeTargetLanguage,
+                    onAlternativeTarget: { viewModel.selectAlternativeTarget($0) },
+                    hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                     onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
                 )
 

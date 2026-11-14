@@ -4,6 +4,29 @@ import Testing
 
 @MainActor
 struct HomeRequestRegressionTests {
+    @Test("Suggested languages apply to the current text without changing preferences")
+    func suggestedLanguagesAreScopedToCurrentText() throws {
+        let harness = try HomeRequestHarness()
+        defer { harness.cleanup() }
+        harness.preferences.setSourceLanguage(.auto)
+        harness.preferences.setTargetLanguage(.appLanguage)
+        let model = harness.makeModel(models: [])
+        model.inputText = "这个请求失败了，The request timed out after the server disconnected."
+        model.refreshLanguagePreview()
+        model.selectSuggestedSource(.english)
+        #expect(model.detectedSourceLanguage == .english)
+        #expect(harness.preferences.sourceLanguage == .auto)
+        model.selectAlternativeTarget(.english)
+        #expect(model.resolvedTargetLanguage == .english)
+        #expect(harness.preferences.targetLanguage == .appLanguage)
+        #expect(model.consumeResolvedTarget(for: model.inputText).target == .english)
+        #expect(model.consumeResolvedTarget(for: model.inputText).target == .english)
+        model.inputText = ""
+        model.refreshLanguagePreview()
+        #expect(model.currentTextTarget == nil)
+        #expect(model.sourceLanguageOverride == nil)
+    }
+
     @Test("Apple Chinese script conversion completes and retries without a session or download", arguments: [false, true])
     func appleScriptConversionUsesLocalPath(supportsAppleTranslate: Bool) async throws {
         let harness = try HomeRequestHarness()

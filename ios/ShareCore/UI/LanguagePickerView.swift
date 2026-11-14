@@ -89,6 +89,7 @@ public struct LanguagePickerView: View {
         @State private var highlightedCode: String?
     #endif
     private let rows: [LanguageRow]
+    private let suggestedCodes: [String]
     private let title: String
     private static let iOSListTopContentMargin: CGFloat = 8
 
@@ -110,15 +111,26 @@ public struct LanguagePickerView: View {
         guard searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return [RowSection(title: nil, rows: rows)]
         }
+        let suggested = suggestedCodes.compactMap { code in rows.first { $0.id == code && !$0.isDisabled } }
+        let suggestedIDs = Set(suggested.map(\.id))
+        let remaining = rows.filter { !suggestedIDs.contains($0.id) }
         let commonCodes = Set(LanguageCatalog.commonCodes)
         let isPinned: (LanguageRow) -> Bool = {
             commonCodes.contains($0.id) || !LanguageCatalog.allCodeSet.contains($0.id)
         }
-        let pinned = rows.filter(isPinned)
-        let others = rows.filter { !isPinned($0) }
-        guard !pinned.isEmpty, !others.isEmpty else {
-            return [RowSection(title: nil, rows: rows)]
+        let pinned = remaining.filter(isPinned)
+        let others = remaining.filter { !isPinned($0) }
+        if !suggested.isEmpty {
+            var result = [RowSection(title: String(localized: "Suggested Languages"), rows: suggested)]
+            if !pinned.isEmpty {
+                result.append(RowSection(title: String(localized: "Common Languages"), rows: pinned))
+            }
+            if !others.isEmpty {
+                result.append(RowSection(title: String(localized: "All Languages"), rows: others))
+            }
+            return result
         }
+        guard !pinned.isEmpty, !others.isEmpty else { return [RowSection(title: nil, rows: rows)] }
         return [
             RowSection(title: String(localized: "Common Languages"), rows: pinned),
             RowSection(title: String(localized: "All Languages"), rows: others),
@@ -130,11 +142,13 @@ public struct LanguagePickerView: View {
         selectedCode: Binding<String>,
         isPresented: Binding<Bool>,
         rows: [LanguageRow],
+        suggestedCodes: [String] = [],
         title: String = String(localized: "Select Language")
     ) {
         _selectedCode = selectedCode
         _isPresented = isPresented
         self.rows = rows
+        self.suggestedCodes = suggestedCodes
         self.title = title
     }
 
@@ -149,6 +163,7 @@ public struct LanguagePickerView: View {
         _isPresented = isPresented
         let options = availableOptions ?? TargetLanguageOption.selectionOptions
         rows = options.map { LanguageRow(target: $0) }
+        suggestedCodes = []
         self.title = title
     }
 

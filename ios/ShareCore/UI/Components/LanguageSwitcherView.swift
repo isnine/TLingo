@@ -46,6 +46,12 @@ public struct LanguageSwitcherView: View {
     let onOverrideTarget: ((TargetLanguageOption) -> Void)?
     /// When non-nil, the source selector shows this detected language instead of "Detect Language".
     let detectedSource: SourceLanguageOption?
+    let suggestedSources: [SourceLanguageOption]
+    let suggestedSourceOverride: SourceLanguageOption?
+    let onSuggestedSource: ((SourceLanguageOption) -> Void)?
+    let alternativeTarget: TargetLanguageOption?
+    let onAlternativeTarget: ((TargetLanguageOption) -> Void)?
+    let hasTemporaryTarget: Bool
     /// Called when the user picks a new source language (so callers can clear detectedSource state).
     let onSourceChanged: (() -> Void)?
     /// Called once after any source/target selection or swap changes.
@@ -72,6 +78,12 @@ public struct LanguageSwitcherView: View {
         resolvedTarget: TargetLanguageOption? = nil,
         onOverrideTarget: ((TargetLanguageOption) -> Void)? = nil,
         detectedSource: SourceLanguageOption? = nil,
+        suggestedSources: [SourceLanguageOption] = [],
+        suggestedSourceOverride: SourceLanguageOption? = nil,
+        onSuggestedSource: ((SourceLanguageOption) -> Void)? = nil,
+        alternativeTarget: TargetLanguageOption? = nil,
+        onAlternativeTarget: ((TargetLanguageOption) -> Void)? = nil,
+        hasTemporaryTarget: Bool = false,
         onSourceChanged: (() -> Void)? = nil,
         onSelectionChanged: (() -> Void)? = nil
     ) {
@@ -93,6 +105,12 @@ public struct LanguageSwitcherView: View {
         self.resolvedTarget = resolvedTarget
         self.onOverrideTarget = onOverrideTarget
         self.detectedSource = detectedSource
+        self.suggestedSources = suggestedSources
+        self.suggestedSourceOverride = suggestedSourceOverride
+        self.onSuggestedSource = onSuggestedSource
+        self.alternativeTarget = alternativeTarget
+        self.onAlternativeTarget = onAlternativeTarget
+        self.hasTemporaryTarget = hasTemporaryTarget
         self.onSourceChanged = onSourceChanged
         self.onSelectionChanged = onSelectionChanged
     }
@@ -145,7 +163,7 @@ public struct LanguageSwitcherView: View {
     }
 
     private var usesAutomaticTarget: Bool {
-        selectedTargetLanguage == .appLanguage
+        selectedTargetLanguage == .appLanguage && !hasTemporaryTarget
     }
 
     private var sourceDisplayName: String {
@@ -241,6 +259,7 @@ public struct LanguageSwitcherView: View {
                     selectedCode: $sourceCode,
                     isPresented: $isSourcePickerPresented,
                     rows: sourceRows,
+                    suggestedCodes: selectedSourceLanguage == .auto ? suggestedSources.map(\.rawValue) : [],
                     title: String(localized: "Select Source Language")
                 )
                 .presentationDetents([.medium, .large])
@@ -260,10 +279,15 @@ public struct LanguageSwitcherView: View {
             }
             .onChange(of: sourceCode) {
                 if let option = SourceLanguageOption(rawValue: sourceCode), isSourceOptionEnabled(option) {
+                    if option == suggestedSourceOverride { return }
+                    if selectedSourceLanguage == .auto, suggestedSources.contains(option), let onSuggestedSource {
+                        onSuggestedSource(option)
+                        return
+                    }
                     let didChange = option != selectedSourceLanguage
                     resolveTargetConflict(withNewSource: option)
                     setSourceLanguage(option, reason: "LanguageSwitcher source picker")
-                    if didChange {
+                    if didChange || suggestedSourceOverride != nil {
                         onSourceChanged?()
                         onSelectionChanged?()
                     }
@@ -396,14 +420,14 @@ public struct LanguageSwitcherView: View {
 
     private func sourceButton(style: LanguageControlStyle) -> some View {
         Button {
-            sourceCode = selectedSourceLanguage.rawValue
+            sourceCode = (suggestedSourceOverride ?? selectedSourceLanguage).rawValue
             isSourcePickerPresented = true
         } label: {
             languageControl(style: style) {
                 HStack(spacing: 3) {
                     let showDetected = detectedSource != nil && detectedSource != selectedSourceLanguage
                     if showDetected, let detected = detectedSource {
-                        if selectedSourceLanguage == .auto {
+                        if selectedSourceLanguage == .auto, suggestedSourceOverride == nil {
                             languageModeBadge("Detect")
                         }
                         languageLabel(detected.primaryLabel)
@@ -433,6 +457,20 @@ public struct LanguageSwitcherView: View {
     @ViewBuilder
     private func targetSection(style: LanguageControlStyle) -> some View {
         targetButton(style: style)
+        if let alternativeTarget, let onAlternativeTarget {
+            Button {
+                onAlternativeTarget(alternativeTarget)
+            } label: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 32, height: chipHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Translate to \(alternativeTarget.primaryLabel)"))
+            .help(Text("Translate to \(alternativeTarget.primaryLabel)"))
+            .accessibilityIdentifier("language_switcher_alternative_target")
+        }
     }
 
     private var targetButton: some View {

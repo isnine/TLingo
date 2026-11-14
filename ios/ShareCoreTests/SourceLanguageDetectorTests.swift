@@ -10,6 +10,23 @@ import Testing
 
 @Suite("SourceLanguageDetector.resolveAutoSourceCode")
 struct SourceLanguageDetectorTests {
+    @Test("Mixed Chinese and English prose offers both languages")
+    func mixedProseSuggestions() {
+        let suggestions = SourceLanguageDetector.suggestedSourceLanguages(
+            of: "这个请求失败了，The request timed out after the server disconnected."
+        )
+        #expect(suggestions.contains(.simplifiedChinese))
+        #expect(suggestions.contains(.english))
+    }
+
+    @Test("A URL and code alone do not introduce English as a mixed-language suggestion")
+    func urlAndCodeDoNotIntroduceEnglish() {
+        let suggestions = SourceLanguageDetector.suggestedSourceLanguages(
+            of: "请检查这个地址 https://example.com/hello/world 和 `some method call` 是否正确"
+        )
+        #expect(!suggestions.contains(.english))
+    }
+
     // MARK: - Mixed language with target exclusion
 
     @Test("Predominantly Chinese text with target=en → zh-Hans")

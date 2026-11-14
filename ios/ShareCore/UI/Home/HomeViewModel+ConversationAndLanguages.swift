@@ -271,7 +271,22 @@ public extension HomeViewModel {
 
     /// Called when the user picks a new source language — clears the detected source until the preview refreshes.
     func clearDetectedSourceLanguage() {
+        sourceLanguageOverride = nil
         setDetectedSourceLanguage(nil, reason: "User changed source language")
+        scheduleLanguagePreviewRefresh()
+    }
+
+    func selectSuggestedSource(_ language: SourceLanguageOption) {
+        sourceLanguageOverride = language
+        cancelActiveRequest(clearResults: true, resetsLanguages: false)
+        refreshLanguagePreview()
+    }
+
+    func selectAlternativeTarget(_ language: TargetLanguageOption) {
+        sourceLanguageOverride = nil
+        currentTextTarget = language
+        cancelActiveRequest(clearResults: true, resetsLanguages: false)
+        refreshLanguagePreview()
     }
 
     func swapInputLanguages() {
@@ -587,14 +602,14 @@ public extension HomeViewModel {
     /// (e.g. "你好, hello") picks the *other* language when the user is in `.auto` mode.
     internal func consumeResolvedTarget(for text: String) -> ResolvedLanguagePair {
         let preferredTarget = preferences.targetLanguage
-        let overrideTarget = targetLanguageOverride
-        if overrideTarget != nil {
+        let overrideTarget = targetLanguageOverride ?? currentTextTarget
+        if targetLanguageOverride != nil {
             setTargetLanguageOverride(nil, reason: "Consumed one-shot target override")
         }
         languagePreviewTask?.cancel()
         let resolution = Self.resolveLanguages(
             text: text,
-            sourcePreference: preferences.sourceLanguage,
+            sourcePreference: sourceLanguageOverride ?? preferences.sourceLanguage,
             preferredTarget: preferredTarget,
             override: overrideTarget
         )
@@ -683,17 +698,25 @@ public extension HomeViewModel {
     internal func refreshLanguagePreview() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
+            suggestedSourceLanguages = []
+            alternativeTargetLanguage = nil
             applyLanguageResolution(nil, reason: "Live preview cleared")
             return
         }
-        applyLanguageResolution(
-            Self.resolveLanguages(
-                text: text,
-                sourcePreference: preferences.sourceLanguage,
-                preferredTarget: preferences.targetLanguage,
-                override: targetLanguageOverride
-            ),
-            reason: "Live preview"
+        let suggestions = preferences.sourceLanguage == .auto
+            ? SourceLanguageDetector.suggestedSourceLanguages(of: text)
+            : []
+        suggestedSourceLanguages = suggestions
+        let resolution = Self.resolveLanguages(
+            text: text,
+            sourcePreference: sourceLanguageOverride ?? preferences.sourceLanguage,
+            preferredTarget: preferences.targetLanguage,
+            override: targetLanguageOverride ?? currentTextTarget
         )
+        let targetCandidates = suggestions.compactMap { TargetLanguageOption(rawValue: $0.rawValue) }
+        alternativeTargetLanguage = targetCandidates.count > 1
+            ? targetCandidates.first { !SourceLanguageDetector.languagesAreSame($0.rawValue, resolution.target.rawValue) }
+            : nil
+        applyLanguageResolution(resolution, reason: "Live preview")
     }
 }
