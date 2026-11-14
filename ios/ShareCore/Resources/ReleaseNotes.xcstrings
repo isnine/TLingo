@@ -5126,6 +5126,131 @@
         }
       }
     },
+    "Offer Email Support separately from in-app feedback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقديم الدعم عبر البريد الإلكتروني بشكل منفصل عن الملاحظات داخل التطبيق"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbyd e-mailsupport separat fra feedback i appen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail-Support getrennt vom In-App-Feedback anbieten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offer Email Support separately from in-app feedback"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ofrecer soporte por correo electrónico independiente de los comentarios en la app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proposer l'assistance par e-mail séparément des commentaires dans l'application"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tawarkan Dukungan Email secara terpisah dari umpan balik dalam aplikasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offri supporto via e-mail separatamente dai feedback in-app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリ内フィードバックとは別にメールサポートを提供する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인앱 피드백과 별도로 이메일 지원 제공"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tawarkan Sokongan E-mel secara berasingan daripada maklum balas dalam aplikasi"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilby e-poststøtte separat fra tilbakemeldinger i appen"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bied e-mailondersteuning afzonderlijk van in-app feedback aan"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oferuj pomoc przez e-mail oddzielnie od opinii w aplikacji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oferecer suporte por e-mail separadamente do feedback no app"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erbjud e-postsupport separat från feedback i appen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-posta Desteğini uygulama içi geri bildirimden ayrı olarak sun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分開提供電郵支援與應用程式內反映意見"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提供与应用内反馈分开的电子邮件支持"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分開提供電子郵件支援與 App 內意見反映"
+          }
+        }
+      }
+    },
     "Open What's New at half height without clipped buttons" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6876,6 +7001,131 @@
         }
       }
     },
+    "Replace selected text only when the same selection is still focused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استبدال النص المحدد فقط عندما يكون التحديد نفسه لا يزال قيد التركيز"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstat kun markeret tekst, når den samme markering stadig er i fokus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählten Text nur ersetzen, wenn dieselbe Auswahl noch fokussiert ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace selected text only when the same selection is still focused"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar el texto seleccionado solo cuando la misma selección aún tenga el foco"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer le texte sélectionné uniquement lorsque la même sélection est toujours active"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganti teks yang dipilih hanya jika pilihan yang sama masih difokuskan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisci il testo selezionato solo se la stessa selezione ha ancora il focus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同じ選択範囲にフォーカスがある場合のみ、選択したテキストを置換する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "동일한 선택 항목에 여전히 포커스가 있을 때만 선택한 텍스트 대체"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gantikan teks yang dipilih hanya apabila pilihan yang sama masih difokuskan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstatt markert tekst bare når den samme markeringen fortsatt er i fokus"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geselecteerde tekst alleen vervangen wanneer dezelfde selectie nog de focus heeft"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zastępuj zaznaczony tekst tylko wtedy, gdy to samo zaznaczenie jest nadal aktywne"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Substituir o texto selecionado apenas quando a mesma seleção ainda estiver em foco"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersätt endast markerad text när samma markering fortfarande är i fokus"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçilen metni yalnızca aynı seçim hâlâ odaktayken değiştir"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在同一個選取範圍仍處於焦點時取代所選文字"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅在仍聚焦于同一选区时替换所选文本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在仍聚焦於同一個選取範圍時取代所選文字"
+          }
+        }
+      }
+    },
     "Retry from the no-model error card" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7122,6 +7372,256 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "當已過期的會員資格仍選取了進階模型時，執行免費 AI 模型"
+          }
+        }
+      }
+    },
+    "Send crash diagnostics automatically on a later launch, without linking them to an account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال تشخيصات الأعطال تلقائيًا عند تشغيل لاحق، دون ربطها بحساب"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send kraschdiagnostik automatisk ved en senere start uden at knytte dem til en konto"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturzdiagnosen bei einem späteren Start automatisch senden, ohne sie mit einem Konto zu verknüpfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send crash diagnostics automatically on a later launch, without linking them to an account"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar diagnósticos de fallos automáticamente en un inicio posterior, sin vincularlos a una cuenta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer automatiquement les diagnostics de plantage lors d'un lancement ultérieur, sans les associer à un compte"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirim diagnostik kerusakan secara otomatis pada peluncuran berikutnya, tanpa menautkannya ke akun"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia automaticamente i dati diagnostici sui crash a un avvio successivo, senza collegarli a un account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントと紐付けずに、次回の起動時にクラッシュ診断を自動送信する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정과 연결하지 않고 나중에 앱을 실행할 때 충돌 진단 정보를 자동으로 전송"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hantar diagnostik ranap secara automatik pada pelancaran kemudian, tanpa memautkannya ke akaun"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send krasjdiagnostikk automatisk ved en senere oppstart, uten å koble dem til en konto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crashdiagnostiek automatisch verzenden bij een latere start, zonder deze aan een account te koppelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysyłaj dane diagnostyczne o awariach automatycznie przy kolejnym uruchomieniu, bez łączenia ich z kontem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar diagnósticos de falhas automaticamente em uma inicialização posterior, sem vinculá-los a uma conta"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skicka kraschdiagnostik automatiskt vid en senare start, utan att koppla den till ett konto"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çökme tanılamalarını bir hesapla ilişkilendirmeden, sonraki bir başlatmada otomatik olarak gönder"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在日後啟動時自動傳送死機診斷資訊，無需連結到帳戶"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在稍后启动时自动发送崩溃诊断信息，无需关联至账户"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在日後啟動時自動傳送當機診斷資訊，無需連結至帳號"
+          }
+        }
+      }
+    },
+    "Send feedback and up to four screenshots from Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال ملاحظات وما يصل إلى أربع لقطات شاشة من \"الإعدادات\""
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send feedback og op til fire skærmbilleder fra Indstillinger"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback und bis zu vier Screenshots über die Einstellungen senden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send feedback and up to four screenshots from Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía comentarios y hasta cuatro capturas de pantalla desde Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyez des commentaires et jusqu'à quatre captures d'écran depuis les Réglages"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirim umpan balik dan hingga empat tangkapan layar dari Pengaturan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia feedback e fino a quattro screenshot da Impostazioni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「設定」からフィードバックと最大4枚のスクリーンショットを送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정에서 피드백 및 최대 4장의 스크린샷 전송"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hantar maklum balas dan sehingga empat tangkapan skrin daripada Tetapan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send tilbakemelding og opptil fire skjermbilder fra Innstillinger"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur feedback en maximaal vier schermafbeeldingen vanuit Instellingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij opinię i maksymalnie cztery zrzuty ekranu z poziomu Ustawień"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envie comentários e até quatro capturas de tela a partir de Ajustes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skicka feedback och upp till fyra skärmavbilder från Inställningar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar'dan geri bildirim ve en fazla dört ekran görüntüsü gönderin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從「設定」傳送意見反映及最多四張螢幕截圖"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从“设置”发送反馈以及最多四张屏幕截图"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從「設定」傳送意見反映和最多四張螢幕截圖"
           }
         }
       }

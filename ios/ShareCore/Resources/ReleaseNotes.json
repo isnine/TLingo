@@ -4,6 +4,18 @@
       "version": "5.7.5",
       "items": [
         {
+          "kind": "added",
+          "text": "Send feedback and up to four screenshots from Settings"
+        },
+        {
+          "kind": "added",
+          "text": "Send crash diagnostics automatically on a later launch, without linking them to an account"
+        },
+        {
+          "kind": "improved",
+          "text": "Offer Email Support separately from in-app feedback"
+        },
+        {
           "kind": "improved",
           "text": "Mark automatically detected source languages with a clear label"
         },
@@ -93,6 +105,13 @@
             "macos"
           ],
           "text": "Avoid showing the selection trigger when dragging controls or windows"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Replace selected text only when the same selection is still focused"
         }
       ]
     },

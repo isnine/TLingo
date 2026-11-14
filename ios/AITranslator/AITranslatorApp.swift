@@ -41,6 +41,17 @@ struct AITranslatorApp: App {
 
     init() {
         MetricKitReporter.shared.start()
+        // Keep automatic reporting out of XCTest and screenshot/UI-test launches.
+        let environment = ProcessInfo.processInfo.environment
+        let isTestProcess = ["XCTestConfigurationFilePath", "XCTestBundlePath", "XCTestSessionIdentifier"]
+            .contains { environment[$0] != nil } || NSClassFromString("XCTestCase") != nil
+        if !isTestProcess, !Self.isSnapshotMode {
+            AirCrashReports.start(
+                apiKey: AirFeedbackConfiguration.appKey,
+                endpoint: AirFeedbackConfiguration.crashEndpoint,
+                teamID: AirFeedbackConfiguration.teamID
+            )
+        }
 
         // Debug: Print configuration on launch
         #if DEBUG

@@ -44,6 +44,7 @@ struct SettingsView: View {
         @State private var showOnboardingReplay = false
         @State private var pendingOnboardingReplayResult: OnboardingFlowResult = .dismissed
     #endif
+    @State private var showFeedback = false
     @State private var feedbackDraft: FeedbackMailDraft?
 
     @State private var showNetworkDebug = false
@@ -130,6 +131,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(context: .settingsUpgrade)
+        }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackView()
+                .accessibilityIdentifier("feedback_form")
         }
         #if os(iOS)
         .sheet(item: $feedbackDraft) { draft in
@@ -259,14 +264,29 @@ struct SettingsView: View {
     private var helpSection: some View {
         Section {
             actionRow {
+                showFeedback = true
+            } label: {
+                settingsLabel("Feedback", systemImage: "bubble.left", subtitle: Text("Send feedback and optional screenshots directly from the app."))
+            }
+            .accessibilityIdentifier("settings_feedback_row")
+
+            actionRow {
                 composeFeedbackEmail()
             } label: {
                 settingsLabel(
-                    "Feedback",
+                    "Email Support",
                     systemImage: "envelope",
                     subtitle: Text("Every email gets a reply · iamzanderwang@outlook.com")
                 )
             }
+            .accessibilityIdentifier("settings_email_support_row")
+
+            DisclosureGroup("Automatic Crash Reports") {
+                Text("After the system provides a crash report, the app automatically sends diagnostic information during a later launch to help investigate the problem. It includes the crash time, crash type, exception message, thread call information, app and system versions, device model, architecture, language and region, and a random identifier created per installation to count affected installations. Information that verifies the request comes from the app may also be included. Reports are not linked to your account.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityIdentifier("settings_crash_disclosure")
 
             #if os(iOS)
                 actionRow {

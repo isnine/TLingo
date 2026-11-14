@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.7.5] - 2026-11-12
 
+### Added
+
+- [Both] Send feedback and up to four screenshots from Settings
+- [Both] Send crash diagnostics automatically on a later launch, without linking them to an account
+
 ### Improved
 
+- [Both] Offer Email Support separately from in-app feedback
 - [Both] Mark automatically detected source languages with a clear label
 - [Both] Show the models that will actually run in the model picker, keeping premium selections for later
 - [Both] Open the paywall directly from the quick panel when a premium model is locked
@@ -33,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Preserve clearly identifiable Chinese scripts during automatic language detection
 - [Mac] Keep notch captions visible while realtime translation is paused
 - [Mac] Avoid showing the selection trigger when dragging controls or windows
+- [Mac] Replace selected text only when the same selection is still focused
 
 ### Changed
 

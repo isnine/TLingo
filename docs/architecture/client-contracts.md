@@ -100,3 +100,125 @@ header 等待减上游 header 等待仅是包含 Worker 前置开销的估计，
 - 结果排序偏好保存在 App Group UserDefaults（`model_result_order`），不通过 iCloud 同步；默认按首次出现结果的时间升序（`firstCompletedFirst`，出结果后位置固定，不随完成或失败跳动），可选按模型列表顺序（`modelList`）。
 - 首次安装且未保存模型选择时，默认启用微软翻译和 AI 模型目录中的第一个免费模型（目录顺序），不启用付费模型。
 - 免费用户点击另一个免费云端 AI 模型时，直接替换当前免费云端模型，不要求先取消旧选择；其他翻译服务、Apple Intelligence、自定义端点及已保存的锁定付费选择保持不变。会员仍可多选，取消最后一个模型时仍保留可用默认模型。
+
+
+## AirFeedback: anonymous feedback and automatic crash diagnostics
+
+Only the main `ios/AITranslator` app integrates AirFeedback. No Helper, widget,
+extension, ShareCore, account/authentication, translation API, release pipeline,
+service setting, policy website, or App Store Connect privacy label is changed.
+`FeedbackMail` and the existing local `MetricKitReporter` remain separate and
+unchanged. Settings **Feedback** opens the anonymous form; **Email Support** keeps
+the existing mail workflow, including its existing user-visible diagnostics behavior.
+The onboarding mail entry is unchanged.
+
+### Public configuration and verification
+
+`Feedback/AirFeedbackConfiguration.swift` contains only the public ingest `key`,
+`feedbackEndpoint`, `crashEndpoint`, and expected `bundleId` read from production
+`workers app-key`, plus Apple team `JW2LR94V6G`. The bundle is
+`com.zanderwang.AITranslator`. This is a shipped, public **ingestion-only** key,
+not a management credential, account token, identity, translation secret, or
+HMAC secret. Requests use `Authorization: Bearer <public ingest key>` and
+`Content-Type: application/json`, independently of TLingo's translation client.
+
+The unchanged official `AirDeviceProof.swift` optionally signs the exact JSON
+bytes. It obtains a challenge at the ingest sibling `attestation/challenge`,
+then submits `{scheme: "app-attest", keyId, attestation, challenge, appId}` at
+`attestation`; `appId` is the Apple team and bundle joined by `.`. A report's
+optional proof headers are `X-Attest-Key-Id` and `X-Attest-Assertion`.
+`X-Attest-Status: unknown-key` resets the proof key for the next submission.
+The proof key ID and refused build are stored in standard UserDefaults; no
+account is involved. Both manual feedback and crashes can carry this proof;
+it is not a user/account or analytics identifier.
+
+Only the main app has App Attest entitlements: Debug `development`, Release
+`production`. Compatible App Store/TestFlight builds and correctly provisioned
+App IDs are needed for verified reports. Simulator, unsupported devices,
+Developer ID Macs, local development builds, unavailable attestation, or a
+failed proof still submit successfully as **unverified**. Verification is never
+a submission requirement. Signing/profile capability and verified production
+device behavior have not been established by static source checks. The upstream
+proof asset is unchanged, including its first-use attestation concurrency behavior.
+
+### Optional, manually submitted feedback
+
+Nothing is submitted merely by opening the form. Send requires nonblank text or
+at least one user-selected image. The exact JSON fields are:
+
+- `message`: only the user's draft; maximum 4000, conservatively bounded in UTF-16
+  units without splitting a user-perceived character, in both the form and client.
+- `appVersion`, `appBuild`: main bundle version/build strings.
+- `deviceModel`: hardware model (`uname` on iOS, `hw.model` on macOS), not a unique
+  device identifier.
+- `osVersion`: system name/version on iOS; macOS operating-system version string.
+- `locale`: `Locale.current.identifier`.
+- `images`: zero to four `{mediaType: "image/jpeg", data: <base64 JPEG>}` objects,
+  selected by the user via PhotosPicker (iOS) or the file importer (macOS).
+  Images are rendered/re-encoded to JPEG with longest side at most 2048 pixels;
+  macOS also checks each encoded image against the server's 8 MiB limit.
+
+No local logs, local MetricKit files, account state/ID, mail draft/contact,
+translation source text, translation history, original image filename/path,
+or crash install ID is automatically added. Chosen text/images can themselves
+contain personal information; the user controls that content. The draft stays
+in view state only, is discarded on dismissal, and is retained for retry after
+a failed send. Sending snapshots the draft and locks editing/removal; image
+loading disables submission/removal and checks cancellation before updating state.
+No feedback queue, contacts field, fabricated identity, or debug submission
+bypass is added. A 2xx response indicates accepted delivery; network/non-2xx
+failures leave the form available for retry.
+
+### Automatic crash diagnostics
+
+`AITranslatorApp.init` starts the unchanged official `AirCrashReports.swift`
+once, immediately after the existing local MetricKit reporter. Ordinary
+production launches start it; XCTest environment/class markers and the existing
+screenshot/UI-test launch mode suppress only the new automatic reporter.
+It subscribes separately to MetricKit and never uploads the local reporter's
+files, logs, hangs, metrics, history, account data, or mail drafts.
+
+Each submitted crash body has exactly:
+
+- `id`: random report UUID; `occurredAt`: diagnostic payload end time in ISO 8601,
+  capped at now; `installID`: random UUID stored in standard UserDefaults,
+  created per install and used only in crash reports to count affected installs.
+- `app`: `{version, build, bundleID}`.
+- `device`: `{model, os, osVersion, osBuild, arch, locale}`.
+- `exception`: `{type, code, signal, name, message, terminationReason}`;
+  missing values are explicit nulls. Names/messages are capped at 256/1024
+  characters, termination reason at 512. Objective-C name/message require
+  iOS 17/macOS 14 or later. Never put personal text into exception/trap messages.
+- `threads`: up to 64 `{crashed, frames}` entries, crashed thread first with
+  up to 256 frames, others up to 64. Each frame has `{image, uuid, offset,
+  inApp}` and optional locally resolved `{symbol, symbolOffset}`.
+- `images`: deduplicated binary descriptors `{name, uuid, inApp}`, **not photos**.
+
+Crash JSON is bounded to 500,000 bytes by dropping deep frames/other threads.
+System symbols are resolved on-device; application symbols require matching
+dSYMs at AirFeedback. A failed delivery waits on disk in the app's caches,
+with at most **20** queued reports; the next launch retries. The existing
+server crash-enabled setting is not modified (a disabled host responds 202,
+which drops the queued report). Release dSYM availability/upload was not changed
+or validated here; no archive, upload, distribution, or service mutation occurs.
+
+MetricKit delivers real diagnostics to a **later launch**, often only within a
+day, including crashes in the first session. Simulator supplies **no crash
+diagnostics**. A simulator form submission can check ingestion/error handling,
+not verified App Attest or real crash capture. No physical-device crash,
+verified production proof, backend ingestion, symbolication, or queue replay
+was exercised by the implementation's static checks.
+
+### Privacy manifest
+
+Main-app `PrivacyInfo.xcprivacy` adds `NSPrivacyCollectedDataTypeCustomerSupport`
+(User Content / Customer Support, manually submitted text),
+`NSPrivacyCollectedDataTypePhotosorVideos` (optional user-selected images), and
+`NSPrivacyCollectedDataTypeCrashData` (automatic diagnostics), each with
+`NSPrivacyCollectedDataTypeLinked = false`,
+`NSPrivacyCollectedDataTypeTracking = false`, and purpose
+`NSPrivacyCollectedDataTypePurposeAppFunctionality`. Existing UserDefaults
+reasons `CA92.1` and `1C8F.1` remain unchanged; `CA92.1` covers the new local
+crash/proof defaults. No tracking is added. This source declaration does not
+publish changes to the policy website or App Store Connect privacy labels;
+those remain separate owner-reviewed release work.
