@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.6] - 2026-11-14
+
+### Added
+
+- [Both] Choose a reading font and size for translation results, with a live preview
+- [Both] Import your own TTF or OTF fonts for translation results
+- [Both] Send feedback and up to four screenshots from Settings
+- [Both] Send crash diagnostics automatically on a later launch, without linking them to an account
+
+### Improved
+
+- [Both] Offer Email Support separately from in-app feedback
+- [Both] Mark automatically detected source languages with a clear label
+- [Both] Show the models that will actually run in the model picker, keeping premium selections for later
+- [Both] Open the paywall directly from the quick panel when a premium model is locked
+- [Both] Show every text selection action in the toolbar instead of hiding extras
+- [Both] Move Apple Translate's downloaded language count onto its model row
+- [iOS] Collapse and expand translation results in the system translation sheet
+- [Both] Copy translated text when replacing the original
+- [Mac] Keep chat input stable while composing with an input method
+- [Mac] Replace editable selected text with the translation from the selection popup
+- [Both] Refine language selection when the input mixes languages
+- [Both] Localize language selection shortcuts
+- [Both] Refine compact result action chips
+- [Both] Refine realtime captions and history
+- [Mac] Refine selection popup handling and resizing
+
+### Fixed
+
+- [Both] Switch free AI models directly without getting stuck in selection alerts
+- [Both] Run the free AI model when a lapsed membership still has premium models selected
+- [Both] Open new chats on a usable model when the saved chat model is premium
+- [Both] Retry from the no-model error card
+- [Both] Keep the cached model list when the server returns an empty catalog
+- [Both] Detect Japanese correctly when source and target languages are automatic
+- [Both] Convert between Traditional and Simplified Chinese locally with Apple Translate
+- [Both] Preserve clearly identifiable Chinese scripts during automatic language detection
+- [Mac] Keep notch captions visible while realtime translation is paused
+- [Mac] Avoid showing the selection trigger when dragging controls or windows
+- [Mac] Replace selected text only when the same selection is still focused
+- [Both] Restore caption popover linking
+- [Both] Validate configuration more reliably and handle network responses better
+
+### Changed
+
+- [Both] Show only annual and lifetime plans on the App Store paywall
+
 ## [5.7.5] - 2026-11-12
 
 ### Added

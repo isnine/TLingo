@@ -1,6 +1,160 @@
 {
   "releases": [
     {
+      "version": "5.7.6",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Choose a reading font and size for translation results, with a live preview"
+        },
+        {
+          "kind": "added",
+          "text": "Import your own TTF or OTF fonts for translation results"
+        },
+        {
+          "kind": "added",
+          "text": "Send feedback and up to four screenshots from Settings"
+        },
+        {
+          "kind": "added",
+          "text": "Send crash diagnostics automatically on a later launch, without linking them to an account"
+        },
+        {
+          "kind": "improved",
+          "text": "Offer Email Support separately from in-app feedback"
+        },
+        {
+          "kind": "improved",
+          "text": "Mark automatically detected source languages with a clear label"
+        },
+        {
+          "kind": "improved",
+          "text": "Show the models that will actually run in the model picker, keeping premium selections for later"
+        },
+        {
+          "kind": "improved",
+          "text": "Open the paywall directly from the quick panel when a premium model is locked"
+        },
+        {
+          "kind": "improved",
+          "text": "Show every text selection action in the toolbar instead of hiding extras"
+        },
+        {
+          "kind": "improved",
+          "text": "Move Apple Translate's downloaded language count onto its model row"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Collapse and expand translation results in the system translation sheet"
+        },
+        {
+          "kind": "improved",
+          "text": "Copy translated text when replacing the original"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep chat input stable while composing with an input method"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Replace editable selected text with the translation from the selection popup"
+        },
+        {
+          "kind": "improved",
+          "text": "Refine language selection when the input mixes languages"
+        },
+        {
+          "kind": "improved",
+          "text": "Localize language selection shortcuts"
+        },
+        {
+          "kind": "improved",
+          "text": "Refine compact result action chips"
+        },
+        {
+          "kind": "improved",
+          "text": "Refine realtime captions and history"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Refine selection popup handling and resizing"
+        },
+        {
+          "kind": "fixed",
+          "text": "Switch free AI models directly without getting stuck in selection alerts"
+        },
+        {
+          "kind": "fixed",
+          "text": "Run the free AI model when a lapsed membership still has premium models selected"
+        },
+        {
+          "kind": "fixed",
+          "text": "Open new chats on a usable model when the saved chat model is premium"
+        },
+        {
+          "kind": "fixed",
+          "text": "Retry from the no-model error card"
+        },
+        {
+          "kind": "fixed",
+          "text": "Keep the cached model list when the server returns an empty catalog"
+        },
+        {
+          "kind": "fixed",
+          "text": "Detect Japanese correctly when source and target languages are automatic"
+        },
+        {
+          "kind": "fixed",
+          "text": "Convert between Traditional and Simplified Chinese locally with Apple Translate"
+        },
+        {
+          "kind": "fixed",
+          "text": "Preserve clearly identifiable Chinese scripts during automatic language detection"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep notch captions visible while realtime translation is paused"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Avoid showing the selection trigger when dragging controls or windows"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Replace selected text only when the same selection is still focused"
+        },
+        {
+          "kind": "fixed",
+          "text": "Restore caption popover linking"
+        },
+        {
+          "kind": "fixed",
+          "text": "Validate configuration more reliably and handle network responses better"
+        }
+      ]
+    },
+    {
       "version": "5.7.5",
       "items": [
         {

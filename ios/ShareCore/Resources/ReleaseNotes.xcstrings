@@ -1501,6 +1501,131 @@
         }
       }
     },
+    "Choose a reading font and size for translation results, with a live preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر خط القراءة وحجمه لنتائج الترجمة مع معاينة مباشرة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg skrifttype og størrelse til oversættelsesresultater med direkte forhåndsvisning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle Schriftart und -größe für Übersetzungsergebnisse mit Live-Vorschau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a reading font and size for translation results, with a live preview"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige la fuente y el tamaño de lectura para los resultados de traducción con una vista previa en directo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez la police et la taille de lecture des résultats de traduction avec un aperçu en direct"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih font dan ukuran teks untuk hasil terjemahan dengan pratinjau langsung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli il carattere e la dimensione del testo per i risultati di traduzione, con anteprima in tempo reale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻訳結果のフォントとサイズをプレビューしながら選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 미리보기로 번역 결과의 글꼴과 크기 선택"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilih fon dan saiz teks untuk hasil terjemahan dengan pratonton langsung"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velg skrifttype og størrelse for oversettelsesresultater med direkte forhåndsvisning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een lettertype en grootte voor vertaalresultaten met een livevoorbeeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz czcionkę i jej rozmiar dla wyników tłumaczenia, korzystając z podglądu na żywo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha a fonte e o tamanho do texto dos resultados de tradução com uma prévia em tempo real"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Välj typsnitt och storlek för översättningsresultat med förhandsvisning i realtid"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canlı önizlemeyle çeviri sonuçları için okuma yazı tipini ve boyutunu seçin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇翻譯結果的閱讀字體和大小，並即時預覽"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择翻译结果的阅读字体和大小，并实时预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇翻譯結果的閱讀字型和大小，並即時預覽"
+          }
+        }
+      }
+    },
     "Clarified recognition model loading status and kept untranslated sessions readable in History." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2747,6 +2872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "明白"
+          }
+        }
+      }
+    },
+    "Import your own TTF or OTF fonts for translation results" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استورد خطوط TTF أو OTF الخاصة بك لنتائج الترجمة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importér dine egne TTF- eller OTF-skrifttyper til oversættelsesresultater"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importiere eigene TTF- oder OTF-Schriftarten für Übersetzungsergebnisse"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import your own TTF or OTF fonts for translation results"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa tus propias fuentes TTF u OTF para los resultados de traducción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importez vos propres polices TTF ou OTF pour les résultats de traduction"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impor font TTF atau OTF Anda sendiri untuk hasil terjemahan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa i tuoi caratteri TTF o OTF per i risultati di traduzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻訳結果に使用するTTFまたはOTFフォントをインポート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "번역 결과에 사용할 TTF 또는 OTF 글꼴 가져오기"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import fon TTF atau OTF anda sendiri untuk hasil terjemahan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer dine egne TTF- eller OTF-skrifttyper til oversettelsesresultater"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importeer je eigen TTF- of OTF-lettertypen voor vertaalresultaten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importuj własne czcionki TTF lub OTF do wyników tłumaczenia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importe suas próprias fontes TTF ou OTF para os resultados de tradução"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importera egna TTF- eller OTF-typsnitt för översättningsresultat"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çeviri sonuçları için kendi TTF veya OTF yazı tiplerinizi içe aktarın"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯入自己的 TTF 或 OTF 字體，用於翻譯結果"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入自己的 TTF 或 OTF 字体，用于翻译结果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯入自己的 TTF 或 OTF 字型，用於翻譯結果"
           }
         }
       }
