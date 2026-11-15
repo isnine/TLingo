@@ -35,6 +35,13 @@ headers = X-Timestamp, X-Signature
 
 模型 ID 含 `/` 时作为多级路径请求（如 `/api/qwen/qwen3.7-flash/chat/completions`），HMAC 对完整路径签名。
 
+AMD Token Lab 支持通过同一 HMAC 聊天接口按 ID 请求 `DeepSeek-V4-Flash`、
+`DeepSeek-V4.1-Flash`、`Gemma-4-31B-IT`、`Qwen3.8-27B`、`MiniCPM5-2B`、
+`MiniCPM-V-4.7-1B` 和 `MiniCPM-V-4.7-35B-A3B`；
+`/api/amd-tokenlab/chat/completions` 默认使用 `Qwen3.8-27B`。
+这些路由不增加 `/models` 展示项，不改变全局默认模型，不包含 Clef、d3 或 d3-flash。
+请求沿用 OpenAI 格式，支持普通和流式响应；`max_completion_tokens` 转为 `max_tokens`。
+
 ## 模型目录
 
 `/models` 返回的 `tags` 是有序字符串数组。可选 `tagStyles` 按标签文字匹配，每项可提供 `textColor` 和 `backgroundColor`（`#RRGGBB`）；缺省或无法解析时使用默认颜色。
