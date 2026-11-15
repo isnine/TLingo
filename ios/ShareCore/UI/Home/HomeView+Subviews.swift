@@ -11,6 +11,7 @@ import SwiftUI
 #if os(iOS)
     struct TranslationResultDetailView: View {
         @Environment(\.colorScheme) private var colorScheme
+        @ObservedObject private var fontLibrary = ResultFontLibrary.shared
 
         let sourceText: String
         let actionName: String?
@@ -112,11 +113,11 @@ import SwiftUI
                 ForEach(Array(result.sentencePairs.enumerated()), id: \.offset) { index, pair in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(pair.original)
-                            .font(.system(size: 14))
+                            .font(fontLibrary.style.font(size: 14))
                             .foregroundStyle(colors.textSecondary)
                             .textSelection(.enabled)
                         Text(pair.translation)
-                            .font(.system(size: 15, weight: .medium))
+                            .font(fontLibrary.style.font(size: 15, weight: .medium))
                             .foregroundStyle(colors.textPrimary)
                             .textSelection(.enabled)
                     }

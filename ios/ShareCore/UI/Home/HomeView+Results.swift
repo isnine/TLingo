@@ -1020,9 +1020,11 @@ extension HomeView {
                         textColor: colors.textPrimary,
                         secondaryTextColor: colors.textSecondary,
                         accentColor: colors.accent,
-                        animatesText: true
+                        animatesText: true,
+                        readingStyle: fontLibrary.style
                     )
                 )
+                .id(fontLibrary.style)
                 .contentDirectionAware(text)
             }
 
@@ -1034,11 +1036,11 @@ extension HomeView {
                     ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(pair.original)
-                                .font(.system(size: 14))
+                                .font(fontLibrary.style.font(size: 14))
                                 .foregroundColor(colors.textSecondary)
                                 .textSelection(.enabled)
                             Text(pair.translation)
-                                .font(.system(size: 14))
+                                .font(fontLibrary.style.font(size: 14))
                                 .foregroundColor(colors.textPrimary)
                                 .textSelection(.enabled)
                         }
@@ -1062,11 +1064,11 @@ extension HomeView {
                         ForEach(Array(result.sentencePairs.enumerated()), id: \.offset) { index, pair in
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(pair.original)
-                                    .font(.system(size: 14))
+                                    .font(fontLibrary.style.font(size: 14))
                                     .foregroundColor(colors.textSecondary)
                                     .textSelection(.enabled)
                                 Text(pair.translation)
-                                    .font(.system(size: 14))
+                                    .font(fontLibrary.style.font(size: 14))
                                     .foregroundColor(colors.textPrimary)
                                     .textSelection(.enabled)
                             }

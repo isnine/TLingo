@@ -17,7 +17,9 @@ public struct MarkdownContentView: View {
     private let lineLimit: Int?
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var parsed: ParsedMarkdown?
+    @ObservedObject private var fontLibrary = ResultFontLibrary.shared
 
     @ThemeColors private var colors: AppColorPalette
 
@@ -60,6 +62,8 @@ public struct MarkdownContentView: View {
     private struct ParseKey: Equatable {
         let text: String
         let colorScheme: ColorScheme
+        let readingStyle: ResultReadingStyle
+        let dynamicTypeSize: DynamicTypeSize
     }
 
     private struct ParsedMarkdown {
@@ -68,7 +72,12 @@ public struct MarkdownContentView: View {
     }
 
     private var parseKey: ParseKey {
-        ParseKey(text: text.isEmpty ? " " : text, colorScheme: colorScheme)
+        ParseKey(
+            text: text.isEmpty ? " " : text,
+            colorScheme: colorScheme,
+            readingStyle: readingStyle,
+            dynamicTypeSize: dynamicTypeSize
+        )
     }
 
     /// Parsing is async, so show styled plain text until it lands instead of an empty frame.
@@ -91,14 +100,21 @@ public struct MarkdownContentView: View {
     private var previewFont: Font {
         switch preset {
         case .compact:
-            .system(size: 15)
+            readingStyle.font(size: 15)
         case .detail:
-            .system(size: 16)
+            readingStyle.font(size: 16)
         case .prominent:
-            .system(size: 19)
+            readingStyle.font(size: 19)
         case let .fixed(font):
             font
         }
+    }
+
+    private var readingStyle: ResultReadingStyle {
+        if case .fixed = preset {
+            return ResultReadingStyle()
+        }
+        return fontLibrary.style
     }
 
     private var renderConfig: MarkdownRenderConfig {
@@ -107,7 +123,8 @@ public struct MarkdownContentView: View {
             textColor: resolvedTextColor,
             secondaryTextColor: colors.textSecondary,
             accentColor: colors.accent,
-            animatesText: false
+            animatesText: false,
+            readingStyle: readingStyle
         )
     }
 }

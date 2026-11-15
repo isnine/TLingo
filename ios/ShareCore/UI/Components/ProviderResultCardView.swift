@@ -111,6 +111,7 @@ public struct ProviderResultCardView: View {
 /// Displays the main content of a provider result based on its status
 struct ResultContentView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var fontLibrary = ResultFontLibrary.shared
     @State private var showingErrorDetails = false
 
     let run: HomeViewModel.ModelRunViewState
@@ -144,9 +145,11 @@ struct ResultContentView: View {
                         textColor: colors.textPrimary,
                         secondaryTextColor: colors.textSecondary,
                         accentColor: colors.accent,
-                        animatesText: false
+                        animatesText: false,
+                        readingStyle: fontLibrary.style
                     )
                 )
+                .id(fontLibrary.style)
                 .contentDirectionAware(text)
             }
 
@@ -692,6 +695,7 @@ struct SuggestedActionChips: View {
 /// Displays sentence pairs (original + translation)
 struct SentencePairsView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var fontLibrary = ResultFontLibrary.shared
 
     let pairs: [SentencePair]
 
@@ -702,12 +706,12 @@ struct SentencePairsView: View {
             ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(pair.original)
-                        .font(.system(size: 12))
+                        .font(fontLibrary.style.font(size: 12))
                         .foregroundColor(colors.textSecondary)
                         .textSelection(.enabled)
                         .contentDirectionAware(pair.original)
                     Text(pair.translation)
-                        .font(.system(size: 13))
+                        .font(fontLibrary.style.font(size: 13))
                         .foregroundColor(colors.textPrimary)
                         .textSelection(.enabled)
                         .contentDirectionAware(pair.translation)

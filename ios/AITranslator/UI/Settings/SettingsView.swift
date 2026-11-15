@@ -22,6 +22,7 @@ struct SettingsView: View {
     private enum Route: Hashable {
         case models
         case actions
+        case readingStyle
     }
 
     @Environment(\.colorScheme) private var colorScheme
@@ -101,6 +102,8 @@ struct SettingsView: View {
                     ModelsView(embedsInNavigationStack: false)
                 case .actions:
                     ActionsView(configurationStore: configStore, embedsInNavigationStack: false)
+                case .readingStyle:
+                    ResultReadingStyleView(embedsInNavigationStack: false)
                 }
             }
             #if os(iOS)
@@ -241,6 +244,10 @@ struct SettingsView: View {
     private var appearanceSection: some View {
         Section("Appearance") {
             accentThemeRow
+            navigationRow(value: .readingStyle) {
+                settingsLabel("Reading Style", systemImage: "textformat.size")
+            }
+            .accessibilityIdentifier("settings_reading_style_row")
         }
     }
 
@@ -280,13 +287,6 @@ struct SettingsView: View {
                 )
             }
             .accessibilityIdentifier("settings_email_support_row")
-
-            DisclosureGroup("Automatic Crash Reports") {
-                Text("After the system provides a crash report, the app automatically sends diagnostic information during a later launch to help investigate the problem. It includes the crash time, crash type, exception message, thread call information, app and system versions, device model, architecture, language and region, and a random identifier created per installation to count affected installations. Information that verifies the request comes from the app may also be included. Reports are not linked to your account.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            .accessibilityIdentifier("settings_crash_disclosure")
 
             #if os(iOS)
                 actionRow {

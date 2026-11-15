@@ -122,6 +122,7 @@ public struct MessageBubbleView: View {
 /// Streaming assistant text rendered on the conversation background.
 public struct StreamingBubbleView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var fontLibrary = ResultFontLibrary.shared
 
     let reasoningText: String
     let text: String
@@ -161,9 +162,11 @@ public struct StreamingBubbleView: View {
                         textColor: colors.textPrimary,
                         secondaryTextColor: colors.textSecondary,
                         accentColor: colors.accent,
-                        animatesText: true
+                        animatesText: true,
+                        readingStyle: fontLibrary.style
                     )
                 )
+                .id(fontLibrary.style)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .foregroundStyle(colors.textPrimary)
                 .contentDirectionAware(text)

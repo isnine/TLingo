@@ -4,6 +4,7 @@ struct StyledDiffView: View {
     let diff: TextDiffBuilder.Presentation
 
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var fontLibrary = ResultFontLibrary.shared
 
     @ThemeColors private var colors: AppColorPalette
 
@@ -54,7 +55,7 @@ struct StyledDiffView: View {
                     .foregroundColor(colors.textSecondary)
 
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(fontLibrary.style.font(size: 14))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: isRTL ? .trailing : .leading)
                     .contentDirectionAware(plainText)

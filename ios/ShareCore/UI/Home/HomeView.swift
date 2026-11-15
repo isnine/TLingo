@@ -38,6 +38,7 @@ public struct HomeView: View {
     #endif
     @StateObject var viewModel: HomeViewModel
     @ObservedObject var preferences = AppPreferences.shared
+    @ObservedObject var fontLibrary = ResultFontLibrary.shared
     @ObservedObject var entitlement = Entitlement.shared
     @State var hasTriggeredAutoRequest = false
     /// The waveform alone reads as voice input, so it carries a label until first use.

@@ -13,16 +13,17 @@ enum MarkdownTypography {
         textColor: Color,
         secondaryTextColor: Color,
         accentColor: Color,
-        animatesText: Bool
+        animatesText: Bool,
+        readingStyle: ResultReadingStyle = ResultReadingStyle()
     ) -> MarkdownRenderConfig {
         let metrics = Metrics(preset: preset)
-        let body = textFonts(size: metrics.bodySize, lineHeight: 1.4)
-        let quote = textFonts(size: metrics.quoteSize, lineHeight: 1.4)
-        let table = textFonts(size: metrics.tableSize, lineHeight: 1.35)
+        let body = textFonts(size: metrics.bodySize, lineHeight: 1.4, readingStyle: readingStyle)
+        let quote = textFonts(size: metrics.quoteSize, lineHeight: 1.4, readingStyle: readingStyle)
+        let table = textFonts(size: metrics.tableSize, lineHeight: 1.35, readingStyle: readingStyle)
 
         return .default
             .withShouldAnimateText(value: animatesText)
-            .withBlockSpacing(value: metrics.blockSpacing)
+            .withBlockSpacing(value: metrics.blockSpacing * readingStyle.scale)
             .withParagraphStyle(value: .init(
                 textFonts: body,
                 textColor: textColor
@@ -32,12 +33,12 @@ enum MarkdownTypography {
                 textColor: secondaryTextColor
             ))
             .withHeadingStyle(value: .init(
-                h1Font: headingFonts(size: metrics.h1Size),
-                h2Font: headingFonts(size: metrics.h2Size),
-                h3Font: headingFonts(size: metrics.h3Size),
-                h4Font: headingFonts(size: metrics.h4Size),
-                h5Font: headingFonts(size: metrics.h5Size, weight: .medium),
-                h6Font: headingFonts(size: metrics.h6Size, weight: .medium),
+                h1Font: headingFonts(size: metrics.h1Size, readingStyle: readingStyle),
+                h2Font: headingFonts(size: metrics.h2Size, readingStyle: readingStyle),
+                h3Font: headingFonts(size: metrics.h3Size, readingStyle: readingStyle),
+                h4Font: headingFonts(size: metrics.h4Size, readingStyle: readingStyle),
+                h5Font: headingFonts(size: metrics.h5Size, weight: .medium, readingStyle: readingStyle),
+                h6Font: headingFonts(size: metrics.h6Size, weight: .medium, readingStyle: readingStyle),
                 textColor: textColor
             ))
             .withOrderedListStyle(value: .init(
@@ -54,36 +55,40 @@ enum MarkdownTypography {
             ))
             .withInlineStyle(value: .init(
                 boldTextColor: textColor,
-                linkTextFont: font(size: metrics.bodySize, weight: .medium),
+                linkTextFont: font(size: metrics.bodySize, weight: .medium, readingStyle: readingStyle),
                 linkTextColor: accentColor,
-                codeTextFont: monospacedFont(size: metrics.codeSize),
+                codeTextFont: monospacedFont(size: metrics.codeSize * readingStyle.scale),
                 codeTextColor: textColor,
                 codeBackgroundColor: MarkdownRenderConfig.defaultInlineStyle.codeBackgroundColor,
                 codeUnderlineColor: accentColor
             ))
     }
 
-    private static func textFonts(size: CGFloat, lineHeight: CGFloat) -> TextFonts {
-        let normal = font(size: size)
+    private static func textFonts(size: CGFloat, lineHeight: CGFloat, readingStyle: ResultReadingStyle) -> TextFonts {
+        let normal = font(size: size, readingStyle: readingStyle)
 
         return TextFonts(
             normal: normal,
-            italic: font(size: size, italic: true),
-            bold: font(size: size, weight: .semibold),
-            boldItalic: font(size: size, weight: .semibold, italic: true),
+            italic: font(size: size, italic: true, readingStyle: readingStyle),
+            bold: font(size: size, weight: .semibold, readingStyle: readingStyle),
+            boldItalic: font(size: size, weight: .semibold, italic: true, readingStyle: readingStyle),
             preferredLetterSpacing: 0,
             preferredLineHeight: normal.pointSize * lineHeight
         )
     }
 
-    private static func headingFonts(size: CGFloat, weight: MDFont.Weight = .semibold) -> TextFonts {
-        let normal = font(size: size, weight: weight)
+    private static func headingFonts(
+        size: CGFloat,
+        weight: MDFont.Weight = .semibold,
+        readingStyle: ResultReadingStyle
+    ) -> TextFonts {
+        let normal = font(size: size, weight: weight, readingStyle: readingStyle)
 
         return TextFonts(
             normal: normal,
-            italic: font(size: size, weight: weight, italic: true),
-            bold: font(size: size, weight: .bold),
-            boldItalic: font(size: size, weight: .bold, italic: true),
+            italic: font(size: size, weight: weight, italic: true, readingStyle: readingStyle),
+            bold: font(size: size, weight: .bold, readingStyle: readingStyle),
+            boldItalic: font(size: size, weight: .bold, italic: true, readingStyle: readingStyle),
             preferredLetterSpacing: 0,
             preferredLineHeight: normal.pointSize * 1.3
         )
@@ -92,10 +97,20 @@ enum MarkdownTypography {
     private static func font(
         size: CGFloat,
         weight: MDFont.Weight = .regular,
-        italic: Bool = false
+        italic: Bool = false,
+        readingStyle: ResultReadingStyle
     ) -> MDFont {
+        let scaledSize = size * readingStyle.scale
         #if canImport(UIKit)
-            let base = MDFont.systemFont(ofSize: size, weight: weight)
+            var base = readingStyle.fontName.flatMap { MDFont(name: $0, size: scaledSize) }
+                ?? MDFont.systemFont(ofSize: scaledSize, weight: weight)
+            if readingStyle.fontName != nil, weight >= .semibold,
+               let descriptor = base.fontDescriptor.withSymbolicTraits(
+                   base.fontDescriptor.symbolicTraits.union(.traitBold)
+               )
+            {
+                base = MDFont(descriptor: descriptor, size: scaledSize)
+            }
             let scaled = UIFontMetrics(forTextStyle: .body).scaledFont(for: base)
             guard italic,
                   let descriptor = scaled.fontDescriptor.withSymbolicTraits(
@@ -106,7 +121,11 @@ enum MarkdownTypography {
             }
             return MDFont(descriptor: descriptor, size: scaled.pointSize)
         #elseif canImport(AppKit)
-            let base = MDFont.systemFont(ofSize: size, weight: weight)
+            var base = readingStyle.fontName.flatMap { MDFont(name: $0, size: scaledSize) }
+                ?? MDFont.systemFont(ofSize: scaledSize, weight: weight)
+            if readingStyle.fontName != nil, weight >= .semibold {
+                base = NSFontManager.shared.convert(base, toHaveTrait: .boldFontMask)
+            }
             guard italic else {
                 return base
             }
