@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Copy translated text when replacing the original
 - [Mac] Keep chat input stable while composing with an input method
 - [Mac] Replace editable selected text with the translation from the selection popup
+- [Both] Refine language selection when the input mixes languages
+- [Both] Localize language selection shortcuts
+- [Both] Refine compact result action chips
+- [Both] Refine realtime captions and history
+- [Mac] Refine selection popup handling and resizing
 
 ### Fixed
 
@@ -40,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Mac] Keep notch captions visible while realtime translation is paused
 - [Mac] Avoid showing the selection trigger when dragging controls or windows
 - [Mac] Replace selected text only when the same selection is still focused
+- [Both] Restore caption popover linking
+- [Both] Validate configuration more reliably and handle network responses better
 
 ### Changed
 
