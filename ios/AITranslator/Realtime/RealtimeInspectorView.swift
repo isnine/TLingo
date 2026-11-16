@@ -26,6 +26,9 @@
                 Section("Captions") {
                     RealtimeCaptionModePicker(store: store)
 
+                    RealtimeSentenceBySentenceToggle(store: store, preferences: preferences)
+                        .help("When off, the original text and the translation are shown in separate panes")
+
                     Button("Caption Appearance…", systemImage: "textformat.size") {
                         isCaptionAppearancePresented = true
                     }

@@ -2,6 +2,31 @@
     import AppKit
     import SwiftUI
 
+    /// Source captions above, translations below, each scrolling on its own.
+    public struct RealtimeSplitCaptionScrollView: View {
+        let lines: [RealtimeCaptionLine]
+        let style: RealtimeCaptionScrollView.Style
+
+        public init(lines: [RealtimeCaptionLine], style: RealtimeCaptionScrollView.Style) {
+            self.lines = lines
+            self.style = style
+        }
+
+        public var body: some View {
+            VStack(spacing: 0) {
+                RealtimeCaptionScrollView(lines: lines.filter { $0.kind == .source }, style: paneStyle)
+                Divider()
+                RealtimeCaptionScrollView(lines: lines.filter { $0.kind == .translation }, style: paneStyle)
+            }
+        }
+
+        private var paneStyle: RealtimeCaptionScrollView.Style {
+            var paneStyle = style
+            paneStyle.verticalPadding = style.verticalPadding / 2
+            return paneStyle
+        }
+    }
+
     /// Live caption list backed by a single TextKit 1 `NSTextView`.
     ///
     /// Mirrors the iOS `RealtimeCaptionTextView`: SwiftUI lazy stacks estimate row heights and

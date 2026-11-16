@@ -84,6 +84,7 @@ public final class AppPreferences: ObservableObject {
     @Published public private(set) var realtimeShowCaptions: Bool
     @Published public private(set) var realtimeDualInputHistoryRecordingEnabled: Bool
     @Published public private(set) var realtimeCaptionDisplayMode: RealtimeCaptionDisplayMode
+    @Published public private(set) var realtimeSentenceBySentenceEnabled: Bool
     @Published public private(set) var realtimeCaptionAppearance: RealtimeCaptionAppearance
     #if os(iOS)
         @Published public private(set) var realtimePictureInPictureEnabled: Bool
@@ -153,6 +154,7 @@ public final class AppPreferences: ObservableObject {
         )
         realtimeCaptionDisplayMode = defaults.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
             .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
+        realtimeSentenceBySentenceEnabled = AppPreferences.readRealtimeSentenceBySentenceEnabled(from: defaults)
         realtimeCaptionAppearance = AppPreferences.readRealtimeCaptionAppearance(from: defaults)
         #if os(iOS)
             realtimePictureInPictureEnabled = defaults
@@ -468,6 +470,14 @@ public final class AppPreferences: ObservableObject {
         )
     }
 
+    public func setRealtimeSentenceBySentenceEnabled(_ enabled: Bool) {
+        setPreference(
+            \.realtimeSentenceBySentenceEnabled,
+            to: enabled,
+            key: StorageKeys.realtimeSentenceBySentenceEnabled
+        )
+    }
+
     public func setRealtimeCaptionAppearance(_ appearance: RealtimeCaptionAppearance) {
         setEncodedPreference(\.realtimeCaptionAppearance, to: appearance, key: StorageKeys.realtimeCaptionAppearance)
     }
@@ -667,6 +677,10 @@ public final class AppPreferences: ObservableObject {
             d.string(forKey: StorageKeys.realtimeCaptionDisplayMode)
                 .flatMap(RealtimeCaptionDisplayMode.init(rawValue:)) ?? .bilingual
         )
+        sync(
+            \.realtimeSentenceBySentenceEnabled,
+            AppPreferences.readRealtimeSentenceBySentenceEnabled(from: d)
+        )
         sync(\.realtimeCaptionAppearance, AppPreferences.readRealtimeCaptionAppearance(from: d))
         #if os(iOS)
             sync(
@@ -865,6 +879,10 @@ public final class AppPreferences: ObservableObject {
         }
         return defaults.bool(forKey: StorageKeys.realtimeShowCaptions)
     }
+
+    private static func readRealtimeSentenceBySentenceEnabled(from defaults: UserDefaults) -> Bool {
+        defaults.object(forKey: StorageKeys.realtimeSentenceBySentenceEnabled) as? Bool ?? true
+    }
 }
 
 private enum StorageKeys {
@@ -912,6 +930,7 @@ private enum StorageKeys {
     static let realtimeShowCaptions = "realtime_show_captions"
     static let realtimeDualInputHistoryRecordingEnabled = "realtime_dual_input_history_recording_enabled"
     static let realtimeCaptionDisplayMode = "realtime_caption_display_mode"
+    static let realtimeSentenceBySentenceEnabled = "realtime_sentence_by_sentence_enabled"
     static let realtimeCaptionAppearance = "realtime_caption_appearance"
     #if os(iOS)
         static let realtimePictureInPictureEnabled = "realtime_picture_in_picture_enabled"

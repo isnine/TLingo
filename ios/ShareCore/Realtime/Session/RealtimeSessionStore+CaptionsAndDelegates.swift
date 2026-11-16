@@ -103,6 +103,11 @@ public extension RealtimeSessionStore {
         }
         return captionDisplayMode
     }
+
+    /// Source and translation each get their own pane instead of interleaving sentence by sentence.
+    var splitsSourceAndTranslationCaptions: Bool {
+        !preferences.realtimeSentenceBySentenceEnabled && resolvedCaptionDisplayMode == .bilingual
+    }
 }
 
 extension RealtimeSessionStore {

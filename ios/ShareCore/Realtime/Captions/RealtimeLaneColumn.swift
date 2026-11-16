@@ -29,7 +29,8 @@
                     store: store,
                     snapshot: snapshot,
                     colors: colors,
-                    phaseTitle: phaseTitle
+                    phaseTitle: phaseTitle,
+                    performsTranslation: configuration.translationProvider.performsTranslation
                 )
             }
             .frame(minWidth: minimumWidth, maxWidth: .infinity, maxHeight: .infinity)

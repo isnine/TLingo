@@ -20,3 +20,21 @@ public struct RealtimeCaptionModePicker: View {
         .accessibilityIdentifier("realtime_caption_mode_picker")
     }
 }
+
+public struct RealtimeSentenceBySentenceToggle: View {
+    @ObservedObject var store: RealtimeSessionStore
+    @ObservedObject var preferences: AppPreferences
+
+    public init(store: RealtimeSessionStore, preferences: AppPreferences) {
+        self.store = store
+        self.preferences = preferences
+    }
+
+    public var body: some View {
+        Toggle("Sentence by Sentence", isOn: Binding(
+            get: { preferences.realtimeSentenceBySentenceEnabled },
+            set: { preferences.setRealtimeSentenceBySentenceEnabled($0) }
+        ))
+        .disabled(store.resolvedCaptionDisplayMode != .bilingual)
+    }
+}

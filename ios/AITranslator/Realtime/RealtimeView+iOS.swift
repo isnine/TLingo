@@ -851,12 +851,32 @@
             // Extends under the navigation bar and control dock; their heights become content insets
             // so captions scroll beneath both while the latest line stays above the dock.
             return ZStack {
-                RealtimeCaptionTextView(
-                    lines: lines,
-                    style: captionStyle,
-                    bottomAccessoryHeight: controlDockHeight,
-                    revision: store.captionRevision
-                )
+                Group {
+                    if store.splitsSourceAndTranslationCaptions {
+                        VStack(spacing: 0) {
+                            RealtimeCaptionTextView(
+                                lines: lines.filter { $0.kind == .source },
+                                style: splitCaptionStyle,
+                                bottomAccessoryHeight: 0,
+                                revision: store.captionRevision
+                            )
+                            Divider()
+                            RealtimeCaptionTextView(
+                                lines: lines.filter { $0.kind == .translation },
+                                style: splitCaptionStyle,
+                                bottomAccessoryHeight: controlDockHeight,
+                                revision: store.captionRevision
+                            )
+                        }
+                    } else {
+                        RealtimeCaptionTextView(
+                            lines: lines,
+                            style: captionStyle,
+                            bottomAccessoryHeight: controlDockHeight,
+                            revision: store.captionRevision
+                        )
+                    }
+                }
                 .ignoresSafeArea(.container, edges: .vertical)
 
                 if lines.isEmpty {
@@ -955,12 +975,27 @@
             )
         }
 
+        private var splitCaptionStyle: RealtimeCaptionTextView.Style {
+            var style = RealtimeCaptionTextView.Style(
+                palette: colors,
+                appearance: preferences.realtimeCaptionAppearance,
+                mode: .bilingual
+            )
+            style.flowsIntoParagraphs = true
+            return style
+        }
+
         private var settingsSheet: some View {
             NavigationStack(path: $settingsPath) {
                 Form {
-                    Section("Captions") {
+                    Section {
                         RealtimeCaptionModePicker(store: store)
+                        RealtimeSentenceBySentenceToggle(store: store, preferences: preferences)
                         NavigationLink("Appearance", value: RealtimeSettingsRoute.captionAppearance)
+                    } header: {
+                        Text("Captions")
+                    } footer: {
+                        Text("When Sentence by Sentence is off, the original text is shown on top and the translation below.")
                     }
 
                     if RealtimeAudioInputSource.allCases.count > 1 {

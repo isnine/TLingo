@@ -135,7 +135,11 @@
 
         private var captionContent: some View {
             ZStack(alignment: .topLeading) {
-                RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
+                if store.splitsSourceAndTranslationCaptions {
+                    RealtimeSplitCaptionScrollView(lines: captionLines, style: captionStyle)
+                } else {
+                    RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
+                }
 
                 if shouldShowCaptionPlaceholder {
                     Text(RealtimeCaptionDisplay.emptyPlaceholderText(isRunning: store.isRunning))

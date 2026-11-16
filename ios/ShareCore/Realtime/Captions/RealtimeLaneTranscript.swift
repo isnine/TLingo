@@ -8,6 +8,7 @@
         let snapshot: RealtimeLaneSnapshot?
         let colors: AppColors.Palette
         let phaseTitle: String
+        let performsTranslation: Bool
 
         var body: some View {
             VStack(alignment: .leading, spacing: 0) {
@@ -20,7 +21,11 @@
                 }
 
                 ZStack {
-                    RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
+                    if splitsSourceAndTranslation {
+                        RealtimeSplitCaptionScrollView(lines: captionLines, style: captionStyle)
+                    } else {
+                        RealtimeCaptionScrollView(lines: captionLines, style: captionStyle)
+                    }
 
                     if captionLines.isEmpty {
                         ContentUnavailableView {
@@ -70,6 +75,12 @@
                 sourcePendingColor: appearance.sourceColor.map { NSColor($0.color).withAlphaComponent(0.85) },
                 translationPendingColor: appearance.translationColor.map { NSColor($0.color).withAlphaComponent(0.85) }
             )
+        }
+
+        private var splitsSourceAndTranslation: Bool {
+            performsTranslation
+                && !preferences.realtimeSentenceBySentenceEnabled
+                && store.captionDisplayMode == .bilingual
         }
 
         private var captionLines: [RealtimeCaptionLine] {

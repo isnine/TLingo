@@ -140822,6 +140822,62 @@
         }
       }
     },
+    "When off, the original text and the translation are shown in separate panes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When off, the original text and the translation are shown in separate panes"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉後，原文和譯文分別顯示在上下兩個區域"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭后，原文和译文分别显示在上下两个区域"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉後，原文和譯文分別顯示在上下兩個區域"
+          }
+        }
+      }
+    },
+    "When Sentence by Sentence is off, the original text is shown on top and the translation below." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When Sentence by Sentence is off, the original text is shown on top and the translation below."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉「逐句對照」後，原文顯示在上方，譯文顯示在下方。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭“逐句对照”后，原文显示在上方，译文显示在下方。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉「逐句對照」後，原文顯示在上方，譯文顯示在下方。"
+          }
+        }
+      }
+    },
     "When you tap Send, your feedback, selected images, app version and build, device model, system version, and language and region are sent. Information that verifies the request comes from the app may also be included. Translation text, translation history, account information, local logs, and email drafts are not attached automatically. Avoid including passwords or other sensitive information in your feedback or images." : {
       "extractionState" : "manual",
       "localizations" : {
