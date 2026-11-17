@@ -46,13 +46,12 @@ AMD Token Lab 支持通过同一 HMAC 聊天接口按 ID 请求 `DeepSeek-V4-Fla
 
 `/models` 返回的 `tags` 是有序字符串数组。可选 `tagStyles` 按标签文字匹配，每项可提供 `textColor` 和 `backgroundColor`（`#RRGGBB`）；缺省或无法解析时使用默认颜色。
 
-`gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash` 和 `gemini-4-carbon` 限时免费，带 `Limited Time Free` 标签；不改变免费默认模型或用户已保存的选择。
-会员目录包含 `deepseek-v4-pro`（DeepSeek-V4-Pro），其 `isPremium: true`、`supportsVision: false`；
-沿用聊天请求及结构化输出契约，不支持图片输入。`deepseek-flash` 继续保留且支持图片。
-目录包含 `gemini-4-carbon`（Gemini 4 Carbon）和 `gemini-4-hydrogen`（Gemini 4 Hydrogen），其 `isPremium: false`、`supportsVision: true`；
-沿用聊天、流式及 JSON Schema 输出契约。Argon、Carbon 和 Hydrogen 固定思考级别 `low`，不能保证零思考 token。
-免费目录为 `gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash`、`gemini-4-carbon`（均限时）和默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-hydrogen`、`gemini-4-argon`、`gemini-3.8-flash`、
-`gpt-5-mini`、`gemini-4-carbon`、`gpt-5.6`、`deepseek-flash`、`deepseek-v4-pro`、`qwen/qwen3.7-flash`。
+`gemini-4-hydrogen` 和 `gemini-3.8-flash` 对用户免费；Hydrogen 带 `LATEST` 标签。不改变免费默认模型或用户已保存的选择。
+`gemini-4-argon` 和 `gemini-4-carbon` 是会员模型，`isPremium: true`、`supportsVision: true`。
+`deepseek-v4-pro` 与 `qwen/qwen3.7-flash` 从目录移除；路由和会员校验保留，已保存的选择仍可请求。
+`deepseek-flash` 继续保留且支持图片。Argon、Carbon 和 Hydrogen 固定思考级别 `low`，不能保证零思考 token。
+免费目录为 `gemini-4-hydrogen`、`gemini-3.8-flash` 和默认模型 `gpt-5-mini`；完整目录顺序为 `gemini-4-hydrogen`、`gemini-3.8-flash`、
+`gpt-5-mini`、`gemini-4-argon`、`gemini-4-carbon`、`gpt-5.6`、`deepseek-flash`。
 `gpt-oss-120b`、`z-ai/glm-5.3-flash`、`gemini-3.1-pro-preview` 从目录移除；不改模型路由及
 会员校验，目录刷新前的已保存选择仍可请求，但这些旧选择不保证关闭思考。
 `deepseek-flash` 展示为 `DeepSeek-V4.1-Flash-1017` 并带 `LATEST`。

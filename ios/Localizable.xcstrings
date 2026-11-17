@@ -45981,126 +45981,126 @@
         }
       }
     },
-    "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview" : {
+    "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, DeepSeek-V4-Pro, Qwen 3.7 Flash, GLM 5.3 Flash, Gemini 3.8 Flash, Gemini 3.1 Pro Preview"
+            "value" : "GPT-5.6, DeepSeek-V4.1-Flash-1017, Gemini 4 Argon, Gemini 4 Carbon"
           }
         }
       }
