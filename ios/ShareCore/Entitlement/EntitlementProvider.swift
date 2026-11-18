@@ -33,7 +33,6 @@ public final class Entitlement: ObservableObject {
         publishState(from: store)
         logger.info("init – initial isPro=\(self.isPro, privacy: .public)")
         Publishers.CombineLatest3(store.$isPremium, store.$activePremiumProductID, store.$premiumSourceDisplayName)
-            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.publishState(from: store)
             }

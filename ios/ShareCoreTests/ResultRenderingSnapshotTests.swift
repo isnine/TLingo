@@ -12,16 +12,24 @@ import XCTest
 @MainActor
 final class ResultRenderingSnapshotTests: XCTestCase {
     private var originalAccentTheme: AccentTheme?
+    private var originalReadingStyle: ResultReadingStyle?
 
     override func setUp() {
         super.setUp()
         originalAccentTheme = AppPreferences.shared.accentTheme
+        originalReadingStyle = ResultFontLibrary.shared.style
         AppPreferences.shared.setAccentTheme(.default)
+        ResultFontLibrary.shared.style = ResultReadingStyle()
     }
 
     override func tearDown() {
         if let originalAccentTheme {
             AppPreferences.shared.setAccentTheme(originalAccentTheme)
+        }
+        if let originalReadingStyle {
+            ResultFontLibrary.shared.style = originalReadingStyle
+        } else {
+            ResultFontLibrary.shared.reloadStyleFromDefaults()
         }
         super.tearDown()
     }

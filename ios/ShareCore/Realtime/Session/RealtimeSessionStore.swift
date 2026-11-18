@@ -228,6 +228,7 @@ public final class RealtimeSessionStore: ObservableObject {
         /// model; the host then owns the transcript and history instead of the extension.
         var usesHostRecognitionRelay = false
         var hostRecognitionRelayTask: Task<Void, Never>?
+        var hostRecognitionRelayDrainTask: Task<Void, Never>?
         var hostRecognitionRelayReader: RealtimeAudioRelayReader?
         var isDrainingHostRecognitionRelay = false
         nonisolated static let hostRecognitionRelayPollInterval: Duration = .milliseconds(50)
@@ -429,7 +430,7 @@ public final class RealtimeSessionStore: ObservableObject {
         ) -> Bool {
             guard physicalMemory < 24 * 1024 * 1024 * 1024 else { return false }
             return configurations.contains { $0.recognitionModel.runtime == .mossOffline } &&
-                configurations.contains { $0.recognitionModel.runtime == .fluidAudio }
+                configurations.contains { $0.recognitionModel.runtime.isLocalStreamingRuntime }
         }
 
         public func setImportedAudioURL(_ url: URL?) {
@@ -873,6 +874,7 @@ public final class RealtimeSessionStore: ObservableObject {
         secondaryAudioHistoryRecorder.finish()
         statusText = String(localized: "Saving realtime history")
         saveRealtimeHistoryIfPossible(generateTitle: true)
+        TranslationHistoryService.shared.activeRealtimeRequestID = nil
         publishSavedHistoryNoticeIfNeeded()
         isRunning = false
         isPaused = false
@@ -1030,6 +1032,7 @@ public final class RealtimeSessionStore: ObservableObject {
             secondaryAudioSource = nil
         #endif
         resetRealtimeHistoryAutosave()
+        TranslationHistoryService.shared.activeRealtimeRequestID = nil
         #if os(iOS)
             latestBroadcastRealtimeHistorySession = nil
         #endif
@@ -1048,6 +1051,10 @@ public final class RealtimeSessionStore: ObservableObject {
     public func clearTranscriptDisplay() {
         captionClearAnchor = RealtimeCaptionDisplayClearAnchor(lines: resolvedCaptionLines())
         assignIfChanged(&captionLines, [])
+        #if os(macOS)
+            realtimePipelineCoordinator.clearCaptionDisplay()
+            laneSnapshots = realtimePipelineCoordinator.snapshots
+        #endif
     }
 
     public func endSession() async {

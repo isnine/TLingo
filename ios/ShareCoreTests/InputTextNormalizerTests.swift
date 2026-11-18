@@ -40,13 +40,17 @@ struct InputTextNormalizerTests {
     @Test("Keeps single markdown heading and list text")
     func keepsMarkdown() {
         #expect(InputTextNormalizer.normalize("# Title") == "# Title")
+        #expect(InputTextNormalizer.normalize("## Section\n### Details") == "## Section\n### Details")
+        #expect(InputTextNormalizer.normalize("/* unclosed start") == "/* unclosed start")
         #expect(InputTextNormalizer.normalize("* one\n* two") == "* one\n* two")
     }
 
     @Test("Merges PDF hard wraps and hyphenation but keeps paragraphs")
     func mergesHardWraps() {
         let text = "The quick brown fox jumps over the lazy dog and keeps infor-\nmation in\nmind.\n\nNew paragraph."
-        #expect(InputTextNormalizer.normalize(text) == "The quick brown fox jumps over the lazy dog and keeps information in mind.\n\nNew paragraph.")
+        let expected = "The quick brown fox jumps over the lazy dog "
+            + "and keeps information in mind.\n\nNew paragraph."
+        #expect(InputTextNormalizer.normalize(text) == expected)
         #expect(InputTextNormalizer.normalize("First line.\nsecond line") == "First line.\nsecond line")
     }
 

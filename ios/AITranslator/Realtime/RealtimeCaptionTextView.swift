@@ -79,6 +79,7 @@
         struct LineLayout {
             var separator: String
             var attributes: [NSAttributedString.Key: Any]
+            var paragraphLength: Int = 0
         }
 
         static let horizontalPadding: CGFloat = 28
@@ -121,20 +122,38 @@
         static func layouts(for lines: [RealtimeCaptionLine], style: Style) -> [LineLayout] {
             let emphasisStart = emphasisStart(in: lines)
             var paragraphLength = 0
-            return lines.enumerated().map { index, line in
-                var separator = "\n"
-                if index > 0 {
-                    let previous = lines[index - 1]
-                    if style.flowsIntoParagraphs, previous.kind == line.kind, paragraphLength < paragraphCharacterLimit {
-                        separator = previous.text.last.map(isCJK) == true ? "" : " "
-                    }
-                }
-                paragraphLength = separator == "\n" ? line.text.count : paragraphLength + line.text.count
-                return LineLayout(
-                    separator: separator,
-                    attributes: attributes(for: line, isEmphasized: index >= emphasisStart, style: style)
+            return lines.indices.map { index in
+                layout(
+                    at: index,
+                    in: lines,
+                    style: style,
+                    emphasisStart: emphasisStart,
+                    paragraphLength: &paragraphLength
                 )
             }
+        }
+
+        static func layout(
+            at index: Int,
+            in lines: [RealtimeCaptionLine],
+            style: Style,
+            emphasisStart: Int,
+            paragraphLength: inout Int
+        ) -> LineLayout {
+            let line = lines[index]
+            var separator = "\n"
+            if index > 0 {
+                let previous = lines[index - 1]
+                if style.flowsIntoParagraphs, previous.kind == line.kind, paragraphLength < paragraphCharacterLimit {
+                    separator = previous.text.last.map(isCJK) == true ? "" : " "
+                }
+            }
+            paragraphLength = separator == "\n" ? line.text.count : paragraphLength + line.text.count
+            return LineLayout(
+                separator: separator,
+                attributes: attributes(for: line, isEmphasized: index >= emphasisStart, style: style),
+                paragraphLength: paragraphLength
+            )
         }
 
         private static func attributes(
@@ -205,6 +224,7 @@
             private static let maxBottomSlack: CGFloat = 120
 
             private var renderedLines: [RealtimeCaptionLine] = []
+            private var renderedLayouts: [LineLayout] = []
             private var lineRanges: [NSRange] = []
             private var style: Style?
             private var bottomAccessoryHeight: CGFloat = 0
@@ -358,17 +378,30 @@
                 let replaceLocation = start == 0 ? 0 : NSMaxRange(lineRanges[start - 1])
                 let replaceRange = NSRange(location: replaceLocation, length: textStorage.length - replaceLocation)
 
-                let layouts = RealtimeCaptionTextView.layouts(for: lines, style: style)
+                let emphasisStart = RealtimeCaptionTextView.emphasisStart(in: lines)
+                var nextLayouts = Array(renderedLayouts.prefix(start))
+                var paragraphLength = start > 0 && start - 1 < nextLayouts.count
+                    ? nextLayouts[start - 1].paragraphLength
+                    : 0
+                nextLayouts.reserveCapacity(lines.count)
                 let tail = NSMutableAttributedString()
                 var ranges = Array(lineRanges.prefix(start))
                 var cursor = replaceLocation
                 for index in start ..< lines.count {
+                    let lineLayout = RealtimeCaptionTextView.layout(
+                        at: index,
+                        in: lines,
+                        style: style,
+                        emphasisStart: emphasisStart,
+                        paragraphLength: &paragraphLength
+                    )
+                    nextLayouts.append(lineLayout)
                     if index > 0 {
-                        let separator = NSAttributedString(string: layouts[index].separator, attributes: layouts[index].attributes)
+                        let separator = NSAttributedString(string: lineLayout.separator, attributes: lineLayout.attributes)
                         tail.append(separator)
                         cursor += separator.length
                     }
-                    let text = NSAttributedString(string: lines[index].text, attributes: layouts[index].attributes)
+                    let text = NSAttributedString(string: lines[index].text, attributes: lineLayout.attributes)
                     tail.append(text)
                     ranges.append(NSRange(location: cursor, length: text.length))
                     cursor += text.length
@@ -384,6 +417,7 @@
                 }
 
                 renderedLines = lines
+                renderedLayouts = nextLayouts
                 lineRanges = ranges
             }
 

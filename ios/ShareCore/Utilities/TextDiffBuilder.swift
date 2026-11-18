@@ -30,6 +30,10 @@ public enum TextDiffBuilder {
             return nil
         }
 
+        if originalTokens.count + revisedTokens.count > maxTokenDiffCount {
+            return buildLineFallback(original: original, revised: revised)
+        }
+
         let difference = revisedTokens.difference(from: originalTokens)
         var removedOffsets = IndexSet()
         var insertedOffsets = IndexSet()
@@ -223,11 +227,97 @@ public enum TextDiffBuilder {
         return result
     }
 
+    private static let maxTokenDiffCount = 3000
     private static let maxCharacterRefinementLength = 2000
     /// Shared fragments shorter than this stay inside the change, otherwise unrelated words
     /// would be split by coincidental letter matches ("the" vs "then" is fine, "cat" vs "dog" is not).
     private static let minInteriorEqualLength = 3
     private static let minEdgeEqualLength = 2
+
+    private static func buildLineFallback(original: String, revised: String) -> Presentation {
+        let originalLines = original.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        let revisedLines = revised.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard originalLines.count + revisedLines.count <= maxTokenDiffCount else {
+            return Presentation(
+                originalSegments: original.isEmpty ? [] : [Segment(kind: .removed, text: original)],
+                revisedSegments: revised.isEmpty ? [] : [Segment(kind: .added, text: revised)],
+                hasRemovals: !original.isEmpty,
+                hasAdditions: !revised.isEmpty
+            )
+        }
+
+        let difference = revisedLines.difference(from: originalLines)
+        var removedOffsets = IndexSet()
+        var insertedOffsets = IndexSet()
+        for change in difference {
+            switch change {
+            case let .remove(offset, _, _): removedOffsets.insert(offset)
+            case let .insert(offset, _, _): insertedOffsets.insert(offset)
+            }
+        }
+
+        var segments: [Segment] = []
+        var originalIndex = 0
+        var revisedIndex = 0
+        func appendLine(_ line: String, kind: Segment.Kind, hasMoreLines: Bool) {
+            let text = hasMoreLines ? line + "\n" : line
+            if let lastIndex = segments.indices.last, segments[lastIndex].kind == kind {
+                segments[lastIndex].text.append(text)
+            } else {
+                segments.append(Segment(kind: kind, text: text))
+            }
+        }
+
+        while originalIndex < originalLines.count || revisedIndex < revisedLines.count {
+            if originalIndex < originalLines.count, removedOffsets.contains(originalIndex) {
+                appendLine(
+                    originalLines[originalIndex],
+                    kind: .removed,
+                    hasMoreLines: originalIndex + 1 < originalLines.count
+                )
+                originalIndex += 1
+            } else if revisedIndex < revisedLines.count, insertedOffsets.contains(revisedIndex) {
+                appendLine(
+                    revisedLines[revisedIndex],
+                    kind: .added,
+                    hasMoreLines: revisedIndex + 1 < revisedLines.count
+                )
+                revisedIndex += 1
+            } else {
+                appendLine(
+                    originalLines[originalIndex],
+                    kind: .equal,
+                    hasMoreLines: originalIndex + 1 < originalLines.count
+                )
+                originalIndex += 1
+                revisedIndex += 1
+            }
+        }
+
+        var originalSegments: [Segment] = []
+        var revisedSegments: [Segment] = []
+        var hasRemovals = false
+        var hasAdditions = false
+        for segment in segments {
+            switch segment.kind {
+            case .equal:
+                originalSegments.append(segment)
+                revisedSegments.append(segment)
+            case .added:
+                revisedSegments.append(segment)
+                hasAdditions = true
+            case .removed:
+                originalSegments.append(segment)
+                hasRemovals = true
+            }
+        }
+        return Presentation(
+            originalSegments: originalSegments,
+            revisedSegments: revisedSegments,
+            hasRemovals: hasRemovals,
+            hasAdditions: hasAdditions
+        )
+    }
 
     private static func diffByCharacter(removed: String, added: String) -> [(text: String, kind: Segment.Kind)] {
         guard !removed.isEmpty, !added.isEmpty,

@@ -34,4 +34,13 @@ struct OCRTextRecognizerTests {
         let indented = [line("End of one.", top: 0.9), line("Start of two", top: 0.84, minX: 0.2)]
         #expect(OCRTextRecognizer.mergeLines(indented) == "End of one.\nStart of two")
     }
+
+    @Test("Orders fragments on the same visual line from left to right")
+    func ordersSameRowFragmentsLeftToRight() {
+        let sameRow = [
+            line("world", top: 0.9, minX: 0.5, maxX: 0.9),
+            line("Hello", top: 0.895, minX: 0.1, maxX: 0.45),
+        ]
+        #expect(OCRTextRecognizer.mergeLines(sameRow) == "Hello world")
+    }
 }

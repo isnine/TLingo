@@ -80,9 +80,13 @@
         }
 
         private func latencyLabel(_ latency: RealtimeLaneLatency) -> String {
-            """
+            guard configuration.translationProvider.performsTranslation else {
+                return "\(String(localized: "Recognition")) \(latency.recognitionMilliseconds) ms"
+            }
+            let translationText = latency.translationMilliseconds.map(String.init) ?? "—"
+            return """
             \(String(localized: "Recognition")) \(latency.recognitionMilliseconds) · \
-            \(String(localized: "Translation")) \(latency.translationMilliseconds) · \
+            \(String(localized: "Translation")) \(translationText) · \
             \(String(localized: "Total")) \(latency.totalMilliseconds) ms
             """
         }

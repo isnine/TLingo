@@ -31,7 +31,7 @@
             }
             let fluidModelCount = Set(configurations.compactMap { configuration in
                 let model = configuration.recognitionModel
-                return model.runtime == .fluidAudio || model.runtime == .mlxStreaming ? model.id : nil
+                return model.runtime.isLocalStreamingRuntime ? model.id : nil
             }).count
             let maximumFluidModelCount: Int
             if physicalMemory < 24 * 1024 * 1024 * 1024 {

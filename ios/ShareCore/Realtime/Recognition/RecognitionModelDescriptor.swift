@@ -179,6 +179,10 @@ public struct RecognitionModelDescriptor: Identifiable, Equatable, Sendable {
 }
 
 public extension RecognitionModelRuntime {
+    var isLocalStreamingRuntime: Bool {
+        self == .fluidAudio || self == .mlxStreaming
+    }
+
     var title: String {
         switch self {
         case .appleSpeech:

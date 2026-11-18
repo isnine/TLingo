@@ -103,6 +103,7 @@ public enum RealtimeHistoryAudioTimeline {
 
     /// Loudness envelope of the whole recording timeline, normalized to 0...1. Each bucket covers
     /// `duration / bucketCount` seconds; gaps between audio segments stay silent.
+    @concurrent
     public static func waveformLevels(
         for recording: RealtimeHistoryAudioRecording,
         bucketCount: Int

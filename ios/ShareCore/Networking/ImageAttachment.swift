@@ -93,26 +93,51 @@ public struct ImageAttachment: Identifiable, Sendable {
     #if canImport(UIKit)
         /// Creates an ImageAttachment from a UIImage, resizing and compressing automatically.
         public static func from(uiImage: UIImage) -> ImageAttachment? {
-            guard let cgImage = uiImage.cgImage else {
+            guard let sourceCGImage = uiImage.cgImage else {
                 return nil
             }
 
-            let originalWidth = CGFloat(cgImage.width)
-            let originalHeight = CGFloat(cgImage.height)
-            let originalSize = CGSize(width: originalWidth, height: originalHeight)
+            let orientedImage: UIImage
+            let originalSize: CGSize
+            if uiImage.imageOrientation != .up {
+                let pixelSize = CGSize(
+                    width: uiImage.size.width * uiImage.scale,
+                    height: uiImage.size.height * uiImage.scale
+                )
+                originalSize = pixelSize
+                let targetSize = scaledSize(for: pixelSize)
+                let format = UIGraphicsImageRendererFormat()
+                format.scale = 1
+                format.opaque = true
+                let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+                orientedImage = renderer.image { _ in
+                    UIColor.white.setFill()
+                    UIRectFill(CGRect(origin: .zero, size: targetSize))
+                    uiImage.draw(in: CGRect(origin: .zero, size: targetSize))
+                }
+            } else {
+                originalSize = CGSize(width: sourceCGImage.width, height: sourceCGImage.height)
+                let resizedImage = resizeIfNeeded(
+                    cgImage: sourceCGImage,
+                    originalWidth: originalSize.width,
+                    originalHeight: originalSize.height
+                )
+                orientedImage = UIImage(cgImage: resizedImage)
+            }
 
-            let resizedImage = resizeIfNeeded(
-                cgImage: cgImage,
-                originalWidth: originalWidth,
-                originalHeight: originalHeight
-            )
-
-            let uiResized = UIImage(cgImage: resizedImage)
-            guard let jpegData = uiResized.jpegData(compressionQuality: compressionQuality) else {
+            guard let jpegData = orientedImage.jpegData(compressionQuality: compressionQuality) else {
                 return nil
             }
 
             return ImageAttachment(imageData: jpegData, originalSize: originalSize)
+        }
+
+        private static func scaledSize(for size: CGSize) -> CGSize {
+            guard size.width > maxDimension || size.height > maxDimension else {
+                return size
+            }
+            let scale = min(maxDimension / size.width, maxDimension / size.height)
+            return CGSize(width: floor(size.width * scale), height: floor(size.height * scale))
         }
 
         /// Create a SwiftUI Image for thumbnail preview
@@ -147,11 +172,14 @@ public struct ImageAttachment: Identifiable, Sendable {
         let newWidth = Int(originalWidth * scale)
         let newHeight = Int(originalHeight * scale)
 
-        logger.debug("Resizing image from \(Int(originalWidth), privacy: .public)x\(Int(originalHeight), privacy: .public) to \(newWidth, privacy: .public)x\(newHeight, privacy: .public)")
+        logger.debug(
+            "Resizing image from \(Int(originalWidth), privacy: .public)x\(Int(originalHeight), privacy: .public) to \(newWidth, privacy: .public)x\(newHeight, privacy: .public)"
+        )
 
-        // Use a safe bitmapInfo that works for all source images (premultiplied alpha with skip)
-        let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-        let safeBitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue)
+        let colorSpace = rgbColorSpace(for: cgImage)
+        let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+        let byteOrder = CGBitmapInfo.byteOrder32Big.rawValue
+        let safeBitmapInfo = CGBitmapInfo(rawValue: alphaInfo | byteOrder)
 
         guard
             let context = CGContext(
@@ -174,12 +202,19 @@ public struct ImageAttachment: Identifiable, Sendable {
         return context.makeImage() ?? cgImage
     }
 
+    private static func rgbColorSpace(for cgImage: CGImage) -> CGColorSpace {
+        if let sourceSpace = cgImage.colorSpace, sourceSpace.model == .rgb {
+            return sourceSpace
+        }
+        return CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+    }
+
     /// Strip alpha channel from CGImage by drawing onto an opaque white background.
     /// This is required before JPEG conversion since JPEG doesn't support transparency.
     private static func stripAlpha(from cgImage: CGImage) -> CGImage? {
         let width = cgImage.width
         let height = cgImage.height
-        let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let colorSpace = rgbColorSpace(for: cgImage)
         // noneSkipLast = opaque context (no alpha), compatible with JPEG
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue)
 

@@ -103,7 +103,13 @@ public final class FoundationModelService: Sendable {
     }
 
     public static func availabilityDescription(for model: ModelConfig) -> String {
-        let availability = availability(for: model)
+        availabilityDescription(for: model, availability: availability(for: model))
+    }
+
+    public static func availabilityDescription(
+        for model: ModelConfig,
+        availability: FoundationModelAvailability
+    ) -> String {
         if model.isPrivateCloudModel, availability.isAvailable {
             return String(localized: "Private Cloud Compute")
         }

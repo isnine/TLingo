@@ -13,6 +13,8 @@ public final class MicrosoftTranslateService: Sendable {
         let mapped: String = switch code {
         case "en-GB", "en-US": "en"
         case "pt-BR": "pt"
+        case "zh", "zh-CN", "zh-SG": "zh-Hans"
+        case "zh-TW", "zh-HK", "zh-MO": "zh-Hant"
         case "sr": "sr-Cyrl"
         case "mn": "mn-Cyrl"
         case "ckb": "ku"

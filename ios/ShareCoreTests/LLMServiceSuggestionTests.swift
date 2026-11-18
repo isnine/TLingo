@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import Testing
 
 @testable import ShareCore
@@ -295,6 +296,97 @@ struct LLMServiceSuggestionTests {
         #expect(response.content == text.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
+    @Test("SSE stream preserves JSON containing U+2028 and U+2029 line separators")
+    func sseStreamPreservesUnicodeLineSeparators() async throws {
+        let capture = ConversationResponseCapture()
+        let session = URLSession(configuration: MockLLMURLProtocol.configuration)
+        MockLLMURLProtocol.reset()
+        MockLLMURLProtocol.responseBody = try Self.sseResponse([
+            ["choices": [["delta": ["content": "First\u{2028}Second\u{2029}End"]]]],
+        ])
+        MockLLMURLProtocol.responseContentType = "text/event-stream"
+
+        let service = LLMService(urlSession: session)
+        let response = try await service.sendContinuation(
+            messages: [.init(role: "user", content: "Reply.")],
+            model: Self.model,
+            partialHandler: { capture.values.append($0) }
+        )
+
+        #expect(response.content == "First\u{2028}Second\u{2029}End")
+    }
+
+    @Test("Unwraps think tags and code fences from structured JSON responses")
+    func unwrapsThinkAndCodeFencesForStructuredJSON() async throws {
+        let session = URLSession(configuration: MockLLMURLProtocol.configuration)
+        MockLLMURLProtocol.reset()
+        MockLLMURLProtocol.responseBody = try Self.sseResponse([
+            [
+                "choices": [[
+                    "delta": [
+                        "content": "<think>reasoning</think>\n```json\n"
+                            + "{\"revised_text\":\"Fixed.\",\"additional_text\":\"Note.\"}\n```",
+                    ],
+                    "finish_reason": "stop",
+                ]],
+            ],
+        ])
+        MockLLMURLProtocol.responseContentType = "text/event-stream"
+
+        let service = LLMService(urlSession: session)
+        let action = ActionConfig(
+            name: "Grammar",
+            prompt: "Fix: {{text}}",
+            outputType: .grammarCheck,
+            category: .general
+        )
+        let results = await service.perform(
+            text: "Fix",
+            with: action,
+            models: [Self.model],
+            targetLanguageDescriptor: "English",
+            sourceLanguageDescriptor: "English",
+            partialHandler: { _, _ in }
+        )
+        let result = try #require(results.first)
+        guard case let .success(text) = result.response else {
+            Issue.record("Expected parsed structured JSON response")
+            return
+        }
+        #expect(text == "Fixed.\n\nNote.")
+        #expect(result.diffSource == "Fixed.")
+    }
+
+    @Test("Fails truncated structured JSON stream instead of returning raw JSON as success")
+    func failsTruncatedStructuredJSONStream() async throws {
+        let session = URLSession(configuration: MockLLMURLProtocol.configuration)
+        MockLLMURLProtocol.reset()
+        MockLLMURLProtocol.responseBody = try Self.sseResponse([
+            ["choices": [["delta": ["content": "{\"revised_text\":\"Partial"]]]],
+        ], appendDone: false)
+        MockLLMURLProtocol.responseContentType = "text/event-stream"
+
+        let service = LLMService(urlSession: session)
+        let action = ActionConfig(
+            name: "Grammar",
+            prompt: "Fix: {{text}}",
+            outputType: .grammarCheck,
+            category: .general
+        )
+        let results = await service.perform(
+            text: "Partial",
+            with: action,
+            models: [Self.model],
+            targetLanguageDescriptor: "English",
+            sourceLanguageDescriptor: "English",
+            partialHandler: { _, _ in }
+        )
+        let result = try #require(results.first)
+        if case .success = result.response {
+            Issue.record("Truncated JSON must not succeed")
+        }
+    }
+
     private static let model = ModelConfig(id: "gpt-test", displayName: "GPT Test")
 
     private static func chatResponse(content: String, reasoning: String? = nil) throws -> Data {
@@ -338,13 +430,15 @@ struct LLMServiceSuggestionTests {
         ])
     }
 
-    private static func sseResponse(_ events: [[String: Any]]) throws -> Data {
+    private static func sseResponse(_ events: [[String: Any]], appendDone: Bool = true) throws -> Data {
         var response = ""
         for event in events {
             let data = try JSONSerialization.data(withJSONObject: event)
             response += "data: \(String(decoding: data, as: UTF8.self))\n\n"
         }
-        response += "data: [DONE]\n\n"
+        if appendDone {
+            response += "data: [DONE]\n\n"
+        }
         return Data(response.utf8)
     }
 }
@@ -362,12 +456,44 @@ private final class ConversationResponseCapture: @unchecked Sendable {
 }
 
 private class MockLLMURLProtocol: URLProtocol {
-    nonisolated(unsafe) static var responseBody = Data()
-    nonisolated(unsafe) static var responseBodies: [Data] = []
-    nonisolated(unsafe) static var responseContentType = "application/json"
-    nonisolated(unsafe) static var responseContentTypes: [String] = []
-    nonisolated(unsafe) static var capturedBodyString: String?
-    nonisolated(unsafe) static var capturedBodyStrings: [String] = []
+    private struct State {
+        var responseBody = Data()
+        var responseBodies: [Data] = []
+        var responseContentType = "application/json"
+        var responseContentTypes: [String] = []
+        var capturedBodyString: String?
+        var capturedBodyStrings: [String] = []
+    }
+
+    private static let state = OSAllocatedUnfairLock(initialState: State())
+
+    static var responseBody: Data {
+        get { state.withLock(\.responseBody) }
+        set { state.withLock { $0.responseBody = newValue } }
+    }
+
+    static var responseBodies: [Data] {
+        get { state.withLock(\.responseBodies) }
+        set { state.withLock { $0.responseBodies = newValue } }
+    }
+
+    static var responseContentType: String {
+        get { state.withLock(\.responseContentType) }
+        set { state.withLock { $0.responseContentType = newValue } }
+    }
+
+    static var responseContentTypes: [String] {
+        get { state.withLock(\.responseContentTypes) }
+        set { state.withLock { $0.responseContentTypes = newValue } }
+    }
+
+    static var capturedBodyString: String? {
+        state.withLock(\.capturedBodyString)
+    }
+
+    static var capturedBodyStrings: [String] {
+        state.withLock(\.capturedBodyStrings)
+    }
 
     static var configuration: URLSessionConfiguration {
         let configuration = URLSessionConfiguration.ephemeral
@@ -376,12 +502,7 @@ private class MockLLMURLProtocol: URLProtocol {
     }
 
     static func reset() {
-        responseBody = Data()
-        responseBodies = []
-        responseContentType = "application/json"
-        responseContentTypes = []
-        capturedBodyString = nil
-        capturedBodyStrings = []
+        state.withLock { $0 = State() }
     }
 
     override class func canInit(with _: URLRequest) -> Bool {
@@ -393,17 +514,23 @@ private class MockLLMURLProtocol: URLProtocol {
     }
 
     override func startLoading() {
-        if let body = requestBodyData() {
-            let bodyString = String(data: body, encoding: .utf8)
-            Self.capturedBodyString = bodyString
+        let bodyString = requestBodyData().flatMap { String(data: $0, encoding: .utf8) }
+        let (contentType, body) = Self.state.withLock { state -> (String, Data) in
             if let bodyString {
-                Self.capturedBodyStrings.append(bodyString)
+                state.capturedBodyString = bodyString
+                state.capturedBodyStrings.append(bodyString)
+            } else {
+                state.capturedBodyString = nil
             }
+            let type = state.responseContentTypes.isEmpty
+                ? state.responseContentType
+                : state.responseContentTypes.removeFirst()
+            let responseData = state.responseBodies.isEmpty
+                ? state.responseBody
+                : state.responseBodies.removeFirst()
+            return (type, responseData)
         }
 
-        let contentType = Self.responseContentTypes.isEmpty
-            ? Self.responseContentType
-            : Self.responseContentTypes.removeFirst()
         let response = HTTPURLResponse(
             url: request.url!,
             statusCode: 200,
@@ -411,7 +538,6 @@ private class MockLLMURLProtocol: URLProtocol {
             headerFields: ["Content-Type": contentType]
         )!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        let body = Self.responseBodies.isEmpty ? Self.responseBody : Self.responseBodies.removeFirst()
         client?.urlProtocol(self, didLoad: body)
         client?.urlProtocolDidFinishLoading(self)
     }

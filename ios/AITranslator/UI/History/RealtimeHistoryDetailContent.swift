@@ -264,13 +264,12 @@ struct RealtimeHistoryDetailContent: View {
         private var moreMenu: some View {
             Menu {
                 if let selectedTrack {
-                    let text = copyText(for: selectedTrack)
                     Button {
-                        PasteboardHelper.copy(text)
+                        PasteboardHelper.copy(copyText(for: selectedTrack))
                     } label: {
                         Label("Copy", systemImage: "doc.on.doc")
                     }
-                    .disabled(text.isEmpty)
+                    .disabled(!hasCopyableText(for: selectedTrack))
 
                     if selectedTrack.segments.contains(where: { $0.speakerID != nil }) {
                         Button {
@@ -284,8 +283,10 @@ struct RealtimeHistoryDetailContent: View {
                 }
 
                 #if arch(arm64)
-                    Button(action: requestMOSSReconstruction) {
-                        Label(hasBuiltCaptions ? "Rebuild" : "Build Caption", systemImage: "text.magnifyingglass")
+                    if hasPlayableAudioForVisibleSource {
+                        Button(action: requestMOSSReconstruction) {
+                            Label(hasBuiltCaptions ? "Rebuild" : "Build Caption", systemImage: "text.magnifyingglass")
+                        }
                     }
                 #endif
 
@@ -335,6 +336,12 @@ struct RealtimeHistoryDetailContent: View {
 
     private var hasPlayableAudio: Bool {
         currentSession.audioRecordings.contains(where: \.hasPlayableAudio)
+    }
+
+    private var hasPlayableAudioForVisibleSource: Bool {
+        currentSession.audioRecordings.contains {
+            $0.source == visibleCaptionSource && $0.hasPlayableAudio
+        }
     }
 
     private var audioTimeline: some View {
@@ -427,7 +434,7 @@ struct RealtimeHistoryDetailContent: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .help(progressTitle(reconstructionProgress))
                 .accessibilityLabel(progressTitle(reconstructionProgress))
-            } else if !hasBuiltCaptions {
+            } else if !hasBuiltCaptions, hasPlayableAudioForVisibleSource {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Improve with MOSS")
@@ -459,7 +466,7 @@ struct RealtimeHistoryDetailContent: View {
 
         private var emptyCaptionPrompt: some View {
             Group {
-                if reconstructionProgress == nil {
+                if reconstructionProgress == nil, hasPlayableAudioForVisibleSource {
                     Button(action: requestMOSSReconstruction) {
                         Label("Improve with MOSS", systemImage: "text.magnifyingglass")
                             .font(.system(size: 14, weight: .semibold))
@@ -662,10 +669,12 @@ struct RealtimeHistoryDetailContent: View {
             if let selectedTrack {
                 // Resolved once per playback tick instead of once per row.
                 let activeSegmentID = selectedTrack.activeSegmentID(at: playbackTime)
+                let defaultSpeakers = Self.defaultSpeakerNames(for: selectedTrack)
                 ForEach(selectedTrack.segments) { segment in
                     transcriptRow(
                         segment,
                         activeSegmentID: activeSegmentID,
+                        defaultSpeakers: defaultSpeakers,
                         annotation: annotations[segment.id.uuidString]
                     )
                     .id(segment.id)
@@ -682,19 +691,22 @@ struct RealtimeHistoryDetailContent: View {
     }
 
     private var compareTracks: some View {
-        ScrollView(.horizontal, showsIndicators: true) {
+        let annotations = record.historyAnnotations
+        return ScrollView(.horizontal, showsIndicators: true) {
             HStack(alignment: .top, spacing: 0) {
                 ForEach(displayTracks) { track in
-                    VStack(alignment: .leading, spacing: 12) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         trackHeader(track)
 
                         let activeSegmentID = track.activeSegmentID(at: playbackTime)
+                        let defaultSpeakers = Self.defaultSpeakerNames(for: track)
                         ForEach(track.segments) { segment in
                             transcriptRow(
                                 segment,
                                 track: track,
                                 activeSegmentID: activeSegmentID,
-                                annotation: record.historyAnnotations[segment.id.uuidString]
+                                defaultSpeakers: defaultSpeakers,
+                                annotation: annotations[segment.id.uuidString]
                             )
                             .id(segment.id)
                         }
@@ -711,7 +723,6 @@ struct RealtimeHistoryDetailContent: View {
     }
 
     private func trackHeader(_ track: RealtimeHistoryTrack) -> some View {
-        let text = copyText(for: track)
         return HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(versionTitle(for: track))
                 .font(.system(size: 13, weight: .semibold))
@@ -720,14 +731,14 @@ struct RealtimeHistoryDetailContent: View {
                 .help(track.title)
 
             Button {
-                PasteboardHelper.copy(text)
+                PasteboardHelper.copy(copyText(for: track))
             } label: {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(colors.textSecondary)
             }
             .buttonStyle(.plain)
-            .disabled(text.isEmpty)
+            .disabled(!hasCopyableText(for: track))
             .accessibilityLabel("Copy")
 
             #if os(macOS)
@@ -852,6 +863,13 @@ struct RealtimeHistoryDetailContent: View {
         track.recognitionModelID == mossRealtimeHistoryModelID ? "sparkles" : "waveform"
     }
 
+    private func hasCopyableText(for track: RealtimeHistoryTrack) -> Bool {
+        track.segments.contains {
+            !$0.sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                !$0.translatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
     private func copyText(for track: RealtimeHistoryTrack) -> String {
         let hasTranslation = track.segments.contains {
             !$0.translatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -883,6 +901,7 @@ struct RealtimeHistoryDetailContent: View {
         _ segment: RealtimeHistoryTrackSegment,
         track: RealtimeHistoryTrack? = nil,
         activeSegmentID: UUID?,
+        defaultSpeakers: [String: String] = [:],
         annotation: String?
     ) -> some View {
         let track = track ?? selectedTrack
@@ -902,7 +921,7 @@ struct RealtimeHistoryDetailContent: View {
             segment: displaySegment(from: segment),
             duration: segment.duration,
             speakerID: segment.speakerID,
-            speakerName: speakerName(for: segment, track: track),
+            speakerName: speakerName(for: segment, track: track, defaultSpeakers: defaultSpeakers),
             alignment: transcriptAlignment(for: segment, track: track),
             isActive: isActive,
             spokenWords: spokenWords,
@@ -941,7 +960,8 @@ struct RealtimeHistoryDetailContent: View {
 
     private func speakerName(
         for segment: RealtimeHistoryTrackSegment,
-        track: RealtimeHistoryTrack?
+        track: RealtimeHistoryTrack?,
+        defaultSpeakers: [String: String] = [:]
     ) -> String? {
         guard let rawSpeakerID = segment.speakerID else { return nil }
         if let name = currentSession.speakerNames[rawSpeakerID] {
@@ -951,28 +971,42 @@ struct RealtimeHistoryDetailContent: View {
         if let name = currentSession.speakerNames[groupedSpeakerID] {
             return name
         }
+        if let defaultName = defaultSpeakers[groupedSpeakerID] {
+            return defaultName
+        }
         guard let dominantSpeakers = track?.dominantConversationSpeakerIDs,
               let index = dominantSpeakers.firstIndex(of: groupedSpeakerID)
         else {
-            guard let track,
-                  track.recognitionModelID == mossRealtimeHistoryModelID
-            else {
-                return nil
-            }
-
-            var durationBySpeaker: [String: TimeInterval] = [:]
-            for segment in track.segments {
-                guard let speakerID = segment.speakerID else { continue }
-                let groupedSpeakerID = track.conversationSpeakerID(for: speakerID)
-                durationBySpeaker[groupedSpeakerID, default: 0] += max(segment.duration, 0)
-            }
-            let speakerIDs = durationBySpeaker.sorted {
-                $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value
-            }.map(\.key)
-            guard let index = speakerIDs.firstIndex(of: groupedSpeakerID) else { return nil }
-            return Self.defaultSpeakerName(for: index)
+            return track.map { Self.defaultSpeakerNames(for: $0)[groupedSpeakerID] } ?? nil
         }
         return Self.defaultSpeakerName(for: index)
+    }
+
+    private static func defaultSpeakerNames(for track: RealtimeHistoryTrack) -> [String: String] {
+        if let dominantSpeakers = track.dominantConversationSpeakerIDs {
+            var names: [String: String] = [:]
+            for (index, speakerID) in dominantSpeakers.enumerated() {
+                names[speakerID] = defaultSpeakerName(for: index)
+            }
+            return names
+        }
+        guard track.recognitionModelID == mossRealtimeHistoryModelID else {
+            return [:]
+        }
+        var durationBySpeaker: [String: TimeInterval] = [:]
+        for segment in track.segments {
+            guard let speakerID = segment.speakerID else { continue }
+            let groupedSpeakerID = track.conversationSpeakerID(for: speakerID)
+            durationBySpeaker[groupedSpeakerID, default: 0] += max(segment.duration, 0)
+        }
+        let orderedSpeakerIDs = durationBySpeaker.sorted {
+            $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value
+        }.map(\.key)
+        var names: [String: String] = [:]
+        for (index, speakerID) in orderedSpeakerIDs.enumerated() {
+            names[speakerID] = defaultSpeakerName(for: index)
+        }
+        return names
     }
 
     private static func defaultSpeakerName(for index: Int) -> String {

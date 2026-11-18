@@ -33,7 +33,32 @@ public enum OCRTextRecognizer {
 
     /// Joins wrapped lines and starts a new paragraph on large vertical gaps or indentation.
     static func mergeLines(_ lines: [Line]) -> String {
-        let sorted = lines.sorted { $0.box.midY > $1.box.midY }
+        let topToBottom = lines.sorted { $0.box.midY > $1.box.midY }
+        guard !topToBottom.isEmpty else { return "" }
+
+        var rows: [[Line]] = []
+        for line in topToBottom {
+            if let lastIndex = rows.indices.last,
+               let anchor = rows[lastIndex].first,
+               abs(line.box.midY - anchor.box.midY) <= min(line.box.height, anchor.box.height) * 0.5
+            {
+                rows[lastIndex].append(line)
+            } else {
+                rows.append([line])
+            }
+        }
+
+        let sorted = rows.map { row -> Line in
+            let ordered = row.sorted { $0.box.minX < $1.box.minX }
+            var mergedText = ordered[0].text
+            var unionBox = ordered[0].box
+            for segment in ordered.dropFirst() {
+                let separator = (isCJK(mergedText.last) || isCJK(segment.text.first)) ? "" : " "
+                mergedText += separator + segment.text
+                unionBox = unionBox.union(segment.box)
+            }
+            return Line(text: mergedText, box: unionBox)
+        }
         guard let first = sorted.first else { return "" }
 
         let heights = sorted.map(\.box.height).sorted()

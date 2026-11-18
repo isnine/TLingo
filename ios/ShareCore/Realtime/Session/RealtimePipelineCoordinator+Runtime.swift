@@ -262,7 +262,7 @@
             didEncounterCriticalMemoryPressure = true
             guard let candidate = configurations.reversed().first(where: {
                 $0.id != primaryLaneID && !removingLaneIDs.contains($0.id) &&
-                    $0.recognitionModel.runtime == .fluidAudio
+                    $0.recognitionModel.runtime.isLocalStreamingRuntime
             }) else {
                 return
             }

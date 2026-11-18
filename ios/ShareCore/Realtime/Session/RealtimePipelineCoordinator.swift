@@ -229,6 +229,13 @@
             publishSnapshots()
         }
 
+        func clearCaptionDisplay() {
+            for runtime in laneRuntimes.values {
+                runtime.clearCaptionDisplay()
+            }
+            publishSnapshots()
+        }
+
         func setPaused(_ isPaused: Bool) {
             if isPaused {
                 pausedAt = Date()

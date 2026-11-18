@@ -42,13 +42,19 @@ public final class TranslationHistoryService {
     public static let shared = TranslationHistoryService()
 
     private static let appGroupIdentifier = AppPreferences.appGroupSuiteName
+    private static let isAppExtension = Bundle.main.bundleURL.pathExtension == "appex"
     static let migrationMarkerKey = "history.v2.migrated"
 
     private let modelContainer: ModelContainer?
     private let persistentContext: ModelContext?
+    public var activeRealtimeRequestID: UUID?
 
     private convenience init() {
-        self.init(storeURL: Self.historyStoreURL())
+        self.init(
+            storeURL: Self.historyStoreURL(),
+            userDefaults: AppPreferences.sharedDefaults,
+            pruneAudioRecordings: !Self.isAppExtension
+        )
     }
 
     init(
@@ -80,6 +86,7 @@ public final class TranslationHistoryService {
                 }
             )
             let context = ModelContext(container)
+            context.autosaveEnabled = false
             modelContainer = container
             persistentContext = context
             if pruneAudioRecordings {
@@ -180,7 +187,12 @@ public final class TranslationHistoryService {
             persistentContext.insert(record)
         }
 
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         logger.debug("Saved translation record for request \(requestID.uuidString.prefix(8), privacy: .public)")
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
     }
@@ -223,7 +235,12 @@ public final class TranslationHistoryService {
             persistentContext.insert(record)
         }
 
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         logger.debug("Saved realtime session for request \(session.requestID.uuidString.prefix(8), privacy: .public)")
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
     }
@@ -244,7 +261,12 @@ public final class TranslationHistoryService {
 
         session.generatedTitle = title
         record.realtimeSession = session
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
     }
 
@@ -255,6 +277,29 @@ public final class TranslationHistoryService {
         guard let current else { return incoming }
         var merged = incoming
 
+        if merged.endedAt < current.endedAt ||
+            (merged.endedAt == current.endedAt && merged.segments.count < current.segments.count)
+        {
+            merged.segments = current.segments
+            merged.endedAt = current.endedAt
+            merged.duration = max(merged.duration, current.duration)
+        }
+        if merged.audioRecordings.isEmpty, !current.audioRecordings.isEmpty {
+            merged.audioRecordings = current.audioRecordings
+        } else {
+            var recordingsByID = Dictionary(uniqueKeysWithValues: current.audioRecordings.map { ($0.id, $0) })
+            for recording in merged.audioRecordings {
+                if let existing = recordingsByID[recording.id],
+                   existing.segments.count > recording.segments.count
+                {
+                    continue
+                }
+                recordingsByID[recording.id] = recording
+            }
+            let incomingRecordingOrder = merged.audioRecordings.map(\.id)
+            let extraCurrentOrder = current.audioRecordings.map(\.id).filter { !incomingRecordingOrder.contains($0) }
+            merged.audioRecordings = (incomingRecordingOrder + extraCurrentOrder).compactMap { recordingsByID[$0] }
+        }
         if merged.delayedTranscriptSegments.isEmpty {
             merged.delayedTranscriptSegments = current.delayedTranscriptSegments
         }
@@ -312,7 +357,12 @@ public final class TranslationHistoryService {
             into: currentSession
         )
         record.realtimeSession = mergedSession
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
         return mergedSession
     }
@@ -346,6 +396,7 @@ public final class TranslationHistoryService {
             try persistentContext.save()
             NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
         } catch {
+            persistentContext.rollback()
             logger.error("Annotation save failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
@@ -398,15 +449,20 @@ public final class TranslationHistoryService {
 
     // MARK: - Delete
 
-    public func delete(_ record: TranslationRecord) {
-        guard let persistentContext else { return }
+    @discardableResult
+    public func delete(_ record: TranslationRecord) -> Bool {
+        guard let persistentContext else { return false }
         let recordID = record.id
         var descriptor = FetchDescriptor<TranslationRecord>(
             predicate: #Predicate { $0.id == recordID }
         )
         descriptor.fetchLimit = 1
         do {
-            guard let found = try persistentContext.fetch(descriptor).first else { return }
+            guard let found = try persistentContext.fetch(descriptor).first else { return false }
+            guard found.requestID != activeRealtimeRequestID else {
+                logger.info("Skipped deleting active realtime session")
+                return false
+            }
             let audioRecordings = found.realtimeSession?.audioRecordings ?? []
             persistentContext.delete(found)
             try Self.deleteAudioAfterPersistence(
@@ -418,18 +474,25 @@ public final class TranslationHistoryService {
                     RealtimeHistoryAudioStorage.deleteRecordings(recordings)
                 }
             )
+            NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
+            return true
         } catch {
             persistentContext.rollback()
             logger.error("Delete failed: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 
-    public func deleteAll() {
-        guard let persistentContext else { return }
+    @discardableResult
+    public func deleteAll() -> Bool {
+        guard let persistentContext else { return false }
         do {
-            let recordings = try persistentContext.fetch(FetchDescriptor<TranslationRecord>())
-                .flatMap { $0.realtimeSession?.audioRecordings ?? [] }
-            try persistentContext.delete(model: TranslationRecord.self)
+            let records = try persistentContext.fetch(FetchDescriptor<TranslationRecord>())
+            let deletable = records.filter { $0.requestID != activeRealtimeRequestID }
+            let recordings = deletable.flatMap { $0.realtimeSession?.audioRecordings ?? [] }
+            for record in deletable {
+                persistentContext.delete(record)
+            }
             try Self.deleteAudioAfterPersistence(
                 recordings: recordings,
                 persist: {
@@ -439,10 +502,13 @@ public final class TranslationHistoryService {
                     RealtimeHistoryAudioStorage.deleteRecordings(recordings)
                 }
             )
-            logger.info("Deleted all records")
+            NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
+            logger.info("Deleted \(deletable.count, privacy: .public) history records")
+            return true
         } catch {
             persistentContext.rollback()
             logger.error("Delete all failed: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 
@@ -497,7 +563,12 @@ extension TranslationHistoryService {
             !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         record.realtimeSession = session
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
         return session
     }
@@ -532,7 +603,12 @@ extension TranslationHistoryService {
         }
 
         record.realtimeSession = session
-        try persistentContext.save()
+        do {
+            try persistentContext.save()
+        } catch {
+            persistentContext.rollback()
+            throw error
+        }
         NotificationCenter.default.post(name: .translationRecordSaved, object: nil)
         return session
     }

@@ -19,7 +19,6 @@ extension RealtimeSessionStore {
         cancelTranslationWork()
         errorMessage = nil
         translationState.resetTranslationResults()
-        updateTranscriptPresentation()
         scheduleTranslation()
     }
 
@@ -361,19 +360,32 @@ extension RealtimeSessionStore {
 
         /// Stops reading relayed audio, then finishes recognition and translation like a microphone stop.
         func drainHostRecognitionRelay() async {
+            if let existingDrainTask = hostRecognitionRelayDrainTask {
+                await existingDrainTask.value
+                return
+            }
             guard let task = hostRecognitionRelayTask else { return }
             hostRecognitionRelayTask = nil
-            logRealtime("host drain begin sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
-            task.cancel()
-            await task.value
-            await activeRecognizer.stop()
-            await callbackDrain.wait()
-            finalizePendingRecognition()
-            await translationScheduler.settle()
-            audioHistoryRecorder.finish()
-            hostRecognitionRelayReader?.removeAll()
-            hostRecognitionRelayReader = nil
-            logRealtime("host drain end sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+            isDrainingHostRecognitionRelay = true
+            let drainTask = Task { @MainActor [self] in
+                defer {
+                    hostRecognitionRelayDrainTask = nil
+                    isDrainingHostRecognitionRelay = false
+                }
+                logRealtime("host drain begin sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+                task.cancel()
+                await task.value
+                await activeRecognizer.stop()
+                await callbackDrain.wait()
+                finalizePendingRecognition()
+                await translationScheduler.settle()
+                audioHistoryRecorder.finish()
+                hostRecognitionRelayReader?.removeAll()
+                hostRecognitionRelayReader = nil
+                logRealtime("host drain end sourceLen=\(sourceText.count) pairs=\(sentencePairs.count)", stage: "relay")
+            }
+            hostRecognitionRelayDrainTask = drainTask
+            await drainTask.value
         }
 
         /// The extension stopped seeing host heartbeats and recognizes locally now. Save what the host
@@ -390,7 +402,6 @@ extension RealtimeSessionStore {
                 await drainHostRecognitionRelay()
                 saveRealtimeHistoryIfPossible(generateTitle: true)
                 usesHostRecognitionRelay = false
-                isDrainingHostRecognitionRelay = false
                 logRealtime("host handed off to extension", stage: "relay")
             }
         }
@@ -404,7 +415,7 @@ extension RealtimeSessionStore {
                     startFailureAlert = alert
                 }
             }
-            guard hostRecognitionRelayTask != nil else {
+            guard hostRecognitionRelayTask != nil || hostRecognitionRelayDrainTask != nil else {
                 finish()
                 return
             }
@@ -414,12 +425,14 @@ extension RealtimeSessionStore {
             logRealtime("session ending status=\(status); draining host recognition", stage: "relay")
             Task { @MainActor [weak self] in
                 await self?.drainHostRecognitionRelay()
-                self?.isDrainingHostRecognitionRelay = false
                 finish()
             }
         }
 
         func finishIPhoneAudioBroadcastSession(status: String) {
+            hostRecognitionRelayDrainTask?.cancel()
+            hostRecognitionRelayDrainTask = nil
+            isDrainingHostRecognitionRelay = false
             if let task = hostRecognitionRelayTask {
                 logRealtime("finish without drain; stopping host recognition", stage: "relay")
                 task.cancel()
@@ -430,6 +443,7 @@ extension RealtimeSessionStore {
                 Task { await recognizer.stop() }
             }
             saveRealtimeHistoryIfPossible(generateTitle: true)
+            TranslationHistoryService.shared.activeRealtimeRequestID = nil
             usesHostRecognitionRelay = false
             stopBroadcastStatePolling()
             isRunning = false
@@ -793,7 +807,7 @@ extension RealtimeSessionStore {
         if sourceText != recognizedSourceText {
             sourceText = recognizedSourceText
         }
-        updateTranscriptPresentation()
+        updateTranslationSources()
         let recognitionTimings = result.snapshot.map(Self.recognitionTimings(in:)) ?? []
         recognitionAudioPosition = max(
             recognitionAudioPosition,
@@ -802,16 +816,19 @@ extension RealtimeSessionStore {
         if usesRealtimeSessionHistory {
             historySessionBuilder.noteSource(
                 committedCount: translationState.sourceSegments.count,
-                hasText: !pendingSourceText.isEmpty
+                hasText: !translationState.pendingSourceText.isEmpty
             )
             historySessionBuilder.noteRecognition(timings: recognitionTimings)
         }
         Self.logSourceSegmentChange(
             from: previousSegments,
             to: translationState.sourceSegments,
-            pending: pendingSourceText,
+            pending: translationState.pendingSourceText,
             result: result
         )
+        statusText = result
+            .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
+        scheduleTranslation()
         let displayedTranslationLength = translatedText.count + pendingTranslatedText.count
         if displayedTranslationLength < previousDisplayedTranslationLength {
             RealtimeLog.warn(
@@ -822,9 +839,6 @@ extension RealtimeSessionStore {
                 """
             )
         }
-        statusText = result
-            .confidence > 0 ? String(localized: "Recognizing") : String(localized: "Listening to \(inputSource.title)")
-        scheduleTranslation()
     }
 
     /// Word timings when the recognizer reports them; otherwise each timed segment is one span.
@@ -832,7 +846,8 @@ extension RealtimeSessionStore {
         in snapshot: RealtimeRecognitionSnapshot
     ) -> [RealtimeRecognitionTokenTiming] {
         guard snapshot.tokenTimings.isEmpty else { return snapshot.tokenTimings }
-        return (snapshot.stableSegments + [snapshot.pendingSegment].compactMap(\.self)).map {
+        let cutoff = (snapshot.audioOffset ?? snapshot.stableSegments.last?.endOffset ?? 0) - 300
+        return (snapshot.stableSegments.filter { $0.endOffset >= cutoff } + [snapshot.pendingSegment].compactMap(\.self)).map {
             RealtimeRecognitionTokenTiming(
                 token: $0.text,
                 startTime: $0.startOffset,
@@ -848,7 +863,7 @@ extension RealtimeSessionStore {
         guard !pending.isEmpty else { return }
 
         assignIfChanged(&sourceText, transcriptAccumulator.commitPartial())
-        updateTranscriptPresentation()
+        updateTranslationSources()
         scheduleTranslation()
     }
 
@@ -866,8 +881,8 @@ extension RealtimeSessionStore {
             updateStatusAfterTranslationActivity()
             return
         }
-        let stableSourceText = translationSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let partialSourceText = pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stableSourceText = translationState.translationSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let partialSourceText = translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !stableSourceText.isEmpty || !partialSourceText.isEmpty else {
             cancelTranslationWork()
             translationState.clearStableTranslation()
@@ -1079,6 +1094,9 @@ extension RealtimeSessionStore {
     }
 
     func generateRealtimeHistoryTitleIfNeeded(for session: RealtimeHistorySession) {
+        #if os(macOS)
+            guard preferences.hasAcceptedDataSharing else { return }
+        #endif
         let requestID = session.requestID
         guard session.generatedTitle == nil,
               !realtimeHistoryTitleRequestIDs.contains(requestID),
@@ -1201,6 +1219,7 @@ extension RealtimeSessionStore {
         resetRealtimeHistoryAutosave()
         if usesRealtimeSessionHistory {
             historySessionBuilder.start(recognitionTimelineBase: recognitionAudioPosition)
+            TranslationHistoryService.shared.activeRealtimeRequestID = historySessionBuilder.requestID
             audioHistoryRecorder.start(
                 requestID: historySessionBuilder.requestID,
                 source: activeHistoryAudioSource
@@ -1220,6 +1239,7 @@ extension RealtimeSessionStore {
                 secondaryAudioHistoryRecorder.reset()
             #endif
         } else {
+            TranslationHistoryService.shared.activeRealtimeRequestID = nil
             historySessionBuilder.reset()
             audioHistoryRecorder.reset()
             secondaryAudioHistoryRecorder.reset()

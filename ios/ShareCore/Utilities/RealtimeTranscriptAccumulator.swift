@@ -82,9 +82,15 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
     public let tokenTimings: [RealtimeRecognitionTokenTiming]
     public let audioOffset: TimeInterval?
     public let isTerminal: Bool
+    private let flatStableText: String
 
     public var visibleText: String {
-        Self.joined(stableText, volatileText)
+        switch (flatStableText.isEmpty, volatileText.isEmpty) {
+        case (true, true): ""
+        case (true, false): volatileText
+        case (false, true): flatStableText
+        case (false, false): "\(flatStableText) \(volatileText)"
+        }
     }
 
     public init(
@@ -94,7 +100,9 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         audioOffset: TimeInterval? = nil,
         isTerminal: Bool = false
     ) {
-        self.stableText = Self.normalizedPreservingParagraphs(stableText)
+        let paragraphs = Self.normalizedParagraphs(stableText)
+        self.stableText = paragraphs.joined(separator: "\n\n")
+        flatStableText = paragraphs.joined(separator: " ")
         self.volatileText = Self.normalized(volatileText)
         stableSegments = []
         pendingSegment = nil
@@ -110,9 +118,12 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         audioOffset: TimeInterval? = nil,
         isTerminal: Bool = false
     ) {
-        self.stableSegments = stableSegments.filter { !$0.text.isEmpty }
+        let nonEmptySegments = stableSegments.filter { !$0.text.isEmpty }
+        self.stableSegments = nonEmptySegments
         self.pendingSegment = pendingSegment?.text.isEmpty == false ? pendingSegment : nil
-        stableText = self.stableSegments.map(\.text).joined(separator: "\n\n")
+        let segmentTexts = nonEmptySegments.map(\.text)
+        stableText = segmentTexts.joined(separator: "\n\n")
+        flatStableText = segmentTexts.joined(separator: " ")
         volatileText = self.pendingSegment?.text ?? ""
         self.tokenTimings = tokenTimings
         self.audioOffset = audioOffset
@@ -121,6 +132,7 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
 
     init(
         precomputedStableText: String,
+        precomputedFlatStableText: String? = nil,
         stableSegments: [RealtimeRecognitionSegment],
         pendingSegment: RealtimeRecognitionSegment? = nil,
         tokenTimings: [RealtimeRecognitionTokenTiming] = [],
@@ -130,17 +142,21 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
         self.stableSegments = stableSegments
         self.pendingSegment = pendingSegment?.text.isEmpty == false ? pendingSegment : nil
         stableText = precomputedStableText
+        flatStableText = precomputedFlatStableText ?? Self.normalized(precomputedStableText)
         volatileText = self.pendingSegment?.text ?? ""
         self.tokenTimings = tokenTimings
         self.audioOffset = audioOffset
         self.isTerminal = isTerminal
     }
 
-    private static func joined(_ stable: String, _ volatile: String) -> String {
-        [stable, volatile]
-            .map(normalized)
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
+    public static func == (lhs: RealtimeRecognitionSnapshot, rhs: RealtimeRecognitionSnapshot) -> Bool {
+        lhs.stableText == rhs.stableText
+            && lhs.volatileText == rhs.volatileText
+            && lhs.stableSegments == rhs.stableSegments
+            && lhs.pendingSegment == rhs.pendingSegment
+            && lhs.tokenTimings == rhs.tokenTimings
+            && lhs.audioOffset == rhs.audioOffset
+            && lhs.isTerminal == rhs.isTerminal
     }
 
     private static func normalized(_ text: String) -> String {
@@ -151,11 +167,10 @@ public struct RealtimeRecognitionSnapshot: Equatable, Sendable {
 
     /// Recognizer finals are separated by blank lines; flattening them let the segmenter merge an
     /// already-translated fragment like "So," into the next sentence.
-    private static func normalizedPreservingParagraphs(_ text: String) -> String {
+    private static func normalizedParagraphs(_ text: String) -> [String] {
         text.components(separatedBy: "\n\n")
             .map(normalized)
             .filter { !$0.isEmpty }
-            .joined(separator: "\n\n")
     }
 }
 

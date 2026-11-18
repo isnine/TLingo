@@ -35,13 +35,15 @@ public enum InputTextNormalizer {
         guard !contentLines.isEmpty else { return text }
 
         let trimmedFirst = contentLines[0].trimmingCharacters(in: .whitespaces)
-        let isBlockComment = trimmedFirst.hasPrefix("/*")
+        let trimmedLast = contentLines.last?.trimmingCharacters(in: .whitespaces) ?? ""
+        let isBlockComment = trimmedFirst.hasPrefix("/*") && trimmedLast.hasSuffix("*/")
         let markers: [String]
         if isBlockComment {
             markers = ["/**", "/*", "*/", "*"]
         } else if contentLines.allSatisfy({ $0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }) {
             markers = ["///", "//"]
         } else if contentLines.count > 1,
+                  !contentLines.contains(where: { $0.contains(#/^\s*#{2,6}\s/#) }),
                   contentLines.allSatisfy({ $0.trimmingCharacters(in: .whitespaces).hasPrefix("#") })
         {
             markers = ["#"]

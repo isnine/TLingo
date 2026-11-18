@@ -112,7 +112,7 @@ public struct VocabularyView: View {
             List {
                 ForEach(filteredEntries) { entry in
                     NavigationLink {
-                        VocabularyEntryDetailView(entry: entry)
+                        VocabularyEntryDetailView(term: entry.term, translation: entry.translation)
                     } label: {
                         VocabularyRow(entry: entry)
                     }
@@ -154,30 +154,31 @@ private struct VocabularyRow: View {
 
 private struct VocabularyEntryDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
-    let entry: VocabularyEntry
+    let term: String
+    let translation: String
 
     var body: some View {
         let colors = AppColors.palette(for: colorScheme)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text(entry.term)
+                Text(term)
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(colors.textPrimary)
                     .textSelection(.enabled)
-                MarkdownContentView(text: entry.translation, preset: .compact)
+                MarkdownContentView(text: translation, preset: .compact)
                     .textSelection(.enabled)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
         }
-        .navigationTitle(entry.term)
+        .navigationTitle(term)
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Copy", systemImage: "doc.on.doc") {
-                        PasteboardHelper.copy(entry.translation)
+                        PasteboardHelper.copy(translation)
                     }
                 }
             }

@@ -37,10 +37,10 @@ struct VocabularySaveButton: View {
         .help(isSaved ? "Remove from Vocabulary" : "Save to Vocabulary")
         .accessibilityLabel(isSaved ? "Remove from Vocabulary" : "Save to Vocabulary")
         .accessibilityIdentifier("vocabulary_save_button")
-        .onAppear { store.reload() }
+        .onAppear { store.reloadIfStale() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                store.reload()
+                store.reloadIfStale()
             }
         }
     }

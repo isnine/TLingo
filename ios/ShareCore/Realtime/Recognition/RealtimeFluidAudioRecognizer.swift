@@ -150,10 +150,14 @@
 
         private(set) var stableSegments: [RealtimeRecognitionSegment] = []
         private(set) var stableText = ""
+        private(set) var flatStableText = ""
         private(set) var pendingSegment: RealtimeRecognitionSegment?
         private var currentSegmentStartOffset: TimeInterval = 0
-        private var committedModelWordCount = 0
-        private var lastPartialText = ""
+        private var committedRawPrefix = ""
+        private var committedNormalizedPrefix = ""
+        private var committedInGeneration: [String] = []
+        private var lastRawPartialText = ""
+        private var lastNormalizedTail = ""
 
         var pendingText: String {
             pendingSegment?.text ?? ""
@@ -161,25 +165,36 @@
 
         @discardableResult
         mutating func updatePartial(_ text: String, audioOffset: TimeInterval) -> Bool {
-            let normalized = Self.normalized(text)
-            guard !normalized.isEmpty, normalized != lastPartialText else { return false }
-            lastPartialText = normalized
+            guard text != lastRawPartialText else { return false }
 
-            let modelWords = normalized.split(whereSeparator: \.isWhitespace)
-            if modelWords.count <= committedModelWordCount {
-                // Word-count based trimming hides everything when the model rewrites or shortens
-                // its hypothesis, and for unspaced scripts (CJK) where one "word" is a whole clause.
-                RealtimeLog.warn(
-                    "fluid",
-                    """
-                    partial hidden modelWords=\(modelWords.count) committedWords=\(committedModelWordCount) \
-                    raw=\(RealtimeLog.text(normalized, limit: 64)) stableTail=\(RealtimeLog.text(stableSegments.last?.text ?? ""))
-                    """
+            let uncommittedText: String
+            let usedFastPrefixPath: Bool
+            if let rawTail = Self.uncommittedRawTail(from: text, committedRawPrefix: committedRawPrefix) {
+                let normalizedTail = Self.normalized(rawTail)
+                guard !committedRawPrefix.isEmpty || !normalizedTail.isEmpty else { return false }
+                if normalizedTail == lastNormalizedTail {
+                    lastRawPartialText = text
+                    return false
+                }
+                uncommittedText = normalizedTail
+                usedFastPrefixPath = true
+            } else {
+                let normalized = Self.normalized(text)
+                guard !normalized.isEmpty else { return false }
+                let tail = Self.uncommittedNormalizedTail(
+                    from: normalized,
+                    committedNormalizedPrefix: committedNormalizedPrefix,
+                    committedInGeneration: committedInGeneration
                 )
+                if tail == lastNormalizedTail {
+                    lastRawPartialText = text
+                    return false
+                }
+                uncommittedText = tail
+                usedFastPrefixPath = false
             }
-            let uncommittedText = modelWords
-                .dropFirst(min(committedModelWordCount, modelWords.count))
-                .joined(separator: " ")
+
+            lastRawPartialText = text
             let split = RealtimeTranscriptSegmenter.completedSegmentsAndPending(from: uncommittedText)
             let previousPendingID = pendingSegment?.id
             let previousPendingText = pendingSegment?.text ?? ""
@@ -195,6 +210,7 @@
                 pendingWords.removeFirst(boundaryIndex)
             }
             let pendingText = pendingWords.joined(separator: " ")
+            lastNormalizedTail = pendingText
             let segmentDuration = completedSegments.isEmpty
                 ? 0
                 : max(0, audioOffset - currentSegmentStartOffset) / Double(completedSegments.count)
@@ -210,16 +226,26 @@
                     boundaryReason: completedSegment.1
                 )
                 appendStableSegment(segment)
-                committedModelWordCount += completedSegment.0.split(whereSeparator: \.isWhitespace).count
+                committedInGeneration.append(segment.text)
+                if committedNormalizedPrefix.isEmpty {
+                    committedNormalizedPrefix = segment.text
+                } else {
+                    committedNormalizedPrefix += " " + segment.text
+                }
             }
             if !completedSegments.isEmpty {
                 currentSegmentStartOffset = audioOffset
+                committedRawPrefix = Self.committedRawPrefix(
+                    in: text,
+                    excludingTrailingNonWhitespaceFrom: pendingText
+                )
                 RealtimeLog.log(
                     "fluid",
                     """
                     segment commit +\(completedSegments.count) at=\(String(format: "%.1fs", audioOffset)) \
-                    reasons=\(completedSegments.map(\.1.rawValue)) committedWords=\(committedModelWordCount)/\(modelWords.count) \
-                    new=\(RealtimeLog.segments(completedSegments.map(\.0), tail: 4)) pending=\(RealtimeLog.text(pendingText))
+                    reasons=\(completedSegments.map(\.1.rawValue)) committedSegs=\(committedInGeneration.count) \
+                    fast=\(usedFastPrefixPath) new=\(RealtimeLog.segments(completedSegments.map(\.0), tail: 4)) \
+                    pending=\(RealtimeLog.text(pendingText))
                     """
                 )
             }
@@ -234,30 +260,48 @@
             return !completedSegments.isEmpty || previousPendingText != pendingText
         }
 
+        func makeSnapshot(
+            audioOffset: TimeInterval? = nil,
+            tokenTimings: [RealtimeRecognitionTokenTiming] = [],
+            isTerminal: Bool = false
+        ) -> RealtimeRecognitionSnapshot {
+            RealtimeRecognitionSnapshot(
+                precomputedStableText: stableText,
+                precomputedFlatStableText: flatStableText,
+                stableSegments: stableSegments,
+                pendingSegment: pendingSegment,
+                tokenTimings: tokenTimings,
+                audioOffset: audioOffset,
+                isTerminal: isTerminal
+            )
+        }
+
         @discardableResult
         mutating func commit(
             _ text: String? = nil,
             boundaryReason: RealtimeRecognitionBoundaryReason,
             audioOffset: TimeInterval
         ) -> Bool {
-            if let text {
-                updatePartial(text, audioOffset: audioOffset)
-            }
-            return commitPending(boundaryReason: boundaryReason, endOffset: audioOffset)
+            let updated = text.map { updatePartial($0, audioOffset: audioOffset) } ?? false
+            let committed = commitPending(boundaryReason: boundaryReason, endOffset: audioOffset)
+            return updated || committed
         }
 
         mutating func reset() {
             stableSegments.removeAll()
             stableText = ""
+            flatStableText = ""
             pendingSegment = nil
             currentSegmentStartOffset = 0
-            committedModelWordCount = 0
-            lastPartialText = ""
+            beginEngineGeneration()
         }
 
         mutating func beginEngineGeneration() {
-            committedModelWordCount = 0
-            lastPartialText = ""
+            committedRawPrefix = ""
+            committedNormalizedPrefix = ""
+            committedInGeneration.removeAll()
+            lastRawPartialText = ""
+            lastNormalizedTail = ""
         }
 
         private mutating func appendStableSegment(_ segment: RealtimeRecognitionSegment) {
@@ -265,8 +309,10 @@
             stableSegments.append(segment)
             if stableText.isEmpty {
                 stableText = segment.text
+                flatStableText = segment.text
             } else {
                 stableText += "\n\n" + segment.text
+                flatStableText += " " + segment.text
             }
         }
 
@@ -295,8 +341,75 @@
             return true
         }
 
-        private static func normalized(_ text: String) -> String {
+        private static func normalized<S: StringProtocol>(_ text: S) -> String {
             text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        }
+
+        private static func uncommittedRawTail(from text: String, committedRawPrefix: String) -> Substring? {
+            guard !committedRawPrefix.isEmpty else { return text[...] }
+            let prefixUTF8Count = committedRawPrefix.utf8.count
+            guard text.utf8.count >= prefixUTF8Count else { return nil }
+            let splitUTF8 = text.utf8.index(text.utf8.startIndex, offsetBy: prefixUTF8Count)
+            guard text.utf8[..<splitUTF8].elementsEqual(committedRawPrefix.utf8),
+                  let splitIndex = splitUTF8.samePosition(in: text)
+            else {
+                return nil
+            }
+            return text[splitIndex...]
+        }
+
+        private static func uncommittedNormalizedTail(
+            from normalized: String,
+            committedNormalizedPrefix: String,
+            committedInGeneration: [String]
+        ) -> String {
+            guard !committedNormalizedPrefix.isEmpty else { return normalized }
+            if normalized.hasPrefix(committedNormalizedPrefix) {
+                return String(normalized.dropFirst(committedNormalizedPrefix.count))
+                    .trimmingCharacters(in: .whitespaces)
+            }
+            for segmentText in committedInGeneration.reversed() {
+                if let range = normalized.range(of: segmentText, options: .backwards) {
+                    return String(normalized[range.upperBound...])
+                        .trimmingCharacters(in: .whitespaces)
+                }
+            }
+            let committedWords = committedNormalizedPrefix.split(whereSeparator: \.isWhitespace)
+            let words = normalized.split(whereSeparator: \.isWhitespace)
+            if words.count > 1, committedWords.count > 1 {
+                return words.dropFirst(min(committedWords.count, words.count)).joined(separator: " ")
+            }
+            if normalized.count > committedNormalizedPrefix.count {
+                return String(normalized.dropFirst(committedNormalizedPrefix.count))
+                    .trimmingCharacters(in: .whitespaces)
+            }
+            return ""
+        }
+
+        private static func committedRawPrefix(
+            in text: String,
+            excludingTrailingNonWhitespaceFrom pendingText: String
+        ) -> String {
+            var pendingNonWhitespace = 0
+            for character in pendingText where !character.isWhitespace {
+                pendingNonWhitespace += 1
+            }
+            var splitIndex = text.endIndex
+            if pendingNonWhitespace > 0 {
+                var remaining = pendingNonWhitespace
+                while splitIndex > text.startIndex, remaining > 0 {
+                    splitIndex = text.index(before: splitIndex)
+                    if !text[splitIndex].isWhitespace {
+                        remaining -= 1
+                    }
+                }
+            }
+            while splitIndex > text.startIndex {
+                let prev = text.index(before: splitIndex)
+                guard text[prev].isWhitespace else { break }
+                splitIndex = prev
+            }
+            return String(text[..<splitIndex])
         }
 
         private static func fallbackBoundaryIndex(in words: [Substring]) -> Int? {
@@ -733,23 +846,18 @@
             isTerminal: Bool = false,
             sessionID: UUID
         ) {
-            let state = stateLock.withLock {
-                (
-                    (!isStopping || isTerminal) && sessionID == activeSessionID,
-                    transcriptState.stableText,
-                    transcriptState.stableSegments,
-                    transcriptState.pendingSegment,
-                    Double(processedSampleCount) / Double(sampleRate)
+            let snapshot: RealtimeRecognitionSnapshot? = stateLock.withLock {
+                guard (!isStopping || isTerminal) && sessionID == activeSessionID,
+                      !transcriptState.stableSegments.isEmpty || transcriptState.pendingSegment != nil
+                else {
+                    return nil
+                }
+                return transcriptState.makeSnapshot(
+                    audioOffset: Double(processedSampleCount) / Double(sampleRate),
+                    isTerminal: isTerminal
                 )
             }
-            guard state.0, !state.2.isEmpty || state.3 != nil else { return }
-            let snapshot = RealtimeRecognitionSnapshot(
-                precomputedStableText: state.1,
-                stableSegments: state.2,
-                pendingSegment: state.3,
-                audioOffset: state.4,
-                isTerminal: isTerminal
-            )
+            guard let snapshot else { return }
             delegate?.realtimeFluidAudioRecognizer(
                 self,
                 sessionID: sessionID,

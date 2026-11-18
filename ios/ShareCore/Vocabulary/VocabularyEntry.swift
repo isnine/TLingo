@@ -9,6 +9,8 @@ import SwiftData
 /// A saved term and its translation. Stored apart from History so its schema never migrates the History store.
 @Model
 public final class VocabularyEntry {
+    #Index<VocabularyEntry>([\.normalizedTerm, \.targetLanguageCode], [\.createdAt])
+
     @Attribute(.unique) public var id: UUID
     public var term: String
     /// Deduplication key together with `targetLanguageCode`.

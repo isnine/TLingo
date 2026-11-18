@@ -23,6 +23,7 @@ public final class RealtimeHistoryAudioPlayer: ObservableObject {
         do {
             let composition = try await RealtimeHistoryAudioTimeline.composition(for: recording)
             guard !Task.isCancelled else { return }
+            cleanupObservers()
             let item = AVPlayerItem(asset: composition)
             let player = AVPlayer(playerItem: item)
             timeObserver = player.addPeriodicTimeObserver(
@@ -39,8 +40,10 @@ public final class RealtimeHistoryAudioPlayer: ObservableObject {
                 queue: .main
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
-                    self?.isPlaying = false
-                    self?.deactivateAudioSession()
+                    guard let self else { return }
+                    self.currentTime = self.duration
+                    self.isPlaying = false
+                    self.deactivateAudioSession()
                 }
             }
             self.player = player
@@ -82,19 +85,23 @@ public final class RealtimeHistoryAudioPlayer: ObservableObject {
 
     public func stop() {
         player?.pause()
+        cleanupObservers()
+        player = nil
+        currentTime = 0
+        duration = 0
+        isPlaying = false
+        deactivateAudioSession()
+    }
+
+    private func cleanupObservers() {
         if let timeObserver, let player {
             player.removeTimeObserver(timeObserver)
         }
         if let endObserver {
             NotificationCenter.default.removeObserver(endObserver)
         }
-        player = nil
         timeObserver = nil
         endObserver = nil
-        currentTime = 0
-        duration = 0
-        isPlaying = false
-        deactivateAudioSession()
     }
 
     deinit {

@@ -431,18 +431,23 @@ public final class LLMService {
             }
             var emittedPairCount = 0
             var emittedTextLength = 0
+            var sawStreamCompletion = false
 
-            for try await line in bytes.lines {
+            for try await line in Self.sseLines(from: bytes) {
                 try Task.checkCancellation()
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard trimmedLine.hasPrefix("data:") else { continue }
                 let payload = trimmedLine.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
                 if payload == "[DONE]" {
+                    sawStreamCompletion = true
                     break
                 }
 
                 guard let data = payload.data(using: .utf8), !data.isEmpty else { continue }
                 let chunk = try ChatCompletionsStreamChunk.decode(data, using: decoder)
+                if chunk.hasFinishReason {
+                    sawStreamCompletion = true
+                }
                 let deltaText = chunk.combinedText
                 guard !deltaText.isEmpty else { continue }
                 timingTrace.receiveContent()
@@ -479,6 +484,12 @@ public final class LLMService {
 
             if isSentencePairsMode {
                 let pairs = parseSentencePairsFromJSON(finalText)
+                let unwrappedPayload = Self.unwrapJSONPayload(finalText)
+                if pairs.isEmpty,
+                   !sawStreamCompletion || unwrappedPayload.hasPrefix("{") || unwrappedPayload.hasPrefix("[")
+                {
+                    throw URLError(.cannotParseResponse)
+                }
                 let combinedText = pairs.map { "\($0.original)\n\($0.translation)" }.joined(separator: "\n\n")
                 let (cleanedText, suggestions) = Self.extractSuggestedActions(
                     from: combinedText.isEmpty ? finalText : combinedText
@@ -497,8 +508,7 @@ public final class LLMService {
             }
 
             if let config = structuredOutputConfig {
-                let parsed = parseStructuredOutputFromJSON(finalText, config: config)
-                if let parsed {
+                if let parsed = parseStructuredOutputFromJSON(finalText, config: config) {
                     let (cleanedMessage, suggestions) = Self.extractSuggestedActions(from: parsed.message)
                     let duration = Date().timeIntervalSince(start)
                     let upstream = upstreamTTFBMs.map { $0 / 1000.0 }
@@ -513,6 +523,10 @@ public final class LLMService {
                         upstreamTTFB: upstream,
                         clientToAzureLatency: timingTrace.clientHeaderOverhead
                     )
+                }
+                let unwrappedPayload = Self.unwrapJSONPayload(finalText)
+                if !sawStreamCompletion || unwrappedPayload.hasPrefix("{") || unwrappedPayload.hasPrefix("[") {
+                    throw URLError(.cannotParseResponse)
                 }
             }
 
@@ -788,7 +802,7 @@ public final class LLMService {
 
         var accumulator = ConversationResponseAccumulator()
         var toolCallAccumulator = StreamingToolCallAccumulator()
-        for try await line in bytes.lines {
+        for try await line in Self.sseLines(from: bytes) {
             try Task.checkCancellation()
             let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmedLine.hasPrefix("data:") else { continue }
@@ -850,9 +864,63 @@ public final class LLMService {
         return Self.historyAnnotationToolOutput(result)
     }
 
+    /// Splits SSE strictly on LF/CRLF so JSON U+2028/U+2029/U+0085 separators stay intact.
+    private static func sseLines(from bytes: URLSession.AsyncBytes) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    var buffer: [UInt8] = []
+                    buffer.reserveCapacity(1024)
+                    for try await byte in bytes {
+                        try Task.checkCancellation()
+                        if byte == 0x0A {
+                            if buffer.last == 0x0D {
+                                buffer.removeLast()
+                            }
+                            let line = String(decoding: buffer, as: UTF8.self)
+                            buffer.removeAll(keepingCapacity: true)
+                            continuation.yield(line)
+                        } else {
+                            buffer.append(byte)
+                        }
+                    }
+                    if !buffer.isEmpty {
+                        if buffer.last == 0x0D {
+                            buffer.removeLast()
+                        }
+                        continuation.yield(String(decoding: buffer, as: UTF8.self))
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
+        }
+    }
+
+    static func unwrapJSONPayload(_ rawText: String) -> String {
+        var text = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasPrefix("<think>"), let endThink = text.range(of: "</think>") {
+            text = String(text[endThink.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if text.hasPrefix("```") {
+            if let firstNewline = text.firstIndex(of: "\n") {
+                var inner = text[text.index(after: firstNewline)...]
+                if let closingFence = inner.range(of: "```", options: .backwards) {
+                    inner = inner[..<closingFence.lowerBound]
+                }
+                text = String(inner).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return text
+    }
+
     /// Parse sentence pairs from raw JSON string
     private func parseSentencePairsFromJSON(_ jsonString: String) -> [SentencePair] {
-        guard let data = jsonString.data(using: .utf8),
+        guard let data = Self.unwrapJSONPayload(jsonString).data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let pairsArray = json[ActionConfig.StructuredOutputConfig.sentencePairsFieldName] as? [[String: Any]]
         else {
@@ -882,7 +950,7 @@ public final class LLMService {
         _ jsonString: String,
         config: ActionConfig.StructuredOutputConfig
     ) -> ParsedResponse? {
-        guard let data = jsonString.data(using: .utf8),
+        guard let data = Self.unwrapJSONPayload(jsonString).data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let primaryValue = json[config.primaryField] as? String,
               !primaryValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

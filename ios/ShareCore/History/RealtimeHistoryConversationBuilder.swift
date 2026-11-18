@@ -50,12 +50,13 @@ public enum RealtimeHistoryConversationBuilder {
 
     private static func transcriptSegments(from session: RealtimeHistorySession) -> [RealtimeHistoryTranscriptSegment] {
         let source = session.primaryAudioSource
-        return session.segments.enumerated().map { index, segment in
+        let baseSegments = session.segments.isEmpty ? (session.primaryTrack?.legacySegments ?? []) : session.segments
+        return baseSegments.enumerated().map { index, segment in
             RealtimeHistoryTranscriptSegment(
                 id: segment.id,
                 source: source,
                 offset: segment.offset,
-                duration: duration(for: index, in: session.segments),
+                duration: duration(for: index, in: baseSegments),
                 text: segment.sourceText,
                 translatedText: segment.translatedText
             )
@@ -91,10 +92,8 @@ public enum RealtimeHistoryConversationBuilder {
         if left == right { return 1 }
         let shorter = min(left.count, right.count)
         let longer = max(left.count, right.count)
-        if longer > 0,
-           left.contains(right) || right.contains(left),
-           Double(shorter) / Double(longer) >= 0.82
-        {
+        guard longer > 0, Double(shorter) / Double(longer) >= 0.82 else { return 0 }
+        if left.contains(right) || right.contains(left) {
             return Double(shorter) / Double(longer)
         }
         let distance = levenshtein(Array(left), Array(right))

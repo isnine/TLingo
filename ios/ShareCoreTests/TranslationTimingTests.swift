@@ -2,7 +2,7 @@ import Foundation
 @testable import ShareCore
 import Testing
 
-@Suite("Text translation timing")
+@Suite("Text translation timing", .serialized)
 struct TranslationTimingTests {
     @Test("Header overhead excludes generation and preserves first milestones")
     func headerOverhead() throws {
@@ -94,7 +94,12 @@ struct TranslationTimingTests {
         coalescer.append(.text("A"))
         coalescer.append(.text("AB"))
         coalescer.append(.text("ABC"))
-        try await Task.sleep(for: .milliseconds(80))
+        for _ in 0 ..< 25 {
+            if values == ["A", "ABC"] {
+                break
+            }
+            try await Task.sleep(for: .milliseconds(20))
+        }
         #expect(values == ["A", "ABC"])
         coalescer.cancel()
     }

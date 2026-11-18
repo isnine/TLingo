@@ -15,6 +15,7 @@ public final class MetricKitReporter: NSObject, MXMetricManagerSubscriber, @unch
     private let directory: URL?
     private let lock = NSLock()
     private var isStarted = false
+    private var lastStamp: (milliseconds: UInt64, sequence: UInt32) = (0, 0)
 
     init(directory: URL? = MetricKitReporter.defaultDirectory) {
         self.directory = directory
@@ -69,9 +70,15 @@ public final class MetricKitReporter: NSObject, MXMetricManagerSubscriber, @unch
         lock.withLock {
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-                let stamp = Int(Date().timeIntervalSince1970 * 1000)
-                // Zero-padded stamp keeps lexical order chronological within each kind.
-                let name = "\(kind.rawValue)-\(String(format: "%015d", stamp))-\(UUID().uuidString).json"
+                let nowMs = UInt64(max(0, Date().timeIntervalSince1970 * 1000))
+                if nowMs > lastStamp.milliseconds {
+                    lastStamp = (nowMs, 0)
+                } else {
+                    lastStamp.sequence &+= 1
+                }
+                // Zero-padded stamp + sequence keeps lexical order strictly chronological even within 1 ms.
+                let stamp = String(format: "%015llu%04u", lastStamp.milliseconds, lastStamp.sequence)
+                let name = "\(kind.rawValue)-\(stamp)-\(UUID().uuidString).json"
                 try data.write(to: directory.appendingPathComponent(name), options: .atomic)
                 for file in storedFiles().dropFirst(Self.maxStoredPayloads) {
                     try? FileManager.default.removeItem(at: file)

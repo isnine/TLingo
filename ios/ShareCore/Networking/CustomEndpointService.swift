@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import Security
 
 public struct CustomEndpointModel: Codable, Hashable, Sendable {
@@ -53,13 +54,21 @@ public final class CustomEndpointService: Sendable {
 
     private let urlSession: URLSession
 
+    private enum CachedEndpointState: Sendable {
+        case uncached
+        case empty
+        case loaded(StoredEndpoint)
+    }
+
+    private let cacheLock = OSAllocatedUnfairLock<CachedEndpointState>(initialState: .uncached)
+
     public init(urlSession: URLSession = NetworkSession.shared) {
         self.urlSession = urlSession
     }
 
     // MARK: - Stored Configuration
 
-    private struct StoredEndpoint: Codable {
+    private struct StoredEndpoint: Codable, Sendable {
         let configuration: CustomEndpointConfiguration
         let token: String
     }
@@ -83,6 +92,29 @@ public final class CustomEndpointService: Sendable {
     }
 
     private var stored: StoredEndpoint? {
+        if let cached = cacheLock.withLock({ state -> StoredEndpoint?? in
+            switch state {
+            case .uncached:
+                return nil
+            case .empty:
+                return .some(nil)
+            case let .loaded(value):
+                return .some(value)
+            }
+        }) {
+            return cached
+        }
+
+        let loaded = loadFromKeychain()
+        cacheLock.withLock { state in
+            if case .uncached = state {
+                state = loaded.map(CachedEndpointState.loaded) ?? .empty
+            }
+        }
+        return loaded
+    }
+
+    private func loadFromKeychain() -> StoredEndpoint? {
         var query = Self.keychainQuery
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -96,7 +128,8 @@ public final class CustomEndpointService: Sendable {
     }
 
     public func save(_ configuration: CustomEndpointConfiguration, token: String) throws {
-        let data = try JSONEncoder().encode(StoredEndpoint(configuration: configuration, token: token))
+        let entry = StoredEndpoint(configuration: configuration, token: token)
+        let data = try JSONEncoder().encode(entry)
         var status = SecItemUpdate(
             Self.keychainQuery as CFDictionary,
             [kSecValueData as String: data] as CFDictionary
@@ -109,10 +142,12 @@ public final class CustomEndpointService: Sendable {
             status = SecItemAdd(add as CFDictionary, nil)
         }
         guard status == errSecSuccess else { throw CustomEndpointError.storageFailed(status) }
+        cacheLock.withLock { $0 = .loaded(entry) }
     }
 
     public func remove() {
         SecItemDelete(Self.keychainQuery as CFDictionary)
+        cacheLock.withLock { $0 = .empty }
     }
 
     private static var keychainQuery: [String: Any] {

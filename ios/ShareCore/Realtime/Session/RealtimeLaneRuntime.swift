@@ -40,6 +40,7 @@
         )] = [:]
         private var isTranslationDisabled = false
         private var hasSuccessfulTranslation = false
+        private var captionClearAnchor: RealtimeCaptionDisplayClearAnchor = .empty
 
         init(
             configuration: RealtimeLaneConfiguration,
@@ -100,10 +101,19 @@
                 }
                 historyBuilder.noteRecognition(timings: recognitionTimings)
             }
-            snapshot.sourceText = transcriptAccumulator.append(result, afterLongSilence: false)
+            let snapshotSourceText = transcriptAccumulator.append(result, afterLongSilence: false)
+            snapshot.sourceText = snapshotSourceText
+            let committedCount: Int
+            if !configuration.translationProvider.performsTranslation {
+                committedCount = result.snapshot?.stableSegments.count
+                    ?? RealtimeTranscriptSegmenter.segments(from: transcriptAccumulator.committedText).count
+            } else {
+                translationState.updateSources(from: transcriptAccumulator)
+                committedCount = translationState.sourceSegments.count
+            }
             historyBuilder.noteSource(
-                committedCount: RealtimeTranscriptSegmenter.segments(from: transcriptAccumulator.committedText).count,
-                hasText: !snapshot.sourceText.isEmpty,
+                committedCount: committedCount,
+                hasText: !snapshotSourceText.isEmpty,
                 at: Date(timeIntervalSinceReferenceDate: currentEventOffset - snapshot.startedOffset)
             )
             snapshot.phase = .recognizing
@@ -115,7 +125,6 @@
                 return
             }
 
-            translationState.updateSources(from: transcriptAccumulator)
             scheduleTranslation(latencyContext: latestTranslationLatencyContext(
                 recognizedAt: recognizedAt,
                 capturedAudioOffset: capturedAudioOffset,
@@ -147,6 +156,15 @@
             } else {
                 syncApplePresentation()
             }
+        }
+
+        func clearCaptionDisplay() {
+            let allLines = configuration.translationProvider.performsTranslation
+                ? appleCaptionLines()
+                : sourceOnlyCaptionLines()
+            captionClearAnchor = RealtimeCaptionDisplayClearAnchor(lines: allLines)
+            snapshot.captionLines = []
+            publish()
         }
 
         func fail(_ error: Error) {
@@ -379,37 +397,20 @@
             )
         }
 
-        private func syncApplePresentation() {
-            snapshot.sourceText = transcriptAccumulator.visibleText
-            snapshot.translatedText = translationState.translatedText
-            snapshot.pendingSourceText = translationState.pendingSourceText
-            snapshot.pendingTranslatedText = translationState.pendingTranslatedText
-            snapshot.sentencePairs = translationState.sentencePairs
-            snapshot.captionLines = RealtimeCaptionDisplay.displayWindow(
-                RealtimeCaptionDisplay.resolvedLines(
-                    pairs: translationState.sentencePairs,
-                    translatedSourceSegments: translationState.sourceSegments,
-                    translatedSource: translationState.translationSourceText,
-                    translatedText: translationState.translatedText,
-                    pendingSource: translationState.pendingSourceText,
-                    pendingTranslation: translationState.pendingTranslatedText,
-                    sourceText: transcriptAccumulator.visibleText,
-                    mode: displayMode()
-                ),
-                limit: 160
-            )
-            historyBuilder.sync(
+        private func appleCaptionLines() -> [RealtimeCaptionLine] {
+            RealtimeCaptionDisplay.resolvedLines(
                 pairs: translationState.sentencePairs,
-                at: Date(timeIntervalSinceReferenceDate: currentEventOffset - snapshot.startedOffset)
+                translatedSourceSegments: translationState.sourceSegments,
+                translatedSource: translationState.translationSourceText,
+                translatedText: translationState.translatedText,
+                pendingSource: translationState.pendingSourceText,
+                pendingTranslation: translationState.pendingTranslatedText,
+                sourceText: transcriptAccumulator.visibleText,
+                mode: displayMode()
             )
-            publish()
         }
 
-        private func refreshSourceOnlyPresentation() {
-            snapshot.translatedText = ""
-            snapshot.pendingSourceText = transcriptAccumulator.partialText
-            snapshot.pendingTranslatedText = ""
-            snapshot.sentencePairs = []
+        private func sourceOnlyCaptionLines() -> [RealtimeCaptionLine] {
             var structuredLines = recognitionSegments.map {
                 RealtimeCaptionLine(
                     id: "recognition-\($0.id.uuidString)",
@@ -425,18 +426,43 @@
                     isPending: true
                 ))
             }
+            return structuredLines.isEmpty
+                ? RealtimeCaptionDisplay.resolvedLines(
+                    pairs: [],
+                    translatedSource: transcriptAccumulator.committedText,
+                    translatedText: "",
+                    pendingSource: transcriptAccumulator.partialText,
+                    pendingTranslation: "",
+                    sourceText: transcriptAccumulator.visibleText,
+                    mode: .sourceOnly
+                )
+                : structuredLines
+        }
+
+        private func syncApplePresentation() {
+            snapshot.sourceText = transcriptAccumulator.visibleText
+            snapshot.translatedText = translationState.translatedText
+            snapshot.pendingSourceText = translationState.pendingSourceText
+            snapshot.pendingTranslatedText = translationState.pendingTranslatedText
+            snapshot.sentencePairs = translationState.sentencePairs
             snapshot.captionLines = RealtimeCaptionDisplay.displayWindow(
-                structuredLines.isEmpty
-                    ? RealtimeCaptionDisplay.resolvedLines(
-                        pairs: [],
-                        translatedSource: transcriptAccumulator.committedText,
-                        translatedText: "",
-                        pendingSource: transcriptAccumulator.partialText,
-                        pendingTranslation: "",
-                        sourceText: transcriptAccumulator.visibleText,
-                        mode: .sourceOnly
-                    )
-                    : structuredLines,
+                RealtimeCaptionDisplay.linesVisibleAfterClear(appleCaptionLines(), anchor: captionClearAnchor),
+                limit: 160
+            )
+            historyBuilder.sync(
+                pairs: translationState.sentencePairs,
+                at: Date(timeIntervalSinceReferenceDate: currentEventOffset - snapshot.startedOffset)
+            )
+            publish()
+        }
+
+        private func refreshSourceOnlyPresentation() {
+            snapshot.translatedText = ""
+            snapshot.pendingSourceText = transcriptAccumulator.partialText
+            snapshot.pendingTranslatedText = ""
+            snapshot.sentencePairs = []
+            snapshot.captionLines = RealtimeCaptionDisplay.displayWindow(
+                RealtimeCaptionDisplay.linesVisibleAfterClear(sourceOnlyCaptionLines(), anchor: captionClearAnchor),
                 limit: 160
             )
             publish()
@@ -520,6 +546,9 @@
         private func resultAfterActivation(_ result: RealtimeRecognitionResult) -> RealtimeRecognitionResult? {
             guard let recognitionSnapshot = result.snapshot else { return result }
             if !recognitionSnapshot.stableSegments.isEmpty || recognitionSnapshot.pendingSegment != nil {
+                if snapshot.startedOffset <= 0 {
+                    return result
+                }
                 let stableSegments = recognitionSnapshot.stableSegments.filter {
                     $0.startOffset >= snapshot.startedOffset
                 }

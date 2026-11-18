@@ -1,13 +1,14 @@
 import Foundation
+import os
 import Testing
 
 @testable import ShareCore
 
-@Suite("ModelsService")
+@Suite("ModelsService", .serialized)
 struct ModelsServiceTests {
     @Test("Force refresh always requests the network")
     func forceRefreshAlwaysRequestsNetwork() async throws {
-        ModelsURLProtocol.requestCount = 0
+        ModelsURLProtocol.reset()
         let service = ModelsService(urlSession: URLSession(configuration: ModelsURLProtocol.configuration))
 
         _ = try await service.fetchModels(forceRefresh: true)
@@ -40,7 +41,15 @@ struct ModelsServiceTests {
 }
 
 private final class ModelsURLProtocol: URLProtocol {
-    nonisolated(unsafe) static var requestCount = 0
+    private static let lock = OSAllocatedUnfairLock(initialState: 0)
+
+    static var requestCount: Int {
+        lock.withLock { $0 }
+    }
+
+    static func reset() {
+        lock.withLock { $0 = 0 }
+    }
 
     static var configuration: URLSessionConfiguration {
         let configuration = URLSessionConfiguration.ephemeral
@@ -57,7 +66,7 @@ private final class ModelsURLProtocol: URLProtocol {
     }
 
     override func startLoading() {
-        Self.requestCount += 1
+        Self.lock.withLock { $0 += 1 }
         let response = HTTPURLResponse(
             url: request.url!,
             statusCode: 200,

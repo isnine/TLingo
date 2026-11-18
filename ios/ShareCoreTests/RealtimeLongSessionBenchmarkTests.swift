@@ -82,11 +82,9 @@
                     totals.state += milliseconds(start.duration(to: clock.now))
 
                     start = clock.now
-                    let result = RealtimeRecognitionResult(snapshot: RealtimeRecognitionSnapshot(
-                        stableSegments: transcriptState.stableSegments,
-                        pendingSegment: transcriptState.pendingSegment,
-                        audioOffset: offset
-                    ))
+                    let result = RealtimeRecognitionResult(
+                        snapshot: transcriptState.makeSnapshot(audioOffset: offset)
+                    )
                     totals.snapshot += milliseconds(start.duration(to: clock.now))
 
                     start = clock.now

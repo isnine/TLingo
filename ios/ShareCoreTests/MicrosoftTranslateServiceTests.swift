@@ -1,4 +1,5 @@
 import Foundation
+import os
 @testable import ShareCore
 import Testing
 
@@ -38,11 +39,33 @@ struct MicrosoftTranslateServiceTests {
         }
         #expect(translated == "Hola")
     }
+
+    @Test("Normalizes Chinese locale variants to Microsoft translator codes")
+    func normalizesChineseLocaleVariants() {
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh") == "zh-Hans")
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh-CN") == "zh-Hans")
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh-SG") == "zh-Hans")
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh-TW") == "zh-Hant")
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh-HK") == "zh-Hant")
+        #expect(MicrosoftTranslateService.translatorCode(for: "zh-MO") == "zh-Hant")
+    }
 }
 
 private final class MicrosoftTranslateURLProtocol: URLProtocol {
-    nonisolated(unsafe) static var request: URLRequest?
-    nonisolated(unsafe) static var requestBody: Data?
+    private struct State: @unchecked Sendable {
+        var request: URLRequest?
+        var requestBody: Data?
+    }
+
+    private static let state = OSAllocatedUnfairLock(initialState: State())
+
+    static var request: URLRequest? {
+        state.withLock(\.request)
+    }
+
+    static var requestBody: Data? {
+        state.withLock(\.requestBody)
+    }
 
     static var configuration: URLSessionConfiguration {
         let configuration = URLSessionConfiguration.ephemeral
@@ -51,8 +74,7 @@ private final class MicrosoftTranslateURLProtocol: URLProtocol {
     }
 
     static func reset() {
-        request = nil
-        requestBody = nil
+        state.withLock { $0 = State() }
     }
 
     override static func canInit(with _: URLRequest) -> Bool {
@@ -64,8 +86,12 @@ private final class MicrosoftTranslateURLProtocol: URLProtocol {
     }
 
     override func startLoading() {
-        Self.request = request
-        Self.requestBody = requestBodyData()
+        let capturedRequest = request
+        let capturedBody = requestBodyData()
+        Self.state.withLock {
+            $0.request = capturedRequest
+            $0.requestBody = capturedBody
+        }
 
         let response = HTTPURLResponse(
             url: request.url!,

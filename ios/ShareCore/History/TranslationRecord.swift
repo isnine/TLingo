@@ -655,11 +655,15 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
     }
 
     public var sourceText: String {
-        segments.map(\.sourceText).joined(separator: "\n")
+        displaySegments.map(\.sourceText).joined(separator: "\n")
     }
 
     public var translatedText: String {
-        segments.map(\.translatedText).joined(separator: "\n")
+        displaySegments.map(\.translatedText).joined(separator: "\n")
+    }
+
+    private var displaySegments: [RealtimeHistorySegment] {
+        segments.isEmpty ? (primaryTrack?.legacySegments ?? []) : segments
     }
 
     public var sourceTextForCopy: String {
@@ -759,7 +763,7 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
         if !generated.isEmpty {
             return generated
         }
-        let first = segments.first?.sourceText.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let first = displaySegments.first?.sourceText.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return first.isEmpty ? fallback : first
     }
 
@@ -797,28 +801,37 @@ public struct RealtimeHistorySession: Codable, Hashable, Sendable {
 }
 
 private extension RealtimeHistorySession {
+    static let maxTrackConversationContextLength = 48000
+
     var realtimeTracksConversationContext: String {
-        "Realtime Tracks:\n" + tracks.map { track in
-            let cells = track.segments.map { segment in
-                let speaker = segment.speakerID.map { "\nSpeaker: \($0)" } ?? ""
-                return """
-                Cell ID: \(segment.id.uuidString)
-                Time: \(segment.offsetLabel)-\(segment.endOffset.clockLabel)\(speaker)
-                Original:
-                \(segment.sourceText)
-                Translation:
-                \(segment.translatedText)
-                """
-            }
-            .joined(separator: "\n\n")
+        guard let track = primaryTrack ?? tracks.first else {
+            return "Realtime Tracks:"
+        }
+        let header = """
+        Track ID: \(track.id.uuidString)
+        Audio Source: \((track.audioSource ?? primaryAudioSource).title)
+        Recognition: \(track.recognitionModelDisplayName)
+        Translation: \(track.translationProviderDisplayName)
+        """
+        let cells = track.segments.map { segment in
+            let speaker = segment.speakerID.map { "\nSpeaker: \($0)" } ?? ""
             return """
-            Track ID: \(track.id.uuidString)
-            Audio Source: \((track.audioSource ?? primaryAudioSource).title)
-            Recognition: \(track.recognitionModelDisplayName)
-            Translation: \(track.translationProviderDisplayName)
-            \(cells)
+            Cell ID: \(segment.id.uuidString)
+            Time: \(segment.offsetLabel)-\(segment.endOffset.clockLabel)\(speaker)
+            Original:
+            \(segment.sourceText)
+            Translation:
+            \(segment.translatedText)
             """
-        }.joined(separator: "\n\n")
+        }
+        .joined(separator: "\n\n")
+        let full = "Realtime Tracks:\n\(header)\n\(cells)"
+        guard full.count > Self.maxTrackConversationContextLength else {
+            return full
+        }
+        let prefix = "Realtime Tracks:\n\(header)\n\n[... earlier transcript omitted ...]\n\n"
+        let tailBudget = max(0, Self.maxTrackConversationContextLength - prefix.count)
+        return prefix + String(cells.suffix(tailBudget))
     }
 }
 
@@ -922,6 +935,8 @@ private struct StoredConversationMessage: Codable {
 
 @Model
 public final class TranslationRecord {
+    #Index<TranslationRecord>([\.timestamp], [\.requestID], [\.actionName, \.timestamp])
+
     public static let realtimeActionName = "Realtime"
     public static let realtimeSystemImageName = "waveform.and.mic"
 

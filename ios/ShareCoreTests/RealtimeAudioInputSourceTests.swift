@@ -30,7 +30,12 @@ struct RealtimeAudioInputSourceTests {
             )
             #expect(RealtimeAudioInputSource.microphone.supportedRecognitionModels == RecognitionModelStore.availableModels)
             #expect(RealtimeAudioInputSource.iphoneAudio.supportedTranslationProviders == [.appleTranslator, .transcriptionOnly])
-            #expect(RealtimeAudioInputSource.iphoneAudio.supportedRecognitionModels == [.appleSpeech])
+            #expect(
+                RealtimeAudioInputSource.iphoneAudio.supportedRecognitionModels
+                    == RecognitionModelStore.availableModels.filter {
+                        $0.runtime == .appleSpeech || $0.runtime == .fluidAudio
+                    }
+            )
         #elseif os(macOS)
             #expect(
                 RealtimeAudioInputSource.macAudio.supportedTranslationProviders == RealtimeTranslationProvider

@@ -4,6 +4,7 @@ import Foundation
 
 final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
     private let lock = NSLock()
+    private let conversionLock = NSLock()
     /// AAC encoding for buffers handed over by `enqueue`, off the realtime audio thread.
     private let writeQueue = DispatchQueue(label: "TLingo.RealtimeAudioHistoryRecorder.write")
     private let fileManager: FileManager
@@ -93,7 +94,6 @@ final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
     }
 
     func snapshot() -> RealtimeHistoryAudioRecording? {
-        writeQueue.sync {}
         lock.lock()
         defer { lock.unlock() }
 
@@ -105,7 +105,11 @@ final class RealtimeAudioHistoryRecorder: @unchecked Sendable {
         lock.lock()
         let canRecord = isActive && !isPaused
         lock.unlock()
-        guard canRecord, let pcmBuffer = sampleBufferConverter?.pcmBuffer(from: sampleBuffer) else { return false }
+        guard canRecord else { return false }
+        let pcmBuffer: AVAudioPCMBuffer? = conversionLock.withLock {
+            sampleBufferConverter?.pcmBuffer(from: sampleBuffer)
+        }
+        guard let pcmBuffer else { return false }
         return append(pcmBuffer)
     }
 

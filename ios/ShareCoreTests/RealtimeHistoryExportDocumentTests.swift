@@ -150,7 +150,7 @@ struct RealtimeHistoryExportDocumentTests {
 
         #expect(trackFiles.count == 2)
         #expect(trackFiles.keys.contains { $0.contains("apple-speech-apple-translator") })
-        #expect(trackFiles.keys.contains { $0.contains("qwen3-asr-azure-gpt-realtime-translator") })
+        #expect(trackFiles.keys.contains { $0.contains("qwen3-asr-apple-translation-realtime") })
         #expect(markdown.contains("## Mac Audio · Apple Speech → Apple Translator"))
         #expect(markdown.contains("## Mac Audio · Qwen3 ASR → Apple Translation Realtime"))
         #expect(markdown.contains("Speaker S01"))

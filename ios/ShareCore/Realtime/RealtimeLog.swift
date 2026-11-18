@@ -19,12 +19,13 @@ public enum RealtimeLog {
     /// Quoted preview plus length. Release builds record only the length so speech content
     /// does not leave the device through sysdiagnose.
     static func text(_ text: String, limit: Int = 48) -> String {
-        let normalized = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         #if DEBUG
+            let window = text.prefix(max(limit * 4, 256))
+            let normalized = window.split(whereSeparator: \.isWhitespace).joined(separator: " ")
             let preview = normalized.count > limit ? "\(normalized.prefix(limit))…" : normalized
-            return "\"\(preview)\"(\(normalized.count))"
+            return "\"\(preview)\"(\(text.count))"
         #else
-            return "(\(normalized.count))"
+            return "(\(text.utf8.count))"
         #endif
     }
 

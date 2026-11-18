@@ -108,6 +108,7 @@ public final class StoreManager: ObservableObject {
         #else
             // Read cached premium status from App Group defaults
             isPremium = AppPreferences.sharedDefaults.bool(forKey: Self.premiumKey)
+            activePremiumProductID = AppPreferences.sharedDefaults.string(forKey: Self.premiumProductIDKey)
             usageAppStoreSubjectID = AppPreferences.sharedDefaults.string(forKey: Self.usageAppStoreSubjectIDKey)
             // Earlier builds let TestFlight testers grant premium locally.
             AppPreferences.sharedDefaults.removeObject(forKey: "testflight_premium_override")
@@ -178,12 +179,12 @@ public final class StoreManager: ObservableObject {
             case let .success(verification):
                 let transaction = try checkVerified(verification)
                 updateUsageSubject(from: transaction)
-                await transaction.finish()
                 if PremiumProduct.allIdentifiers.contains(transaction.productID) {
                     activePremiumProductID = transaction.productID
                     updatePremiumStatus(true)
                 }
                 await checkSubscriptionStatus(including: (transaction, verification.jwsRepresentation))
+                await transaction.finish()
                 logger.info("Purchase successful: \(product.id, privacy: .public)")
                 return true
 
@@ -353,9 +354,9 @@ public final class StoreManager: ObservableObject {
             for await result in Transaction.updates {
                 guard let self else { return }
                 if let transaction = try? await self.checkVerified(result) {
-                    await transaction.finish()
                     // currentEntitlements omits refunded transactions, so the revocation is only visible here.
                     await self.checkSubscriptionStatus(including: (transaction, result.jwsRepresentation))
+                    await transaction.finish()
                 }
             }
         }

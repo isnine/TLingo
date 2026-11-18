@@ -30,6 +30,8 @@ public final class VocabularyStore: ObservableObject {
     private let container: ModelContainer?
     private let storeURL: URL?
     private var context: ModelContext?
+    private var savedKeys: Set<String> = []
+    private var lastReloadedAt: Date?
 
     init(storeURL: URL?) {
         self.storeURL = storeURL
@@ -56,13 +58,21 @@ public final class VocabularyStore: ObservableObject {
         }
     }
 
+    /// Coalesces `.onAppear` / scene activation reloads across visible bookmark buttons.
+    public func reloadIfStale(minimumInterval: TimeInterval = 0.25) {
+        if let lastReloadedAt, Date().timeIntervalSince(lastReloadedAt) < minimumInterval {
+            return
+        }
+        reload()
+    }
+
     /// Re-reads the store; the translation extension may have written to it.
     public func reload() {
         do {
-            try withFreshContext { context in
-                entries = try fetchEntries(context)
+            let snapshot = try withFreshContext { context -> ([VocabularyEntry], ModelContext) in
+                try (fetchEntries(context), context)
             }
-            loadError = nil
+            applySnapshot(entries: snapshot.0, context: snapshot.1)
         } catch {
             logger.error("Vocabulary fetch failed: \(error.localizedDescription, privacy: .public)")
             loadError = error.localizedDescription
@@ -70,7 +80,7 @@ public final class VocabularyStore: ObservableObject {
     }
 
     public func contains(_ draft: VocabularyDraft) -> Bool {
-        entry(for: draft) != nil
+        savedKeys.contains(draft.key)
     }
 
     /// Saves the draft, replacing the translation of an existing entry for the same term and target language.
@@ -140,9 +150,19 @@ public final class VocabularyStore: ObservableObject {
         ))
     }
 
+    private func applySnapshot(entries: [VocabularyEntry], context: ModelContext) {
+        self.context = context
+        self.entries = entries
+        savedKeys = Set(entries.map {
+            VocabularyDraft.key(normalizedTerm: $0.normalizedTerm, targetLanguageCode: $0.targetLanguageCode)
+        })
+        lastReloadedAt = Date()
+        loadError = nil
+    }
+
     private func update(_ mutation: (ModelContext, [VocabularyEntry]) -> Void) throws {
         do {
-            try withFreshContext { context in
+            let snapshot = try withFreshContext { context -> ([VocabularyEntry], ModelContext) in
                 let persisted = try fetchEntries(context)
                 mutation(context, persisted)
                 do {
@@ -151,9 +171,9 @@ public final class VocabularyStore: ObservableObject {
                     context.rollback()
                     throw error
                 }
-                entries = try fetchEntries(context)
+                return try (fetchEntries(context), context)
             }
-            loadError = nil
+            applySnapshot(entries: snapshot.0, context: snapshot.1)
         } catch {
             logger.error("Vocabulary update failed: \(error.localizedDescription, privacy: .public)")
             loadError = error.localizedDescription
@@ -161,20 +181,23 @@ public final class VocabularyStore: ObservableObject {
         }
     }
 
-    private func withFreshContext(_ operation: (ModelContext) throws -> Void) throws {
+    private func withFreshContext<T>(_ operation: (ModelContext) throws -> T) throws -> T {
         guard let container, let storeURL else { throw VocabularyStoreError.unavailable }
-        try Self.withExclusiveAccess(to: storeURL) {
+        return try Self.withExclusiveAccess(to: storeURL) {
             // A fetch on a long-lived context can return cached objects after another process writes.
             let freshContext = ModelContext(container)
             freshContext.autosaveEnabled = false
-            try operation(freshContext)
-            context = freshContext
+            return try operation(freshContext)
         }
     }
 
     nonisolated static func withExclusiveAccess<T>(to storeURL: URL, _ operation: () throws -> T) throws -> T {
         // App and extension must serialize the entire read/modify/save, not just SQLite's save.
-        let descriptor = open(storeURL.appendingPathExtension("lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        let descriptor = open(
+            storeURL.appendingPathExtension("lock").path,
+            O_CREAT | O_RDWR | O_CLOEXEC,
+            S_IRUSR | S_IWUSR
+        )
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
         defer { close(descriptor) }
         while flock(descriptor, LOCK_EX) != 0 {

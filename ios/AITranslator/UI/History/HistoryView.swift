@@ -181,9 +181,14 @@ struct HistoryView: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete All", role: .destructive) {
-                    TranslationHistoryService.shared.deleteAll()
-                    withAnimation {
-                        records.removeAll()
+                    if TranslationHistoryService.shared.deleteAll() {
+                        if TranslationHistoryService.shared.activeRealtimeRequestID == nil {
+                            withAnimation {
+                                records.removeAll()
+                            }
+                        } else {
+                            refreshRecords()
+                        }
                     }
                 }
             } message: {
@@ -297,9 +302,11 @@ struct HistoryView: View {
                 }
             }
             .swipeActions(edge: .leading) {
-                if let result = copyableResult(for: record) {
+                if hasCopyableResult(for: record) {
                     Button {
-                        PasteboardHelper.copy(result)
+                        if let result = copyableResult(for: record) {
+                            PasteboardHelper.copy(result)
+                        }
                     } label: {
                         Label("Copy Result", systemImage: "doc.on.doc")
                     }
@@ -322,7 +329,11 @@ struct HistoryView: View {
                 Button {
                     onConversationSelected(record)
                 } label: {
-                    TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
+                    TextHistoryRow(
+                        record: record,
+                        results: decoded.results,
+                        languagePair: decodedRecords.languagePair(for: record)
+                    )
                 }
                 .buttonStyle(.plain)
             } else {
@@ -335,14 +346,22 @@ struct HistoryView: View {
                     )
                     .id(record.id)
                 } label: {
-                    TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
+                    TextHistoryRow(
+                        record: record,
+                        results: decoded.results,
+                        languagePair: decodedRecords.languagePair(for: record)
+                    )
                 }
             }
         } else {
             NavigationLink {
                 HistoryRecordDetailView(record: record)
             } label: {
-                TextHistoryRow(record: record, results: decoded.results, languagePair: decoded.languagePair)
+                TextHistoryRow(
+                    record: record,
+                    results: decoded.results,
+                    languagePair: decodedRecords.languagePair(for: record)
+                )
             }
         }
     }
@@ -382,6 +401,15 @@ struct HistoryView: View {
 
     // MARK: - Helpers
 
+    private func hasCopyableResult(for record: TranslationRecord) -> Bool {
+        let decoded = decodedRecords.decoded(record)
+        if let session = decoded.session {
+            return !session.translatedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !session.delayedTranscriptSegments.isEmpty
+        }
+        return decoded.results.first.map { !$0.resultText.isEmpty } ?? false
+    }
+
     private func copyableResult(for record: TranslationRecord) -> String? {
         let decoded = decodedRecords.decoded(record)
         let text = decoded.session?.translatedTextForCopy ?? decoded.results.first?.resultText
@@ -402,7 +430,7 @@ struct HistoryView: View {
     }
 
     private func delete(_ record: TranslationRecord) {
-        TranslationHistoryService.shared.delete(record)
+        guard TranslationHistoryService.shared.delete(record) else { return }
         withAnimation { records.removeAll { $0.id == record.id } }
     }
 
@@ -417,31 +445,39 @@ private final class DecodedHistoryRecordCache {
     struct Entry {
         let session: RealtimeHistorySession?
         let results: [ModelResult]
-        let languagePair: String?
     }
 
     private var entries: [PersistentIdentifier: Entry] = [:]
+    private var languagePairs: [PersistentIdentifier: String] = [:]
 
     func decoded(_ record: TranslationRecord) -> Entry {
         if let entry = entries[record.persistentModelID] {
             return entry
         }
-        let session = record.realtimeSession
         let entry = Entry(
-            session: session,
-            results: record.modelResults,
-            languagePair: session == nil ? Self.languagePair(for: record) : nil
+            session: record.realtimeSession,
+            results: record.modelResults
         )
         entries[record.persistentModelID] = entry
         return entry
     }
 
+    func languagePair(for record: TranslationRecord) -> String? {
+        if let cached = languagePairs[record.persistentModelID] {
+            return cached.isEmpty ? nil : cached
+        }
+        let computed = Self.computeLanguagePair(for: record) ?? ""
+        languagePairs[record.persistentModelID] = computed
+        return computed.isEmpty ? nil : computed
+    }
+
     func removeAll() {
         entries.removeAll()
+        languagePairs.removeAll()
     }
 
     /// Records keep only the target's English name, so the source is detected from the text.
-    private static func languagePair(for record: TranslationRecord) -> String? {
+    private static func computeLanguagePair(for record: TranslationRecord) -> String? {
         guard let target = TargetLanguageOption.allCases.first(where: {
             $0 != .appLanguage && $0.englishName == record.targetLanguage
         }) else { return nil }

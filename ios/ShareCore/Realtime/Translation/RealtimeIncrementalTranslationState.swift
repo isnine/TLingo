@@ -12,6 +12,12 @@ struct RealtimeTextTranslationRequest {
 }
 
 struct RealtimeIncrementalTranslationState {
+    private struct TranslationConfiguration: Equatable {
+        let provider: RealtimeTranslationProvider
+        let sourceLanguage: SourceLanguageOption
+        let targetLanguage: TargetLanguageOption
+    }
+
     /// Bounded memory cache that lets re-displayed segments skip re-translation. It may be
     /// smaller than a long session's segment count: display and dedup both fall back to the
     /// currently displayed `sentencePairs`, so eviction only lowers the cache-hit rate.
@@ -29,6 +35,12 @@ struct RealtimeIncrementalTranslationState {
     private var finalizedPreviewPairsBySource: [String: SentencePair] = [:]
     private var queuedFinalTranslationKeys: Set<String> = []
     private var partialTranslationSourceTracker = RealtimeTranslationSourceTracker()
+    private var stableGeneration: UInt64 = 0
+    private var cachedPairsGeneration: UInt64?
+    private var cachedPairsConfiguration: TranslationConfiguration?
+    private var pendingFinalScanStartIndex = 0
+    private var lastFinalScanConfiguration: TranslationConfiguration?
+    private var cachedPairsCanExtendFromCount: Int?
 
     /// Committed and in-progress source sentences without translations, for transcription-only history.
     var sourceOnlyPairs: [SentencePair] {
@@ -39,6 +51,7 @@ struct RealtimeIncrementalTranslationState {
         translationSourceText = ""
         pendingSourceText = ""
         sourceSegments = []
+        stableGeneration &+= 1
         resetTranslationResults()
     }
 
@@ -51,6 +64,11 @@ struct RealtimeIncrementalTranslationState {
         finalizedPreviewPairsBySource.removeAll()
         queuedFinalTranslationKeys.removeAll()
         partialTranslationSourceTracker.reset()
+        cachedPairsGeneration = nil
+        cachedPairsConfiguration = nil
+        pendingFinalScanStartIndex = 0
+        lastFinalScanConfiguration = nil
+        cachedPairsCanExtendFromCount = nil
     }
 
     mutating func updateSources(from transcript: RealtimeTranscriptAccumulator) {
@@ -74,13 +92,22 @@ struct RealtimeIncrementalTranslationState {
         let stableChanged = sourceParts.stableText != previousStableText
         var rollbackPreviewTranslation: String?
         if stableChanged {
+            stableGeneration &+= 1
+            cachedPairsGeneration = nil
             updateSourceSegments(previousStableText: previousStableText)
-            if let finalizedPreviewPair = Self.finalizedPreviewPair(
+            let appendedOnly = sourceSegments.count >= previousStableSegments.count &&
+                sourceSegments.starts(with: previousStableSegments)
+            pendingFinalScanStartIndex = appendedOnly
+                ? min(pendingFinalScanStartIndex, previousStableSegments.count)
+                : 0
+            let finalizedPreviewPair = Self.finalizedPreviewPair(
                 previousPendingSource: previousPendingSource,
                 previousPendingTranslation: previousPendingTranslation,
                 previousStableSegments: previousStableSegments,
-                currentStableSegments: sourceSegments
-            ) {
+                currentStableSegments: sourceSegments,
+                appendedOnly: appendedOnly
+            )
+            if let finalizedPreviewPair {
                 RealtimeLog.log(
                     "align",
                     """
@@ -90,14 +117,26 @@ struct RealtimeIncrementalTranslationState {
                 )
                 finalizedPreviewPairsBySource[Self.normalizedSourceKey(finalizedPreviewPair.original)] = finalizedPreviewPair
             }
-            rollbackPreviewTranslation = Self.rollbackPreviewTranslation(
+            if !appendedOnly || finalizedPreviewPair != nil {
+                cachedPairsCanExtendFromCount = nil
+            }
+            if !appendedOnly {
+                rollbackPreviewTranslation = Self.rollbackPreviewTranslation(
+                    previousStableSegments: previousStableSegments,
+                    previousSentencePairs: previousSentencePairs,
+                    currentStableSegments: sourceSegments,
+                    currentPendingSource: pendingSourceText
+                )
+                if !finalizedPreviewPairsBySource.isEmpty {
+                    pruneFinalizedPreviewPairs(to: sourceSegments)
+                }
+            }
+            refreshDisplayedSentencePairs(
+                using: sourceSegments,
                 previousStableSegments: previousStableSegments,
-                previousSentencePairs: previousSentencePairs,
-                currentStableSegments: sourceSegments,
-                currentPendingSource: pendingSourceText
+                appendedOnly: appendedOnly,
+                addedPreviewPair: finalizedPreviewPair
             )
-            pruneFinalizedPreviewPairs(to: sourceSegments)
-            refreshDisplayedSentencePairs(using: sourceSegments)
         }
 
         if let rollbackPreviewTranslation {
@@ -135,6 +174,9 @@ struct RealtimeIncrementalTranslationState {
         sentencePairs = []
         translatedText = ""
         finalizedPreviewPairsBySource.removeAll()
+        cachedPairsGeneration = nil
+        cachedPairsCanExtendFromCount = nil
+        pendingFinalScanStartIndex = 0
     }
 
     mutating func applySameLanguageTranslation() {
@@ -142,6 +184,9 @@ struct RealtimeIncrementalTranslationState {
         sentencePairs = sourceSegments.map { SentencePair(original: $0, translation: $0) }
         pendingTranslatedText = pendingSourceText
         finalizedPreviewPairsBySource.removeAll()
+        cachedPairsGeneration = nil
+        cachedPairsCanExtendFromCount = nil
+        pendingFinalScanStartIndex = 0
     }
 
     mutating func makeFinalTranslationRequests(
@@ -150,24 +195,42 @@ struct RealtimeIncrementalTranslationState {
         source: Locale.Language?,
         targetLanguage: TargetLanguageOption
     ) -> [RealtimeTextTranslationRequest] {
+        let configuration = TranslationConfiguration(
+            provider: provider,
+            sourceLanguage: sourceLanguage,
+            targetLanguage: targetLanguage
+        )
+        if lastFinalScanConfiguration != configuration {
+            pendingFinalScanStartIndex = 0
+            lastFinalScanConfiguration = configuration
+        }
+        guard pendingFinalScanStartIndex < sourceSegments.count else { return [] }
+
         // A segment shown with a finalized translation must not be re-translated even after its
         // cache entry is evicted, otherwise long sessions churn endlessly (evict -> re-translate
         // -> re-evict) and the captions flicker between source-only and bilingual.
-        let alreadyTranslatedSourceKeys = displayedFinalTranslatedSourceKeys()
+        var cachedAlreadyTranslatedSourceKeys: Set<String>?
         var requests: [RealtimeTextTranslationRequest] = []
-        for segment in sourceSegments {
+        for segment in sourceSegments[pendingFinalScanStartIndex...] {
             let key = translationPairCacheKey(
                 segment,
                 provider: provider,
                 sourceLanguage: sourceLanguage,
                 targetLanguage: targetLanguage
             )
+            guard translatedPairsBySource[key] == nil,
+                  !queuedFinalTranslationKeys.contains(key)
+            else {
+                continue
+            }
+            let alreadyTranslatedSourceKeys = cachedAlreadyTranslatedSourceKeys ?? {
+                let keys = displayedFinalTranslatedSourceKeys()
+                cachedAlreadyTranslatedSourceKeys = keys
+                return keys
+            }()
             // Insert the key immediately so identical segments within one transcript (e.g. repeated
             // "Cool.") are not enqueued more than once.
-            guard translatedPairsBySource[key] == nil,
-                  !queuedFinalTranslationKeys.contains(key),
-                  !alreadyTranslatedSourceKeys.contains(Self.normalizedSourceKey(segment))
-            else {
+            guard !alreadyTranslatedSourceKeys.contains(Self.normalizedSourceKey(segment)) else {
                 continue
             }
             queuedFinalTranslationKeys.insert(key)
@@ -181,6 +244,7 @@ struct RealtimeIncrementalTranslationState {
                 targetLanguage: targetLanguage
             ))
         }
+        pendingFinalScanStartIndex = sourceSegments.count
         return requests
     }
 
@@ -229,34 +293,63 @@ struct RealtimeIncrementalTranslationState {
 
     mutating func finishFinalTranslationRequest(_ request: RealtimeTextTranslationRequest) {
         queuedFinalTranslationKeys.remove(request.cacheKey)
+        pendingFinalScanStartIndex = 0
     }
 
     mutating func cancelQueuedFinalTranslationRequests() {
         queuedFinalTranslationKeys.removeAll()
+        pendingFinalScanStartIndex = 0
     }
 
     mutating func applyFinalTranslationSuccess(
         _ result: ModelExecutionResult,
         request: RealtimeTextTranslationRequest
     ) -> Bool {
-        finishFinalTranslationRequest(request)
-        guard case let .success(text) = result.response else { return false }
+        queuedFinalTranslationKeys.remove(request.cacheKey)
+        guard case let .success(text) = result.response else {
+            pendingFinalScanStartIndex = 0
+            return false
+        }
 
         let combinedTranslation = translatedText(
             from: result,
             fallbackTranslation: text,
             request: request
         )
-        finalizedPreviewPairsBySource.removeValue(forKey: Self.normalizedSourceKey(request.translationText))
-        cacheTranslatedSentencePair(SentencePair(
+        let normalizedRequestKey = Self.normalizedSourceKey(request.translationText)
+        let hadPreview = finalizedPreviewPairsBySource.removeValue(forKey: normalizedRequestKey) != nil
+        let pair = SentencePair(
             original: request.translationText,
             translation: combinedTranslation
-        ), cacheKey: request.cacheKey)
-        updateCachedSentencePairs(
+        )
+        cacheTranslatedSentencePair(pair, cacheKey: request.cacheKey)
+
+        let configuration = TranslationConfiguration(
             provider: request.provider,
             sourceLanguage: request.sourceLanguage,
             targetLanguage: request.targetLanguage
         )
+        if !hadPreview,
+           finalizedPreviewPairsBySource.isEmpty,
+           cachedPairsGeneration == stableGeneration,
+           cachedPairsConfiguration == configuration,
+           sentencePairs.count == sourceSegments.count - 1,
+           let lastSegment = sourceSegments.last,
+           Self.normalizedSourceKey(lastSegment) == normalizedRequestKey
+        {
+            let rebased = Self.pair(pair, rebasedOn: lastSegment)
+            sentencePairs.append(rebased)
+            translatedText = translatedText.isEmpty ? rebased.translation : "\(translatedText)\n\(rebased.translation)"
+            cachedPairsCanExtendFromCount = sourceSegments.count
+        } else {
+            cachedPairsGeneration = nil
+            cachedPairsCanExtendFromCount = nil
+            updateCachedSentencePairs(
+                provider: request.provider,
+                sourceLanguage: request.sourceLanguage,
+                targetLanguage: request.targetLanguage
+            )
+        }
         if pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             pendingTranslatedText = ""
         }
@@ -297,7 +390,56 @@ struct RealtimeIncrementalTranslationState {
             return
         }
 
-        var existingPairsBySource = Dictionary(grouping: sentencePairs) { Self.normalizedSourceKey($0.original) }
+        let configuration = TranslationConfiguration(
+            provider: provider,
+            sourceLanguage: sourceLanguage,
+            targetLanguage: targetLanguage
+        )
+        if cachedPairsGeneration == stableGeneration,
+           cachedPairsConfiguration == configuration
+        {
+            return
+        }
+
+        if let extendFrom = cachedPairsCanExtendFromCount,
+           extendFrom <= sourceSegments.count,
+           cachedPairsConfiguration == configuration,
+           finalizedPreviewPairsBySource.isEmpty
+        {
+            var newPairs: [SentencePair] = []
+            var hadMissingTailTranslation = false
+            for segment in sourceSegments[extendFrom...] {
+                if let finalPair = translatedPairsBySource[translationPairCacheKey(
+                    segment,
+                    provider: provider,
+                    sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage
+                )] {
+                    newPairs.append(Self.pair(finalPair, rebasedOn: segment))
+                } else {
+                    hadMissingTailTranslation = true
+                }
+            }
+            if newPairs.isEmpty {
+                cachedPairsGeneration = stableGeneration
+                cachedPairsCanExtendFromCount = sourceSegments.count
+                return
+            }
+            if !hadMissingTailTranslation, sentencePairs.count == extendFrom {
+                sentencePairs.append(contentsOf: newPairs)
+                let joinedNew = newPairs.map(\.translation).joined(separator: "\n")
+                translatedText = translatedText.isEmpty ? joinedNew : "\(translatedText)\n\(joinedNew)"
+                cachedPairsGeneration = stableGeneration
+                cachedPairsCanExtendFromCount = sourceSegments.count
+                return
+            }
+        }
+
+        var existingPairsBySource: [String: [SentencePair]] = [:]
+        existingPairsBySource.reserveCapacity(sentencePairs.count)
+        for pair in sentencePairs.reversed() {
+            existingPairsBySource[Self.normalizedSourceKey(pair.original), default: []].append(pair)
+        }
         let displayedPairs = sourceSegments.compactMap { segment in
             let finalPair = translatedPairsBySource[translationPairCacheKey(
                 segment,
@@ -309,26 +451,69 @@ struct RealtimeIncrementalTranslationState {
                 .map { Self.pair($0, rebasedOn: segment) }
         }
         assignDisplayedPairs(displayedPairs)
+        cachedPairsGeneration = stableGeneration
+        cachedPairsConfiguration = configuration
+        cachedPairsCanExtendFromCount = sourceSegments.count
     }
 
-    private mutating func refreshDisplayedSentencePairs(using sourceSegments: [String]) {
+    private mutating func refreshDisplayedSentencePairs(
+        using sourceSegments: [String],
+        previousStableSegments: [String],
+        appendedOnly: Bool,
+        addedPreviewPair: SentencePair?
+    ) {
         guard !sourceSegments.isEmpty else {
             clearStableTranslation()
             return
         }
 
-        var remainingPairs = sentencePairs
-        let displayedPairs = sourceSegments.compactMap { segment in
-            let key = Self.normalizedSourceKey(segment)
-            if let exactIndex = remainingPairs.firstIndex(where: {
-                Self.normalizedSourceKey($0.original) == key
-            }) {
-                return Self.pair(remainingPairs.remove(at: exactIndex), rebasedOn: segment)
+        if appendedOnly {
+            if finalizedPreviewPairsBySource.isEmpty {
+                return
             }
-            if let revisedIndex = remainingPairs.firstIndex(where: {
-                Self.isLikelyRevision($0.original, replacement: segment)
+            if addedPreviewPair == nil || sentencePairs.count == previousStableSegments.count {
+                let appendedPairs = sourceSegments.dropFirst(previousStableSegments.count).compactMap { segment in
+                    let key = Self.normalizedSourceKey(segment)
+                    return finalizedPreviewPairsBySource[key].map { Self.pair($0, rebasedOn: segment) }
+                }
+                if !appendedPairs.isEmpty {
+                    sentencePairs.append(contentsOf: appendedPairs)
+                    let joinedAdded = appendedPairs.map(\.translation).joined(separator: "\n")
+                    translatedText = translatedText.isEmpty ? joinedAdded : "\(translatedText)\n\(joinedAdded)"
+                }
+                return
+            }
+        }
+
+        let remainingPairs = sentencePairs
+        var consumed = [Bool](repeating: false, count: remainingPairs.count)
+        var indicesByKey: [String: [Int]] = [:]
+        indicesByKey.reserveCapacity(remainingPairs.count)
+        for (index, pair) in remainingPairs.enumerated() {
+            indicesByKey[Self.normalizedSourceKey(pair.original), default: []].append(index)
+        }
+        var cursorByKey: [String: Int] = [:]
+
+        let displayedPairs = sourceSegments.compactMap { segment -> SentencePair? in
+            let key = Self.normalizedSourceKey(segment)
+            if let indices = indicesByKey[key] {
+                var cursor = cursorByKey[key, default: 0]
+                while cursor < indices.count, consumed[indices[cursor]] {
+                    cursor += 1
+                }
+                if cursor < indices.count {
+                    let matchIndex = indices[cursor]
+                    consumed[matchIndex] = true
+                    cursorByKey[key] = cursor + 1
+                    return Self.pair(remainingPairs[matchIndex], rebasedOn: segment)
+                }
+                cursorByKey[key] = cursor
+            }
+            if let revisedIndex = remainingPairs.indices.first(where: {
+                !consumed[$0] && Self.isLikelyRevision(remainingPairs[$0].original, replacement: segment)
             }) {
-                let previousPair = remainingPairs.remove(at: revisedIndex)
+                consumed[revisedIndex] = true
+                let previousPair = remainingPairs[revisedIndex]
                 let previewPair = SentencePair(original: segment, translation: previousPair.translation)
                 // The old translation stays under the revised source until the new request lands.
                 RealtimeLog.log(
@@ -343,8 +528,13 @@ struct RealtimeIncrementalTranslationState {
             }
             return finalizedPreviewPairsBySource[key].map { Self.pair($0, rebasedOn: segment) }
         }
-        let droppedPairs = remainingPairs.filter {
-            !$0.translation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let droppedPairs = remainingPairs.enumerated().compactMap { index, pair -> SentencePair? in
+            guard !consumed[index],
+                  !pair.translation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            else {
+                return nil
+            }
+            return pair
         }
         if !droppedPairs.isEmpty {
             RealtimeLog.warn(
@@ -378,9 +568,7 @@ struct RealtimeIncrementalTranslationState {
         consuming existingPairsBySource: inout [String: [SentencePair]]
     ) -> SentencePair? {
         let key = Self.normalizedSourceKey(segment)
-        if var existingPairs = existingPairsBySource[key], let pair = existingPairs.first {
-            existingPairs.removeFirst()
-            existingPairsBySource[key] = existingPairs
+        if let pair = existingPairsBySource[key]?.popLast() {
             return pair
         }
         return finalizedPreviewPairsBySource[key]
@@ -539,7 +727,8 @@ struct RealtimeIncrementalTranslationState {
         previousPendingSource: String,
         previousPendingTranslation: String,
         previousStableSegments: [String],
-        currentStableSegments: [String]
+        currentStableSegments: [String],
+        appendedOnly: Bool = false
     ) -> SentencePair? {
         guard !previousPendingSource.isEmpty,
               !previousPendingTranslation.isEmpty,
@@ -548,14 +737,18 @@ struct RealtimeIncrementalTranslationState {
             return nil
         }
 
-        let previousStableKeys = previousStableSegments.map(normalizedSourceKey)
-        let currentStableKeys = currentStableSegments.map(normalizedSourceKey)
         let addedSegments: ArraySlice<String>
-        if currentStableKeys.starts(with: previousStableKeys) {
+        if appendedOnly {
             addedSegments = currentStableSegments.dropFirst(previousStableSegments.count)
         } else {
-            let previousKeySet = Set(previousStableKeys)
-            addedSegments = currentStableSegments[...].filter { !previousKeySet.contains(normalizedSourceKey($0)) }[...]
+            let previousStableKeys = previousStableSegments.map(normalizedSourceKey)
+            let currentStableKeys = currentStableSegments.map(normalizedSourceKey)
+            if currentStableKeys.starts(with: previousStableKeys) {
+                addedSegments = currentStableSegments.dropFirst(previousStableSegments.count)
+            } else {
+                let previousKeySet = Set(previousStableKeys)
+                addedSegments = currentStableSegments[...].filter { !previousKeySet.contains(normalizedSourceKey($0)) }[...]
+            }
         }
 
         guard let finalizedSource = addedSegments.last(where: {

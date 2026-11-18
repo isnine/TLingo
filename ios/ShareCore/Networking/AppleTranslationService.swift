@@ -178,7 +178,9 @@ public final class AppleTranslationService: @unchecked Sendable {
         let supported = try await Self.withOperationTimeout(operationName: "supportedLanguages") {
             await availability.supportedLanguages
         }
-        if supported.contains(where: { $0.minimalIdentifier == target.minimalIdentifier }) {
+        if supported.contains(where: {
+            SourceLanguageDetector.languagesAreSame($0.minimalIdentifier, target.minimalIdentifier)
+        }) {
             return .supported
         }
         logger.error("languageAvailabilityStatus: target \(targetDesc, privacy: .public) not in supported list (auto source)")
@@ -378,6 +380,11 @@ public final class AppleTranslationService: @unchecked Sendable {
         logger.debug("translate called, text length: \(text.count, privacy: .public)")
 
         if requestsDownload {
+            #if os(macOS)
+                defer {
+                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
+                }
+            #endif
             do {
                 // prepareTranslation() triggers the system download UI if the language pack
                 // is not yet installed (.supported status). No-op if already installed (.installed).
@@ -385,15 +392,8 @@ public final class AppleTranslationService: @unchecked Sendable {
                 try await session.prepareTranslation()
             } catch {
                 logger.error("translate: prepareTranslation failed: \(String(describing: error), privacy: .public)")
-                #if os(macOS)
-                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-                #endif
                 throw error
             }
-            // Notify the host app that language download is done and the auxiliary window can be hidden.
-            #if os(macOS)
-                NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-            #endif
         }
 
         let response: TranslationSession.Response
@@ -436,19 +436,18 @@ public final class AppleTranslationService: @unchecked Sendable {
         let start = Date()
 
         if requestsDownload {
+            #if os(macOS)
+                defer {
+                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
+                }
+            #endif
             do {
                 // prepareTranslation() triggers the system download UI if needed.
                 try await session.prepareTranslation()
             } catch {
                 logger.error("translateSentences: prepareTranslation failed: \(String(describing: error), privacy: .public)")
-                #if os(macOS)
-                    NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-                #endif
                 throw error
             }
-            #if os(macOS)
-                NotificationCenter.default.post(name: .appleTranslationPrepareCompleted, object: nil)
-            #endif
         }
 
         let sentences = splitIntoSentences(text)

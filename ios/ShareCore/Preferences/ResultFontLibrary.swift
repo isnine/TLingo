@@ -30,16 +30,15 @@ final class ResultFontLibrary: ObservableObject {
         directory: URL? = nil
     ) {
         self.defaults = defaults
-        let root = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: AppPreferences.appGroupSuiteName
-        ) ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        #if os(iOS)
+            let root = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: AppPreferences.appGroupSuiteName
+            ) ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        #else
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        #endif
         self.directory = directory ?? root.appendingPathComponent("ImportedResultFonts", isDirectory: true)
-        let saved = defaults.data(forKey: Self.styleKey)
-            .flatMap { try? JSONDecoder().decode(ResultReadingStyle.self, from: $0) }
-        style = saved ?? ResultReadingStyle()
-        style.textSize = style.textSize.isFinite
-            ? min(max(style.textSize, Self.textSizeRange.lowerBound), Self.textSizeRange.upperBound)
-            : 15
+        style = Self.loadStyle(from: defaults)
 
         let files = (try? FileManager.default.contentsOfDirectory(
             at: self.directory,
@@ -61,6 +60,24 @@ final class ResultFontLibrary: ObservableObject {
         if let name = style.fontName, !fonts.contains(where: { $0.postScriptName == name }) {
             style.fontName = nil
         }
+    }
+
+    func reloadStyleFromDefaults() {
+        var loaded = Self.loadStyle(from: defaults)
+        if let name = loaded.fontName, !fonts.contains(where: { $0.postScriptName == name }) {
+            loaded.fontName = nil
+        }
+        style = loaded
+    }
+
+    private static func loadStyle(from defaults: UserDefaults) -> ResultReadingStyle {
+        let saved = defaults.data(forKey: styleKey)
+            .flatMap { try? JSONDecoder().decode(ResultReadingStyle.self, from: $0) }
+        var loaded = saved ?? ResultReadingStyle()
+        loaded.textSize = loaded.textSize.isFinite
+            ? min(max(loaded.textSize, textSizeRange.lowerBound), textSizeRange.upperBound)
+            : 15
+        return loaded
     }
 
     @discardableResult

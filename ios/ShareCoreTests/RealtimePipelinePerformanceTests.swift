@@ -139,6 +139,31 @@
             #expect(state.stableSegments.count == 1)
         }
 
+        @Test("Tracks unspaced CJK cumulative partials and direct commit without text loss")
+        func tracksUnspacedCJKPartialsAndDirectCommit() {
+            var state = RealtimeStreamingTranscriptState()
+
+            let first = state.updatePartial("今天天气很好。我们去散步吧", audioOffset: 1)
+            #expect(first)
+            #expect(state.stableSegments.map(\.text) == ["今天天气很好。"])
+            #expect(state.pendingText == "我们去散步吧")
+
+            let second = state.updatePartial("今天天气很好。我们去散步吧。顺便买杯咖啡", audioOffset: 2)
+            #expect(second)
+            #expect(state.stableSegments.map(\.text) == ["今天天气很好。", "我们去散步吧。"])
+            #expect(state.pendingText == "顺便买杯咖啡")
+
+            let pausedCommit = state.commit(boundaryReason: .pause, audioOffset: 2.5)
+            #expect(pausedCommit)
+            #expect(state.stableSegments.map(\.text) == ["今天天气很好。", "我们去散步吧。", "顺便买杯咖啡"])
+            state.beginEngineGeneration()
+
+            let directCommitted = state.commit("尾声结束。", boundaryReason: .modelEOU, audioOffset: 3)
+            #expect(directCommitted)
+            #expect(state.stableSegments.map(\.text) == ["今天天气很好。", "我们去散步吧。", "顺便买杯咖啡", "尾声结束。"])
+            #expect(state.pendingText.isEmpty)
+        }
+
         @Test(
             "Flushes native streaming models on the realtime fixture",
             .enabled(if: ProcessInfo.processInfo.environment["RUN_REALTIME_STREAMING_BENCHMARK"] == "1")

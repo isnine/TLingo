@@ -422,8 +422,12 @@ extension RealtimeSessionStore {
         )
     }
 
-    func updateTranscriptPresentation() {
+    func updateTranslationSources() {
         translationState.updateSources(from: transcriptAccumulator)
+    }
+
+    func updateTranscriptPresentation() {
+        updateTranslationSources()
         syncTranslationStatePresentation()
     }
 
@@ -465,7 +469,9 @@ extension RealtimeSessionStore {
         ) else {
             if translationState.pendingSourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 cancelPartialTranslationWork()
-                syncTranslationStatePresentation()
+                if !pendingTranslatedText.isEmpty {
+                    syncTranslationStatePresentation()
+                }
             }
             return
         }

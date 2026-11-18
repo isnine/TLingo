@@ -10,6 +10,7 @@ struct ResultFontLibraryTests {
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
         let library = ResultFontLibrary(defaults: defaults, directory: directory)
         library.style = ResultReadingStyle(fontName: "MissingFont", textSize: 22)
 
@@ -28,9 +29,11 @@ struct ResultFontLibraryTests {
             JSONEncoder().encode(ResultReadingStyle(textSize: 100)),
             forKey: ResultFontLibrary.styleKey
         )
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
         let library = ResultFontLibrary(
             defaults: defaults,
-            directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            directory: directory
         )
         #expect(library.style.textSize == ResultFontLibrary.textSizeRange.upperBound)
     }

@@ -110,11 +110,16 @@ final class StreamingSentencePairParser {
     /// Append new delta text and return all completed pairs found so far.
     func append(_ delta: String) -> [SentencePair] {
         buffer.append(delta)
+        guard delta.contains("}") else { return emittedPairs }
 
         // Try to extract completed sentence pair objects
         let newPairs = extractCompletedPairs()
         if !newPairs.isEmpty {
             emittedPairs.append(contentsOf: newPairs)
+            if scanOffset > 0 {
+                buffer = (buffer as NSString).substring(from: scanOffset)
+                scanOffset = 0
+            }
         }
 
         return emittedPairs
@@ -245,6 +250,7 @@ extension LLMService {
             }
 
             let delta: Delta?
+            let finishReason: String?
         }
 
         /// Upstream providers report mid-stream failures as an `error` frame
@@ -281,6 +287,10 @@ extension LLMService {
             (choices ?? []).flatMap { $0.delta?.toolCalls ?? [] }
         }
 
+        var hasFinishReason: Bool {
+            (choices ?? []).contains { $0.finishReason != nil }
+        }
+
         static func decode(_ data: Data, using decoder: JSONDecoder) throws -> ChatCompletionsStreamChunk {
             let chunk = try decoder.decode(ChatCompletionsStreamChunk.self, from: data)
             if let error = chunk.error {
@@ -296,17 +306,90 @@ extension LLMService {
     }
 
     struct ConversationResponseAccumulator {
+        private static let openingTag = "<think>"
+        private static let closingTag = "</think>"
+
         private var reasoning = ""
         private var content = ""
+        private var embeddedReasoning = ""
+        private var resolvedThinkOpening = false
+        private var hasEmbeddedThink = false
+        private var hasClosedThink = false
 
         mutating func append(reasoning reasoningDelta: String, content contentDelta: String) -> ConversationResponse {
-            reasoning.append(reasoningDelta)
+            if !reasoningDelta.isEmpty {
+                reasoning.append(reasoningDelta)
+            }
+            if !resolvedThinkOpening {
+                content.append(contentDelta)
+                return resolveOpeningState()
+            }
+            if hasEmbeddedThink, !hasClosedThink {
+                let tailCount = min(embeddedReasoning.count, Self.closingTag.count - 1)
+                let tailStart = embeddedReasoning.index(embeddedReasoning.endIndex, offsetBy: -tailCount)
+                let junction = String(embeddedReasoning[tailStart...]) + contentDelta
+                if let closingInJunction = junction.range(of: Self.closingTag) {
+                    let consumedInTail = junction.distance(from: junction.startIndex, to: closingInJunction.lowerBound)
+                    let keepEnd = embeddedReasoning.index(tailStart, offsetBy: consumedInTail)
+                    embeddedReasoning = String(embeddedReasoning[..<keepEnd])
+                    content = String(junction[closingInJunction.upperBound...])
+                    hasClosedThink = true
+                    return .init(reasoning: combinedReasoning, content: content)
+                }
+                embeddedReasoning.append(contentDelta)
+                return .init(reasoning: combinedReasoning, content: "")
+            }
+
             content.append(contentDelta)
-            return ConversationResponse.split(reasoning: reasoning, content: content, isFinal: false)
+            return .init(reasoning: combinedReasoning, content: content)
         }
 
         func finalResponse() -> ConversationResponse {
-            ConversationResponse.split(reasoning: reasoning, content: content, isFinal: true)
+            if !resolvedThinkOpening || (hasEmbeddedThink && !hasClosedThink) {
+                return ConversationResponse.split(
+                    reasoning: reasoning,
+                    content: hasEmbeddedThink ? Self.openingTag + embeddedReasoning : content,
+                    isFinal: true
+                )
+            }
+            return .init(
+                reasoning: combinedReasoning.trimmingCharacters(in: .whitespacesAndNewlines),
+                content: content.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+        }
+
+        private var combinedReasoning: String {
+            switch (reasoning.isEmpty, embeddedReasoning.isEmpty) {
+            case (true, true): ""
+            case (false, true): reasoning
+            case (true, false): embeddedReasoning
+            case (false, false): "\(reasoning)\n\n\(embeddedReasoning)"
+            }
+        }
+
+        private mutating func resolveOpeningState() -> ConversationResponse {
+            let firstContentIndex = content.firstIndex { !$0.isWhitespace } ?? content.endIndex
+            let candidate = content[firstContentIndex...]
+            if Self.openingTag.hasPrefix(candidate), candidate.utf8.count < Self.openingTag.utf8.count {
+                return .init(reasoning: reasoning, content: "")
+            }
+            resolvedThinkOpening = true
+            guard candidate.hasPrefix(Self.openingTag) else {
+                hasEmbeddedThink = false
+                return .init(reasoning: reasoning, content: content)
+            }
+            hasEmbeddedThink = true
+            let afterOpen = candidate.index(candidate.startIndex, offsetBy: Self.openingTag.count)
+            let remainder = candidate[afterOpen...]
+            if let closingRange = remainder.range(of: Self.closingTag) {
+                embeddedReasoning = String(remainder[..<closingRange.lowerBound])
+                content = String(remainder[closingRange.upperBound...])
+                hasClosedThink = true
+                return .init(reasoning: combinedReasoning, content: content)
+            }
+            embeddedReasoning = String(remainder)
+            content = ""
+            return .init(reasoning: combinedReasoning, content: "")
         }
     }
 
@@ -437,7 +520,7 @@ extension LLMService.JSONValue {
     }
 
     static func dictionary(from string: String) -> [String: LLMService.JSONValue]? {
-        guard let data = string.data(using: .utf8),
+        guard let data = LLMService.unwrapJSONPayload(string).data(using: .utf8),
               let value = try? JSONDecoder.llmDecoder.decode(LLMService.JSONValue.self, from: data),
               case let .object(object) = value
         else {
