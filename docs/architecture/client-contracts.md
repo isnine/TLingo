@@ -226,6 +226,9 @@ Main-app `PrivacyInfo.xcprivacy` adds `NSPrivacyCollectedDataTypeCustomerSupport
 `NSPrivacyCollectedDataTypeTracking = false`, and purpose
 `NSPrivacyCollectedDataTypePurposeAppFunctionality`. Existing UserDefaults
 reasons `CA92.1` and `1C8F.1` remain unchanged; `CA92.1` covers the new local
-crash/proof defaults. No tracking is added. This source declaration does not
+crash/proof defaults. `ShareCore/PrivacyInfo.xcprivacy` declares
+`NSPrivacyAccessedAPICategorySystemBootTime` (`35F9.1`), and
+`ios/TLingoBroadcastUpload/PrivacyInfo.xcprivacy` declares `UserDefaults` reasons
+`CA92.1` and `1C8F.1`. No tracking is added. This source declaration does not
 publish changes to the policy website or App Store Connect privacy labels;
 those remain separate owner-reviewed release work.

@@ -1,24 +1,23 @@
 #!/bin/bash
 
-# Pre-commit hook to prevent committing secrets
-# Patterns to check for potential secrets
+set -euo pipefail
 
+# Pre-commit hook to prevent committing generated secrets or leaked credentials.
 PATTERNS=(
-    # API Keys (32+ hex characters)
-    '[a-fA-F0-9]{32,}'
-    # Common secret patterns
-    'api[_-]?key\s*[:=]\s*["\x27][^"\x27]{10,}'
-    'secret\s*[:=]\s*["\x27][^"\x27]{10,}'
-    'token\s*[:=]\s*["\x27][^"\x27]{10,}'
-    'password\s*[:=]\s*["\x27][^"\x27]{5,}'
-    # Azure specific
+    'sk-[A-Za-z0-9_-]{20,}'
+    'AIza[0-9A-Za-z_-]{35}'
+    'gh[pousr]_[A-Za-z0-9]{30,}'
+    'AKIA[0-9A-Z]{16}'
+    'xox[baprs]-[A-Za-z0-9-]{10,}'
+    '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+    'api[_-]?key[[:space:]]*[:=][[:space:]]*["'\''][^"'\'']{10,}'
+    '(client_?secret|secret_?key|hmac_?secret)[[:space:]]*[:=][[:space:]]*["'\''][^"'\'']{10,}'
+    'password[[:space:]]*[:=][[:space:]]*["'\''][^"'\'']{8,}'
     'openai\.azure\.com'
-    # Known leaked patterns (redacted versions for reference)
     'REDACTED_AZURE_API_KEY'
     'REDACTED_HMAC_SECRET'
 )
 
-# Files to exclude from checking
 EXCLUDE_PATTERNS=(
     '\.md$'
     '\.example$'
@@ -28,49 +27,45 @@ EXCLUDE_PATTERNS=(
 
 echo "Running secret detection pre-commit hook..."
 
-# Get staged files
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
-
-if [ -z "$STAGED_FILES" ]; then
-    exit 0
-fi
-
 FOUND_SECRETS=0
 
-for FILE in $STAGED_FILES; do
-    # Skip excluded files
+while IFS= read -r FILE; do
+    [[ -z "$FILE" ]] && continue
+
+    if [[ "$FILE" == *"AppSecrets.swift" ]]; then
+        echo "❌ Refusing to commit generated secret file: $FILE"
+        FOUND_SECRETS=1
+        continue
+    fi
+
     SKIP=0
     for EXCLUDE in "${EXCLUDE_PATTERNS[@]}"; do
-        if echo "$FILE" | grep -qE "$EXCLUDE"; then
+        if [[ "$FILE" =~ $EXCLUDE ]]; then
             SKIP=1
             break
         fi
     done
-    
-    if [ $SKIP -eq 1 ]; then
+    if [[ $SKIP -eq 1 ]]; then
         continue
     fi
-    
-    # Check file content
-    CONTENT=$(git show ":$FILE" 2>/dev/null)
-    
-    for PATTERN in "${PATTERNS[@]}"; do
-        if echo "$CONTENT" | grep -qE "$PATTERN"; then
-            # Additional check: skip if it's clearly a placeholder or part of a URL
-            MATCH=$(echo "$CONTENT" | grep -oE "$PATTERN" | head -1)
-            MATCH_LINE=$(echo "$CONTENT" | grep -E "$PATTERN" | head -1)
-            if [[ "$MATCH" == *"YOUR_"* ]] || [[ "$MATCH" == *"EXAMPLE"* ]] || [[ "$MATCH" == *"PLACEHOLDER"* ]] || [[ "$MATCH_LINE" == *"notion.site"* ]] || [[ "$MATCH_LINE" == *"notion.so"* ]]; then
-                continue
-            fi
-            
-            echo "❌ Potential secret found in: $FILE"
-            echo "   Pattern: $PATTERN"
-            FOUND_SECRETS=1
-        fi
-    done
-done
 
-if [ $FOUND_SECRETS -eq 1 ]; then
+    ADDED_LINES=$(git diff --cached -U0 -- "$FILE" | grep '^+[^+]' | sed 's/^+//' || true)
+    [[ -z "$ADDED_LINES" ]] && continue
+
+    for PATTERN in "${PATTERNS[@]}"; do
+        MATCH_LINE=$(printf '%s\n' "$ADDED_LINES" | grep -E "$PATTERN" | head -1 || true)
+        [[ -z "$MATCH_LINE" ]] && continue
+        if [[ "$MATCH_LINE" == *"YOUR_"* ]] || [[ "$MATCH_LINE" == *"EXAMPLE"* ]] || [[ "$MATCH_LINE" == *"PLACEHOLDER"* ]] || [[ "$MATCH_LINE" == *"example.invalid"* ]] || [[ "$MATCH_LINE" == *"notion.site"* ]] || [[ "$MATCH_LINE" == *"notion.so"* ]]; then
+            continue
+        fi
+
+        echo "❌ Potential secret found in staged diff of: $FILE"
+        echo "   Pattern: $PATTERN"
+        FOUND_SECRETS=1
+    done
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [[ $FOUND_SECRETS -eq 1 ]]; then
     echo ""
     echo "🚫 Commit blocked: Potential secrets detected!"
     echo ""

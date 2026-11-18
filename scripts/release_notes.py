@@ -10,7 +10,7 @@ platform tag `[iOS]`, `[Mac]`, or `[Both]` (no tag means both). CHANGELOG items 
 tag as a prefix, e.g. `- [Mac] Kept global shortcuts separate per app.` Platform tags only filter
 the generated data and are never shown in the app. Every user-facing item from
 `REQUIRE_EXPLICIT_PLATFORM_FROM` onward must carry an explicit tag so iOS and macOS notes stay
-separate. Only the Added, Improved, and Fixed sections ship in the app.
+separate. Only the Added, Improved (including Changed), and Fixed sections ship in the app.
 """
 
 import json
@@ -30,7 +30,9 @@ CATALOG = RESOURCES / "ReleaseNotes.xcstrings"
 FIRST_ITEMIZED_VERSION = "5.5.9"
 # Require an explicit [iOS]/[Mac]/[Both] tag from this version onward.
 REQUIRE_EXPLICIT_PLATFORM_FROM = "5.7.5"
-KINDS = {"Added": "added", "Improved": "improved", "Fixed": "fixed"}
+KINDS = {"Added": "added", "Improved": "improved", "Changed": "improved", "Fixed": "fixed"}
+DRAFT_KINDS = ("Added", "Improved", "Fixed")
+IGNORED_KINDS = {"Removed", "Security", "Deprecated"}
 PLATFORMS = {"iOS": "ios", "Mac": "macos"}
 SECTION = re.compile(r"^## \[(\d+(?:\.\d+)*)\]")
 COMMIT = re.compile(r"^\[(\w+)\](?:\s*\[(iOS|Mac|Both)\])?\s*(.+)$")
@@ -69,7 +71,7 @@ def draft():
     if base is None:
         sys.exit("No MARKETING_VERSION change found.")
     subjects = git("log", "--reverse", "--format=%s", f"{base}..HEAD").splitlines()
-    sections = {name: [] for name in KINDS}
+    sections = {name: [] for name in DRAFT_KINDS}
     skipped = []
     for subject in subjects:
         match = COMMIT.match(subject)
@@ -100,7 +102,13 @@ def parse_changelog():
         elif line.startswith("## "):
             current = None
         elif line.startswith("### ") and current is not None:
-            kind = KINDS.get(line[4:].strip())
+            heading = line[4:].strip()
+            if heading in KINDS:
+                kind = KINDS[heading]
+            elif heading in IGNORED_KINDS:
+                kind = None
+            else:
+                sys.exit(f"Unknown CHANGELOG section heading '### {heading}' in [{current['version']}]")
         elif line.startswith("  ") and line.strip() and current is not None and current["items"] and kind is not None:
             # Wrapped continuation of the previous item.
             item = current["items"][-1]

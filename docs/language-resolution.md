@@ -22,7 +22,7 @@
 
 ### `detectLocaleLanguage(of:)` — 基础检测
 
-- 用 `NLLanguageRecognizer`，约束在 20 种应用支持的语言
+- 用 `NLLanguageRecognizer`，约束在 `SourceLanguageDetector.supportedNLLanguages` 列出的支持语言
 - `languageHints` 给常见语言加先验（英文 2.0、简中 1.5、日 0.6 等）
 - 短文本判定：≤10 字符 **或** ≤3 词 → 阈值提高到 0.5（默认 0.3）
 - 对中文做 `correctChineseScript`：当 `Locale.preferredLanguages` 只含简中或繁中时，把另一种纠正过来（`NLLanguageRecognizer` 对短 Han 文本无法可靠区分脚本）
@@ -44,7 +44,7 @@
 
 ### 同语言判定
 
-- `translationLanguagesAreSame`（私有）：翻译语义。同 base（`en` vs `en-US`、`pt` vs `pt-BR`）或仅差默认脚本（`en` vs `en-Latn`）为同语言；`zh-Hans` 与 `zh-Hant` 是不同的翻译语言。
+- `languagesAreSame`（`ShareCore` 共享）：翻译语义。同 base（`en` vs `en-US`、`pt` vs `pt-BR`）或仅差默认脚本（`en` vs `en-Latn`）为同语言；`zh-Hans` 与 `zh-Hant` 是不同的翻译语言。
 - `detectionLanguagesAreEquivalent`：检测排除目标语言时使用。在上面基础上，双方都带 script 的同 language code（`zh-Hans` vs `zh-Hant`、`sr-Cyrl` vs `sr-Latn`）也视为等价，避免检测结果因脚本差异绕过排除。
 - `en` vs `fr` 恒为不同。
 
@@ -95,7 +95,7 @@ isMatchFallback = resolvesMatch && sourceCode != nil && target != matchCandidate
 | 项 | 行为 |
 |---|---|
 | **源语言传参** | `MicrosoftTranslateService.translatorCode(for: resolved.sourceCode)`；为 nil 或 Microsoft 不支持时由服务端自动检测 |
-| **目标语言传参** | `MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue)`，把 App 语言代码映射为 Microsoft 代码（如 `sr` → `sr-Cyrl`、`ku` → `kmr`） |
+| **目标语言传参** | `MicrosoftTranslateService.translatorCode(for: resolvedTarget.rawValue)`，把 App 语言代码映射为 Microsoft 代码（如 `sr` → `sr-Cyrl`、`ku` → `kmr`、`zh`/`zh-CN`/`zh-SG` → `zh-Hans`、`zh-TW`/`zh-HK`/`zh-MO` → `zh-Hant`） |
 | **不支持的目标语言** | 目标不在 Microsoft 支持列表时不发请求，直接生成 `LocalProviderError.unsupportedLanguage`，结果卡片显示"不支持"且不提供重试 |
 | **`source == target` 短路** | 与 Apple Translate 共用 `sameSourceAndTargetResult`，命中则不发请求 |
 | **网络层** | 经 Cloud Worker 的 `translate/microsoft` 端点 |
@@ -145,7 +145,7 @@ Apple `Locale.Language` API 在不同 macOS 版本对默认脚本的处理不一
 | `SourceLanguageDetector` | `detectExcluding(target=...) hypotheses=[...] → '...' rejected (...)` / `→ picked '...'` | 排除-target 决策链，含拒绝原因 |
 | `AppleTranslation` | `Apple Translate: source==target (...), short-circuiting` | 短路命中 |
 | `AppleTranslation` | `languageAvailabilityStatus: ... = unsupported` | 系统拒绝该语言对 |
-| `AppleTranslation` | `Apple Translate watchdog fired — .translationTask() did not respond in 10s` | macOS bridge 超时 |
+| `AppleTranslation` | `Apple Translate watchdog fired — .translationTask() did not respond in 60s` | macOS bridge 超时 |
 | `AppleTranslation` | `translate: prepareTranslation failed: ...` | 系统 API 抛错（含原始 TranslationError） |
 
 ## 单元测试

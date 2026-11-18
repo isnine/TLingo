@@ -3,33 +3,41 @@
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+TOKEN_PATTERN = re.compile(
+    r"[\u3400-\u4dbf\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]|[a-z0-9_]+(?:'[a-z0-9_]+)*"
+)
 
 
 def words(text: str) -> list[str]:
-    return re.findall(r"[\w']+", text.lower(), flags=re.UNICODE)
+    return TOKEN_PATTERN.findall(text.lower())
 
 
 def score(reference: list[str], hypothesis: list[str]) -> dict:
-    rows = [[(0, 0, index, 0) for index in range(len(hypothesis) + 1)]]
-    rows[0] = [(0, 0, index, 0) for index in range(len(hypothesis) + 1)]
+    if not reference:
+        raise ValueError("Reference transcript contains no scorable tokens.")
+
+    prev = [(0, 0, index) for index in range(len(hypothesis) + 1)]
     for reference_index, reference_word in enumerate(reference, start=1):
-        row = [(0, reference_index, 0, 0)]
+        curr = [(0, reference_index, 0)]
         for hypothesis_index, hypothesis_word in enumerate(hypothesis, start=1):
             if reference_word == hypothesis_word:
-                row.append(rows[-1][hypothesis_index - 1])
+                curr.append(prev[hypothesis_index - 1])
                 continue
-            substitution = rows[-1][hypothesis_index - 1]
-            deletion = rows[-1][hypothesis_index]
-            insertion = row[hypothesis_index - 1]
-            candidates = [
-                (sum(substitution) + 1, (substitution[0] + 1, substitution[1], substitution[2], substitution[3])),
-                (sum(deletion) + 1, (deletion[0], deletion[1] + 1, deletion[2], deletion[3])),
-                (sum(insertion) + 1, (insertion[0], insertion[1], insertion[2] + 1, insertion[3])),
-            ]
-            row.append(min(candidates, key=lambda item: item[0])[1])
-        rows.append(row)
-    substitutions, deletions, insertions, _ = rows[-1][-1]
+            substitution = prev[hypothesis_index - 1]
+            deletion = prev[hypothesis_index]
+            insertion = curr[hypothesis_index - 1]
+            candidates = (
+                (substitution[0] + 1, substitution[1], substitution[2]),
+                (deletion[0], deletion[1] + 1, deletion[2]),
+                (insertion[0], insertion[1], insertion[2] + 1),
+            )
+            curr.append(min(candidates, key=sum))
+        prev = curr
+
+    substitutions, deletions, insertions = prev[-1]
     errors = substitutions + deletions + insertions
     reference_count = len(reference)
     return {
@@ -39,7 +47,7 @@ def score(reference: list[str], hypothesis: list[str]) -> dict:
         "deletions": deletions,
         "insertions": insertions,
         "errors": errors,
-        "wer": errors / reference_count if reference_count else 0.0,
+        "wer": errors / reference_count,
     }
 
 
@@ -50,10 +58,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    result = score(
-        words(args.reference.read_text(encoding="utf-8")),
-        words(args.hypothesis.read_text(encoding="utf-8")),
-    )
+    ref_tokens = words(args.reference.read_text(encoding="utf-8"))
+    hyp_tokens = words(args.hypothesis.read_text(encoding="utf-8"))
+    if not ref_tokens:
+        sys.exit("Error: reference transcript contains no scorable tokens.")
+    result = score(ref_tokens, hyp_tokens)
     payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

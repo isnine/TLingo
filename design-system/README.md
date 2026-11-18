@@ -23,7 +23,7 @@ TLingo is a calm, native-feeling translator for iPhone, iPad and Mac. The interf
 
 ### Type
 
-- One family: the system font (`sans` — SF Pro on Apple platforms). No custom fonts are shipped. Code uses `mono` (SF Mono).
+- One family: the system font (`sans` — SF Pro on Apple platforms). No custom fonts are bundled; user-imported reading fonts are managed by `ResultFontLibrary`. Code uses `mono` (SF Mono).
 - Interface sizes are small and dense: `body` (14) is the default, `label` / `label-strong` (13) for labels, `footnote` (12) for metadata, `chip` (14 medium) on chips. Weights are 400, 500 and 600; 700 only for `display` and `title-1`.
 - Model output is Markdown, rendered with the **Markdown results** styles at 1.4 line height (headings 1.3). Three presets scale it: compact (`md-body` 15), detail (`md-body-detail` 16), prominent (`md-body-prominent` 19). All of it respects Dynamic Type on iOS.
 

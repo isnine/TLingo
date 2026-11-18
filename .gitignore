@@ -123,7 +123,14 @@ vendor
 
 # Local agent tool config
 .agents/
+.agy-staff/
+.airbuild/
+.claude/
 .codex/
+AGENTS.local.md
+AGENTS.override.md
+CLAUDE.local.md
+COPILOT.md
 
 # understand-anything tool artifacts
 .understand-anything/

@@ -6,7 +6,7 @@
 # Generates the gitignored AppSecrets.swift from Xcode Cloud TLINGO_*
 # secret environment variables.
 
-set -e
+set -euo pipefail
 
 "$(dirname "${BASH_SOURCE[0]}")/generate-app-secrets.sh"
 

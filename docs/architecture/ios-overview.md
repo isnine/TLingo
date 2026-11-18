@@ -88,6 +88,6 @@ flowchart LR
 - `RealtimePipelineCoordinator`: multi-lane node sharing, per-lane lifecycle, audio-timeline lag measurement and device-aware resource isolation.
 - `TranslationHistoryService`: migration, SwiftData error handling and audio cleanup.
 - `HistoryRecordDetailView`: post-processing and live record synchronization.
-- `RealtimeFluidAudioRecognizer`: per-update transcript work grows with session length. A 40-minute benchmark shows flat memory (about 90 MB for Nemotron 560 ms, 170–185 MB for Parakeet EOU 320 ms) but processing time per audio minute roughly doubles, because transcript state and snapshots are rebuilt from the whole session on every partial.
+- `RealtimeFluidAudioRecognizer`: long-session incremental transcript state uses cached flat prefix buffers and monotone-append fast paths (verified 750-sentence per-update cost reduced from ~19.1 ms to ~2.7 ms). Continue keeping per-partial allocations bounded.
 
 File size alone is not a finding. Refactors must reduce state ownership ambiguity or duplicate behavior behind a smaller interface.

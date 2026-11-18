@@ -14,8 +14,17 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT="$ROOT/ios/ShareCore/Configuration/AppSecrets.swift"
 
-CLOUD_ENDPOINT="${TLINGO_CLOUD_ENDPOINT:-${AITRANSLATOR_CLOUD_ENDPOINT:-}}"
-CLOUD_SECRET="${TLINGO_CLOUD_SECRET:-${AITRANSLATOR_CLOUD_SECRET:-}}"
+trim() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf '%s' "$value"
+}
+
+CLOUD_ENDPOINT="$(trim "${TLINGO_CLOUD_ENDPOINT:-${AITRANSLATOR_CLOUD_ENDPOINT:-}}")"
+CLOUD_SECRET="$(trim "${TLINGO_CLOUD_SECRET:-${AITRANSLATOR_CLOUD_SECRET:-}}")"
+CLOUD_API_VERSION="$(trim "${TLINGO_CLOUD_API_VERSION:-2025-01-01-preview}")"
+: "${CLOUD_API_VERSION:=2025-01-01-preview}"
 
 if [[ -n "${CI_XCODE_CLOUD:-}" ]]; then
     missing_variables=()
@@ -35,7 +44,23 @@ if [[ -z "$CLOUD_SECRET" && -f "$OUTPUT" ]]; then
     exit 0
 fi
 
-cat > "$OUTPUT" <<EOF
+EFFECTIVE_ENDPOINT="${CLOUD_ENDPOINT:-https://example.invalid}"
+if [[ ! "$EFFECTIVE_ENDPOINT" =~ ^https://[^[:space:]\"#]+$ ]]; then
+    echo "Invalid TLINGO_CLOUD_ENDPOINT URL: expected https:// URL without whitespace or '#': $EFFECTIVE_ENDPOINT" >&2
+    exit 1
+fi
+
+for secret_var in "$CLOUD_SECRET" "$CLOUD_API_VERSION"; do
+    if [[ "$secret_var" == *'"#'* ]] || [[ "$secret_var" == *$'\n'* ]] || [[ "$secret_var" == *$'\r'* ]]; then
+        echo "Invalid control characters or Swift raw-string delimiter in AppSecrets environment variable" >&2
+        exit 1
+    fi
+done
+
+TMP_OUTPUT="$(mktemp "${OUTPUT}.tmp.XXXXXX")"
+trap 'rm -f "$TMP_OUTPUT"' EXIT
+
+cat > "$TMP_OUTPUT" <<EOF
 //
 //  AppSecrets.swift
 //  ShareCore
@@ -46,10 +71,17 @@ cat > "$OUTPUT" <<EOF
 import Foundation
 
 public enum AppSecrets {
-    public static let cloudEndpoint = URL(string: "${CLOUD_ENDPOINT:-https://example.invalid}")!
-    public static let cloudSecret = "$CLOUD_SECRET"
-    public static let cloudAPIVersion = "${TLINGO_CLOUD_API_VERSION:-2025-01-01-preview}"
+    public static let cloudEndpoint = URL(string: #"$EFFECTIVE_ENDPOINT"#)!
+    public static let cloudSecret = #"$CLOUD_SECRET"#
+    public static let cloudAPIVersion = #"$CLOUD_API_VERSION"#
 }
 EOF
 
+if [[ -f "$OUTPUT" ]] && cmp -s "$TMP_OUTPUT" "$OUTPUT"; then
+    echo "AppSecrets.swift unchanged; keeping existing file"
+    exit 0
+fi
+
+mv "$TMP_OUTPUT" "$OUTPUT"
+trap - EXIT
 echo "Wrote $OUTPUT (cloud configured: $([[ -n "$CLOUD_SECRET" ]] && echo yes || echo no))"
