@@ -20,6 +20,10 @@
           "text": "Send crash diagnostics automatically on a later launch, without linking them to an account"
         },
         {
+          "kind": "added",
+          "text": "Show source and translated realtime captions in separate panes"
+        },
+        {
           "kind": "improved",
           "text": "Offer Email Support separately from in-app feedback"
         },
@@ -92,6 +96,14 @@
           "text": "Refine selection popup handling and resizing"
         },
         {
+          "kind": "improved",
+          "text": "Speed up long realtime caption sessions and scrolling through large history transcripts"
+        },
+        {
+          "kind": "improved",
+          "text": "Update the premium models listed on the paywall"
+        },
+        {
           "kind": "fixed",
           "text": "Switch free AI models directly without getting stuck in selection alerts"
         },
@@ -151,6 +163,32 @@
         {
           "kind": "fixed",
           "text": "Validate configuration more reliably and handle network responses better"
+        },
+        {
+          "kind": "fixed",
+          "text": "Keep CJK streaming transcripts, SSE line separators, and Chinese Microsoft Translate language codes accurate"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Restore the Live Translate button in compact iPad Split View and keep active chats open when resizing"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep prompt editing stable while composing with an input method and ignore restored clipboard snapshots"
+        },
+        {
+          "kind": "fixed",
+          "text": "Highlight the {appLanguage} prompt token and protect active realtime sessions while deleting history"
+        },
+        {
+          "kind": "improved",
+          "text": "Show only annual and lifetime plans on the App Store paywall"
         }
       ]
     },
@@ -297,6 +335,10 @@
         {
           "kind": "fixed",
           "text": "Validate configuration more reliably and handle network responses better"
+        },
+        {
+          "kind": "improved",
+          "text": "Show only annual and lifetime plans on the App Store paywall"
         }
       ]
     },
@@ -458,11 +500,29 @@
     },
     {
       "version": "5.7.1",
-      "items": []
+      "items": [
+        {
+          "kind": "improved",
+          "text": "Refreshed App Store titles, subtitles, and keywords."
+        },
+        {
+          "kind": "improved",
+          "text": "Refined Chinese wording for additional models."
+        }
+      ]
     },
     {
       "version": "5.7.0",
-      "items": []
+      "items": [
+        {
+          "kind": "improved",
+          "text": "Prepared App Store product pages for text, iPhone audio, and microphone translation."
+        },
+        {
+          "kind": "improved",
+          "text": "Added screenshot fixtures for video and travel examples; app features are unchanged."
+        }
+      ]
     },
     {
       "version": "5.6.1",

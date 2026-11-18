@@ -876,6 +876,131 @@
         }
       }
     },
+    "Added screenshot fixtures for video and travel examples; app features are unchanged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أُضيفت لقطات شاشة ثابتة لأمثلة الفيديو والسفر؛ ولم تتغير ميزات التطبيق."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføjede faste skærmbilleder til video- og rejseeksempler; appens funktioner er uændrede."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screenshot-Fixtures für Video- und Reisebeispiele hinzugefügt; die App-Funktionen bleiben unverändert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added screenshot fixtures for video and travel examples; app features are unchanged."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añadieron capturas de prueba para ejemplos de vídeo y viajes; las funciones de la app no han cambiado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajout de captures de référence pour les exemples de vidéo et de voyage ; les fonctionnalités de l’app restent inchangées."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan tangkapan layar acuan untuk contoh video dan perjalanan; fitur aplikasi tidak berubah."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunte schermate di riferimento per gli esempi di video e viaggi; le funzioni dell’app restano invariate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動画と旅行の例にスクリーンショットのフィクスチャを追加しました。アプリの機能に変更はありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "동영상 및 여행 예시에 스크린샷 픽스처를 추가했습니다. 앱 기능은 변경되지 않았습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menambahkan tangkapan skrin rujukan untuk contoh video dan perjalanan; ciri aplikasi tidak berubah."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La til faste skjermbilder for video- og reiseeksempler; appens funksjoner er uendret."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screenshots als testfixtures toegevoegd voor video- en reisvoorbeelden; appfuncties zijn ongewijzigd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodano wzorcowe zrzuty ekranu dla przykładów dotyczących wideo i podróży; funkcje aplikacji pozostają bez zmian."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionadas capturas de tela de referência para exemplos de vídeo e viagem; os recursos do app não foram alterados."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade till fasta skärmbilder för video- och reseexempel; appens funktioner är oförändrade."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video ve seyahat örnekleri için ekran görüntüsü fikstürleri eklendi; uygulama özellikleri değişmedi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為影片和旅遊範例新增螢幕截圖測試素材；App 功能維持不變。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为视频和旅行示例添加了屏幕截图测试素材；应用功能保持不变。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為影片和旅遊範例新增螢幕截圖測試素材；App 功能維持不變。"
+          }
+        }
+      }
+    },
     "Added transcription-only realtime history on iPhone Audio." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2876,6 +3001,131 @@
         }
       }
     },
+    "Highlight the {appLanguage} prompt token and protect active realtime sessions while deleting history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمييز الرمز {appLanguage} في المطالبة وحماية الجلسات المباشرة النشطة عند حذف السجل"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fremhæv prompttokenet {appLanguage}, og beskyt aktive realtidssessioner ved sletning af historik"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Prompt-Token {appLanguage} hervorheben und aktive Echtzeitsitzungen beim Löschen des Verlaufs schützen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight the {appLanguage} prompt token and protect active realtime sessions while deleting history"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resaltar el token {appLanguage} del prompt y proteger las sesiones activas en tiempo real al borrar el historial"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre en évidence le jeton {appLanguage} du prompt et protéger les sessions en temps réel actives lors de la suppression de l’historique"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorot token prompt {appLanguage} dan lindungi sesi real-time yang aktif saat menghapus riwayat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evidenziare il token {appLanguage} del prompt e proteggere le sessioni attive in tempo reale durante l’eliminazione della cronologia"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロンプトの{appLanguage}トークンを強調表示し、履歴の削除時に進行中のリアルタイムセッションを保護"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프롬프트의 {appLanguage} 토큰을 강조 표시하고 기록 삭제 시 활성 실시간 세션 보호"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serlahkan token prompt {appLanguage} dan lindungi sesi masa nyata yang aktif semasa memadam sejarah"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fremhev prompttokenet {appLanguage}, og beskytt aktive sanntidsøkter når historikken slettes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het prompttoken {appLanguage} markeren en actieve realtime sessies beschermen bij het verwijderen van de geschiedenis"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyróżnienie tokenu {appLanguage} w prompcie i ochrona aktywnych sesji w czasie rzeczywistym podczas usuwania historii"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destacar o token {appLanguage} do prompt e proteger sessões ativas em tempo real ao excluir o histórico"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markera prompttoken {appLanguage} och skydda aktiva realtidssessioner när historiken raderas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İstemdeki {appLanguage} belirtecini vurgulayın ve geçmişi silerken etkin gerçek zamanlı oturumları koruyun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "突出顯示提示詞中的 {appLanguage} 標記，並在刪除記錄時保護進行中的即時工作階段"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "突出显示提示词中的 {appLanguage} 标记，并在删除历史记录时保护进行中的实时会话"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "醒目顯示提示詞中的 {appLanguage} 標記，並在刪除歷史記錄時保護進行中的即時工作階段"
+          }
+        }
+      }
+    },
     "Import your own TTF or OTF fonts for translation results" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3376,6 +3626,131 @@
         }
       }
     },
+    "Keep CJK streaming transcripts, SSE line separators, and Chinese Microsoft Translate language codes accurate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على دقة النصوص المتدفقة باللغات الصينية واليابانية والكورية، وفواصل أسطر SSE، ورموز اللغة الصينية في Microsoft Translate"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sørg for korrekte streamingtransskriptioner på kinesisk, japansk og koreansk, SSE-linjeskift og kinesiske sprogkoder i Microsoft Translate"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korrekte Streaming-Transkripte für Chinesisch, Japanisch und Koreanisch, SSE-Zeilentrenner und chinesische Sprachcodes für Microsoft Translate sicherstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep CJK streaming transcripts, SSE line separators, and Chinese Microsoft Translate language codes accurate"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener la precisión de las transcripciones en streaming en chino, japonés y coreano, los separadores de línea SSE y los códigos de idioma chino de Microsoft Translate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garantir l’exactitude des transcriptions en streaming en chinois, japonais et coréen, des séparateurs de lignes SSE et des codes de langue chinoise de Microsoft Translate"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan transkrip streaming CJK, pemisah baris SSE, dan kode bahasa Mandarin Microsoft Translate tetap akurat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garantire l’accuratezza delle trascrizioni in streaming CJK, dei separatori di riga SSE e dei codici della lingua cinese di Microsoft Translate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中国語・日本語・韓国語のストリーミング書き起こし、SSEの行区切り、Microsoft Translateの中国語言語コードの正確性を維持"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CJK 스트리밍 전사, SSE 줄 구분자, Microsoft Translate 중국어 언어 코드의 정확성 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan transkrip penstriman CJK, pemisah baris SSE dan kod bahasa Cina Microsoft Translate kekal tepat"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sørg for korrekte strømmetranskripsjoner på kinesisk, japansk og koreansk, SSE-linjeskift og kinesiske språkkoder i Microsoft Translate"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgen voor correcte streamingtranscripties in het Chinees, Japans en Koreaans, SSE-regelscheidingstekens en Chinese taalcodes voor Microsoft Translate"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapewnienie poprawności transkrypcji strumieniowych CJK, separatorów wierszy SSE i chińskich kodów językowych Microsoft Translate"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter a precisão das transcrições em streaming em chinês, japonês e coreano, dos separadores de linha SSE e dos códigos de idioma chinês do Microsoft Translate"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Säkerställ korrekta strömmande transkriptioner på kinesiska, japanska och koreanska, SSE-radbrytningar och kinesiska språkkoder i Microsoft Translate"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CJK akış transkriptlerinin, SSE satır ayırıcılarının ve Microsoft Translate Çince dil kodlarının doğruluğunu koruyun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確保中日韓串流轉錄文字、SSE 行分隔符和 Microsoft Translate 中文語言代碼準確無誤"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确保中日韩流式转录文本、SSE 行分隔符和 Microsoft Translate 中文语言代码准确无误"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確保中日韓串流轉錄文字、SSE 行分隔符和 Microsoft Translate 中文語言代碼準確無誤"
+          }
+        }
+      }
+    },
     "Keep Picture in Picture captions ready when switching to the background" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3747,6 +4122,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "即時翻譯暫停時保持瀏海字幕顯示"
+          }
+        }
+      }
+    },
+    "Keep prompt editing stable while composing with an input method and ignore restored clipboard snapshots" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على استقرار تحرير المطالبات أثناء الكتابة باستخدام طريقة إدخال وتجاهل لقطات الحافظة المستعادة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold promptredigering stabil under indtastning med en inputmetode, og ignorér gendannede udklipsholder-snapshots"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Prompt-Bearbeitung während der Eingabe mit einer Eingabemethode stabil halten und wiederhergestellte Zwischenablage-Snapshots ignorieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep prompt editing stable while composing with an input method and ignore restored clipboard snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener estable la edición de prompts durante la composición con un método de entrada e ignorar las instantáneas restauradas del portapapeles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenir la stabilité de la modification des prompts pendant la saisie avec une méthode de saisie et ignorer les instantanés restaurés du presse-papiers"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaga pengeditan prompt tetap stabil saat menyusun teks dengan metode input dan abaikan snapshot clipboard yang dipulihkan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenere stabile la modifica dei prompt durante la composizione con un metodo di input e ignorare le istantanee ripristinate degli appunti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力メソッドでの文字入力中もプロンプト編集を安定させ、復元されたクリップボードのスナップショットを無視"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력기로 텍스트를 작성하는 동안 프롬프트 편집을 안정적으로 유지하고 복원된 클립보드 스냅샷 무시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan penyuntingan prompt stabil semasa mengarang dengan kaedah input dan abaikan syot kilat papan keratan yang dipulihkan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold promptredigering stabil under skriving med en inndatametode, og ignorer gjenopprettede utklippstavle-øyeblikksbilder"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Promptbewerking stabiel houden tijdens het invoeren met een invoermethode en herstelde klembordmomentopnamen negeren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilna edycja promptów podczas wpisywania tekstu za pomocą metody wprowadzania i ignorowanie przywróconych migawek schowka"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter a edição de prompts estável durante a composição com um método de entrada e ignorar instantâneos restaurados da área de transferência"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll promptredigeringen stabil vid inmatning med en inmatningsmetod och ignorera återställda ögonblicksbilder av urklipp"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir giriş yöntemiyle metin oluştururken istem düzenlemeyi kararlı tutun ve geri yüklenen pano anlık görüntülerini yok sayın"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法組字時保持提示詞編輯穩定，並忽略還原的剪貼簿快照"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用输入法组字时保持提示词编辑稳定，并忽略恢复的剪贴板快照"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法組字時保持提示詞編輯穩定，並忽略還原的剪貼簿快照"
           }
         }
       }
@@ -6126,6 +6626,131 @@
         }
       }
     },
+    "Prepared App Store product pages for text, iPhone audio, and microphone translation." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أُعدّت صفحات منتجات App Store لترجمة النصوص وصوت iPhone والميكروفون."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klargjorde App Store-produktsider til tekst-, iPhone-lyd- og mikrofonoversættelse."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Store-Produktseiten für Text-, iPhone-Audio- und Mikrofonübersetzung vorbereitet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepared App Store product pages for text, iPhone audio, and microphone translation."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se prepararon las páginas de producto del App Store para la traducción de texto, audio del iPhone y micrófono."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation des pages produit de l’App Store pour la traduction de texte, de l’audio de l’iPhone et du microphone."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan halaman produk App Store untuk terjemahan teks, audio iPhone, dan mikrofon."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparate le pagine prodotto dell’App Store per la traduzione di testo, audio dell’iPhone e microfono."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキスト、iPhoneの音声、マイクによる翻訳のApp Store製品ページを準備しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "텍스트, iPhone 오디오 및 마이크 번역을 위한 App Store 제품 페이지를 준비했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyediakan halaman produk App Store untuk terjemahan teks, audio iPhone dan mikrofon."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klargjorde App Store-produktsider for oversettelse av tekst, iPhone-lyd og mikrofon."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store-productpagina’s voorbereid voor tekst-, iPhone-audio- en microfoonvertaling."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przygotowano strony produktów w App Store dla tłumaczenia tekstu, dźwięku z iPhone’a i mikrofonu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparadas páginas de produto da App Store para tradução de texto, áudio do iPhone e microfone."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förberedde produktsidor i App Store för översättning av text, iPhone-ljud och mikrofon."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metin, iPhone sesi ve mikrofon çevirisi için App Store ürün sayfaları hazırlandı."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已為文字、iPhone 音訊和咪高峰翻譯準備 App Store 產品頁面。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已为文本、iPhone 音频和麦克风翻译准备 App Store 产品页面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已為文字、iPhone 音訊和麥克風翻譯準備 App Store 產品頁面。"
+          }
+        }
+      }
+    },
     "Preserve clearly identifiable Chinese scripts during automatic language detection" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7376,6 +8001,131 @@
         }
       }
     },
+    "Refined Chinese wording for additional models." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حُسّنت الصياغة الصينية لنماذج إضافية."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedrede den kinesiske ordlyd for yderligere modeller."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinesische Formulierungen für weitere Modelle verfeinert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refined Chinese wording for additional models."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se mejoró la redacción en chino para otros modelos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amélioration des formulations en chinois pour d’autres modèles."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyempurnakan susunan kata bahasa Mandarin untuk model tambahan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliorata la formulazione in cinese per altri modelli."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加モデルの中国語表記を改善しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가 모델의 중국어 표현을 다듬었습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperhalus susunan kata bahasa Cina untuk model tambahan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedret den kinesiske ordlyden for flere modeller."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chinese formuleringen voor extra modellen verbeterd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopracowano chińskie sformułowania dla dodatkowych modeli."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprimorada a redação em chinês para outros modelos."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förbättrade den kinesiska formuleringen för ytterligare modeller."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer modeller için Çince ifadeler iyileştirildi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優化了其他模型的中文用字。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "优化了其他模型的中文措辞。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優化了其他模型的中文用詞。"
+          }
+        }
+      }
+    },
     "Refined History audio playback with a waveform timeline, spoken-word highlighting, and word-level seeking." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7622,6 +8372,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "改良快速面板控制項及帶波形顯示的即時輸入。"
+          }
+        }
+      }
+    },
+    "Refreshed App Store titles, subtitles, and keywords." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حُدّثت العناوين والعناوين الفرعية والكلمات المفتاحية في App Store."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdaterede titler, undertitler og nøgleord i App Store."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Store-Titel, Untertitel und Schlüsselwörter aktualisiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshed App Store titles, subtitles, and keywords."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se actualizaron los títulos, subtítulos y palabras clave del App Store."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualisation des titres, sous-titres et mots-clés de l’App Store."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperbarui judul, subjudul, dan kata kunci App Store."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornati titoli, sottotitoli e parole chiave dell’App Store."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Storeのタイトル、サブタイトル、キーワードを更新しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store 제목, 부제목 및 키워드를 업데이트했습니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengemas kini tajuk, subtajuk dan kata kunci App Store."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oppdaterte titler, undertitler og nøkkelord i App Store."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store-titels, ondertitels en trefwoorden vernieuwd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odświeżono tytuły, podtytuły i słowa kluczowe w App Store."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizados os títulos, subtítulos e palavras-chave da App Store."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdaterade titlar, undertitlar och nyckelord i App Store."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store başlıkları, alt başlıkları ve anahtar kelimeleri yenilendi."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了 App Store 標題、副標題和關鍵字。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了 App Store 标题、副标题和关键词。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新了 App Store 標題、副標題和關鍵字。"
           }
         }
       }
@@ -8122,6 +8997,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "還原字幕浮動面板的連結"
+          }
+        }
+      }
+    },
+    "Restore the Live Translate button in compact iPad Split View and keep active chats open when resizing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة زر الترجمة المباشرة في العرض المنقسم المدمج على iPad وإبقاء المحادثات النشطة مفتوحة عند تغيير الحجم"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gendan knappen Live Translate i kompakt Split View på iPad, og hold aktive chats åbne ved størrelsesændring"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Live-Translate-Schaltfläche in der kompakten iPad Split View wiederherstellen und aktive Chats bei Größenänderungen offen halten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore the Live Translate button in compact iPad Split View and keep active chats open when resizing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar el botón de traducción en directo en la vista dividida compacta del iPad y mantener abiertos los chats activos al cambiar el tamaño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir le bouton de traduction en direct dans la vue Split View compacte sur iPad et garder les conversations actives ouvertes lors du redimensionnement"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulihkan tombol Terjemahan Langsung di Split View iPad yang ringkas dan biarkan chat aktif tetap terbuka saat ukuran diubah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristinare il pulsante di traduzione dal vivo nella Split View compatta di iPad e mantenere aperte le chat attive durante il ridimensionamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadのコンパクトなSplit Viewでライブ翻訳ボタンを復元し、サイズ変更時も進行中のチャットを開いたままにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad의 좁은 Split View에서 실시간 번역 버튼을 복원하고 크기를 변경할 때 활성 채팅을 열린 상태로 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulihkan butang Terjemahan Langsung dalam Split View padat pada iPad dan kekalkan sembang aktif terbuka apabila saiz diubah"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjenopprett Live Translate-knappen i kompakt Split View på iPad, og hold aktive chatter åpne ved størrelsesendring"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De knop Live Translate herstellen in de compacte Split View op iPad en actieve chats openhouden bij het wijzigen van de grootte"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przywrócenie przycisku tłumaczenia na żywo w kompaktowym widoku Split View na iPadzie i zachowanie otwartych aktywnych czatów podczas zmiany rozmiaru"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar o botão de tradução ao vivo no Split View compacto do iPad e manter conversas ativas abertas ao redimensionar"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Återställ knappen Live Translate i kompakt Split View på iPad och håll aktiva chattar öppna vid storleksändring"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad'de kompakt Split View görünümünde Canlı Çeviri düğmesini geri getirin ve boyut değiştirirken etkin sohbetleri açık tutun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 的緊湊 Split View 中還原即時翻譯按鈕，並在調整大小時保持進行中的對話開啟"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 紧凑型分屏视图中恢复实时翻译按钮，并在调整大小时保持进行中的聊天打开"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 的緊湊 Split View 中還原即時翻譯按鈕，並在調整大小時保持進行中的聊天開啟"
           }
         }
       }
@@ -9001,6 +10001,256 @@
         }
       }
     },
+    "Show only annual and lifetime plans on the App Store paywall" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض الخطط السنوية ومدى الحياة فقط على شاشة الدفع في App Store"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis kun års- og livstidsplaner på App Store-betalingsskærmen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf der App-Store-Bezahlschranke nur Jahres- und lebenslange Pläne anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show only annual and lifetime plans on the App Store paywall"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar solo los planes anuales y de por vida en la pantalla de pago del App Store"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher uniquement les offres annuelles et à vie sur l’écran de paiement de l’App Store"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan hanya paket tahunan dan seumur hidup di layar pembayaran App Store"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrare solo i piani annuali e a vita nella schermata di pagamento dell’App Store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Storeの購入画面に年間プランと買い切りプランのみを表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store 결제 화면에 연간 및 평생 플랜만 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paparkan pelan tahunan dan seumur hidup sahaja pada skrin pembayaran App Store"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis bare års- og livstidsplaner på betalingsskjermen i App Store"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen jaar- en levenslange abonnementen tonen op het App Store-betaalscherm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyświetlanie wyłącznie planów rocznych i dożywotnich na ekranie płatności App Store"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar apenas os planos anual e vitalício na tela de pagamento da App Store"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa endast års- och livstidsplaner på betalväggen i App Store"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store ödeme ekranında yalnızca yıllık ve ömür boyu planları gösterin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 App Store 付費頁面只顯示年度和終身方案"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 App Store 付费页面仅显示年度和终身方案"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 App Store 付費頁面僅顯示年度和終身方案"
+          }
+        }
+      }
+    },
+    "Show source and translated realtime captions in separate panes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض النص الأصلي والترجمة المباشرة في لوحتين منفصلتين"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis originale og oversatte realtidsundertekster i separate paneler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originale und übersetzte Echtzeit-Untertitel in getrennten Bereichen anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show source and translated realtime captions in separate panes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar los subtítulos originales y traducidos en tiempo real en paneles separados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les sous-titres originaux et traduits en temps réel dans des volets distincts"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan teks sumber dan terjemahan real-time di panel terpisah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrare i sottotitoli originali e tradotti in tempo reale in riquadri separati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム字幕の原文と翻訳を別々のペインに表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실시간 원문 자막과 번역 자막을 별도 창에 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paparkan kapsyen asal dan terjemahan masa nyata dalam panel berasingan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis originale og oversatte sanntidstekster i separate paneler"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originele en vertaalde realtime ondertiteling in aparte panelen tonen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyświetlanie oryginalnych i przetłumaczonych napisów w czasie rzeczywistym w osobnych panelach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar legendas originais e traduzidas em tempo real em painéis separados"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa originaltext och översatta realtidsundertexter i separata paneler"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaynak ve çevrilmiş gerçek zamanlı altyazıları ayrı panellerde gösterin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在獨立窗格中顯示即時字幕的原文和譯文"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在独立窗格中显示实时字幕的原文和译文"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在獨立窗格中顯示即時字幕的原文和譯文"
+          }
+        }
+      }
+    },
     "Show the models that will actually run in the model picker, keeping premium selections for later" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9122,6 +10372,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在模型選擇器中顯示實際會執行的模型，並保留進階選擇以備後用"
+          }
+        }
+      }
+    },
+    "Speed up long realtime caption sessions and scrolling through large history transcripts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسريع جلسات التسميات التوضيحية المباشرة الطويلة والتمرير عبر سجلات النصوص الكبيرة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gør lange sessioner med undertekster i realtid og rulning gennem lange transskriptioner i historikken hurtigere"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lange Sitzungen mit Echtzeit-Untertiteln und das Scrollen durch umfangreiche Transkripte im Verlauf beschleunigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed up long realtime caption sessions and scrolling through large history transcripts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agiliza las sesiones largas de subtítulos en tiempo real y el desplazamiento por transcripciones extensas del historial"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accélérer les longues sessions de sous-titrage en temps réel et le défilement des longues transcriptions de l’historique"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempercepat sesi teks langsung yang panjang dan penelusuran transkrip panjang dalam riwayat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocizza le sessioni lunghe di sottotitolazione in tempo reale e lo scorrimento delle trascrizioni estese nella cronologia"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長時間のリアルタイム字幕セッションと、履歴内の長い文字起こしのスクロールを高速化"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "긴 실시간 자막 세션과 기록에 저장된 긴 전사 내용의 스크롤 속도 향상"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mempercepat sesi kapsyen masa nyata yang panjang dan penatalan transkrip panjang dalam sejarah"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjør lange økter med sanntidsteksting og rulling gjennom lange transkripsjoner i historikken raskere"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lange sessies met realtime ondertiteling en het scrollen door lange transcripties in de geschiedenis versnellen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przyspieszenie długich sesji napisów na żywo i przewijania obszernych transkrypcji w historii"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acelerar sessões longas de legendas em tempo real e a rolagem de transcrições extensas no histórico"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gör långa sessioner med textning i realtid och rullning genom långa transkriptioner i historiken snabbare"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uzun gerçek zamanlı altyazı oturumlarını ve geçmişteki uzun transkriptlerde gezinmeyi hızlandır"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加快長時間即時字幕工作階段，以及捲動瀏覽記錄中大型逐字稿的速度"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加快长时间实时字幕会话的运行速度，以及滚动浏览历史记录中大型转录文本的速度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加快長時間即時字幕工作階段，以及捲動瀏覽記錄中大型逐字稿的速度"
           }
         }
       }
@@ -10247,6 +11622,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "統一了語言目錄並加入可搜尋的選擇器，同時改良了翻譯結果、設定及 macOS 導覽。"
+          }
+        }
+      }
+    },
+    "Update the premium models listed on the paywall" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث النماذج المميزة المعروضة على شاشة الاشتراك"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdater de premiummodeller, der vises på betalingsskærmen"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die auf der Paywall angezeigten Premium-Modelle aktualisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update the premium models listed on the paywall"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualiza los modelos premium que se muestran en la pantalla de suscripción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour les modèles premium affichés sur l’écran d’abonnement"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui model premium yang tercantum di layar langganan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna i modelli premium elencati nella schermata di abbonamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "課金画面に表示されるプレミアムモデルを更新"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구독 화면에 표시된 프리미엄 모델 업데이트"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kemas kini model premium yang disenaraikan pada skrin langganan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oppdater premiummodellene som vises på betalingsskjermen"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De premiummodellen op het abonnementsscherm bijwerken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualizacja modeli premium wymienionych na ekranie subskrypcji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar os modelos premium listados na tela de assinatura"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uppdatera premiummodellerna som visas på betalningsskärmen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abonelik ekranında listelenen premium modelleri güncelle"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新訂閱頁面上列出的進階模型"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新订阅页面上列出的高级模型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新訂閱頁面上列出的進階模型"
           }
         }
       }

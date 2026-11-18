@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Import your own TTF or OTF fonts for translation results
 - [Both] Send feedback and up to four screenshots from Settings
 - [Both] Send crash diagnostics automatically on a later launch, without linking them to an account
+- [Both] Show source and translated realtime captions in separate panes
 
 ### Improved
 
@@ -33,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Both] Refine compact result action chips
 - [Both] Refine realtime captions and history
 - [Mac] Refine selection popup handling and resizing
+- [Both] Speed up long realtime caption sessions and scrolling through large history transcripts
+- [Both] Update the premium models listed on the paywall
 
 ### Fixed
 
@@ -49,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Mac] Replace selected text only when the same selection is still focused
 - [Both] Restore caption popover linking
 - [Both] Validate configuration more reliably and handle network responses better
+- [Both] Keep CJK streaming transcripts, SSE line separators, and Chinese Microsoft Translate language codes accurate
+- [iOS] Restore the Live Translate button in compact iPad Split View and keep active chats open when resizing
+- [Mac] Keep prompt editing stable while composing with an input method and ignore restored clipboard snapshots
+- [Both] Highlight the {appLanguage} prompt token and protect active realtime sessions while deleting history
 
 ### Changed
 
