@@ -1290,7 +1290,7 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AITranslator/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "TLingo uses the camera to capture text you want to translate.";

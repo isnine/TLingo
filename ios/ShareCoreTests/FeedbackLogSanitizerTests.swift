@@ -44,12 +44,18 @@ struct FeedbackLogSanitizerTests {
             "X-Signature": "secret-signature",
             "Authorization": "Bearer token",
             "X-Onboarding-Trial": "trial-signature",
+            "X-AppStore-Transaction": "jws-payload",
+            "X-Onboarding-Device": "device-uuid",
+            "X-Usage-Subject-ID": "subject-uuid",
         ])
 
         #expect(sanitized["Content-Type"] == "application/json")
         #expect(sanitized["X-Signature"] == "<redacted>")
         #expect(sanitized["Authorization"] == "<redacted>")
         #expect(sanitized["X-Onboarding-Trial"] == "<redacted>")
+        #expect(sanitized["X-AppStore-Transaction"] == "<redacted>")
+        #expect(sanitized["X-Onboarding-Device"] == "<redacted>")
+        #expect(sanitized["X-Usage-Subject-ID"] == "<redacted>")
     }
 
     @Test func redactsSensitiveJSONFields() throws {

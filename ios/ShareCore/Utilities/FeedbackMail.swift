@@ -194,7 +194,10 @@ enum FeedbackLogSanitizer {
         "x-api-key",
         "api-key",
         "x-signature",
+        "x-appstore-transaction",
+        "x-onboarding-device",
         "x-onboarding-trial",
+        "x-usage-subject-id",
     ]
 
     private static let sensitiveJSONKeys: Set<String> = [

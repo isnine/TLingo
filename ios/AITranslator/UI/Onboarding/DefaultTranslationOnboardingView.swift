@@ -813,6 +813,10 @@
             trialSheetRequest = TrialSheetRequest(inputText: trimmed, models: models)
         }
 
+        private var isEligibleForFreeTrial: Bool {
+            hasFreeTrialOffer == true
+        }
+
         private var trialOfferPage: some View {
             VStack(spacing: Constants.Layout.successSpacing) {
                 Image(systemName: "crown.fill")
@@ -826,7 +830,7 @@
                     )
 
                 VStack(spacing: Constants.Layout.textBlockSpacing) {
-                    Text("Keep using these models after your free trial")
+                    Text(trialOfferHeadline)
                         .font(.system(size: Constants.FontSize.successTitle, weight: .bold))
                         .foregroundColor(colors.textPrimary)
                         .multilineTextAlignment(.center)
@@ -838,10 +842,18 @@
                         .lineSpacing(Constants.Layout.bodyLineSpacing)
                 }
 
-                reminderCard
+                if isEligibleForFreeTrial {
+                    reminderCard
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, Constants.Layout.successTopPadding)
+        }
+
+        private var trialOfferHeadline: LocalizedStringKey {
+            isEligibleForFreeTrial
+                ? "Keep using these models after your free trial"
+                : "Unlock every AI translation model"
         }
 
         @ViewBuilder
@@ -884,17 +896,24 @@
 
         private var trialSubtitle: LocalizedStringKey {
             if let price = storeManager.annualProduct?.displayPrice {
-                return "Then \(price) per year. Cancel anytime."
+                return isEligibleForFreeTrial
+                    ? "Then \(price) per year. Cancel anytime."
+                    : "\(price) per year. Cancel anytime."
             }
             return "Cancel anytime."
         }
 
         private var trialPrimaryTitle: LocalizedStringKey {
-            if storeManager.isPurchasing { return "Starting…" }
-            if let duration = trialDurationText {
-                return "Start \(duration) free trial"
+            if isEligibleForFreeTrial {
+                if storeManager.isPurchasing {
+                    return "Starting…"
+                }
+                if let duration = trialDurationText {
+                    return "Start \(duration) free trial"
+                }
+                return "Start free trial"
             }
-            return "Start free trial"
+            return storeManager.isPurchasing ? "Subscribing…" : "Continue"
         }
 
         /// Maps a free-trial introductory offer's period to `DateComponents`,
@@ -914,7 +933,8 @@
         }
 
         private var trialDurationText: String? {
-            guard let trialProduct,
+            guard isEligibleForFreeTrial,
+                  let trialProduct,
                   let offer = trialProduct.subscription?.introductoryOffer,
                   offer.paymentMode == .freeTrial,
                   let components = trialPeriodComponents(offer.period)
@@ -941,7 +961,8 @@
         /// When the free trial would end, relative to now. nil when the
         /// resolved product carries no free-trial introductory offer.
         private var trialEndDate: Date? {
-            guard let offer = trialProduct?.subscription?.introductoryOffer,
+            guard isEligibleForFreeTrial,
+                  let offer = trialProduct?.subscription?.introductoryOffer,
                   offer.paymentMode == .freeTrial,
                   let components = trialPeriodComponents(offer.period)
             else { return nil }
@@ -1147,7 +1168,9 @@
                 ? ModelConfig.defaultEnabledModelIDs(cloudModels: catalog)
                 : preferences.enabledModelIDs
             preferences.setEnabledModelIDs(base.union(selectedPremiumIDs))
-            scheduleSelectedReminders()
+            if isEligibleForFreeTrial {
+                scheduleSelectedReminders()
+            }
             // Reuse the success celebration + review prompt so an in-flow
             // trial purchase gets the same confetti and rating ask as the
             // "Start translating" path. celebrateThenFinish self-guards
@@ -1225,7 +1248,45 @@
                 secondaryButton("View other subscription plans") {
                     showSubscriptionPaywall = true
                 }
+                trialLegalFooter
             }
+        }
+
+        private static let privacyPolicyURL = URL(
+            string: "https://tlingo.zanderwang.com/privacy/"
+        )!
+        private static let termsOfUseURL = URL(
+            string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+        )!
+
+        private var trialLegalFooter: some View {
+            VStack(spacing: 6) {
+                HStack(spacing: 12) {
+                    Button("Restore") {
+                        Task {
+                            await storeManager.restorePurchases()
+                            await entitlement.refresh()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(storeManager.isPurchasing)
+
+                    Link("Terms of Use", destination: Self.termsOfUseURL)
+                    Link("Privacy Policy", destination: Self.privacyPolicyURL)
+                }
+                .font(.system(size: Constants.FontSize.small))
+                .foregroundColor(colors.textSecondary)
+
+                let renewalText = String(localized: "Subscriptions renew automatically.")
+                let cancellationText = String(
+                    localized: "Cancel at least 24 hours before the end of the current period to avoid renewal."
+                )
+                Text("\(renewalText) \(cancellationText)")
+                    .font(.system(size: Constants.FontSize.small))
+                    .foregroundColor(colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.top, 4)
         }
 
         private func primaryButton(
