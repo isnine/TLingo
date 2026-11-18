@@ -11,7 +11,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Chat model preference persists and refreshes")
     func chatModelPreferencePersistsAndRefreshes() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         #expect(preferences.chatModelID == nil)
@@ -26,7 +27,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Stored available model overrides the session model")
     func storedAvailableModelOverridesSessionModel() throws {
-        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let (preferences, cleanup) = try makePreferences(chatModelID: premiumModel.id)
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         #expect(viewModel.model == premiumModel)
@@ -34,7 +36,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Unusable stored premium model falls back to the session model")
     func unusableStoredPremiumModelFallsBackToSessionModel() throws {
-        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let (preferences, cleanup) = try makePreferences(chatModelID: premiumModel.id)
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, isPro: false)
 
         #expect(viewModel.model == freeModel)
@@ -43,7 +46,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Unusable stored and session models fall back to the first usable model")
     func unusableStoredAndSessionModelsFallBackToFirstUsableModel() throws {
-        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let (preferences, cleanup) = try makePreferences(chatModelID: premiumModel.id)
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, sessionModel: premiumModel, isPro: false)
 
         #expect(viewModel.model == freeModel)
@@ -51,7 +55,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Missing stored model falls back without clearing the preference")
     func missingStoredModelFallsBackWithoutClearingPreference() throws {
-        let preferences = try makePreferences(chatModelID: "missing")
+        let (preferences, cleanup) = try makePreferences(chatModelID: "missing")
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, isPro: false)
 
         #expect(viewModel.model == freeModel)
@@ -60,7 +65,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Changing model updates the preference")
     func changingModelUpdatesPreference() throws {
-        let preferences = try makePreferences()
+        let (preferences, cleanup) = try makePreferences()
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         viewModel.model = premiumModel
@@ -70,7 +76,8 @@ struct ConversationModelSelectionTests {
 
     @Test("Premium access gates the selected model")
     func premiumAccessGatesSelectedModel() throws {
-        let preferences = try makePreferences(chatModelID: premiumModel.id)
+        let (preferences, cleanup) = try makePreferences(chatModelID: premiumModel.id)
+        defer { cleanup() }
         let viewModel = makeViewModel(preferences: preferences, isPro: true)
 
         #expect(!viewModel.canUseSelectedModel(isPro: false))
@@ -95,18 +102,18 @@ struct ConversationModelSelectionTests {
         )
     }
 
-    private func makePreferences(chatModelID: String? = nil) throws -> AppPreferences {
-        let defaults = try makeDefaults()
+    private func makePreferences(chatModelID: String? = nil) throws -> (AppPreferences, () -> Void) {
+        let (defaults, suiteName) = try makeDefaults()
         if let chatModelID {
             defaults.set(chatModelID, forKey: "chat_model_id")
         }
-        return AppPreferences(defaults: defaults)
+        return (AppPreferences(defaults: defaults), { defaults.removePersistentDomain(forName: suiteName) })
     }
 
-    private func makeDefaults() throws -> UserDefaults {
+    private func makeDefaults() throws -> (UserDefaults, String) {
         let suiteName = "ConversationModelSelectionTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        return defaults
+        return (defaults, suiteName)
     }
 }

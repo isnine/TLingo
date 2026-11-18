@@ -7,8 +7,73 @@ import SwiftUI
     import AppKit
 #endif
 
+private struct RenderConfigCacheKey: Hashable, Sendable {
+    let preset: MarkdownContentPreset
+    let textColor: Color
+    let secondaryTextColor: Color
+    let accentColor: Color
+    let animatesText: Bool
+    let readingStyle: ResultReadingStyle
+}
+
+private final class RenderConfigCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [RenderConfigCacheKey: MarkdownRenderConfig] = [:]
+
+    func getOrBuild(
+        key: RenderConfigCacheKey,
+        build: () -> MarkdownRenderConfig
+    ) -> MarkdownRenderConfig {
+        lock.lock()
+        if let cached = storage[key] {
+            lock.unlock()
+            return cached
+        }
+        lock.unlock()
+
+        let built = build()
+        lock.lock()
+        if storage.count >= 32 {
+            storage.removeAll(keepingCapacity: true)
+        }
+        storage[key] = built
+        lock.unlock()
+        return built
+    }
+}
+
 enum MarkdownTypography {
+    private static let cache = RenderConfigCache()
+
     static func renderConfig(
+        preset: MarkdownContentPreset,
+        textColor: Color,
+        secondaryTextColor: Color,
+        accentColor: Color,
+        animatesText: Bool,
+        readingStyle: ResultReadingStyle = ResultReadingStyle()
+    ) -> MarkdownRenderConfig {
+        let key = RenderConfigCacheKey(
+            preset: preset,
+            textColor: textColor,
+            secondaryTextColor: secondaryTextColor,
+            accentColor: accentColor,
+            animatesText: animatesText,
+            readingStyle: readingStyle
+        )
+        return cache.getOrBuild(key: key) {
+            buildRenderConfig(
+                preset: preset,
+                textColor: textColor,
+                secondaryTextColor: secondaryTextColor,
+                accentColor: accentColor,
+                animatesText: animatesText,
+                readingStyle: readingStyle
+            )
+        }
+    }
+
+    private static func buildRenderConfig(
         preset: MarkdownContentPreset,
         textColor: Color,
         secondaryTextColor: Color,

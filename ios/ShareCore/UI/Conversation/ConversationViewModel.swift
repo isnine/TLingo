@@ -107,15 +107,25 @@ public final class ConversationViewModel: ObservableObject {
     }
 
     public func send() {
-        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawInput = inputText
+        let text = rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !attachedImages.isEmpty, !isStreaming else { return }
+        inputText = ""
         streamingTask?.cancel()
         requiresPremiumAccess = false
         streamingTask = Task { [weak self] in
             guard let self else { return }
             let isPro = await Entitlement.shared.refreshAndGetIsPro()
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                if self.inputText.isEmpty {
+                    self.inputText = rawInput
+                }
+                return
+            }
             guard self.canUseSelectedModel(isPro: isPro) else {
+                if self.inputText.isEmpty {
+                    self.inputText = rawInput
+                }
                 self.requiresPremiumAccess = true
                 return
             }

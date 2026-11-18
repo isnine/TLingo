@@ -16,6 +16,10 @@
 
         /// Tag applied to synthetic CGEvents to distinguish from real user keypresses.
         private static let syntheticEventTag: Int64 = 0x544C_696E // "TLin"
+        private static let restoredPasteboardType = NSPasteboard.PasteboardType(
+            "com.zanderwang.AITranslator.restoredPasteboard"
+        )
+        private static let transientPasteboardType = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
 
         /// Grab selected text by simulating Cmd+C (or pressing the app's Copy menu item) and reading the clipboard.
         /// Saves and restores previous clipboard content unless externally modified.
@@ -65,11 +69,11 @@
 
             // Wait for clipboard to update (max 300ms)
             let deadline = Date().addingTimeInterval(0.3)
-            while pasteboard.changeCount == previousCount, Date() < deadline {
+            while !Task.isCancelled, pasteboard.changeCount == previousCount, Date() < deadline {
                 try? await Task.sleep(for: .milliseconds(20))
             }
 
-            guard pasteboard.changeCount != previousCount else {
+            guard !Task.isCancelled, pasteboard.changeCount != previousCount else {
                 return nil
             }
 
@@ -159,11 +163,20 @@
         ) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
-            guard let savedItems else { return }
-            let items = savedItems.map { itemTypes -> NSPasteboardItem in
+            guard let savedItems, !savedItems.isEmpty else {
+                let marker = NSPasteboardItem()
+                marker.setData(Data([1]), forType: transientPasteboardType)
+                marker.setData(Data([1]), forType: restoredPasteboardType)
+                pasteboard.writeObjects([marker])
+                return
+            }
+            let items = savedItems.enumerated().map { index, itemTypes -> NSPasteboardItem in
                 let item = NSPasteboardItem()
                 for (type, data) in itemTypes {
                     item.setData(data, forType: type)
+                }
+                if index == 0 {
+                    item.setData(Data([1]), forType: restoredPasteboardType)
                 }
                 return item
             }

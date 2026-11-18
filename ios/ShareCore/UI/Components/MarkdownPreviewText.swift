@@ -9,13 +9,28 @@ import Foundation
 /// block markers (headings, quotes, list bullets) are dropped, blocks are joined with spaces,
 /// and inline emphasis, code, and links keep their styling.
 enum MarkdownPreviewText {
-    static func attributed(from markdown: String) -> AttributedString {
+    private static let defaultPreviewCharacterLimit = 800
+
+    static func attributed(
+        from markdown: String,
+        maxCharacters: Int = defaultPreviewCharacterLimit
+    ) -> AttributedString {
+        let bounded: String
+        if maxCharacters > 0,
+           let cutoff = markdown.index(markdown.startIndex, offsetBy: maxCharacters, limitedBy: markdown.endIndex),
+           cutoff < markdown.endIndex
+        {
+            bounded = String(markdown[..<cutoff])
+        } else {
+            bounded = markdown
+        }
+
         let options = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .full,
             failurePolicy: .returnPartiallyParsedIfPossible
         )
-        guard let parsed = try? AttributedString(markdown: markdown, options: options) else {
-            return AttributedString(markdown.replacingOccurrences(of: "\n", with: " "))
+        guard let parsed = try? AttributedString(markdown: bounded, options: options) else {
+            return AttributedString(bounded.replacingOccurrences(of: "\n", with: " "))
         }
 
         var result = AttributedString()

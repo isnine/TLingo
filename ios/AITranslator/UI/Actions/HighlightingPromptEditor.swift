@@ -3,7 +3,7 @@
 //  TLingo
 //
 //  A multi-line text editor that live-highlights prompt placeholder tokens
-//  ({text}, {sourceLanguage}, {targetLanguage} and their {{...}} variants).
+//  ({text}, {sourceLanguage}, {targetLanguage}, {appLanguage} and their {{...}} variants).
 //
 
 import SwiftUI
@@ -18,9 +18,10 @@ import SwiftUI
 /// Matches the supported placeholder tokens, preferring the double-brace form.
 /// Mirrors the tokens handled in `PromptSubstitution`.
 private let placeholderRegex: NSRegularExpression = {
+    let tokens = "text|sourceLanguage|targetLanguage|appLanguage"
     do {
         return try NSRegularExpression(
-            pattern: #"\{\{(?:text|sourceLanguage|targetLanguage)\}\}|\{(?:text|sourceLanguage|targetLanguage)\}"#
+            pattern: "\\{\\{(?:\(tokens))\\}\\}|\\{(?:\(tokens))\\}"
         )
     } catch {
         preconditionFailure("Invalid placeholder regex: \(error)")
@@ -88,8 +89,10 @@ private func applyHighlighting(
         }
 
         func updateNSView(_ nsView: NSScrollView, context: Context) {
+            context.coordinator.parent = self
             guard let textView = nsView.documentView as? NSTextView else { return }
             textView.isEditable = isEditable
+            guard !textView.hasMarkedText() else { return }
             if textView.string != text {
                 textView.string = text
                 context.coordinator.applyHighlight(textView)
@@ -97,7 +100,7 @@ private func applyHighlighting(
         }
 
         final class Coordinator: NSObject, NSTextViewDelegate {
-            private let parent: HighlightingPromptEditor
+            var parent: HighlightingPromptEditor
 
             init(parent: HighlightingPromptEditor) {
                 self.parent = parent
@@ -118,7 +121,9 @@ private func applyHighlighting(
             }
 
             func textDidChange(_ notification: Notification) {
-                guard let textView = notification.object as? NSTextView else { return }
+                guard let textView = notification.object as? NSTextView,
+                      !textView.hasMarkedText()
+                else { return }
                 if parent.text != textView.string {
                     parent.text = textView.string
                 }
@@ -155,20 +160,22 @@ private func applyHighlighting(
         }
 
         func updateUIView(_ uiView: UITextView, context: Context) {
+            context.coordinator.parent = self
             uiView.isEditable = isEditable
+            guard uiView.markedTextRange == nil else { return }
             if uiView.text != text {
                 uiView.text = text
                 context.coordinator.applyHighlight(uiView)
             }
         }
 
-        func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+        func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context _: Context) -> CGSize? {
             guard let width = proposal.width else { return nil }
             return uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
         }
 
         final class Coordinator: NSObject, UITextViewDelegate {
-            private let parent: HighlightingPromptEditor
+            var parent: HighlightingPromptEditor
 
             init(parent: HighlightingPromptEditor) {
                 self.parent = parent
@@ -190,6 +197,7 @@ private func applyHighlighting(
             }
 
             func textViewDidChange(_ textView: UITextView) {
+                guard textView.markedTextRange == nil else { return }
                 let updated = textView.text ?? ""
                 if parent.text != updated {
                     parent.text = updated

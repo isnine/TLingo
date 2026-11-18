@@ -75,6 +75,10 @@
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: activeConversationSession != nil)
+            .onDisappear {
+                viewModel.cancelActiveRequest(clearResults: false)
+                viewModel.stopSpeaking()
+            }
             .onAppear {
                 AppPreferences.shared.refreshFromDefaults()
                 // The extension being shown at all means the user picked TLingo

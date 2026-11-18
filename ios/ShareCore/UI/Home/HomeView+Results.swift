@@ -38,9 +38,19 @@ extension HomeView {
                                 flatResultRow(for: run)
                             }
                         } else {
+                            let previews = Dictionary(
+                                uniqueKeysWithValues: remainingRuns.map { run in
+                                    (run.id, isAwaitingFirstOutput(run) ? AttributedString() : resultPreview(for: run))
+                                }
+                            )
                             collapsedResults(
                                 remainingRuns,
-                                lineLimits: collapsedPreviewLineLimits(for: remainingRuns, viewportHeight: viewportHeight)
+                                previews: previews,
+                                lineLimits: collapsedPreviewLineLimits(
+                                    for: remainingRuns,
+                                    previews: previews,
+                                    viewportHeight: viewportHeight
+                                )
                             )
                         }
                     }
@@ -241,6 +251,7 @@ extension HomeView {
 
     func collapsedResults(
         _ runs: [HomeViewModel.ModelRunViewState],
+        previews: [String: AttributedString],
         lineLimits: [String: Int]
     ) -> some View {
         let labelWidth = collapsedPreviewLabelWidth(for: runs)
@@ -278,7 +289,7 @@ extension HomeView {
                             if isAwaitingFirstOutput(run) {
                                 AnimatedEllipsis()
                             } else {
-                                Text(resultPreview(for: run))
+                                Text(previews[run.id] ?? AttributedString())
                             }
                         }
                         .font(.system(size: Self.collapsedPreviewFontSize))
@@ -410,6 +421,7 @@ extension HomeView {
     /// so comparing models rarely needs scrolling. iPhone keeps one line per preview.
     func collapsedPreviewLineLimits(
         for runs: [HomeViewModel.ModelRunViewState],
+        previews: [String: AttributedString],
         viewportHeight: CGFloat
     ) -> [String: Int] {
         #if os(macOS)
@@ -429,7 +441,7 @@ extension HomeView {
             let lineBudget = previewHeight.isFinite ? Int((previewHeight / lineHeight).rounded(.down)) : 0
 
             let neededLines = runs.map { run in
-                let text = String(resultPreview(for: run).characters) as NSString
+                let text = String((previews[run.id] ?? AttributedString()).characters) as NSString
                 let height = text.boundingRect(
                     with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
                     options: [.usesLineFragmentOrigin, .usesFontLeading],

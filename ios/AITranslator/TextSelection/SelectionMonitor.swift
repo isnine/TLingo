@@ -24,7 +24,13 @@
         private var mouseDownPoint: CGPoint?
         private var dragOrigin: AccessibilityGrabber.DragOrigin?
         private var isSuppressed = false
-        private nonisolated(unsafe) var suppressTask: Task<Void, Never>?
+        nonisolated(unsafe) private var suppressTask: Task<Void, Never>?
+        nonisolated(unsafe) private var pendingSelectionTask: Task<Void, Never>?
+
+        private var isFrontmostAppIgnored: Bool {
+            Self.ignoredBundleIDs.union(ignoredApplications)
+                .contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
+        }
 
         /// Screen-mirroring hosts and screenshot overlays, where mouse events are not text selection.
         private static let ignoredBundleIDs: Set<String> = [
@@ -45,6 +51,7 @@
                 NSEvent.removeMonitor(monitor)
             }
             suppressTask?.cancel()
+            pendingSelectionTask?.cancel()
         }
 
         func start() {
@@ -54,9 +61,14 @@
             mouseDownMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
                 let screenPoint = NSEvent.mouseLocation
                 Task { @MainActor in
-                    self?.mouseDownPoint = screenPoint
-                    self?.dragOrigin = AccessibilityGrabber.dragOrigin(at: screenPoint)
-                    self?.onMouseDown?(screenPoint)
+                    guard let self else { return }
+                    self.pendingSelectionTask?.cancel()
+                    self.pendingSelectionTask = nil
+                    self.mouseDownPoint = screenPoint
+                    self.dragOrigin = !self.isSuppressed && !self.isFrontmostAppIgnored
+                        ? AccessibilityGrabber.dragOrigin(at: screenPoint)
+                        : nil
+                    self.onMouseDown?(screenPoint)
                 }
             }
 
@@ -78,12 +90,15 @@
                 let clickCount = event.clickCount
                 let isShiftClick = event.modifierFlags.contains(.shift)
                 Task { @MainActor in
+                    guard let self else { return }
                     if eventType == .leftMouseDown {
-                        self?.mouseDownPoint = screenPoint
-                        self?.dragOrigin = nil
-                        self?.onMouseDown?(screenPoint)
+                        self.pendingSelectionTask?.cancel()
+                        self.pendingSelectionTask = nil
+                        self.mouseDownPoint = screenPoint
+                        self.dragOrigin = nil
+                        self.onMouseDown?(screenPoint)
                     } else {
-                        self?.handleMouseUp(at: screenPoint, clickCount: clickCount, isShiftClick: isShiftClick)
+                        self.handleMouseUp(at: screenPoint, clickCount: clickCount, isShiftClick: isShiftClick)
                     }
                 }
                 return event
@@ -105,12 +120,16 @@
             }
             suppressTask?.cancel()
             suppressTask = nil
+            pendingSelectionTask?.cancel()
+            pendingSelectionTask = nil
             logger.debug("Selection monitoring stopped")
         }
 
         /// Suppress detection for 0.5s to prevent re-trigger after dismissal.
         func suppressBriefly() {
             isSuppressed = true
+            pendingSelectionTask?.cancel()
+            pendingSelectionTask = nil
             suppressTask?.cancel()
             suppressTask = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .milliseconds(500))
@@ -120,10 +139,9 @@
         }
 
         private func handleMouseUp(at point: CGPoint, clickCount: Int, isShiftClick: Bool) {
-            guard !isSuppressed,
-                  !Self.ignoredBundleIDs.union(ignoredApplications)
-                      .contains(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "")
-            else { return }
+            pendingSelectionTask?.cancel()
+            pendingSelectionTask = nil
+            guard !isSuppressed, !isFrontmostAppIgnored else { return }
 
             var dragDistance: CGFloat = 0
             if let downPoint = mouseDownPoint {
@@ -138,7 +156,7 @@
             let wasDragOrMultiClick = clickCount >= 2 || dragDistance > 5
             guard wasDragOrMultiClick || isShiftClick else { return }
 
-            Task { @MainActor [weak self] in
+            pendingSelectionTask = Task { @MainActor [weak self] in
                 guard let self else { return }
                 try? await Task.sleep(for: .milliseconds(50))
                 guard !Task.isCancelled, !self.isSuppressed else { return }

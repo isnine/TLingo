@@ -579,13 +579,17 @@ struct ActionsView: View {
         switch result {
         case let .success(config):
             let name = configurationStore.currentConfigurationName ?? "Default"
-            try? ConfigurationFileManager.shared.saveConfiguration(config, name: name)
-            ConfigurationService.shared.applyConfiguration(
-                config,
-                to: configurationStore,
-                preferences: preferences,
-                configurationName: name
-            )
+            do {
+                try ConfigurationFileManager.shared.saveConfiguration(config, name: name)
+                ConfigurationService.shared.applyConfiguration(
+                    config,
+                    to: configurationStore,
+                    preferences: preferences,
+                    configurationName: name
+                )
+            } catch {
+                importError = error.localizedDescription
+            }
         case let .failure(error):
             importError = error.localizedDescription
         }

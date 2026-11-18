@@ -82,12 +82,17 @@ private struct HistorySidebarLabel: View {
 @MainActor
 func conversationSession(for record: TranslationRecord) -> ConversationSession {
     let cachedModels = (ModelsService.shared.getCachedModels() ?? []).filter { !$0.isDirectTranslation }
-    let recordModels = record.modelResults.map { result in
-        cachedModels.first { $0.id == result.modelID } ?? ModelConfig(
-            id: result.modelID,
-            displayName: result.modelDisplayName.isEmpty ? result.modelID : result.modelDisplayName
-        )
-    }
+    let recordModels = record.modelResults
+        .filter {
+            !ModelConfig.isDirectTranslationID($0.modelID)
+                && !ModelConfig.isFoundationModelID($0.modelID)
+        }
+        .map { result in
+            cachedModels.first { $0.id == result.modelID } ?? ModelConfig(
+                id: result.modelID,
+                displayName: result.modelDisplayName.isEmpty ? result.modelID : result.modelDisplayName
+            )
+        }
     var availableModels: [ModelConfig] = []
     for model in recordModels + cachedModels {
         guard !availableModels.contains(where: { $0.id == model.id }) else { continue }
@@ -164,7 +169,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         private let realtimeStore = RealtimeSessionStore.shared
         @ObservedObject private var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
-        @ObservedObject private var storeManager = StoreManager.shared
 
         init(initialTab: RootTabView.TabItem, configStore: AppConfigurationStore) {
             let scene = MacSnapshotScene.current()
@@ -398,7 +402,6 @@ private struct SidebarHistorySection<SelectionValue: Hashable>: View {
         @ObservedObject private var realtimeControlModel: RealtimeControlModel
         @ObservedObject private var configStore: AppConfigurationStore
         @ObservedObject private var preferences = AppPreferences.shared
-        @ObservedObject private var storeManager = StoreManager.shared
         @State private var showFeaturePaywall = false
 
         init(

@@ -7,7 +7,8 @@ import Testing
 struct RealtimeCaptionPreferencesTests {
     @Test("Defaults preserve platform appearance and bilingual captions")
     func defaultsPreserveAppearance() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
         #expect(preferences.realtimeCaptionDisplayMode == .bilingual)
         #expect(preferences.realtimeCaptionAppearance == RealtimeCaptionAppearance())
@@ -20,7 +21,8 @@ struct RealtimeCaptionPreferencesTests {
 
     @Test("Legacy typography survives decoding without new appearance fields")
     func legacyTypographySurvives() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set(
             Data(#"{"fontDesign":"rounded","textSize":29,"spacing":"relaxed"}"#.utf8),
             forKey: "realtime_caption_appearance"
@@ -37,7 +39,8 @@ struct RealtimeCaptionPreferencesTests {
 
     @Test("Appearance and display mode persist and refresh")
     func preferencesPersistAndRefresh() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
         var appearance = RealtimeCaptionAppearance()
         appearance.fontDesign = .system
@@ -62,7 +65,9 @@ struct RealtimeCaptionPreferencesTests {
 
     @Test("Resetting appearance does not reset display mode or translation provider")
     func appearanceResetIsIsolated() throws {
-        let preferences = try AppPreferences(defaults: makeDefaults())
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let preferences = AppPreferences(defaults: defaults)
         preferences.setRealtimeCaptionDisplayMode(.translationOnly)
         let provider = preferences.realtimeTranslationProvider
         var appearance = RealtimeCaptionAppearance()
@@ -75,7 +80,8 @@ struct RealtimeCaptionPreferencesTests {
 
     @Test("Session restores mode and tracks external preference refresh")
     func sessionRestoresMode() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
         preferences.setRealtimeCaptionDisplayMode(.translationOnly)
         let store = RealtimeSessionStore(preferences: preferences)
@@ -89,7 +95,9 @@ struct RealtimeCaptionPreferencesTests {
 
     @Test("Transcription temporarily resolves to source without changing chosen mode")
     func transcriptionPreservesMode() throws {
-        let preferences = try AppPreferences(defaults: makeDefaults())
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let preferences = AppPreferences(defaults: defaults)
         preferences.setRealtimeCaptionDisplayMode(.translationOnly)
         let store = RealtimeSessionStore(preferences: preferences)
         #if os(macOS)
@@ -122,14 +130,19 @@ struct RealtimeCaptionPreferencesTests {
         #expect(store.resolvedCaptionDisplayMode == .translationOnly)
     }
 
-    private func makeDefaults() throws -> UserDefaults {
-        try #require(UserDefaults(suiteName: "RealtimeCaptionPreferencesTests.\(UUID().uuidString)"))
+    private func makeDefaults() throws -> (UserDefaults, String) {
+        let suiteName = "RealtimeCaptionPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        return (defaults, suiteName)
     }
 
     #if os(macOS)
         @Test("Stopped lanes follow caption mode without changing backing text or primary lane")
         func stoppedLanesFollowMode() throws {
-            let preferences = try AppPreferences(defaults: makeDefaults())
+            let (defaults, suiteName) = try makeDefaults()
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let preferences = AppPreferences(defaults: defaults)
             preferences.setRealtimeCaptionDisplayMode(.translationOnly)
             let store = RealtimeSessionStore(preferences: preferences)
             let snapshots = [RecognitionModelDescriptor.appleSpeech.id, RecognitionModelDescriptor.parakeetEOU320.id].map {

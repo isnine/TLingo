@@ -12,7 +12,8 @@ import Testing
 struct RealtimeLanguagePreferencesTests {
     @Test("Realtime languages default separately from text languages")
     func defaultsSeparatelyFromTextLanguages() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set(TargetLanguageOption.french.rawValue, forKey: TargetLanguageOption.storageKey)
         defaults.set(SourceLanguageOption.auto.rawValue, forKey: SourceLanguageOption.storageKey)
 
@@ -29,7 +30,8 @@ struct RealtimeLanguagePreferencesTests {
 
     @Test("Realtime language changes persist without changing text languages")
     func changesPersistSeparatelyFromTextLanguages() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(
             defaults: defaults,
             preferredLanguages: ["en-US", "ja-JP"]
@@ -71,10 +73,10 @@ struct RealtimeLanguagePreferencesTests {
         #expect(target == .japanese)
     }
 
-    private func makeDefaults() throws -> UserDefaults {
+    private func makeDefaults() throws -> (UserDefaults, String) {
         let suiteName = "RealtimeLanguagePreferencesTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        return defaults
+        return (defaults, suiteName)
     }
 }

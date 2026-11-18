@@ -72,7 +72,7 @@ private struct WhatsNewPresentation: ViewModifier {
 
     @MainActor
     private func presentIfNeeded() async {
-        guard !HomeViewModel.isSnapshotMode, !RootTabView.forceOnboarding else { return }
+        guard !AITranslatorApp.isAutomatedLaunch, !RootTabView.forceOnboarding else { return }
         let preferences = AppPreferences.shared
         // Upgraders from builds without What's New have no stored version; onboarding (iOS, non-Pro)
         // or saved history marks them as existing users on either platform.

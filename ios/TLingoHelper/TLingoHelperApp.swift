@@ -152,7 +152,13 @@ struct HelperSettingsView: View {
         .fixedSize(horizontal: false, vertical: true)
         .onAppear {
             model.refreshTLingoStatus()
+            if !model.isAccessibilityGranted {
+                permissionManager.startPolling()
+            }
             NSApp.activate()
+        }
+        .onDisappear {
+            permissionManager.stopPolling()
         }
     }
 

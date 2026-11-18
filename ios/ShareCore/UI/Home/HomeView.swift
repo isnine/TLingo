@@ -48,6 +48,7 @@ public struct HomeView: View {
     @State var showingProviderInfo: String?
     @State var isFallbackTargetPickerPresented = false
     @State var activeConversationSession: ConversationSession?
+    @State var conversationViewModel: ConversationViewModel?
     @State var isConversationInspectorPresented = false
     @State var showSatisfactionToast = false
     @State var showModelSelectionSheet = false
@@ -119,6 +120,9 @@ public struct HomeView: View {
                 },
                 set: { newValue in
                     activeConversationSession = newValue
+                    if newValue == nil {
+                        conversationViewModel = nil
+                    }
                 }
             )
         }
@@ -528,15 +532,24 @@ public struct HomeView: View {
             }
             .inspector(isPresented: conversationInspectorBinding) {
                 if let session = activeConversationSession {
-                    ConversationContentView(session: session, onPremiumRequired: {
-                        onPremiumRequired?()
-                    })
+                    ConversationContentView(
+                        session: session,
+                        viewModel: conversationViewModel,
+                        onPremiumRequired: {
+                            onPremiumRequired?()
+                        }
+                    )
                     .id(session.id)
                     .inspectorColumnWidth(
                         min: InspectorColumnWidth.min,
                         ideal: InspectorColumnWidth.ideal,
                         max: InspectorColumnWidth.max
                     )
+                }
+            }
+            .onChange(of: activeConversationSession?.id) { _, sessionID in
+                if sessionID == nil {
+                    conversationViewModel = nil
                 }
             }
         #if os(iOS)
@@ -546,10 +559,15 @@ public struct HomeView: View {
                     presentPendingPremiumIfNeeded()
                 },
                 content: { session in
-                    ConversationView(session: session, onPremiumRequired: {
-                        pendingPremiumPresentation = true
-                        activeConversationSession = nil
-                    })
+                    ConversationView(
+                        session: session,
+                        viewModel: conversationViewModel,
+                        onPremiumRequired: {
+                            pendingPremiumPresentation = true
+                            activeConversationSession = nil
+                            conversationViewModel = nil
+                        }
+                    )
                     .presentationDetents(
                         HomeViewModel.isSnapshotConversationMode ? [.large] : [.medium, .large]
                     )

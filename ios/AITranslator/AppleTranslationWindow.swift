@@ -51,6 +51,14 @@
             // Capture a strong reference so the correct viewModel is used even if
             // another registration happens before the Task runs.
             Task { @MainActor [viewModel] in
+                await self.acquireRequestSlot()
+                // The request may have been cancelled or timed out while queued behind another one.
+                guard !Task.isCancelled, viewModel.pendingAppleTranslateText != nil else {
+                    self.releaseRequestSlot()
+                    return
+                }
+
+                var didShowWindowForDownload = false
                 do {
                     let status = try await AppleTranslationService.shared.languageAvailabilityStatus(
                         source: source, target: targetLocale
@@ -59,14 +67,20 @@
                         .debug(
                             "language availability: \(String(describing: status), privacy: .public) for viewModel=\(String(describing: ObjectIdentifier(viewModel)), privacy: .public)"
                         )
+                    guard !Task.isCancelled, viewModel.pendingAppleTranslateText != nil else {
+                        self.releaseRequestSlot()
+                        return
+                    }
                     if status == .supported {
                         AppleTranslationWindowManager.shared.showForLanguageDownload()
+                        didShowWindowForDownload = true
                     } else if status != .installed {
                         // The view model already reports unsupported pairs; no session will arrive.
                         logger
                             .error(
                                 "Apple Translate bridge: unsupported language pair source=\(source?.minimalIdentifier ?? "nil", privacy: .public), target=\(targetLocale.minimalIdentifier, privacy: .public), status=\(String(describing: status), privacy: .public)"
                             )
+                        self.releaseRequestSlot()
                         return
                     }
                 } catch {
@@ -74,11 +88,14 @@
                         .error(
                             "Apple Translate bridge: language availability failed: \(String(describing: error), privacy: .public)"
                         )
+                    self.releaseRequestSlot()
+                    return
                 }
 
-                await self.acquireRequestSlot()
-                // The request may have been cancelled or timed out while queued behind another one.
-                guard viewModel.pendingAppleTranslateText != nil else {
+                guard !Task.isCancelled, viewModel.pendingAppleTranslateText != nil else {
+                    if didShowWindowForDownload {
+                        AppleTranslationWindowManager.shared.hideAfterSessionReady()
+                    }
                     self.releaseRequestSlot()
                     return
                 }

@@ -417,6 +417,7 @@ public final class HomeViewModel: ObservableObject {
     @Published public var requestSystemReview: Bool = false
     /// Incremented each time a translation request completes with at least one success.
     @Published public internal(set) var successfulTranslationCount: Int = 0
+    var lastRecordedOutcomeGeneration: UUID?
     let ttsService: TTSPreviewService
 
     public let placeholderHint: String = NSLocalizedString(

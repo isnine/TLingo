@@ -45,7 +45,7 @@ struct AITranslatorApp: App {
         let environment = ProcessInfo.processInfo.environment
         let isTestProcess = ["XCTestConfigurationFilePath", "XCTestBundlePath", "XCTestSessionIdentifier"]
             .contains { environment[$0] != nil } || NSClassFromString("XCTestCase") != nil
-        if !isTestProcess, !Self.isSnapshotMode {
+        if !isTestProcess, !Self.isAutomatedLaunch {
             AirCrashReports.start(
                 apiKey: AirFeedbackConfiguration.appKey,
                 endpoint: AirFeedbackConfiguration.crashEndpoint,
@@ -66,6 +66,15 @@ struct AITranslatorApp: App {
 
     static var isSnapshotMode: Bool {
         HomeViewModel.isSnapshotMode
+    }
+
+    static var isAutomatedLaunch: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        let environment = ProcessInfo.processInfo.environment
+        return isSnapshotMode
+            || arguments.contains("-SNAPSHOT_TAB")
+            || arguments.contains("-TLINGO_UI_TESTING")
+            || environment["TLINGO_UI_TESTING"] == "1"
     }
 
     var body: some Scene {

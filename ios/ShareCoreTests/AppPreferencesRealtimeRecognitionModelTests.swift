@@ -12,7 +12,8 @@ import Testing
 struct AppPreferencesRecognitionModelTests {
     @Test("Defaults to the preferred realtime model")
     func defaultsToPreferredRealtimeModel() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         #expect(preferences.realtimeRecognitionModelID == RecognitionModelStore.defaultRealtimeModel.id)
@@ -20,7 +21,8 @@ struct AppPreferencesRecognitionModelTests {
 
     @Test("Falls back from unknown model IDs")
     func fallsBackFromUnknownModelIDs() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("missing-model", forKey: "realtime_recognition_model_id")
 
         let preferences = AppPreferences(defaults: defaults)
@@ -30,7 +32,8 @@ struct AppPreferencesRecognitionModelTests {
 
     @Test("Migrates retired TDT model IDs")
     func migratesRetiredTDTModelIDs() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("parakeet-tdt-0.6b-v3", forKey: "realtime_recognition_model_id")
 
         let preferences = AppPreferences(defaults: defaults)
@@ -40,7 +43,8 @@ struct AppPreferencesRecognitionModelTests {
 
     @Test("Migrates retired Parakeet Flash")
     func migratesRetiredParakeetFlash() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("parakeet-flash", forKey: "realtime_recognition_model_id")
 
         let preferences = AppPreferences(defaults: defaults)
@@ -50,7 +54,8 @@ struct AppPreferencesRecognitionModelTests {
 
     @Test("Migrates retired Qwen model")
     func migratesRetiredQwen() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("qwen3-asr-int8", forKey: "realtime_recognition_model_id")
 
         let preferences = AppPreferences(defaults: defaults)
@@ -58,10 +63,10 @@ struct AppPreferencesRecognitionModelTests {
         #expect(preferences.realtimeRecognitionModelID == RecognitionModelStore.defaultRealtimeModel.id)
     }
 
-    private func makeDefaults() throws -> UserDefaults {
+    private func makeDefaults() throws -> (UserDefaults, String) {
         let suiteName = "AppPreferencesRealtimeRecognitionModelTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        return defaults
+        return (defaults, suiteName)
     }
 }

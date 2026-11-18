@@ -70,6 +70,9 @@ struct VoicePickerView: View {
             .task {
                 await loadVoices()
             }
+            .onDisappear {
+                ttsPreviewService.stopPlayback()
+            }
         }
     #endif
 
@@ -110,6 +113,9 @@ struct VoicePickerView: View {
         .tint(colors.accent)
         .task {
             await loadVoices()
+        }
+        .onDisappear {
+            ttsPreviewService.stopPlayback()
         }
     }
 

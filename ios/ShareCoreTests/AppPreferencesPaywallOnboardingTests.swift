@@ -13,7 +13,8 @@ import Testing
 struct AppPreferencesPaywallOnboardingTests {
     @Test("iOS paywall onboarding defaults to unseen")
     func defaultsToUnseen() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         #expect(!preferences.hasSeenIOSPaywallOnboarding)
@@ -21,7 +22,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("iOS paywall onboarding seen state persists")
     func seenStatePersists() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         preferences.setHasSeenIOSPaywallOnboarding(true)
@@ -32,7 +34,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("refresh updates iOS paywall onboarding seen state")
     func refreshUpdatesSeenState() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         defaults.set(true, forKey: "has_seen_ios_paywall_onboarding")
@@ -43,7 +46,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("default translation onboarding starts unseen and incomplete")
     func defaultTranslationOnboardingDefaults() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         #expect(!preferences.hasSeenDefaultTranslationOnboarding)
@@ -53,7 +57,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("default translation onboarding seen state persists")
     func defaultTranslationOnboardingSeenStatePersists() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         preferences.setHasSeenDefaultTranslationOnboarding(true)
@@ -64,7 +69,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("refresh updates default translation onboarding seen state")
     func refreshUpdatesDefaultTranslationOnboardingSeenState() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         defaults.set(true, forKey: "ios_default_translation_onboarding_seen")
@@ -75,7 +81,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("default translation trial invocation persists completion and timestamp")
     func defaultTranslationTrialInvocationPersists() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let date = Date(timeIntervalSince1970: 1_800_000_000)
         let preferences = AppPreferences(defaults: defaults)
 
@@ -88,7 +95,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("refresh updates default translation trial completion")
     func refreshUpdatesDefaultTranslationTrialCompletion() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let date = Date(timeIntervalSince1970: 1_800_000_100)
         let preferences = AppPreferences(defaults: defaults)
 
@@ -102,7 +110,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("satisfaction prompt ignores old shown-only cooldown")
     func satisfactionPromptIgnoresOldShownOnlyCooldown() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("3.4.27", forKey: "satisfaction_prompt_last_version")
         defaults.set(Date(), forKey: "satisfaction_prompt_last_date")
 
@@ -113,7 +122,8 @@ struct AppPreferencesPaywallOnboardingTests {
 
     @Test("satisfaction prompt response starts seven day cooldown")
     func satisfactionPromptResponseStartsSevenDayCooldown() throws {
-        let defaults = try makeDefaults()
+        let (defaults, suiteName) = try makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let preferences = AppPreferences(defaults: defaults)
 
         preferences.markSatisfactionPromptResponded()
@@ -124,10 +134,10 @@ struct AppPreferencesPaywallOnboardingTests {
         #expect(preferences.shouldShowSatisfactionPrompt)
     }
 
-    private func makeDefaults() throws -> UserDefaults {
+    private func makeDefaults() throws -> (UserDefaults, String) {
         let suiteName = "AppPreferencesPaywallOnboardingTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        return defaults
+        return (defaults, suiteName)
     }
 }

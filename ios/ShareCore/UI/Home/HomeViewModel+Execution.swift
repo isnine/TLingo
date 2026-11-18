@@ -325,7 +325,12 @@ extension HomeViewModel {
             self.applyDirectFailure(
                 .translationFailed(
                     AppleTranslationErrorFormatter.withLanguagePair(
-                        "Apple Translate timed out after \(AppleTranslationService.operationTimeoutSeconds) seconds. Language pack may not be available.",
+                        String(
+                            localized: """
+                            Apple Translate timed out after \(AppleTranslationService.operationTimeoutSeconds) seconds. \
+                            Language pack may not be available.
+                            """
+                        ),
                         source: sourceLocale,
                         target: resolvedTarget
                     )
@@ -413,7 +418,7 @@ extension HomeViewModel {
         })
         defer { coalescers.values.forEach { $0.cancel() } }
 
-        let results = await llmService.perform(
+        _ = await llmService.perform(
             text: text,
             with: action,
             models: cloudModels,
@@ -449,24 +454,28 @@ extension HomeViewModel {
                 self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
             }
         )
-
-        guard !Task.isCancelled else { return }
-        let validResults = results.filter { result in
-            guard let runToken = runTokens[result.modelID] else { return false }
-            return isRunStillValid(context, runID: result.modelID, runToken: runToken)
-        }
-        guard !validResults.isEmpty else { return }
-
-        recordTranslationOutcome(validResults)
     }
 
-    func recordTranslationOutcome(_ validResults: [ModelExecutionResult]) {
-        let successFlags = validResults.map { result in
-            if case .success = result.response {
-                return true
+    func recordTranslationOutcomeIfReady(for generation: UUID) {
+        guard lastRecordedOutcomeGeneration != generation,
+              activeRequestContext?.generation == generation,
+              !modelRuns.isEmpty
+        else { return }
+
+        var successFlags: [Bool] = []
+        successFlags.reserveCapacity(modelRuns.count)
+        for run in modelRuns {
+            switch run.status {
+            case .success:
+                successFlags.append(true)
+            case .failure:
+                successFlags.append(false)
+            case .idle, .running, .streaming, .streamingSentencePairs:
+                return
             }
-            return false
         }
+
+        lastRecordedOutcomeGeneration = generation
         let hasSuccess = successFlags.contains(true)
         let shouldRequestReview = preferences.recordTranslationOutcomeForReview(
             succeeded: !successFlags.contains(false)
@@ -711,6 +720,8 @@ extension HomeViewModel {
             let failedRun = modelRuns.remove(at: index)
             modelRuns.append(failedRun)
         }
+
+        recordTranslationOutcomeIfReady(for: context.generation)
     }
 
     func refreshActions() {

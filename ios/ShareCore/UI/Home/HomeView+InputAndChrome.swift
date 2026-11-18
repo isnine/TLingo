@@ -254,7 +254,28 @@ extension HomeView {
             imageTextInputButton
         #endif
         inputSpeakButton
-        inputSendButton
+        #if os(iOS)
+            if let onRealtimeTap,
+               !viewModel.canSend,
+               viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            {
+                Button {
+                    hasUsedRealtimeButton = true
+                    onRealtimeTap()
+                } label: {
+                    phonePrimaryInputButtonIcon("waveform")
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+                .tint(colors.accent)
+                .accessibilityLabel("Live Translate")
+                .accessibilityIdentifier("home_realtime_button")
+            } else {
+                inputSendButton
+            }
+        #else
+            inputSendButton
+        #endif
     }
 
     var modelSelectionButton: some View {
@@ -378,6 +399,7 @@ extension HomeView {
             onResultConversation?(session)
             return
         }
+        conversationViewModel = ConversationViewModel(session: session)
         activeConversationSession = session
         isConversationInspectorPresented = usesConversationInspectorPresentation
     }

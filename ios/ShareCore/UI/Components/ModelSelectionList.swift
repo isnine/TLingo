@@ -62,18 +62,22 @@ public struct ModelSelectionList: View {
         return false
     }
 
-    private var enabledIDs: Set<String> {
+    private func effectiveEnabledIDs(forSelectableModels models: [ModelConfig]) -> Set<String> {
         switch mode {
         case .enabledModels:
             // Without Pro, show what actually runs; locked premium selections stay in storage.
             return ModelSelectionPolicy.effectiveEnabledIDs(
                 enabledIDs: preferences.enabledModelIDs,
-                availableModels: selectableModels,
+                availableModels: models,
                 isPro: entitlement.isPro
             )
         case let .single(selection, _, _):
             return [selection.wrappedValue.id]
         }
+    }
+
+    private var enabledIDs: Set<String> {
+        effectiveEnabledIDs(forSelectableModels: selectableModels)
     }
 
     // MARK: - Displayed Models
@@ -104,15 +108,6 @@ public struct ModelSelectionList: View {
         return cloudModels.filter { !builtInIDs.contains($0.id) }
     }
 
-    private var sections: ModelListSections {
-        ModelListSections(
-            cloudModels: displayedCloudModels,
-            enabledIDs: enabledIDs,
-            order: preferences.modelListOrder,
-            isPro: entitlement.isPro
-        )
-    }
-
     private var selectableModels: [ModelConfig] {
         ModelConfig.translationServices + ModelConfig.appleIntelligenceModels + displayedCloudModels
     }
@@ -120,7 +115,13 @@ public struct ModelSelectionList: View {
     // MARK: - Body
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        let currentCloudModels = displayedCloudModels
+        let currentSelectableModels = ModelConfig.translationServices
+            + ModelConfig.appleIntelligenceModels
+            + currentCloudModels
+        let currentEnabledIDs = effectiveEnabledIDs(forSelectableModels: currentSelectableModels)
+
+        return VStack(alignment: .leading, spacing: 24) {
             if !isSingleSelection, showsReorderButton {
                 HStack {
                     Spacer()
@@ -135,10 +136,14 @@ public struct ModelSelectionList: View {
             }
 
             ForEach(preferences.modelListOrder.orderedSections) { section in
-                modelSection(section)
+                modelSection(
+                    section,
+                    enabledIDs: currentEnabledIDs,
+                    displayedCloudModels: currentCloudModels
+                )
             }
 
-            if displayedCloudModels.isEmpty {
+            if currentCloudModels.isEmpty {
                 if isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -186,28 +191,48 @@ public struct ModelSelectionList: View {
     }
 
     @ViewBuilder
-    private func modelSection(_ section: ModelListSection) -> some View {
+    private func modelSection(
+        _ section: ModelListSection,
+        enabledIDs: Set<String>,
+        displayedCloudModels: [ModelConfig]
+    ) -> some View {
         switch section {
         case .translation:
             if !translationServices.isEmpty {
-                sectionCard(title: section.title, icon: section.icon, models: translationServices)
+                sectionCard(
+                    title: section.title,
+                    icon: section.icon,
+                    models: translationServices,
+                    enabledIDs: enabledIDs
+                )
             }
         case .appleIntelligence:
             if !appleIntelligenceModels.isEmpty {
-                sectionCard(title: section.title, icon: section.icon, models: appleIntelligenceModels)
+                sectionCard(
+                    title: section.title,
+                    icon: section.icon,
+                    models: appleIntelligenceModels,
+                    enabledIDs: enabledIDs
+                )
             }
         case .ai:
-            if !sections.visibleModels.isEmpty || !sections.collapsedModels.isEmpty {
+            let aiSections = ModelListSections(
+                cloudModels: displayedCloudModels,
+                enabledIDs: enabledIDs,
+                order: preferences.modelListOrder,
+                isPro: entitlement.isPro
+            )
+            if !aiSections.visibleModels.isEmpty || !aiSections.collapsedModels.isEmpty {
                 ModelSectionCard(
                     title: section.title,
                     icon: section.icon,
-                    models: sections.visibleModels,
-                    collapsedModels: sections.collapsedModels,
+                    models: aiSections.visibleModels,
+                    collapsedModels: aiSections.collapsedModels,
                     isExpanded: $showCollapsedModels,
                     dividerLeadingPadding: Self.dividerLeadingPadding,
                     cornerRadius: Self.cornerRadius
                 ) { model in
-                    row(for: model)
+                    row(for: model, isSelected: enabledIDs.contains(model.id))
                 } headerAccessory: {
                     if !entitlement.isPro, onRequiresPro != nil {
                         Spacer()
@@ -224,7 +249,7 @@ public struct ModelSelectionList: View {
                     dividerLeadingPadding: Self.dividerLeadingPadding,
                     cornerRadius: Self.cornerRadius
                 ) { model in
-                    row(for: model)
+                    row(for: model, isSelected: enabledIDs.contains(model.id))
                 } headerAccessory: {
                     if !isSingleSelection {
                         Spacer()
@@ -248,7 +273,8 @@ public struct ModelSelectionList: View {
         icon: String,
         models: [ModelConfig],
         collapsedModels: [ModelConfig] = [],
-        isExpanded: Binding<Bool>? = nil
+        isExpanded: Binding<Bool>? = nil,
+        enabledIDs: Set<String>
     ) -> some View {
         ModelSectionCard(
             title: title,
@@ -259,15 +285,14 @@ public struct ModelSelectionList: View {
             dividerLeadingPadding: Self.dividerLeadingPadding,
             cornerRadius: Self.cornerRadius
         ) { model in
-            row(for: model)
+            row(for: model, isSelected: enabledIDs.contains(model.id))
         }
     }
 
     // MARK: - Rows
 
     @ViewBuilder
-    private func row(for model: ModelConfig) -> some View {
-        let isSelected = enabledIDs.contains(model.id)
+    private func row(for model: ModelConfig, isSelected: Bool) -> some View {
         if model.isDirectTranslation {
             SelectableModelRow(
                 model: model,
@@ -294,12 +319,13 @@ public struct ModelSelectionList: View {
                 installedLanguagesList
             }
         } else if model.isFoundationModel {
-            let isAvailable = FoundationModelService.availability(for: model).isAvailable
+            let availability = FoundationModelService.availability(for: model)
+            let isAvailable = availability.isAvailable
             SelectableModelRow(
                 model: model,
                 isSelected: isSelected,
                 isDimmed: !isAvailable && !isSelected,
-                subtitle: FoundationModelService.availabilityDescription(for: model),
+                subtitle: FoundationModelService.availabilityDescription(for: model, availability: availability),
                 additionalBadges: [
                     SelectableModelRow.Badge(
                         model.isPrivateCloudModel ? String(localized: "Private Cloud") : String(localized: "On-Device"),

@@ -106,8 +106,7 @@ public struct LanguagePickerView: View {
     }
 
     /// Pins automatic options and common languages above the full list; search shows one flat list.
-    private var sections: [RowSection] {
-        let rows = filteredRows
+    private func sections(for rows: [LanguageRow]) -> [RowSection] {
         guard searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return [RowSection(title: nil, rows: rows)]
         }
@@ -177,7 +176,10 @@ public struct LanguagePickerView: View {
 
     #if os(macOS)
         private var macOSPicker: some View {
-            VStack(spacing: 0) {
+            let currentFilteredRows = filteredRows
+            let currentSections = sections(for: currentFilteredRows)
+
+            return VStack(spacing: 0) {
                 HStack(spacing: 12) {
                     Text(title)
                         .font(.headline)
@@ -192,10 +194,10 @@ public struct LanguagePickerView: View {
                 Divider()
 
                 List(selection: $highlightedCode) {
-                    if filteredRows.isEmpty {
+                    if currentFilteredRows.isEmpty {
                         emptySearchState
                     } else {
-                        ForEach(sections) { section in
+                        ForEach(currentSections) { section in
                             Section {
                                 ForEach(section.rows) { row in
                                     languageRowContent(row)
@@ -237,7 +239,7 @@ public struct LanguagePickerView: View {
                         isPresented = false
                     }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(!filteredRows.contains(where: { $0.id == highlightedCode && !$0.isDisabled }))
+                    .disabled(!currentFilteredRows.contains(where: { $0.id == highlightedCode && !$0.isDisabled }))
                 }
                 .controlSize(.large)
                 .padding(16)
@@ -246,8 +248,9 @@ public struct LanguagePickerView: View {
                 highlightedCode = selectedCode
             }
             .onChange(of: searchText) {
-                if !filteredRows.contains(where: { $0.id == highlightedCode && !$0.isDisabled }) {
-                    highlightedCode = filteredRows.first(where: { !$0.isDisabled })?.id
+                let updatedFilteredRows = filteredRows
+                if !updatedFilteredRows.contains(where: { $0.id == highlightedCode && !$0.isDisabled }) {
+                    highlightedCode = updatedFilteredRows.first(where: { !$0.isDisabled })?.id
                 }
             }
             .frame(minWidth: 420, idealWidth: 460, minHeight: 380, idealHeight: 500)
@@ -256,15 +259,18 @@ public struct LanguagePickerView: View {
 
     #if os(iOS)
         private var iOSPicker: some View {
-            NavigationStack {
+            let currentFilteredRows = filteredRows
+            let currentSections = sections(for: currentFilteredRows)
+
+            return NavigationStack {
                 List {
-                    if filteredRows.isEmpty {
+                    if currentFilteredRows.isEmpty {
                         Section {
                             emptySearchState
                                 .listRowBackground(colors.cardBackground)
                         }
                     } else {
-                        ForEach(sections) { section in
+                        ForEach(currentSections) { section in
                             Section {
                                 ForEach(section.rows) { row in
                                     Button {

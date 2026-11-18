@@ -2,7 +2,7 @@ import Foundation
 import SwiftStreamingMarkdown
 import SwiftUI
 
-public enum MarkdownContentPreset {
+public enum MarkdownContentPreset: Hashable, Sendable {
     case compact
     case detail
     /// Large body text for the primary translation on iPhone Home.

@@ -103,7 +103,7 @@
 
     /// Manages the menu bar status item with popover UI for quick action execution
     @MainActor
-    final class MenuBarManager: NSObject, ObservableObject {
+    final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
         static let shared = MenuBarManager()
 
         private var statusItem: NSStatusItem?
@@ -186,6 +186,7 @@
             )
             popover.behavior = .transient
             popover.animates = true
+            popover.delegate = self
             popover.contentViewController = hostingController
 
             self.popover = popover
@@ -391,6 +392,14 @@
 
         private func closePopover() {
             popover?.performClose(nil)
+            cleanupAfterPopoverClose()
+        }
+
+        func popoverDidClose(_: Notification) {
+            cleanupAfterPopoverClose()
+        }
+
+        private func cleanupAfterPopoverClose() {
             // Mark current clipboard state so any copies made while
             // the popover was open won't trigger auto-paste on reopen.
             ClipboardMonitor.shared.recordInternalCopy()

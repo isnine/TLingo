@@ -9,7 +9,8 @@
     struct AppPreferencesRealtimeCaptionWindowTests {
         @Test("Caption window preferences default to floating and private")
         func defaultsToFloatingAndPrivate() throws {
-            let defaults = try makeDefaults()
+            let (defaults, suiteName) = try makeDefaults()
+            defer { defaults.removePersistentDomain(forName: suiteName) }
             let preferences = AppPreferences(defaults: defaults)
 
             #expect(preferences.realtimeCaptionWindowMode == .floating)
@@ -18,7 +19,8 @@
 
         @Test("Caption window preferences persist")
         func preferencesPersist() throws {
-            let defaults = try makeDefaults()
+            let (defaults, suiteName) = try makeDefaults()
+            defer { defaults.removePersistentDomain(forName: suiteName) }
             let preferences = AppPreferences(defaults: defaults)
 
             preferences.setRealtimeCaptionWindowMode(.notch)
@@ -31,7 +33,8 @@
 
         @Test("Refresh updates caption window preferences")
         func refreshUpdatesCaptionWindowPreferences() throws {
-            let defaults = try makeDefaults()
+            let (defaults, suiteName) = try makeDefaults()
+            defer { defaults.removePersistentDomain(forName: suiteName) }
             let preferences = AppPreferences(defaults: defaults)
 
             defaults.set("notch", forKey: "realtime_caption_window_mode")
@@ -42,11 +45,11 @@
             #expect(!preferences.realtimeCaptionPrivacyModeEnabled)
         }
 
-        private func makeDefaults() throws -> UserDefaults {
+        private func makeDefaults() throws -> (UserDefaults, String) {
             let suiteName = "AppPreferencesRealtimeCaptionWindowTests.\(UUID().uuidString)"
             let defaults = try #require(UserDefaults(suiteName: suiteName))
             defaults.removePersistentDomain(forName: suiteName)
-            return defaults
+            return (defaults, suiteName)
         }
     }
 #endif

@@ -41,6 +41,7 @@ public struct ConversationContentView: View {
 
     public init(
         session: ConversationSession,
+        viewModel: ConversationViewModel? = nil,
         onBack: (() -> Void)? = nil,
         onDismiss: (() -> Void)? = nil,
         onPremiumRequired: (() -> Void)? = nil,
@@ -50,7 +51,7 @@ public struct ConversationContentView: View {
         onStreamingChanged: ((Bool) -> Void)? = nil,
         onStopHandlerReady: ((@escaping () -> Void) -> Void)? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: ConversationViewModel(session: session))
+        _viewModel = StateObject(wrappedValue: viewModel ?? ConversationViewModel(session: session))
         self.onBack = onBack
         self.onDismiss = onDismiss
         self.onPremiumRequired = onPremiumRequired
@@ -450,14 +451,20 @@ private extension ConversationContentView {
 /// Users dismiss by dragging the sheet down.
 public struct ConversationView: View {
     private let session: ConversationSession
+    private let viewModel: ConversationViewModel?
     private let onPremiumRequired: (() -> Void)?
 
-    public init(session: ConversationSession, onPremiumRequired: (() -> Void)? = nil) {
+    public init(
+        session: ConversationSession,
+        viewModel: ConversationViewModel? = nil,
+        onPremiumRequired: (() -> Void)? = nil
+    ) {
         self.session = session
+        self.viewModel = viewModel
         self.onPremiumRequired = onPremiumRequired
     }
 
     public var body: some View {
-        ConversationContentView(session: session, onPremiumRequired: onPremiumRequired)
+        ConversationContentView(session: session, viewModel: viewModel, onPremiumRequired: onPremiumRequired)
     }
 }

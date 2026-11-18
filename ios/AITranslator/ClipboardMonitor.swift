@@ -15,6 +15,10 @@
     final class ClipboardMonitor {
         static let shared = ClipboardMonitor()
 
+        private static let restoredPasteboardType = NSPasteboard.PasteboardType(
+            "com.zanderwang.AITranslator.restoredPasteboard"
+        )
+
         /// The interval at which to check for clipboard changes (in seconds)
         private let checkInterval: TimeInterval = 1.0
 
@@ -61,12 +65,14 @@
             lastChangeCount = NSPasteboard.general.changeCount
 
             // Create timer on main run loop
-            timer = Timer.scheduledTimer(withTimeInterval: checkInterval, repeats: true) { [weak self] _ in
+            let timer = Timer.scheduledTimer(withTimeInterval: checkInterval, repeats: true) { [weak self] _ in
                 self?.checkClipboardChange()
             }
+            timer.tolerance = 0.3
+            self.timer = timer
 
             // Ensure timer fires even when UI is tracking
-            RunLoop.main.add(timer!, forMode: .common)
+            RunLoop.main.add(timer, forMode: .common)
         }
 
         /// Stops monitoring clipboard changes.
@@ -102,10 +108,14 @@
         }
 
         private func checkClipboardChange() {
-            let currentChangeCount = NSPasteboard.general.changeCount
+            let pasteboard = NSPasteboard.general
+            let currentChangeCount = pasteboard.changeCount
 
             if currentChangeCount != lastChangeCount {
                 lastChangeCount = currentChangeCount
+                if pasteboard.types?.contains(Self.restoredPasteboardType) == true {
+                    return
+                }
                 lastChangeTime = Date()
             }
         }
