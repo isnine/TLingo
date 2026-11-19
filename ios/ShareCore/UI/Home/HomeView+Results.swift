@@ -25,6 +25,11 @@ extension HomeView {
     func flatResultsPanel(viewportHeight: CGFloat) -> some View {
         let runs = viewModel.displayedModelRuns
         let showsComparison = isComparingResults && runs.count > 1
+        #if os(iOS)
+            let showsResultOptions = showsFocusedComparison || !viewModel.isWordLookupFallback
+        #else
+            let showsResultOptions = !viewModel.isWordLookupFallback
+        #endif
 
         let panel = VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
             if let primaryRun = runs.first {
@@ -43,11 +48,7 @@ extension HomeView {
                             collapsedResults(
                                 remainingRuns,
                                 previews: previews,
-                                lineLimits: collapsedPreviewLineLimits(
-                                    for: remainingRuns,
-                                    previews: previews,
-                                    viewportHeight: viewportHeight
-                                )
+                                viewportHeight: viewportHeight
                             )
                         }
                     }
@@ -55,8 +56,7 @@ extension HomeView {
                 }
             }
 
-            // The word lookup hint above the results already offers Result Options.
-            if !runs.isEmpty, !viewModel.isWordLookupFallback {
+            if !runs.isEmpty, showsResultOptions {
                 resultOptionsFooter(showsResultOrder: runs.count > 1)
             }
 
@@ -72,7 +72,14 @@ extension HomeView {
                 }
             }
         #else
-            return panel
+            return panel.onGeometryChange(for: CGFloat?.self) { geometry in
+                usesAdaptivePhonePreviews && !showsComparison && runs.count > 1 ? geometry.size.height : nil
+            } action: { height in
+                guard let height else { return }
+                updateMeasuredHeight(height, current: flatResultsPanelHeight) {
+                    flatResultsPanelHeight = $0
+                }
+            }
         #endif
     }
 
@@ -163,7 +170,7 @@ extension HomeView {
         HStack(spacing: 8) {
             Text(run.modelDisplayName)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(colors.textSecondary)
+                .foregroundColor(colors.textPrimary)
                 .lineLimit(1)
 
             switch run.status {
@@ -173,7 +180,7 @@ extension HomeView {
             case .failure:
                 Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
                     .font(.system(size: 12))
-                    .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
+                    .foregroundColor(run.status.isUnsupported ? colors.textPrimary : colors.error)
             case .success:
                 EmptyView()
             }
@@ -216,7 +223,7 @@ extension HomeView {
         } label: {
             Image(systemName: "rectangle.split.1x2")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isOn ? colors.onAccent : colors.textSecondary)
+                .foregroundColor(isOn ? colors.onAccent : colors.textPrimary)
                 .frame(width: 28, height: 22)
                 .background {
                     if isOn {
@@ -268,7 +275,7 @@ extension HomeView {
         } label: {
             Image(systemName: isSpeaking ? "stop.fill" : "speaker.wave.2")
                 .font(.system(size: 14))
-                .foregroundColor(isSpeaking ? colors.accent : colors.textSecondary)
+                .foregroundColor(isSpeaking ? colors.accent : colors.textPrimary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isSpeaking ? "Stop Speaking" : "Speak")
@@ -285,58 +292,67 @@ extension HomeView {
     func collapsedResults(
         _ runs: [HomeViewModel.ModelRunViewState],
         previews: [String: AttributedString],
-        lineLimits: [String: Int]
+        viewportHeight: CGFloat
     ) -> some View {
-        let labelWidth = collapsedPreviewLabelWidth(for: runs)
         let finishedCount = runs.filter(isFinishedRun).count
+        #if os(iOS)
+            let previewHeight = phoneCollapsedPreviewHeight(viewportHeight: viewportHeight)
+        #else
+            let lineLimits = collapsedPreviewLineLimits(for: runs, previews: previews, viewportHeight: viewportHeight)
+        #endif
         return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
                 isComparingResults = true
+                #if os(iOS)
+                    if usesPhoneComposerChrome, usesBottomComposerLayout, !showsOnlyResults {
+                        phoneComparisonMode = .expanded
+                    }
+                #endif
             }
         } label: {
-            VStack(alignment: .leading, spacing: Self.collapsedResultsRowSpacing) {
-                HStack(spacing: 4) {
-                    Text("\(runs.count) more models")
-                    if finishedCount < runs.count {
-                        ProgressView()
-                            .controlSize(.mini)
-                        Text(verbatim: "\(finishedCount)/\(runs.count)")
-                            .font(.system(size: 12).monospacedDigit())
-                    }
-                    Spacer()
-                    Text("Compare")
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
+            let header = HStack(spacing: 4) {
+                Text("\(runs.count) more models")
+                if finishedCount < runs.count {
+                    ProgressView()
+                        .controlSize(.mini)
+                    Text(verbatim: "\(finishedCount)/\(runs.count)")
+                        .font(.system(size: 12).monospacedDigit())
                 }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(colors.textSecondary)
-
-                ForEach(runs) { run in
-                    HStack(alignment: .firstTextBaseline, spacing: Self.collapsedPreviewColumnSpacing) {
-                        Text(run.modelDisplayName)
-                            .font(.system(size: Self.collapsedPreviewLabelFontSize, weight: .medium))
-                            .foregroundColor(colors.textSecondary)
-                            .lineLimit(1)
-                            .frame(width: labelWidth, alignment: .leading)
-                        Group {
-                            if isAwaitingFirstOutput(run) {
-                                AnimatedEllipsis()
-                            } else if case let .streaming(initialText, _) = run.status {
-                                CollapsedStreamingPreviewText(
-                                    preview: run.streamPreview,
-                                    fallback: MarkdownPreviewText.plainStreamingPreview(from: initialText)
-                                )
-                            } else {
-                                Text(previews[run.id] ?? AttributedString())
+                Spacer()
+                Text("Compare")
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(colors.textPrimary)
+            VStack(alignment: .leading, spacing: Self.collapsedResultsRowSpacing) {
+                #if os(iOS)
+                    header
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                            guard usesAdaptivePhonePreviews else { return }
+                            updateMeasuredHeight(height, current: phoneCollapsedResultsHeaderHeight) {
+                                phoneCollapsedResultsHeaderHeight = $0
                             }
                         }
-                        .font(.system(size: Self.collapsedPreviewFontSize))
-                        .foregroundColor(colors.textPrimary.opacity(0.8))
-                        .lineLimit(lineLimits[run.id] ?? 1)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if let previewHeight {
+                        let minimumRowHeight = UIFont.systemFont(ofSize: Self.collapsedPreviewFontSize)
+                            .lineHeight.rounded(.up) + Self.collapsedResultsRowSpacing
+                        let visibleRuns = Array(runs.prefix(Int(previewHeight / minimumRowHeight)))
+                        if !visibleRuns.isEmpty {
+                            PhoneCollapsedPreviewLayout(
+                                height: previewHeight - Self.collapsedResultsRowSpacing,
+                                spacing: Self.collapsedResultsRowSpacing
+                            ) {
+                                collapsedPreviewRows(visibleRuns, previews: previews, lineLimit: { _ in nil })
+                            }
+                        }
+                    } else {
+                        collapsedPreviewRows(runs, previews: previews, lineLimit: { _ in 1 })
                     }
-                }
+                #else
+                    header
+                    collapsedPreviewRows(runs, previews: previews, lineLimit: { lineLimits[$0] ?? 1 })
+                #endif
             }
             .padding(.vertical, Self.collapsedResultsVerticalPadding)
             .contentShape(Rectangle())
@@ -353,6 +369,40 @@ extension HomeView {
         .accessibilityIdentifier("home_compare_results_button")
     }
 
+    func collapsedPreviewRows(
+        _ runs: [HomeViewModel.ModelRunViewState],
+        previews: [String: AttributedString],
+        lineLimit: @escaping (String) -> Int?
+    ) -> some View {
+        let labelWidth = collapsedPreviewLabelWidth(for: runs)
+        return ForEach(runs) { run in
+            HStack(alignment: .firstTextBaseline, spacing: Self.collapsedPreviewColumnSpacing) {
+                Text(run.modelDisplayName)
+                    .font(.system(size: Self.collapsedPreviewLabelFontSize, weight: .medium))
+                    .foregroundColor(colors.textPrimary)
+                    .lineLimit(1)
+                    .frame(width: labelWidth, alignment: .leading)
+                Group {
+                    if isAwaitingFirstOutput(run) {
+                        AnimatedEllipsis()
+                    } else if case let .streaming(initialText, _) = run.status {
+                        CollapsedStreamingPreviewText(
+                            preview: run.streamPreview,
+                            fallback: MarkdownPreviewText.plainStreamingPreview(from: initialText)
+                        )
+                    } else {
+                        Text(previews[run.id] ?? AttributedString())
+                    }
+                }
+                .font(.system(size: Self.collapsedPreviewFontSize))
+                .foregroundColor(colors.textPrimary)
+                .lineLimit(lineLimit(run.id))
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
     func resultOptionsFooter(showsResultOrder: Bool) -> some View {
         HStack {
             Spacer()
@@ -361,17 +411,27 @@ extension HomeView {
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "slider.horizontal.3")
-                    Text("Result Options")
+                    #if os(iOS)
+                        if showsResultOrder {
+                            Text(preferences.modelResultOrder.title)
+                        } else {
+                            Text("Result Options")
+                        }
+                    #else
+                        Text("Result Options")
+                    #endif
                 }
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(colors.textSecondary)
+                .foregroundColor(colors.textPrimary)
             }
             #if os(macOS)
             .menuStyle(.borderlessButton)
             #endif
             .fixedSize()
             .accessibilityIdentifier("home_result_order")
-            .accessibilityValue(preferences.modelResultOrder.title)
+            #if os(macOS)
+                .accessibilityValue(preferences.modelResultOrder.title)
+            #endif
         }
         .padding(.top, 4)
     }
@@ -380,27 +440,42 @@ extension HomeView {
         HStack(spacing: 14) {
             Text("\(remainingModelCount) more models")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(colors.textSecondary)
+                .foregroundColor(colors.textPrimary)
 
             Spacer()
 
-            // Result order lives in the result options menu below the results.
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isComparingResults = false
+            #if os(iOS)
+                if !showsFocusedComparison {
+                    collapseComparisonButton
                 }
-            } label: {
-                Image(systemName: "chevron.up")
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(colors.accent)
-            .accessibilityLabel("Collapse")
+            #else
+                collapseComparisonButton
+            #endif
         }
+        .frame(minHeight: 28)
         .padding(.top, 4)
         .padding(.horizontal, 4)
+    }
+
+    var collapseComparisonButton: some View {
+        Button(action: collapseResultComparison) {
+            Image(systemName: "chevron.up")
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 28, height: 28)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(colors.textPrimary)
+        .accessibilityLabel("Collapse")
+    }
+
+    func collapseResultComparison() {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            isComparingResults = false
+            #if os(iOS)
+                phoneComparisonMode = nil
+            #endif
+        }
     }
 
     /// Model output is Markdown, so previews render its inline styling instead of raw markers.
@@ -458,14 +533,27 @@ extension HomeView {
         return min(max(range.lowerBound, widest.rounded(.up)), range.upperBound)
     }
 
-    /// On Mac, collapsed previews grow to fill the visible area below the primary result,
-    /// so comparing models rarely needs scrolling. iPhone keeps one line per preview.
-    func collapsedPreviewLineLimits(
-        for runs: [HomeViewModel.ModelRunViewState],
-        previews: [String: AttributedString],
-        viewportHeight: CGFloat
-    ) -> [String: Int] {
-        #if os(macOS)
+    #if os(iOS)
+        var usesAdaptivePhonePreviews: Bool {
+            usesPhoneComposerChrome && usesBottomComposerLayout && !showsOnlyResults
+        }
+
+        func phoneCollapsedPreviewHeight(viewportHeight: CGFloat) -> CGFloat? {
+            guard usesAdaptivePhonePreviews, viewportHeight.isFinite, flatResultsPanelHeight > 0,
+                  collapsedResultsSize.height > 0, phoneCollapsedResultsHeaderHeight > 0
+            else { return nil }
+            let fixedHeight = flatResultsPanelHeight - collapsedResultsSize.height
+                + phoneCollapsedResultsHeaderHeight + Self.collapsedResultsVerticalPadding * 2
+            return max(0, viewportHeight - fixedHeight)
+        }
+    #endif
+
+    #if os(macOS)
+        func collapsedPreviewLineLimits(
+            for runs: [HomeViewModel.ModelRunViewState],
+            previews: [String: AttributedString],
+            viewportHeight: CGFloat
+        ) -> [String: Int] {
             let font = NSFont.systemFont(ofSize: Self.collapsedPreviewFontSize)
             let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
             let textWidth = collapsedResultsSize.width - collapsedPreviewLabelWidth(for: runs)
@@ -495,10 +583,8 @@ extension HomeView {
                 lineBudget: lineBudget
             )
             return Dictionary(zip(runs.map(\.id), limits)) { first, _ in first }
-        #else
-            return [:]
-        #endif
-    }
+        }
+    #endif
 
     func performInputActionIfPossible() {
         guard viewModel.canSend else { return }
@@ -812,7 +898,7 @@ extension HomeView {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: run.status.isUnsupported ? "nosign" : "exclamationmark.triangle.fill")
-                        .foregroundColor(run.status.isUnsupported ? colors.textSecondary : colors.error)
+                        .foregroundColor(run.status.isUnsupported ? colors.textPrimary : colors.error)
                         .font(.system(size: 14))
 
                     if let duration = run.durationText {
@@ -880,7 +966,7 @@ extension HomeView {
                 } label: {
                     Image(systemName: "arrow.left.arrow.right")
                         .font(.system(size: 14))
-                        .foregroundColor(colors.textSecondary)
+                        .foregroundColor(colors.textPrimary)
                 }
                 .buttonStyle(.plain)
                 .help("Replace")
@@ -910,7 +996,7 @@ extension HomeView {
             } label: {
                 Image(systemName: isShowingDiff ? "eye.slash" : "eye")
                     .font(.system(size: 14))
-                    .foregroundColor(isShowingDiff ? colors.accent : colors.textSecondary)
+                    .foregroundColor(isShowingDiff ? colors.accent : colors.textPrimary)
             }
             .buttonStyle(.plain)
             .help(isShowingDiff ? "Hide changes" : "Show changes")
@@ -927,15 +1013,9 @@ extension HomeView {
                 showingProviderInfo = showingProviderInfo == runID ? nil : runID
             }
         } label: {
-            if DeveloperMode.isEnabled {
-                Image(systemName: "exclamationmark.circle")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-            } else {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
-            }
+            Image(systemName: DeveloperMode.isEnabled ? "exclamationmark.circle" : "info.circle")
+                .font(.system(size: 14))
+                .foregroundColor(colors.textPrimary)
         }
         .buttonStyle(.plain)
         .popover(isPresented: providerInfoBinding(for: runID)) {
@@ -1023,7 +1103,7 @@ extension HomeView {
         } label: {
             Image(systemName: "doc.on.doc")
                 .font(.system(size: 14))
-                .foregroundColor(colors.textSecondary)
+                .foregroundColor(colors.textPrimary)
         }
         .buttonStyle(.plain)
     }
@@ -1040,7 +1120,7 @@ extension HomeView {
             } label: {
                 Image(systemName: "text.bubble")
                     .font(.system(size: 14))
-                    .foregroundColor(colors.textSecondary)
+                    .foregroundColor(colors.textPrimary)
             }
             .buttonStyle(.plain)
             .help("Continue conversation")
@@ -1205,3 +1285,52 @@ struct CollapsedStreamingPreviewText: View {
         Text(preview.text.isEmpty ? fallback : preview.text)
     }
 }
+
+#if os(iOS)
+    private struct PhoneCollapsedPreviewLayout: Layout {
+        let height: CGFloat
+        let spacing: CGFloat
+
+        func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
+            let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+            let heights = rowHeights(width: width, subviews: subviews)
+            return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1)))
+        }
+
+        func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
+            let heights = rowHeights(width: bounds.width, subviews: subviews)
+            var rowTop = bounds.minY
+            for (subview, rowHeight) in zip(subviews, heights) {
+                subview.place(
+                    at: CGPoint(x: bounds.minX, y: rowTop),
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(width: bounds.width, height: rowHeight)
+                )
+                rowTop += rowHeight + spacing
+            }
+        }
+
+        private func rowHeights(width: CGFloat, subviews: Subviews) -> [CGFloat] {
+            func measuredHeight(_ index: Int, at height: CGFloat?) -> CGFloat {
+                subviews[index].sizeThatFits(ProposedViewSize(width: width, height: height)).height
+            }
+            let fullHeights = subviews.indices.map { measuredHeight($0, at: nil) }
+            var heights = subviews.indices.map { measuredHeight($0, at: 0) }
+            var remaining = height - spacing * CGFloat(max(0, subviews.count - 1)) - heights.reduce(0, +)
+            let order = subviews.indices.sorted { fullHeights[$0] - heights[$0] < fullHeights[$1] - heights[$1] }
+            for (position, index) in order.enumerated() where remaining > 0 {
+                let share = remaining / CGFloat(order.count - position)
+                let measured = measuredHeight(index, at: heights[index] + share)
+                remaining -= measured - heights[index]
+                heights[index] = measured
+            }
+            for index in order.sorted(by: { heights[$0] < heights[$1] }) where remaining > 0 {
+                guard heights[index] < fullHeights[index] else { continue }
+                let measured = measuredHeight(index, at: heights[index] + remaining)
+                remaining -= measured - heights[index]
+                heights[index] = measured
+            }
+            return heights
+        }
+    }
+#endif

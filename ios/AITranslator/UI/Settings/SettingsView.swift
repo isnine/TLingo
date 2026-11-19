@@ -113,6 +113,7 @@ struct SettingsView: View {
                             Button(action: onShowSidebarTap) {
                                 Image(systemName: "sidebar.left")
                             }
+                            .tint(colors.textPrimary)
                             .accessibilityLabel("Show Sidebar")
                             .accessibilityIdentifier("ipad_show_sidebar_button")
                         }
@@ -353,17 +354,15 @@ struct SettingsView: View {
     private func settingsLabel(
         _ title: LocalizedStringKey,
         systemImage: String,
-        subtitle: Text? = nil,
-        iconStyle: AnyShapeStyle? = nil
+        subtitle: Text? = nil
     ) -> some View {
-        settingsLabel(Text(title), systemImage: systemImage, subtitle: subtitle, iconStyle: iconStyle)
+        settingsLabel(Text(title), systemImage: systemImage, subtitle: subtitle)
     }
 
     private func settingsLabel(
         _ title: Text,
         systemImage: String,
-        subtitle: Text? = nil,
-        iconStyle: AnyShapeStyle? = nil
+        subtitle: Text? = nil
     ) -> some View {
         let text = VStack(alignment: .leading, spacing: 2) {
             title
@@ -381,17 +380,11 @@ struct SettingsView: View {
             return Label {
                 text
             } icon: {
-                // Accent is reserved for selection and primary actions.
                 Image(systemName: systemImage)
-                    .foregroundStyle(iconStyle ?? AnyShapeStyle(colors.textSecondary))
+                    .foregroundStyle(colors.textPrimary)
             }
         #endif
     }
-
-    // Matches the paywall crown so premium reads consistently across the app.
-    private static let premiumIconStyle = AnyShapeStyle(
-        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
-    )
 
     #if os(macOS)
         private static let subtitleFont = Font.system(size: 13)
@@ -399,24 +392,26 @@ struct SettingsView: View {
         private static let subtitleFont = Font.footnote
     #endif
 
-    @ViewBuilder
     private func navigationRow(value: Route, @ViewBuilder label: () -> some View) -> some View {
-        #if os(macOS)
-            // Outside a List, a NavigationLink draws as a bordered button with no disclosure chevron.
-            NavigationLink(value: value) {
-                HStack {
-                    label()
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
-                .contentShape(Rectangle())
+        NavigationLink(value: value) {
+            HStack {
+                label()
+                Spacer()
+                disclosureChevron
             }
-            .buttonStyle(.plain)
-        #else
-            NavigationLink(value: value, label: label)
+            .contentShape(Rectangle())
+        }
+        .navigationLinkIndicatorVisibility(.hidden)
+        #if os(macOS)
+        .buttonStyle(.plain)
         #endif
+    }
+
+    private var disclosureChevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(colors.textPrimary)
+            .accessibilityHidden(true)
     }
 
     /// A tappable row that opens a sheet or performs an action, styled like a navigation row.
@@ -433,9 +428,7 @@ struct SettingsView: View {
                     Text(value)
                         .foregroundStyle(colors.textSecondary)
                 }
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                disclosureChevron
             }
             .contentShape(Rectangle())
         }
@@ -480,8 +473,7 @@ private extension SettingsView {
                     settingsLabel(
                         "Subscription",
                         systemImage: "crown.fill",
-                        subtitle: Text(entitlement.state.settingsSubtitle),
-                        iconStyle: Self.premiumIconStyle
+                        subtitle: Text(entitlement.state.settingsSubtitle)
                     )
                 }
             } else {
@@ -505,8 +497,7 @@ private extension SettingsView {
             settingsLabel(
                 "Subscription",
                 systemImage: "crown.fill",
-                subtitle: Text(entitlement.state.settingsSubtitle),
-                iconStyle: Self.premiumIconStyle
+                subtitle: Text(entitlement.state.settingsSubtitle)
             )
         }
     }
@@ -527,7 +518,7 @@ private extension SettingsView {
                 if !entitlement.isPro {
                     Image(systemName: "lock.fill")
                         .font(.footnote)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(colors.textPrimary)
                 }
             } label: {
                 settingsLabel(
@@ -660,7 +651,7 @@ private extension SettingsView {
                             hotKeyManager.clearConfiguration(for: type)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(colors.textPrimary)
                         }
                         .buttonStyle(.borderless)
                     }

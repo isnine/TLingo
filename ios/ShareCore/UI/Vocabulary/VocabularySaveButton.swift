@@ -30,7 +30,7 @@ struct VocabularySaveButton: View {
             Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
                 .font(.system(size: iconSize))
                 // Accent marks the saved state only.
-                .foregroundColor(isSaved ? palette.accent : palette.textSecondary)
+                .foregroundColor(isSaved ? palette.accent : palette.textPrimary)
                 .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(.plain)

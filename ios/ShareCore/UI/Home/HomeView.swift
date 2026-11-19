@@ -69,6 +69,14 @@ public struct HomeView: View {
     @State var flatResultsPanelHeight: CGFloat = 0
     @State var collapsedResultsSize: CGSize = .zero
     #if os(iOS)
+        enum PhoneComparisonMode {
+            case expanded
+            case focused
+        }
+
+        @State var phoneComparisonMode: PhoneComparisonMode?
+        @State var phoneComposerDockHeight: CGFloat = 0
+        @State var phoneCollapsedResultsHeaderHeight: CGFloat = 0
         @State var selectedResult: SelectedResult?
         @State var resultDetailDetent: PresentationDetent = .medium
     #endif
@@ -206,6 +214,16 @@ public struct HomeView: View {
     var usesPhoneComposerChrome: Bool {
         usesNativeNavigationChrome && currentTextLayoutIdiom == .phone
     }
+
+    #if os(iOS)
+        var showsPhoneComparison: Bool {
+            usesPhoneComposerChrome && isComparingResults && viewModel.modelRuns.count > 1
+        }
+
+        var showsFocusedComparison: Bool {
+            showsPhoneComparison && phoneComparisonMode == .focused
+        }
+    #endif
 
     /// iPhone and Mac show results as a flat panel with per-row sentence pairs; iPad keeps cards.
     var usesFlatResultsPanel: Bool {
@@ -384,10 +402,12 @@ public struct HomeView: View {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             if let onHistoryTap {
                                 Button("History", systemImage: "clock.arrow.circlepath", action: onHistoryTap)
+                                    .tint(.primary)
                                     .accessibilityIdentifier("home_history_button")
                             }
                             if let onSettingsTap {
                                 Button("Settings", systemImage: "gearshape", action: onSettingsTap)
+                                    .tint(.primary)
                                     .accessibilityIdentifier("tab_settings")
                             }
                         }
@@ -723,7 +743,7 @@ public struct HomeView: View {
                         } else if usesFlatResultsPanel {
                             flatResultsPanel(
                                 viewportHeight: geometry.size.height
-                                    - bottomComposerHeights(availableHeight: geometry.size.height).dockHeight
+                                    - resultsDockHeight(availableHeight: geometry.size.height)
                                     - bottomComposerResultsTopPadding
                                     - bottomComposerResultsBottomPadding
                             )
@@ -737,15 +757,47 @@ public struct HomeView: View {
                     .padding(.top, bottomComposerResultsTopPadding)
                     .padding(.bottom, bottomComposerResultsBottomPadding)
                     .erasedForLaunch()
+                    #if os(iOS)
+                        .onGeometryChange(for: Bool.self) { content in
+                            showsPhoneComparison && phoneComparisonMode == .expanded && phoneComposerDockHeight > 0
+                                && content.size.height > geometry.size.height - phoneComposerDockHeight + 1
+                        } action: { overflows in
+                            guard overflows, showsPhoneComparison, phoneComparisonMode == .expanded else { return }
+                            hideKeyboard()
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                                phoneComparisonMode = .focused
+                            }
+                        }
+                    #endif
                 }
             }
             #if os(iOS)
             // A bar (not an inset) lets results fade under the composer instead of showing through it.
             .safeAreaBar(edge: .bottom, spacing: 0) {
-                bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
-                    .erasedForLaunch()
+                if showsFocusedComparison {
+                    exitComparisonButton
+                } else {
+                    bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                            guard usesPhoneComposerChrome else { return }
+                            updateMeasuredHeight(height, current: phoneComposerDockHeight) {
+                                phoneComposerDockHeight = $0
+                            }
+                        }
+                        .erasedForLaunch()
+                }
             }
             .scrollEdgeEffectStyle(.soft, for: .bottom)
+            .onChange(of: showsPhoneComparison) { _, isComparing in
+                if !isComparing, phoneComparisonMode != nil {
+                    collapseResultComparison()
+                }
+            }
+            .onChange(of: viewModel.activeRequestContext?.generation) {
+                if phoneComparisonMode != nil {
+                    collapseResultComparison()
+                }
+            }
             #else
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 bottomComposerDock(availableHeight: geometry.size.height, isCentered: shouldCenterEmptyComposer)
@@ -759,6 +811,33 @@ public struct HomeView: View {
                 }
             #endif
         }
+    }
+
+    #if os(iOS)
+        var exitComparisonButton: some View {
+            Button(action: collapseResultComparison) {
+                Label("Exit Full Screen", systemImage: "chevron.up")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colors.textPrimary)
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 44)
+                    .tlingoGlassCapsule(.control, interactive: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home_exit_comparison_button")
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+        }
+    #endif
+
+    func resultsDockHeight(availableHeight: CGFloat) -> CGFloat {
+        #if os(iOS)
+            if usesPhoneComposerChrome, phoneComposerDockHeight > 0 {
+                return phoneComposerDockHeight
+            }
+        #endif
+        return bottomComposerHeights(availableHeight: availableHeight).dockHeight
     }
 
     var bottomComposerResultsTopPadding: CGFloat {

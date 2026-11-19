@@ -22,7 +22,7 @@ extension HomeView {
                     Button(action: onShowSidebarTap) {
                         Image(systemName: "sidebar.left")
                             .font(.system(size: 20))
-                            .foregroundColor(colors.textSecondary)
+                            .foregroundColor(colors.textPrimary)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Show Sidebar")
@@ -40,7 +40,7 @@ extension HomeView {
                         Button(action: onHistoryTap) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 20))
-                                .foregroundColor(colors.textSecondary)
+                                .foregroundColor(colors.textPrimary)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("History")
@@ -51,7 +51,7 @@ extension HomeView {
                         Button(action: onSettingsTap) {
                             Image(systemName: "gearshape")
                                 .font(.system(size: 20))
-                                .foregroundColor(colors.textSecondary)
+                                .foregroundColor(colors.textPrimary)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Settings")
@@ -308,6 +308,7 @@ extension HomeView {
         } label: {
             Label("Result Options", systemImage: "slider.horizontal.3")
         }
+        .tint(colors.textPrimary)
         .accessibilityIdentifier("home_result_order")
         .accessibilityValue(preferences.modelResultOrder.title)
     }
@@ -340,7 +341,6 @@ extension HomeView {
                     .truncationMode(.tail)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 8, weight: .semibold))
-                    .opacity(0.6)
             }
             .foregroundColor(colors.textPrimary)
             .padding(.horizontal, 10)
@@ -357,14 +357,12 @@ extension HomeView {
             // Lead with the icon and name the model, so the label says which one is used.
             Image(systemName: "cpu")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(colors.textSecondary)
             Text(modelSelectionTitle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 8, weight: .semibold))
-                .opacity(0.65)
         }
         .foregroundColor(colors.textPrimary)
         .frame(width: usesPhoneComposerChrome ? nil : 170, alignment: .trailing)
@@ -513,7 +511,7 @@ extension HomeView {
 
                 Image(systemName: "chevron.down")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(colors.textSecondary)
+                    .foregroundColor(colors.textPrimary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
@@ -628,7 +626,7 @@ extension HomeView {
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 17))
-                    .foregroundStyle(colors.textSecondary.opacity(0.7))
+                    .foregroundStyle(colors.textPrimary)
                     .frame(width: 32, height: 32)
                     .contentShape(Rectangle())
             }
