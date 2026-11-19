@@ -63,7 +63,7 @@ public struct HomeView: View {
     @State var isComparingResults = false
     /// Settled content height per result row, and the height held while a row reloads,
     /// so switching to sentence pairs never collapses the row before new content streams in.
-    @State var resultContentHeights: [String: CGFloat] = [:]
+    @State var resultContentHeights = ResultContentHeights()
     @State var heldResultHeights: [String: CGFloat] = [:]
     /// Flat panel and its collapsed preview block, measured to size previews to the visible area.
     @State var flatResultsPanelHeight: CGFloat = 0
@@ -85,6 +85,11 @@ public struct HomeView: View {
     #if os(macOS)
         @State var showDataConsent = false
     #endif
+
+    @MainActor
+    final class ResultContentHeights {
+        var values: [String: CGFloat] = [:]
+    }
 
     var usesConversationInspectorPresentation: Bool {
         #if os(macOS)
@@ -267,6 +272,11 @@ public struct HomeView: View {
     let onResultReplace: ((String) -> Void)?
     let onResultConversation: ((ConversationSession) -> Void)?
 
+    #if (DEBUG || TLINGO_LOCAL_RENDER_BENCHMARK) && os(iOS)
+        @Environment(\.debugRenderInteraction) private var debugRenderInteraction
+        @State private var debugRenderScrollPosition = ScrollPosition()
+    #endif
+
     @ThemeColors var colors: AppColorPalette
 
     /// Hides the keyboard on iOS
@@ -332,7 +342,7 @@ public struct HomeView: View {
     /// Compact hosts reuse the result UI while keeping input, consent and request routing in the host.
     var embeddedResultsContent: some View {
         GeometryReader { geometry in
-            ScrollView {
+            let results = ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     if viewModel.isWordLookupFallback {
                         wordLookupFallbackHint
@@ -341,6 +351,33 @@ public struct HomeView: View {
                 }
                 .padding(12)
             }
+            #if (DEBUG || TLINGO_LOCAL_RENDER_BENCHMARK) && os(iOS)
+                if let interaction = debugRenderInteraction {
+                    results
+                        .scrollPosition($debugRenderScrollPosition)
+                        .onScrollGeometryChange(for: CGFloat.self) { scroll in
+                            scroll.contentOffset.y + scroll.contentInsets.top
+                        } action: { _, offset in
+                            interaction.recordOffset(offset)
+                        }
+                        .onChange(of: interaction.step) { _, step in
+                            guard step > 0 else { return }
+                            interaction.recordAppliedStep()
+                            switch interaction.mode {
+                            case .scroll:
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    debugRenderScrollPosition.scrollTo(y: step.isMultiple(of: 2) ? 0 : 1400)
+                                }
+                            case .toggle:
+                                isComparingResults.toggle()
+                            }
+                        }
+                } else {
+                    results
+                }
+            #else
+                results
+            #endif
         }
         .onAppear {
             preferences.refreshFromDefaults()

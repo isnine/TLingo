@@ -119,15 +119,15 @@ extension HomeView {
                 showsInlineActions: false,
                 animatesStreamingText: animatesStreamingText
             )
-                .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
-                // Outgoing content fades inside the row instead of overlapping the next one.
-                .clipped()
-                .onHeightChange { height in
-                    guard !isLoading, heldResultHeights[runID] == nil else { return }
-                    updateMeasuredHeight(height, current: resultContentHeights[runID] ?? 0) {
-                        resultContentHeights[runID] = $0
-                    }
+            .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
+            // Outgoing content fades inside the row instead of overlapping the next one.
+            .clipped()
+            .onHeightChange { height in
+                guard !isLoading, heldResultHeights[runID] == nil else { return }
+                updateMeasuredHeight(height, current: resultContentHeights.values[runID] ?? 0) {
+                    resultContentHeights.values[runID] = $0
                 }
+            }
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,23 +143,9 @@ extension HomeView {
         #endif
 
         #if os(iOS)
-            if isSuccessfulRun(run) {
-                row
-                    .contentShape(Rectangle())
-                    .gesture(
-                        TapGesture()
-                            .onEnded {
-                                presentResultDetail(runID: runID)
-                            },
-                        including: .gesture
-                    )
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction(named: Text("Open Result")) {
-                        presentResultDetail(runID: runID)
-                    }
-            } else {
-                row
-            }
+            row.modifier(ResultDetailInteraction(isEnabled: isSuccessfulRun(run)) {
+                presentResultDetail(runID: runID)
+            })
         #else
             // macOS has no result detail sheet; the text stays selectable in place.
             row
@@ -242,7 +228,7 @@ extension HomeView {
     /// Content swaps without a cross-fade; only the row height animates, from the held height
     /// to the new content once it is ready.
     func toggleSentencePairs(runID: String) {
-        heldResultHeights[runID] = resultContentHeights[runID]
+        heldResultHeights[runID] = resultContentHeights.values[runID]
         viewModel.toggleSentencePairs(runID: runID)
         // A cached result is ready now; release the hold after one frame so the height animates.
         if let run = viewModel.modelRuns.first(where: { $0.id == runID }), !isRunLoading(run) {
@@ -742,31 +728,14 @@ extension HomeView {
         .padding(16)
 
         #if os(iOS)
-            if isSuccessfulRun(run) {
-                cardContent
-                    .background(providerResultCardBackground)
-                #if DEBUG
-                    .background(TranslationFrameProbe(run: run))
-                #endif
-                    .contentShape(Rectangle())
-                    .gesture(
-                        TapGesture()
-                            .onEnded {
-                                presentResultDetail(runID: runID)
-                            },
-                        including: .gesture
-                    )
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction(named: Text("Open Result")) {
-                        presentResultDetail(runID: runID)
-                    }
-            } else {
-                cardContent
-                    .background(providerResultCardBackground)
-                #if DEBUG
-                    .background(TranslationFrameProbe(run: run))
-                #endif
-            }
+            cardContent
+                .background(providerResultCardBackground)
+            #if DEBUG
+                .background(TranslationFrameProbe(run: run))
+            #endif
+                .modifier(ResultDetailInteraction(isEnabled: isSuccessfulRun(run)) {
+                    presentResultDetail(runID: runID)
+                })
         #else
             cardContent
                 .background(providerResultCardBackground)
@@ -1145,8 +1114,59 @@ extension HomeView {
         showsInlineActions: Bool = true,
         animatesStreamingText: Bool = true
     ) -> some View {
+        let pairs: [SentencePair] = switch run.status {
+        case let .streamingSentencePairs(pairs, _): pairs
+        case let .success(result): result.sentencePairs
+        default: []
+        }
+        if pairs.isEmpty {
+            nonPairContent(
+                for: run,
+                textPreset: textPreset,
+                showsInlineActions: showsInlineActions,
+                animatesStreamingText: animatesStreamingText
+            )
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(pairs.indices, id: \.self) { index in
+                        let pair = pairs[index]
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(pair.original)
+                                .font(fontLibrary.style.font(size: 14))
+                                .foregroundColor(colors.textSecondary)
+                                .textSelection(.enabled)
+                            Text(pair.translation)
+                                .font(fontLibrary.style.font(size: 14))
+                                .foregroundColor(colors.textPrimary)
+                                .textSelection(.enabled)
+                        }
+                        .padding(.vertical, 8)
+                        .transition(.opacity)
+
+                        if index < pairs.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+                .animation(isRunLoading(run) ? .easeOut(duration: 0.2) : nil, value: pairs.count)
+
+                if case let .success(result) = run.status {
+                    resultAdditions(result, run: run, showsInlineActions: false)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func nonPairContent(
+        for run: HomeViewModel.ModelRunViewState,
+        textPreset: MarkdownContentPreset,
+        showsInlineActions: Bool,
+        animatesStreamingText: Bool
+    ) -> some View {
         switch run.status {
-        case .idle, .running:
+        case .idle, .running, .streamingSentencePairs:
             skeletonPlaceholder()
 
         case let .streaming(text, _):
@@ -1168,85 +1188,16 @@ extension HomeView {
                 .contentDirectionAware(text)
             }
 
-        case let .streamingSentencePairs(pairs, _):
-            if pairs.isEmpty {
-                skeletonPlaceholder()
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(pair.original)
-                                .font(fontLibrary.style.font(size: 14))
-                                .foregroundColor(colors.textSecondary)
-                                .textSelection(.enabled)
-                            Text(pair.translation)
-                                .font(fontLibrary.style.font(size: 14))
-                                .foregroundColor(colors.textPrimary)
-                                .textSelection(.enabled)
-                        }
-                        .padding(.vertical, 8)
-                        .transition(.opacity)
-
-                        if index < pairs.count - 1 {
-                            Divider()
-                        }
-                    }
-                }
-                .animation(.easeOut(duration: 0.2), value: pairs.count)
-            }
-
         case let .success(result):
-            let showDiff = run.showDiff
-            let runID = run.id
             VStack(alignment: .leading, spacing: 12) {
-                if !result.sentencePairs.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(result.sentencePairs.enumerated()), id: \.offset) { index, pair in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(pair.original)
-                                    .font(fontLibrary.style.font(size: 14))
-                                    .foregroundColor(colors.textSecondary)
-                                    .textSelection(.enabled)
-                                Text(pair.translation)
-                                    .font(fontLibrary.style.font(size: 14))
-                                    .foregroundColor(colors.textPrimary)
-                                    .textSelection(.enabled)
-                            }
-                            .padding(.vertical, 8)
-
-                            if index < result.sentencePairs.count - 1 {
-                                Divider()
-                            }
-                        }
-                    }
-                } else if let diff = result.diff, showDiff {
+                if let diff = result.diff, run.showDiff {
                     StyledDiffView(diff: diff)
                 } else {
                     let mainText = !result.supplementalTexts.isEmpty ? result.copyText : result.text
                     MarkdownContentView(text: mainText, preset: textPreset, timingTrace: run.timingTrace)
                 }
 
-                // Suggested action chips
-                if !result.suggestedActions.isEmpty, !showsOnlyResults || onResultConversation != nil {
-                    suggestedActionChips(actions: result.suggestedActions, runID: runID)
-                }
-
-                // Action buttons above divider (only when supplementalTexts exist)
-                if showsInlineActions, result.sentencePairs.isEmpty, !result.supplementalTexts.isEmpty {
-                    HStack(spacing: 12) {
-                        Spacer()
-                        actionButtons(copyText: result.copyText, runID: runID)
-                    }
-                }
-
-                if !result.supplementalTexts.isEmpty {
-                    Divider()
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(result.supplementalTexts.enumerated()), id: \.offset) { entry in
-                            CompactMarkdownContent(text: entry.element, timingTrace: run.timingTrace)
-                        }
-                    }
-                }
+                resultAdditions(result, run: run, showsInlineActions: showsInlineActions)
             }
 
         case let .failure(message, _, _, isUnsupported):
@@ -1258,6 +1209,33 @@ extension HomeView {
                     .font(.system(size: 14))
                     .foregroundColor(colors.textSecondary)
                     .textSelection(.enabled)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func resultAdditions(
+        _ result: HomeViewModel.ModelRunViewState.SuccessResult,
+        run: HomeViewModel.ModelRunViewState,
+        showsInlineActions: Bool
+    ) -> some View {
+        if !result.suggestedActions.isEmpty, !showsOnlyResults || onResultConversation != nil {
+            suggestedActionChips(actions: result.suggestedActions, runID: run.id)
+        }
+
+        if showsInlineActions, !result.supplementalTexts.isEmpty {
+            HStack(spacing: 12) {
+                Spacer()
+                actionButtons(copyText: result.copyText, runID: run.id)
+            }
+        }
+
+        if !result.supplementalTexts.isEmpty {
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(result.supplementalTexts.enumerated()), id: \.offset) { entry in
+                    CompactMarkdownContent(text: entry.element, timingTrace: run.timingTrace)
+                }
             }
         }
     }
@@ -1287,6 +1265,23 @@ struct CollapsedStreamingPreviewText: View {
 }
 
 #if os(iOS)
+    private struct ResultDetailInteraction: ViewModifier {
+        let isEnabled: Bool
+        let open: () -> Void
+
+        func body(content: Content) -> some View {
+            content
+                .contentShape(Rectangle())
+                .gesture(TapGesture().onEnded { open() }, including: isEnabled ? .gesture : .subviews)
+                .accessibilityAddTraits(isEnabled ? .isButton : [])
+                .accessibilityActions {
+                    if isEnabled {
+                        Button("Open Result", action: open)
+                    }
+                }
+        }
+    }
+
     private struct PhoneCollapsedPreviewLayout: Layout {
         let height: CGFloat
         let spacing: CGFloat

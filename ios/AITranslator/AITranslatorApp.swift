@@ -41,8 +41,11 @@ struct AITranslatorApp: App {
 
     init() {
         _ = TranslationTimingTrace.processStartedAt
-        #if DEBUG && os(iOS)
+        #if (DEBUG || TLINGO_LOCAL_RENDER_BENCHMARK) && os(iOS)
             if DebugStreamingRenderView.isEnabled { return }
+        #endif
+        #if (DEBUG || TLINGO_LOCAL_DEVICE_BENCHMARK) && os(iOS)
+            if DebugDevicePerformanceView.isEnabled { return }
         #endif
         MetricKitReporter.shared.start()
         // Keep automatic reporting out of XCTest and screenshot/UI-test launches.
@@ -94,8 +97,30 @@ struct AITranslatorApp: App {
                 #if DEBUG
                     if DebugStreamingRenderView.isEnabled {
                         DebugStreamingRenderView()
+                    } else if DebugDevicePerformanceView.isEnabled {
+                        DebugDevicePerformanceView()
                     } else if ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK"] == "1" {
                         TextTranslationBenchmarkView()
+                    } else {
+                        RootTabView()
+                    }
+                #elseif TLINGO_LOCAL_RENDER_BENCHMARK && TLINGO_LOCAL_DEVICE_BENCHMARK
+                    if DebugStreamingRenderView.isEnabled {
+                        DebugStreamingRenderView()
+                    } else if DebugDevicePerformanceView.isEnabled {
+                        DebugDevicePerformanceView()
+                    } else {
+                        RootTabView()
+                    }
+                #elseif TLINGO_LOCAL_RENDER_BENCHMARK
+                    if DebugStreamingRenderView.isEnabled {
+                        DebugStreamingRenderView()
+                    } else {
+                        RootTabView()
+                    }
+                #elseif TLINGO_LOCAL_DEVICE_BENCHMARK
+                    if DebugDevicePerformanceView.isEnabled {
+                        DebugDevicePerformanceView()
                     } else {
                         RootTabView()
                     }

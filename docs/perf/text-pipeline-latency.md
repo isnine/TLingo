@@ -5,6 +5,7 @@ verified_commit: e6749b0ba0c80b9e59f1ea0f2d22dc82709fa7c1
 review_triggers:
   - DebugLaunchTestHarness changes
   - DebugStreamingRenderView changes
+  - DebugDevicePerformanceView workload changes
   - TranslationTimingTrace stage changes
   - ActionConfig structuredOutput or OutputType changes
   - LLMService request preparation changes
@@ -16,7 +17,7 @@ End-to-end latency profiling methods, telemetry definitions, and measured baseli
 
 `Client Prepare -> Network / Edge Transit -> Upstream Provider -> SSE Stream -> Diff / Markdown / UI Frame`
 
-## Test Systems (`#if DEBUG` Only)
+## Test Systems (Debug Unless Noted)
 
 ### 1. Launch-Argument Multi-Action Harness (`DebugLaunchTestHarness`)
 
@@ -101,7 +102,21 @@ xcrun devicectl device copy from --device <UDID> \
   --source Documents/debug-streaming-render.json --destination /tmp/tlingo-render.json
 ```
 
-The scenario starts automatically and can be repeated in place with **Replay**. Each run delivers 180 synchronized batches at 20 ms intervals, then completes all runs together. Copy the report after the app shows the result. It includes first-batch delivery spread, sample count, P95/max display-link intervals, and estimated missed 60 Hz callbacks for the first 250 ms, the remaining stream, and the 500 ms completion window. Keep the app in the foreground. These are frame-pacing proxies, not GPU-present counts; the harness does not measure network latency, input responsiveness, or scrolling. Compare the same fixture, panel state, build configuration, device and refresh rate across runs.
+The scenario starts automatically and can be repeated in place with **Replay**. Each run delivers 180 synchronized batches at 20 ms intervals, then completes all runs together. Keep the app in the foreground and copy the report after the app shows the result. The report includes sample count, P95/P99/max display-link intervals, and estimated missed 60 Hz callbacks for the first 250 ms, the remaining stream, and the completion window.
+
+- `-TLingoDebugRenderInteraction scroll`: animate the production results scroll view between offsets 0 and 1,400 points. Start expanded for a comparable scroll range.
+- `-TLingoDebugRenderInteraction toggle`: alternate expanding and collapsing the production comparison panel. Omit the option for a stationary control.
+- The final action is scheduled just before completion so its animation can overlap the result commits. Verify `interaction.actionTimesMs` and `interaction.maxOffsetPoints`/`scrollDistancePoints` in the report rather than assuming the scheduled action happened on time. Use `-TLingoDebugRenderLabel <label>` to distinguish runs when polling the same report path.
+
+These are frame-pacing proxies, not GPU-present counts or touch latency. Compare the same fixture, panel state, build configuration, device, and refresh rate across fresh launches. A local development-signed Release build can explicitly include only the render harness:
+
+```bash
+xcodebuild -project ios/AITranslator.xcodeproj -scheme TLingo -configuration Release \
+  -destination 'platform=iOS,id=<UDID>' -allowProvisioningUpdates \
+  'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) TLINGO_LOCAL_RENDER_BENCHMARK' build
+```
+
+Default Release builds do not define `TLINGO_LOCAL_RENDER_BENCHMARK`.
 
 #### iPhone 15 Plus Debug A/B
 
@@ -116,7 +131,74 @@ Runs started in fresh processes. The baseline uses the same offline harness and 
 
 The expanded plain-text baseline had only 5–6 streaming callbacks in its sample window; the optimized runs had 200. Plain-text expansion still had a 65–75 ms maximum interval in the first 250 ms. Sentence-pair completion peaked at 65–130 ms in two runs. These are stationary Debug measurements, not Release or scroll benchmarks.
 
-### 4. Live Network Inspector & Instruments Signposts
+### 4. Local Device Workloads (`DebugDevicePerformanceView`, iOS)
+
+These workloads are available in Debug and in a local development-signed Release build with `TLINGO_LOCAL_DEVICE_BENCHMARK` added to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` using the command above. The default Release build does not include them.
+
+Use the following launch arguments after `devicectl device process launch --device <UDID> --terminate-existing com.zanderwang.AITranslator --`:
+
+| Arguments | Path measured |
+| --- | --- |
+| `-TLingoDebugDevicePerf history -TLingoDebugHistoryCount 10000` | Save synthetic text records to a temporary SwiftData store, reopen it in-process, and fetch and decode 50-record pages at multiple offsets. Never uses the shared history store. |
+| `-TLingoDebugDevicePerf history-audio -TLingoDebugWaveformBuckets 1200` | Build a one-hour-class timeline from the WAV fixture and generate waveform buckets using the production audio pipeline. The default is 256 buckets; 1,200 matches the player. Uses a uniquely named temporary recording directory and does not play audio or measure scrubbing. |
+| `-TLingoDebugDevicePerf ocr` | Run the production OCR recognizer five times on the same generated 3024 × 4032 image (56 lines of mixed English and Chinese). Times exclude image generation, photo import, and editor presentation. |
+| `-TLingoDebugDevicePerf realtime -TLingoDebugAudioSeconds 300` | Feed a local speech fixture into the production FluidAudio recognizer at 1× wall-clock speed. Records engine loading, time to the first nonempty recognition callback, audio backlog, sampled physical footprint and thermal state, and finalization. |
+| `-TLingoDebugDevicePerf realtime-lifecycle -TLingoDebugAudioSeconds 18` | Run the same replay twice in one process, then explicitly purge the idle engine. Reports physical footprint before loading, after each stop, and two seconds after purge. Does not simulate backgrounding or an OS memory warning. |
+
+For realtime and history audio, copy a nonempty mono 16 kHz WAV to `Documents/debug-realtime-fixture.wav` using `devicectl device copy to`. Use a 10–60 second fixture for history audio. Realtime replay loops the file until the requested audio duration (1–3,600 seconds; default 60). The default model is `nemotron-streaming-1120ms`; choose another available FluidAudio model with `-TLingoDebugRealtimeModel <id>`. Missing models fail unless `-TLingoDebugAllowModelDownload` is present, in which case `downloadMs` includes downloading and disk preparation, separately from engine loading. Existing models are not removed. Keep the foreground active; the file replay does not exercise capture, visible captions, PiP, or saving History.
+
+Pass `-TLingoDebugPerfLabel <label>` and copy `Documents/debug-device-performance.json` after completion. Check the label, `error`, and `interrupted`. `debugLaunchToTaskMs` ends at the benchmark task, not at an interactive application home screen.
+
+#### iPhone 15 Plus Device Baselines (iOS 27.2.1, 2026-11-19)
+
+The offline render matrix used the opt-in local Release build, with two fresh launches per row and the panel initially expanded:
+
+| Fixture | Interaction | Streaming P95 | Completion max |
+| --- | --- | --- | --- |
+| 8 plain-text streams | Stationary / scroll / toggle | 16.6 ms | 31–49 ms across all six runs |
+| 30 sentence-pair streams | Stationary | 16.6 ms | 80–125 ms |
+| 30 sentence-pair streams | Scroll | 16.6 ms | 82–127 ms |
+| 30 sentence-pair streams | Toggle | 18.8–19.8 ms | 58–59 ms |
+
+The scroll runs reached 1,400 points. In the 30-pair toggle runs, streaming P99 was 46.8–53.3 ms. An additional 30-pair scroll Instruments capture found nine hitches (worst: 116.51 ms) and no hang of 250 ms or longer. Main-thread samples around the worst hitch include SwiftUI layout and display-list work. Since completion spikes also occurred at rest, these runs point to profiling the final result commits and layout, not to scrolling as an established cause.
+
+The local workloads below used the Debug build:
+
+| Workload | Result |
+| --- | --- |
+| History, 5,000 and 10,000 synthetic records | Fetch 50 records: 0.69–7.26 ms; read and decode their payloads: 0.53–0.69 ms. Deepest offset had the slowest fetch. |
+| History audio, 59 min 37 sec / 142 timeline segments | Build composition: 383 ms; compute 256 waveform buckets: 13.87 s. The fixture reuses a short WAV, so this is not a measurement of production file I/O or player responsiveness. |
+| OCR, two processes with five passes each | First pass: 517 / 894 ms; later passes: 413–440 ms. All passes returned 3,472 characters. This bypasses the photo import path, including its initial downscale. |
+| Cached Nemotron 1120 ms, 5 minutes at 1× | Engine load: 23.57 s; audio feed to first nonempty result: 1.56 s; maximum backlog: 0.55 s. All 300 seconds were processed. Sampled footprint peaked at 1,590 MiB after loading, then stayed near 1,525 MiB after 15 seconds. Sampled thermal state remained nominal. |
+| Uncached Parakeet EOU 320 ms, one foreground run | Download and disk preparation: 122.00 s; engine load: 41.01 s; audio feed to first nonempty result: 1.03 s (about 164 s in total). |
+
+These baselines do not cover History list/search/scrubbing, camera or photo import to an editable result, cold launch to interactive Home, online long-text latency, download resume, or extended microphone/ReplayKit capture with captions, PiP, lock screen, and battery drain.
+
+#### Instruments Follow-up (Local Release, iPhone 15 Plus)
+
+- **SwiftUI — 30 sentence-pair streams, expand/collapse:** the baseline captured six hitches, with a 116.54 ms worst hitch at 5.129 s. The 84.85 ms SwiftUI update transaction was triggered by publishing results from `HomeViewModel.apply(result:context:runToken:allowDiff:)`. This measures view updates after publication, not the cost of assigning the result.
+- **Time Profiler — 59 min 37 sec history audio, 1,200 buckets:** composition took 321 ms and waveform generation took 311 ms, without a recorded hang. The waveform ran off the main thread; 65 of its 308 one-millisecond CPU samples landed in `AVAudioBuffer` teardown through `madvise`. The 13.87 s Debug result does not represent Release. The fixture still reuses one WAV across 142 segments, while production records separate five-second AAC segments; profile that format before prioritizing waveform optimization.
+- **VM Tracker and Time Profiler — cached Nemotron 1120 ms, fresh process:** loading took 25.58 s even with the model on disk; the first nonempty recognition followed 1.52 s after replay began. The startup CPU window shows Core ML loading, execution-plan setup, and on-device compilation. The app sampled 1,580 MiB of physical footprint just after loading and about 1,523 MiB during the 35-second replay. The device remained nominal. This is a startup and memory-headroom risk, not evidence of a leak. The production engine cache intentionally keeps one idle engine, so measure repeated start/stop, model switching, and background eviction before changing its policy.
+
+#### Sentence-Pair Completion Fix (Local Release, iPhone 15 Plus)
+
+The streaming and final states now use the same sentence-pair view, and enabling result detail no longer replaces the row. Settled height measurements are stored without invalidating the panel; the held height still drives animation when switching result formats. Each model still publishes its completion as soon as it is ready.
+
+| 30 sentence-pair streams | Baseline completion max (2 runs) | Fixed completion max (3 runs) |
+| --- | --- | --- |
+| Stationary | 80–125 ms | 31–33 ms |
+| Scroll to 1,400 points | 82–127 ms | 32–39 ms |
+| Expand/collapse | 58–59 ms | 16.6 ms |
+
+With the same SwiftUI template, the result-publication transaction went from 84.85 to 10.30 ms; the largest hitch across the run went from 116.54 to 33.33 ms, with no hitch at completion in the fixed run. The separate Time Profiler + Hitches scroll capture went from nine hitches to four, and from 116.51 to 16.67 ms for the largest hitch. Neither fixed capture recorded a hang of at least 250 ms. App and ShareCore UUIDs matched the fixed build. Two 8-stream plain-text scroll controls returned a streaming P95 of 16.6 ms and a completion max of 35–44 ms (baseline: 35–49 ms).
+
+Expanding and collapsing while output is still arriving can still hitch: the uninstrumented streaming P99 was 45.8–56.0 ms across the three fixed toggle runs (baseline: 46.8–53.3 ms). This fix targets completion, not the cost of opening the panel mid-stream.
+
+#### Realtime Engine Lifecycle (Local Release, iPhone 15 Plus)
+
+In one VM Tracker + Time Profiler capture, two 18-second replays of cached Nemotron 1120 ms each processed the full input and returned 324 final transcript characters. Engine checkout took 25.59 s in the fresh process and 0.015 ms on restart with the warm engine. First recognition took 1.52 s and 1.49 s after the audio feed began, respectively. Physical footprint after stop was 1,520.7 MiB and 1,520.9 MiB. Purging the idle engine dropped it to 681.3 MiB after two seconds, still above the 10.9 MiB pre-load sample. This confirms warm reuse and partial release, not a return to baseline or the absence of a leak. The fresh-process Core ML load, residual footprint, real background eviction, and model switching remain separate profiling targets.
+
+### 5. Live Network Inspector & Instruments Signposts
 
 - **OSSignposter**: `PerformanceSignposts.signposter` emits `Translation Run` intervals (`submitted -> resultApplied`) and `Translation Stage` events (`subsystem == "com.zanderwang.AITranslator"`).
 - **Network Inspector (`DebugNetworkProtocol`)**: Captures `URLSessionTaskTransactionMetrics` (`domainLookup`, `connect`, `secureConnection`, `request`, `response`, `isReusedConnection`, `networkProtocolName`) correlated by `X-Request-ID`.

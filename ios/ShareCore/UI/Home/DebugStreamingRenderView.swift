@@ -1,4 +1,4 @@
-#if DEBUG && os(iOS)
+#if (DEBUG || TLINGO_LOCAL_RENDER_BENCHMARK) && os(iOS)
 import SwiftUI
 import UIKit
 
@@ -16,6 +16,7 @@ public struct DebugStreamingRenderView: View {
     @State private var isRunning = true
     @State private var interrupted = false
     @State private var summary = "Preparing local streams…"
+    @State private var interaction: DebugRenderInteraction?
 
     private let config = RenderReplayConfiguration()
 
@@ -39,6 +40,7 @@ public struct DebugStreamingRenderView: View {
             Divider()
             HomeView(viewModel: viewModel, showsOnlyResults: true, initiallyExpandsResults: config.expanded)
                 .id(runID)
+                .environment(\.debugRenderInteraction, interaction)
                 .allowsHitTesting(!isRunning)
         }
         .task(id: runID) { await replay() }
@@ -50,6 +52,8 @@ public struct DebugStreamingRenderView: View {
     private func replay() async {
         isRunning = true
         interrupted = false
+        let interaction = config.interaction.map(DebugRenderInteraction.init)
+        self.interaction = interaction
         summary = "Replaying \(config.fixture.rawValue) · no server"
         defer { isRunning = false }
 
@@ -86,6 +90,8 @@ public struct DebugStreamingRenderView: View {
             recorder.start()
             try await Task.sleep(for: .milliseconds(150))
 
+            let input = Task { try await interaction?.perform() }
+            defer { input.cancel() }
             let worker = Task.detached(priority: .userInitiated) { try await config.feed(streams) }
             let replay = try await withTaskCancellationHandler {
                 try await worker.value
@@ -119,12 +125,17 @@ public struct DebugStreamingRenderView: View {
             let streaming = recorder.metrics(from: burstEnd, to: finishRequested)
             let completion = recorder.metrics(from: finishRequested, to: end)
             let report = RenderReplayReport(
+                label: config.label,
+                build: Self.build,
+                thermalState: ProcessInfo.processInfo.thermalState.rawValue,
                 streamCount: config.streamCount,
                 expanded: config.expanded,
                 fixture: config.fixture,
                 batches: config.batchCount,
                 intervalMs: config.intervalMs,
                 firstBatchSpreadMs: replay.firstBatchSpreadMs,
+                lastBatchMs: replay.duration * 1000,
+                interaction: interaction?.report(relativeTo: replay.firstBatch, endingAt: end),
                 burst: burst,
                 streaming: streaming,
                 completion: completion
@@ -144,6 +155,70 @@ public struct DebugStreamingRenderView: View {
             summary = error.localizedDescription
         }
     }
+
+    private static let build = {
+        #if DEBUG
+            "Debug"
+        #else
+            "Local Release benchmark"
+        #endif
+    }()
+}
+
+extension EnvironmentValues {
+    @Entry var debugRenderInteraction: DebugRenderInteraction?
+}
+
+@MainActor
+@Observable
+final class DebugRenderInteraction {
+    enum Mode: String, Encodable, Sendable {
+        case scroll
+        case toggle
+    }
+
+    struct Report: Encodable {
+        let mode: Mode
+        let actionTimesMs: [Double]
+        let scrollDistancePoints: CGFloat
+        let maxOffsetPoints: CGFloat
+    }
+
+    let mode: Mode
+    var step = 0
+    private var appliedSteps: [CFTimeInterval] = []
+    private var offsets: [(time: CFTimeInterval, value: CGFloat)] = []
+
+    init(_ mode: Mode) {
+        self.mode = mode
+    }
+
+    func recordAppliedStep() {
+        appliedSteps.append(CACurrentMediaTime())
+    }
+
+    func perform() async throws {
+        let clock = ContinuousClock()
+        let start = clock.now
+        for (index, offsetMs) in [500, 1_000, 1_500, 2_000, 2_500, 3_470].enumerated() {
+            try await clock.sleep(until: start.advanced(by: .milliseconds(offsetMs)))
+            step = index + 1
+        }
+    }
+
+    func recordOffset(_ offset: CGFloat) {
+        offsets.append((CACurrentMediaTime(), offset))
+    }
+
+    func report(relativeTo start: CFTimeInterval, endingAt end: CFTimeInterval) -> Report {
+        let values = offsets.filter { $0.time >= start && $0.time <= end }.map(\.value)
+        return Report(
+            mode: mode,
+            actionTimesMs: appliedSteps.map { ($0 - start) * 1000 },
+            scrollDistancePoints: zip(values, values.dropFirst()).reduce(0) { $0 + abs($1.1 - $1.0) },
+            maxOffsetPoints: values.max() ?? 0
+        )
+    }
 }
 
 private struct RenderReplayConfiguration: Sendable {
@@ -156,6 +231,8 @@ private struct RenderReplayConfiguration: Sendable {
     let streamCount: Int
     let expanded: Bool
     let fixture: Fixture
+    let interaction: DebugRenderInteraction.Mode?
+    let label: String?
     let batchCount = 180
     let intervalMs = 20
 
@@ -167,6 +244,8 @@ private struct RenderReplayConfiguration: Sendable {
         streamCount = min(30, max(1, value(after: "-TLingoDebugRenderStreams").flatMap(Int.init) ?? 30))
         expanded = arguments.contains("-TLingoDebugRenderExpanded")
         fixture = value(after: "-TLingoDebugRenderFixture").flatMap(Fixture.init(rawValue:)) ?? .text
+        interaction = value(after: "-TLingoDebugRenderInteraction").flatMap(DebugRenderInteraction.Mode.init(rawValue:))
+        label = value(after: "-TLingoDebugRenderLabel")
     }
 
     struct Replay: Sendable {
@@ -246,12 +325,17 @@ private struct RenderReplayConfiguration: Sendable {
 }
 
 private struct RenderReplayReport: Encodable {
+    let label: String?
+    let build: String
+    let thermalState: Int
     let streamCount: Int
     let expanded: Bool
     let fixture: RenderReplayConfiguration.Fixture
     let batches: Int
     let intervalMs: Int
     let firstBatchSpreadMs: Double
+    let lastBatchMs: Double
+    let interaction: DebugRenderInteraction.Report?
     let burst: RenderFrameRecorder.Metrics
     let streaming: RenderFrameRecorder.Metrics
     let completion: RenderFrameRecorder.Metrics
@@ -262,6 +346,7 @@ private final class RenderFrameRecorder: NSObject {
     struct Metrics: Encodable {
         let samples: Int
         let p95Ms: Double?
+        let p99Ms: Double?
         let maxMs: Double?
         let estimatedMissedFrames: Int
     }
@@ -297,9 +382,11 @@ private final class RenderFrameRecorder: NSObject {
             .map(\.interval)
             .sorted()
         let p95 = intervals.isEmpty ? nil : intervals[Int(ceil(Double(intervals.count) * 0.95)) - 1]
+        let p99 = intervals.isEmpty ? nil : intervals[Int(ceil(Double(intervals.count) * 0.99)) - 1]
         return Metrics(
             samples: intervals.count,
             p95Ms: p95.map { $0 * 1000 },
+            p99Ms: p99.map { $0 * 1000 },
             maxMs: intervals.last.map { $0 * 1000 },
             estimatedMissedFrames: intervals.reduce(0) { count, interval in
                 count + max(0, Int((interval * framesPerSecond).rounded()) - 1)
