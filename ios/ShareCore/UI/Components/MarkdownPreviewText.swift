@@ -10,19 +10,37 @@ import Foundation
 /// and inline emphasis, code, and links keep their styling.
 enum MarkdownPreviewText {
     private static let defaultPreviewCharacterLimit = 800
+    private static let streamingPreviewCharacterLimit = 240
+    private static let cacheLimit = 64
+
+    private struct CacheKey: Hashable {
+        let text: String
+        let maxCharacters: Int
+    }
+
+    private static let cacheLock = NSLock()
+    private static var cache: [CacheKey: AttributedString] = [:]
+
+    static func plainStreamingPreview(
+        from text: String,
+        maxCharacters: Int = streamingPreviewCharacterLimit
+    ) -> String {
+        let bounded = truncate(text, maxCharacters: maxCharacters)
+        return flattenNewlines(bounded)
+    }
 
     static func attributed(
         from markdown: String,
         maxCharacters: Int = defaultPreviewCharacterLimit
     ) -> AttributedString {
-        let bounded: String
-        if maxCharacters > 0,
-           let cutoff = markdown.index(markdown.startIndex, offsetBy: maxCharacters, limitedBy: markdown.endIndex),
-           cutoff < markdown.endIndex
-        {
-            bounded = String(markdown[..<cutoff])
-        } else {
-            bounded = markdown
+        let bounded = truncate(markdown, maxCharacters: maxCharacters)
+        if !MarkdownContentView.containsMarkdownSyntax(bounded) {
+            return AttributedString(flattenNewlines(bounded))
+        }
+
+        let key = CacheKey(text: bounded, maxCharacters: maxCharacters)
+        if let cached = cacheLock.withLock({ cache[key] }) {
+            return cached
         }
 
         let options = AttributedString.MarkdownParsingOptions(
@@ -30,7 +48,7 @@ enum MarkdownPreviewText {
             failurePolicy: .returnPartiallyParsedIfPossible
         )
         guard let parsed = try? AttributedString(markdown: bounded, options: options) else {
-            return AttributedString(bounded.replacingOccurrences(of: "\n", with: " "))
+            return AttributedString(flattenNewlines(bounded))
         }
 
         var result = AttributedString()
@@ -53,7 +71,30 @@ enum MarkdownPreviewText {
             result.append(piece)
             previousBlock = block
         }
+
+        cacheLock.withLock {
+            if cache.count >= cacheLimit {
+                cache.removeAll(keepingCapacity: true)
+            }
+            cache[key] = result
+        }
         return result
+    }
+
+    private static func truncate(_ text: String, maxCharacters: Int) -> String {
+        if maxCharacters > 0,
+           let cutoff = text.index(text.startIndex, offsetBy: maxCharacters, limitedBy: text.endIndex),
+           cutoff < text.endIndex
+        {
+            return String(text[..<cutoff])
+        }
+        return text
+    }
+
+    private static func flattenNewlines(_ text: String) -> String {
+        guard text.contains(where: \.isNewline) else { return text }
+        return text.replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
     }
 
     private static func isListItem(_ block: PresentationIntent?) -> Bool {

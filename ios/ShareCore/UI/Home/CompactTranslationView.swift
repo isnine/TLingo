@@ -262,12 +262,21 @@
             HStack(spacing: 8) {
                 collapsedStatus(for: run)
 
-                Text(collapsedPreview(for: run))
-                    .font(.system(size: 14))
-                    .foregroundColor(colors.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                Group {
+                    if case let .streaming(initialText, _) = run.status {
+                        CollapsedStreamingPreviewText(
+                            preview: run.streamPreview,
+                            fallback: MarkdownPreviewText.plainStreamingPreview(from: initialText)
+                        )
+                    } else {
+                        Text(collapsedPreview(for: run))
+                    }
+                }
+                .font(.system(size: 14))
+                .foregroundColor(colors.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(run.modelDisplayName)
                     .font(.system(size: 11, weight: .medium))

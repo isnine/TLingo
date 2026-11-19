@@ -26,17 +26,14 @@ extension HomeView {
         let runs = viewModel.displayedModelRuns
         let showsComparison = isComparingResults && runs.count > 1
 
-        return VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+        let panel = VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
             if let primaryRun = runs.first {
-                flatResultRow(for: primaryRun)
+                flatResultRow(for: primaryRun, animatesStreamingText: true)
                 if runs.count > 1 {
                     let remainingRuns = Array(runs.dropFirst())
-                    VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+                    Group {
                         if showsComparison {
-                            comparisonHeader(remainingModelCount: remainingRuns.count)
-                            ForEach(remainingRuns) { run in
-                                flatResultRow(for: run)
-                            }
+                            expandedComparison(remainingRuns)
                         } else {
                             let previews = Dictionary(
                                 uniqueKeysWithValues: remainingRuns.map { run in
@@ -68,25 +65,58 @@ extension HomeView {
                     .padding(.top, 6)
             }
         }
-        .onHeightChange { height in
-            updateMeasuredHeight(height, current: flatResultsPanelHeight) {
-                flatResultsPanelHeight = $0
+        #if os(macOS)
+            return panel.onHeightChange { height in
+                updateMeasuredHeight(height, current: flatResultsPanelHeight) {
+                    flatResultsPanelHeight = $0
+                }
             }
+        #else
+            return panel
+        #endif
+    }
+
+    @ViewBuilder
+    func expandedComparison(_ runs: [HomeViewModel.ModelRunViewState]) -> some View {
+        #if os(iOS)
+            LazyVStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+                expandedComparisonRows(runs)
+            }
+        #else
+            VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+                expandedComparisonRows(runs)
+            }
+        #endif
+    }
+
+    @ViewBuilder
+    func expandedComparisonRows(_ runs: [HomeViewModel.ModelRunViewState]) -> some View {
+        comparisonHeader(remainingModelCount: runs.count)
+        ForEach(runs) { run in
+            flatResultRow(for: run, animatesStreamingText: false)
         }
     }
 
     @ViewBuilder
-    func flatResultRow(for run: HomeViewModel.ModelRunViewState) -> some View {
+    func flatResultRow(
+        for run: HomeViewModel.ModelRunViewState,
+        animatesStreamingText: Bool = true
+    ) -> some View {
         let runID = run.id
         let isLoading = isRunLoading(run)
         let row = VStack(alignment: .leading, spacing: 8) {
             flatResultHeader(for: run)
-            content(for: run, textPreset: .compact, showsInlineActions: false)
+            content(
+                for: run,
+                textPreset: .compact,
+                showsInlineActions: false,
+                animatesStreamingText: animatesStreamingText
+            )
                 .frame(maxWidth: .infinity, minHeight: heldResultHeights[runID], alignment: .topLeading)
                 // Outgoing content fades inside the row instead of overlapping the next one.
                 .clipped()
                 .onHeightChange { height in
-                    guard heldResultHeights[runID] == nil else { return }
+                    guard !isLoading, heldResultHeights[runID] == nil else { return }
                     updateMeasuredHeight(height, current: resultContentHeights[runID] ?? 0) {
                         resultContentHeights[runID] = $0
                     }
@@ -291,6 +321,11 @@ extension HomeView {
                         Group {
                             if isAwaitingFirstOutput(run) {
                                 AnimatedEllipsis()
+                            } else if case let .streaming(initialText, _) = run.status {
+                                CollapsedStreamingPreviewText(
+                                    preview: run.streamPreview,
+                                    fallback: MarkdownPreviewText.plainStreamingPreview(from: initialText)
+                                )
                             } else {
                                 Text(previews[run.id] ?? AttributedString())
                             }
@@ -378,7 +413,10 @@ extension HomeView {
             if streamedText.isEmpty {
                 text = String(localized: "Generating...")
             } else {
-                return MarkdownPreviewText.attributed(from: streamedText)
+                let preview = run.streamPreview.text.isEmpty
+                    ? MarkdownPreviewText.plainStreamingPreview(from: streamedText)
+                    : run.streamPreview.text
+                return AttributedString(preview)
             }
         case let .streamingSentencePairs(pairs, _):
             text = pairs.isEmpty
@@ -1024,7 +1062,8 @@ extension HomeView {
     func content(
         for run: HomeViewModel.ModelRunViewState,
         textPreset: MarkdownContentPreset = .compact,
-        showsInlineActions: Bool = true
+        showsInlineActions: Bool = true,
+        animatesStreamingText: Bool = true
     ) -> some View {
         switch run.status {
         case .idle, .running:
@@ -1041,7 +1080,7 @@ extension HomeView {
                         textColor: colors.textPrimary,
                         secondaryTextColor: colors.textSecondary,
                         accentColor: colors.accent,
-                        animatesText: true,
+                        animatesText: animatesStreamingText,
                         readingStyle: fontLibrary.style
                     )
                 )
@@ -1155,5 +1194,14 @@ extension HomeView {
         viewModel.inputText = text
         isInputExpanded = true
         viewModel.performSelectedAction()
+    }
+}
+
+struct CollapsedStreamingPreviewText: View {
+    @ObservedObject var preview: HomeViewModel.ModelRunStreamPreview
+    let fallback: String
+
+    var body: some View {
+        Text(preview.text.isEmpty ? fallback : preview.text)
     }
 }

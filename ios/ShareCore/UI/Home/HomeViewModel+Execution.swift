@@ -386,6 +386,74 @@ extension HomeViewModel {
         saveHistoryIfSuccessful(result, context: context, runToken: runToken)
     }
 
+    func makeStreamingCoalescers(
+        _ cloudModels: [ModelConfig],
+        context: RequestContext,
+        runTokens: [String: UUID]
+    ) -> [String: StreamingUpdateCoalescer] {
+        let streamSources = Dictionary(uniqueKeysWithValues: modelRuns.map { ($0.id, $0.markdownStreamSource) })
+        let streamPreviews = Dictionary(uniqueKeysWithValues: modelRuns.map { ($0.id, $0.streamPreview) })
+        return Dictionary(uniqueKeysWithValues: cloudModels.map { model in
+            let modelID = model.id
+            let streamSource = streamSources[modelID]
+            let streamPreview = streamPreviews[modelID]
+            let runToken = runTokens[modelID]
+            return (modelID, StreamingUpdateCoalescer { [weak self] update in
+                switch update {
+                case let .text(text):
+                    streamSource?.yield(text)
+                    let preview = MarkdownPreviewText.plainStreamingPreview(from: text)
+                    Task { @MainActor [weak self] in
+                        guard let self, let token = runToken,
+                              self.isRunStillValid(context, runID: modelID, runToken: token),
+                              let index = self.modelRuns.firstIndex(where: { $0.id == modelID })
+                        else { return }
+                        streamPreview?.update(preview)
+                        switch self.modelRuns[index].status {
+                        case .idle, .running:
+                            let now = Date()
+                            var run = self.modelRuns[index]
+                            run.timingTrace?.mark(.firstUIUpdate)
+                            run.firstOutputAt = run.firstOutputAt ?? now
+                            run.status = .streaming(text: text, start: run.startDate ?? now)
+                            self.modelRuns[index] = run
+                        case .streaming, .streamingSentencePairs, .success, .failure:
+                            break
+                        }
+                    }
+                case let .sentencePairs(pairs):
+                    Task { @MainActor [weak self] in
+                        guard let self, let token = runToken,
+                              self.isRunStillValid(context, runID: modelID, runToken: token),
+                              let index = self.modelRuns.firstIndex(where: { $0.id == modelID })
+                        else { return }
+                        var run = self.modelRuns[index]
+                        switch run.status {
+                        case .success, .failure: return
+                        case .idle, .running, .streaming, .streamingSentencePairs: break
+                        }
+                        let now = Date()
+                        run.timingTrace?.mark(.firstUIUpdate)
+                        run.firstOutputAt = run.firstOutputAt ?? now
+                        run.status = .streamingSentencePairs(pairs: pairs, start: run.startDate ?? now)
+                        self.modelRuns[index] = run
+                    }
+                }
+            })
+        })
+    }
+
+    func finishStreamingRun(
+        _ result: ModelExecutionResult,
+        coalescer: StreamingUpdateCoalescer?,
+        context: RequestContext,
+        runToken: UUID
+    ) {
+        coalescer?.cancel()
+        modelRuns.first { $0.id == result.modelID }?.markdownStreamSource.finish()
+        apply(result: result, context: context, runToken: runToken, allowDiff: context.showsDiff)
+    }
+
     /// Runs cloud LLM models through `LLMService`, streaming partial output into their runs.
     func runCloudModels(
         _ cloudModels: [ModelConfig],
@@ -395,27 +463,7 @@ extension HomeViewModel {
         let text = context.text
         let action = context.action
         let resolved = context.languages
-        let coalescers = Dictionary(uniqueKeysWithValues: cloudModels.map { model in
-            (model.id, StreamingUpdateCoalescer { [weak self] update in
-                guard let self, let token = runTokens[model.id],
-                      self.isRunStillValid(context, runID: model.id, runToken: token),
-                      let index = self.modelRuns.firstIndex(where: { $0.id == model.id })
-                else { return }
-                let now = Date()
-                let startDate = self.modelRuns[index].startDate ?? now
-                self.modelRuns[index].timingTrace?.mark(.firstUIUpdate)
-                if self.modelRuns[index].firstOutputAt == nil {
-                    self.modelRuns[index].firstOutputAt = now
-                }
-                switch update {
-                case let .text(text):
-                    self.modelRuns[index].markdownStreamSource.yield(text)
-                    self.modelRuns[index].status = .streaming(text: text, start: startDate)
-                case let .sentencePairs(pairs):
-                    self.modelRuns[index].status = .streamingSentencePairs(pairs: pairs, start: startDate)
-                }
-            })
-        })
+        let coalescers = makeStreamingCoalescers(cloudModels, context: context, runTokens: runTokens)
         defer { coalescers.values.forEach { $0.cancel() } }
 
         _ = await llmService.perform(
@@ -432,11 +480,7 @@ extension HomeViewModel {
             timingTraces: Dictionary(uniqueKeysWithValues: modelRuns.compactMap { run in
                 run.timingTrace.map { (run.id, $0) }
             }),
-            partialHandler: { [weak self] modelID, update in
-                guard let self,
-                      let runToken = runTokens[modelID],
-                      self.isRunStillValid(context, runID: modelID, runToken: runToken)
-                else { return }
+            partialHandler: { modelID, update in
                 coalescers[modelID]?.append(update)
             },
             completionHandler: { [weak self] result in
@@ -444,13 +488,11 @@ extension HomeViewModel {
                       let runToken = runTokens[result.modelID],
                       self.isRunStillValid(context, runID: result.modelID, runToken: runToken)
                 else { return }
-                coalescers[result.modelID]?.flush()
-                self.modelRuns.first { $0.id == result.modelID }?.markdownStreamSource.finish()
-                self.apply(
-                    result: result,
+                self.finishStreamingRun(
+                    result,
+                    coalescer: coalescers[result.modelID],
                     context: context,
-                    runToken: runToken,
-                    allowDiff: context.showsDiff
+                    runToken: runToken
                 )
                 self.saveHistoryIfSuccessful(result, context: context, runToken: runToken)
             }
@@ -661,11 +703,10 @@ extension HomeViewModel {
 
         switch result.response {
         case let .success(message):
-            if modelRuns[index].firstOutputAt == nil {
-                modelRuns[index].firstOutputAt = Date()
-            }
+            var run = modelRuns[index]
+            run.firstOutputAt = run.firstOutputAt ?? Date()
             let diffTarget = result.diffSource ?? message
-            modelRuns[index].status = .success(ModelRunViewState.SuccessResult(
+            run.status = .success(ModelRunViewState.SuccessResult(
                 text: message,
                 copyText: diffTarget,
                 duration: result.duration,
@@ -676,7 +717,8 @@ extension HomeViewModel {
                 suggestedActions: result.suggestedActions,
                 providerDisplayName: result.providerDisplayName
             ))
-            modelRuns[index].timingTrace?.mark(.resultApplied)
+            modelRuns[index] = run
+            run.timingTrace?.mark(.resultApplied)
             if allowDiff, context.text != diffTarget {
                 Task { [weak self] in
                     let diff = await Task.detached(priority: .userInitiated) {

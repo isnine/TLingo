@@ -66,60 +66,70 @@ struct TranslationTimingTests {
         #expect(legacy.translationTiming == nil)
     }
 
+    private final class CapturedValues: @unchecked Sendable {
+        private let lock = NSLock()
+        private var storage: [String] = []
+
+        func append(_ value: String) {
+            lock.withLock { storage.append(value) }
+        }
+
+        var values: [String] {
+            lock.withLock { storage }
+        }
+    }
+
     @Test("Empty structured prefixes cannot delay first useful output")
-    @MainActor
     func firstUsefulOutput() {
-        var values: [String] = []
+        let captured = CapturedValues()
         let coalescer = StreamingUpdateCoalescer { update in
             if case let .text(text) = update {
-                values.append(text)
+                captured.append(text)
             }
         }
         coalescer.append(.text(""))
         coalescer.append(.sentencePairs([]))
         coalescer.append(.text("Hello"))
-        #expect(values == ["Hello"])
+        #expect(captured.values == ["Hello"])
         coalescer.cancel()
     }
 
     @Test("Latest snapshot is delivered even when the network pauses")
-    @MainActor
     func latestSnapshot() async throws {
-        var values: [String] = []
+        let captured = CapturedValues()
         let coalescer = StreamingUpdateCoalescer(interval: .milliseconds(20)) { update in
             if case let .text(text) = update {
-                values.append(text)
+                captured.append(text)
             }
         }
         coalescer.append(.text("A"))
         coalescer.append(.text("AB"))
         coalescer.append(.text("ABC"))
         for _ in 0 ..< 25 {
-            if values == ["A", "ABC"] {
+            if captured.values == ["A", "ABC"] {
                 break
             }
             try await Task.sleep(for: .milliseconds(20))
         }
-        #expect(values == ["A", "ABC"])
+        #expect(captured.values == ["A", "ABC"])
         coalescer.cancel()
     }
 
     @Test("Completion flushes the latest output; cancellation cannot publish stale text")
-    @MainActor
     func flushAndCancel() async throws {
-        var values: [String] = []
+        let captured = CapturedValues()
         let coalescer = StreamingUpdateCoalescer { update in
             if case let .text(text) = update {
-                values.append(text)
+                captured.append(text)
             }
         }
         coalescer.append(.text("A"))
         coalescer.append(.text("Final"))
         coalescer.flush()
-        #expect(values == ["A", "Final"])
+        #expect(captured.values == ["A", "Final"])
         coalescer.append(.text("Stale"))
         coalescer.cancel()
         try await Task.sleep(for: .milliseconds(100))
-        #expect(values == ["A", "Final"])
+        #expect(captured.values == ["A", "Final"])
     }
 }

@@ -69,6 +69,24 @@ public final class HomeViewModel: ObservableObject {
     }
 
     @Published public var selectedDebugNetworkRecord: NetworkRequestRecord?
+
+    @MainActor
+    public final class ModelRunStreamPreview: ObservableObject {
+        @Published public private(set) var text: String = ""
+
+        nonisolated public init() {}
+
+        public func update(_ newText: String) {
+            guard text != newText else { return }
+            text = newText
+        }
+
+        public func reset() {
+            guard !text.isEmpty else { return }
+            text = ""
+        }
+    }
+
     public struct ModelRunViewState: Identifiable {
         public struct SuccessResult {
             public let text: String
@@ -174,6 +192,7 @@ public final class HomeViewModel: ObservableObject {
 
         public let model: ModelConfig
         public let markdownStreamSource = ConversationMarkdownStreamSource()
+        public let streamPreview = ModelRunStreamPreview()
         public var timingTrace: TranslationTimingTrace?
         public var status: Status
         public var presentation: Presentation = .standard
@@ -1136,6 +1155,7 @@ public final class HomeViewModel: ObservableObject {
 
         // Reset UI state for this specific run
         modelRuns[index].markdownStreamSource.reset()
+        modelRuns[index].streamPreview.reset()
         let trace = TranslationTimingTrace()
         trace.mark(.languageResolved)
         trace.recordActionAndModel(actionID: context.action.id, modelID: model.id, inputCharacters: context.text.count)

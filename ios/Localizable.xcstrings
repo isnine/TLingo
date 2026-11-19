@@ -140847,6 +140847,102 @@
             "state" : "translated",
             "value" : "關閉後，原文和譯文分別顯示在上下兩個區域"
           }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند إيقاف هذا الخيار، يُعرض النص الأصلي والترجمة في لوحتين منفصلتين"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når funktionen er slået fra, vises originalteksten og oversættelsen i separate paneler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn diese Option deaktiviert ist, werden der Originaltext und die Übersetzung in getrennten Bereichen angezeigt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando está desactivado, el texto original y la traducción se muestran en paneles separados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lorsque cette option est désactivée, le texte original et la traduction s’affichent dans des volets distincts"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jika dinonaktifkan, teks asli dan terjemahan ditampilkan di panel terpisah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando l’opzione è disattivata, il testo originale e la traduzione vengono mostrati in riquadri separati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフにすると、原文と翻訳が別々のペインに表示されます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "끄면 원문과 번역이 별도의 패널에 표시됩니다"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apabila dimatikan, teks asal dan terjemahan dipaparkan dalam panel berasingan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når funksjonen er slått av, vises originalteksten og oversettelsen i separate paneler"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als deze optie is uitgeschakeld, worden de oorspronkelijke tekst en de vertaling in aparte panelen weergegeven"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy opcja jest wyłączona, tekst oryginalny i tłumaczenie są wyświetlane w osobnych panelach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando desativado, o texto original e a tradução são exibidos em painéis separados"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "När funktionen är avstängd visas originaltexten och översättningen i separata paneler"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapalı olduğunda, orijinal metin ve çeviri ayrı panellerde gösterilir"
+          }
         }
       }
     },
@@ -140874,6 +140970,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "關閉「逐句對照」後，原文顯示在上方，譯文顯示在下方。"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند إيقاف خيار «جملة بجملة»، يُعرض النص الأصلي في الأعلى والترجمة في الأسفل."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når Sætning for sætning er slået fra, vises originalteksten øverst og oversættelsen nederst."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn „Satz für Satz“ deaktiviert ist, wird der Originaltext oben und die Übersetzung darunter angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando «Frase por frase» está desactivado, el texto original se muestra arriba y la traducción debajo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lorsque l’option « Phrase par phrase » est désactivée, le texte original s’affiche en haut et la traduction en dessous."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jika Kalimat per Kalimat dinonaktifkan, teks asli ditampilkan di atas dan terjemahannya di bawah."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando «Frase per frase» è disattivato, il testo originale viene mostrato in alto e la traduzione sotto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「一文ずつ」がオフの場合、原文が上に、翻訳が下に表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘문장별로’가 꺼져 있으면 원문은 위에, 번역은 아래에 표시됩니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apabila Ayat demi Ayat dimatikan, teks asal dipaparkan di atas dan terjemahan di bawah."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når Setning for setning er slått av, vises originalteksten øverst og oversettelsen under."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als ‘Zin voor zin’ is uitgeschakeld, wordt de oorspronkelijke tekst bovenaan en de vertaling daaronder weergegeven."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy opcja „Zdanie po zdaniu” jest wyłączona, tekst oryginalny jest wyświetlany na górze, a tłumaczenie poniżej."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando a opção “Frase por frase” está desativada, o texto original é exibido em cima e a tradução, embaixo."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "När Mening för mening är avstängt visas originaltexten överst och översättningen nedanför."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle Cümle kapalı olduğunda, orijinal metin üstte, çeviri ise altta gösterilir."
           }
         }
       }

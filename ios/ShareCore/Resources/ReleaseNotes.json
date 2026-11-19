@@ -1,6 +1,44 @@
 {
   "releases": [
     {
+      "version": "5.7.7",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Show original and translated live captions in separate panes"
+        },
+        {
+          "kind": "improved",
+          "text": "Show the first part of a text translation sooner and keep results updating smoothly when several models stream at once"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Keep expanded model comparisons responsive while results are streaming"
+        },
+        {
+          "kind": "improved",
+          "text": "Keep long live caption sessions responsive and make large history transcripts smoother to scroll"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Restore the Live Translate button in narrow iPad Split View and keep chats open when resizing"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "macos"
+          ],
+          "text": "Keep prompt editing stable while composing with an input method"
+        }
+      ]
+    },
+    {
       "version": "5.7.6",
       "items": [
         {

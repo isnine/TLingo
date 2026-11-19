@@ -89,6 +89,9 @@ public final class StoreManager: ObservableObject {
 
     private init() {
         #if DEBUG
+            #if os(iOS)
+                if DebugStreamingRenderView.isEnabled { return }
+            #endif
             // Auto-enable premium in development builds unless user toggled it off
             isDebugPremiumDisabled = AppPreferences.sharedDefaults.bool(forKey: Self.debugPremiumDisabledKey)
             if isDebugPremiumDisabled {

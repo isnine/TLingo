@@ -4001,6 +4001,256 @@
         }
       }
     },
+    "Keep expanded model comparisons responsive while results are streaming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على سرعة استجابة مقارنات النماذج الموسّعة أثناء تدفق النتائج"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold udvidede modelsammenligninger responsive, mens resultaterne streames"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterte Modellvergleiche reagieren auch während des Ergebnis-Streamings zügig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep expanded model comparisons responsive while results are streaming"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener la fluidez de las comparaciones de modelos ampliadas mientras llegan los resultados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préserver la réactivité des comparaisons de modèles développées pendant la diffusion des résultats"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga perbandingan model yang diperluas tetap responsif saat hasil sedang dialirkan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenere reattivi i confronti tra modelli espansi durante lo streaming dei risultati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結果のストリーミング中も、展開したモデル比較を快適に操作できるようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "결과가 스트리밍되는 동안 펼쳐진 모델 비교의 응답성 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan perbandingan model yang dikembangkan kekal responsif semasa hasil distrim"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold utvidede modellsammenligninger responsive mens resultatene strømmes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgeklapte modelvergelijkingen soepel laten reageren terwijl resultaten binnenstromen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowanie płynności rozwiniętych porównań modeli podczas strumieniowego przesyłania wyników"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter a fluidez das comparações de modelos expandidas enquanto os resultados são transmitidos"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll utökade modelljämförelser responsiva medan resultaten strömmas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonuçlar akış halinde gelirken genişletilmiş model karşılaştırmalarının hızlı yanıt vermesini sağla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在串流結果時，讓展開的模型比較保持流暢"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在结果流式输出时，保持展开的模型比较响应流畅"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在串流結果時，讓展開的模型比較保持流暢"
+          }
+        }
+      }
+    },
+    "Keep long live caption sessions responsive and make large history transcripts smoother to scroll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على سرعة الاستجابة في جلسات التسميات التوضيحية المباشرة الطويلة، وجعل تمرير النصوص الطويلة في السجل أكثر سلاسة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold lange sessioner med liveundertekster responsive, og gør det mere flydende at rulle gennem store transskriptioner i historikken"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lange Sitzungen mit Live-Untertiteln bleiben reaktionsschnell, und umfangreiche Transkripte im Verlauf lassen sich flüssiger scrollen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep long live caption sessions responsive and make large history transcripts smoother to scroll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener la fluidez de las sesiones largas de subtítulos en directo y facilitar el desplazamiento por las transcripciones extensas del historial"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préserver la réactivité des longues sessions de sous-titres en direct et fluidifier le défilement des longues transcriptions dans l’historique"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga sesi teks langsung yang panjang tetap responsif dan membuat transkrip riwayat yang panjang lebih lancar digulir"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenere reattive le lunghe sessioni di sottotitoli in tempo reale e rendere più fluido lo scorrimento delle trascrizioni estese nella cronologia"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長時間のライブ字幕セッションを快適に操作できるようにし、履歴内の長い文字起こしをよりスムーズにスクロールできるようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "긴 실시간 자막 세션의 응답성을 유지하고 기록의 긴 대화록을 더 부드럽게 스크롤"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan sesi kapsyen langsung yang panjang kekal responsif dan lancarkan penatalan transkrip sejarah yang panjang"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold lange økter med direkteteksting responsive, og gjør det jevnere å bla gjennom store transkripsjoner i historikken"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lange sessies met live ondertiteling soepel laten reageren en soepeler door lange transcripties in de geschiedenis scrollen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowanie płynności długich sesji napisów na żywo i usprawnienie przewijania obszernych transkrypcji w historii"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter a fluidez de sessões longas de legendas ao vivo e facilitar a rolagem de transcrições extensas no histórico"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll långa sessioner med livetextning responsiva och gör det smidigare att bläddra i stora transkriptioner i historiken"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uzun canlı altyazı oturumlarının hızlı yanıt vermesini sağla ve geçmişteki uzun dökümlerin kaydırılmasını daha akıcı hale getir"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓長時間的即時字幕工作階段保持流暢，並讓瀏覽記錄中較長的逐字稿捲動得更順暢"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保持长时间实时字幕会话的响应速度，让历史记录中的长篇转录文本滚动更流畅"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓長時間的即時字幕工作階段保持流暢，並讓歷史記錄中較長的逐字稿捲動得更順暢"
+          }
+        }
+      }
+    },
     "Keep notch captions visible while realtime translation is paused" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4122,6 +4372,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "即時翻譯暫停時保持瀏海字幕顯示"
+          }
+        }
+      }
+    },
+    "Keep prompt editing stable while composing with an input method" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفاظ على استقرار تحرير الموجّه أثناء الكتابة باستخدام طريقة إدخال"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold redigering af prompts stabil under indtastning med en inputmetode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabile Bearbeitung von Prompts während der Eingabe mit einer Eingabemethode"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep prompt editing stable while composing with an input method"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener estable la edición de instrucciones al escribir con un método de entrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliser la modification des instructions lors de la saisie avec une méthode de saisie"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menjaga pengeditan prompt tetap stabil saat mengetik dengan metode input"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenere stabile la modifica dei prompt durante la composizione con un metodo di input"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力メソッドで文字を入力している間も、プロンプトを安定して編集できるようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력기로 문자를 조합하는 동안 프롬프트 편집의 안정성 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan penyuntingan prompt kekal stabil semasa menaip menggunakan kaedah input"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold redigering av ledetekster stabil under skriving med en inndatametode"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het bewerken van prompts stabiel houden tijdens het typen met een invoermethode"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabilne edytowanie promptów podczas pisania za pomocą metody wprowadzania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter a edição de prompts estável ao digitar com um método de entrada"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll redigering av promptar stabil vid skrivning med en inmatningsmetod"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir giriş yöntemiyle yazarken istem düzenlemenin kararlı kalmasını sağla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法輸入時，保持提示詞編輯穩定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用输入法输入时，保持提示词编辑稳定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用輸入法輸入時，保持提示詞編輯穩定"
           }
         }
       }
@@ -9126,6 +9501,131 @@
         }
       }
     },
+    "Restore the Live Translate button in narrow iPad Split View and keep chats open when resizing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة زر الترجمة المباشرة في العرض المنقسم الضيق على iPad وإبقاء المحادثات مفتوحة عند تغيير الحجم"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gendan knappen Live Translate i smal Split View på iPad, og hold chats åbne ved ændring af størrelse"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Schaltfläche „Live-Übersetzung“ in der schmalen iPad-Split-View wiederherstellen und Chats beim Ändern der Größe geöffnet lassen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore the Live Translate button in narrow iPad Split View and keep chats open when resizing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar el botón de traducción en directo en la vista dividida estrecha del iPad y mantener los chats abiertos al cambiar el tamaño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir le bouton de traduction en direct dans la vue Split View étroite sur iPad et garder les conversations ouvertes lors du redimensionnement"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengembalikan tombol Terjemahan Langsung di Split View iPad yang sempit dan menjaga chat tetap terbuka saat ukuran diubah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristinare il pulsante Traduzione in tempo reale nella vista Split View ridotta su iPad e mantenere aperte le chat durante il ridimensionamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadのSplit Viewの幅が狭い場合にライブ翻訳ボタンを再表示し、サイズ変更時もチャットを開いたままにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좁은 iPad Split View에서 실시간 번역 버튼을 복원하고 크기를 조절할 때 채팅을 열린 상태로 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kembalikan butang Terjemahan Langsung dalam Split View iPad yang sempit dan pastikan sembang kekal terbuka apabila saiz diubah"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjenopprett knappen for direkteoversettelse i smal Split View på iPad, og hold chatter åpne når størrelsen endres"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De knop Live vertalen herstellen in een smalle Split View op iPad en chats openhouden bij het wijzigen van de grootte"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przywrócenie przycisku tłumaczenia na żywo w wąskim widoku Split View na iPadzie i zachowanie otwartych czatów podczas zmiany rozmiaru"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar o botão de tradução ao vivo no Split View estreito do iPad e manter as conversas abertas ao redimensionar"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Återställ knappen för liveöversättning i smal Split View på iPad och håll chattar öppna när storleken ändras"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad'deki dar Split View görünümünde Canlı Çeviri düğmesini geri getir ve yeniden boyutlandırırken sohbetleri açık tut"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 窄版 Split View 中恢復即時翻譯按鈕，並在調整大小時保持對話開啟"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 的窄屏 Split View 中恢复实时翻译按钮，并在调整大小时保持聊天窗口打开"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPad 的窄版 Split View 中恢復即時翻譯按鈕，並在調整大小時保持對話開啟"
+          }
+        }
+      }
+    },
     "Retry from the no-model error card" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10126,6 +10626,131 @@
         }
       }
     },
+    "Show original and translated live captions in separate panes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض التسميات التوضيحية المباشرة الأصلية والمترجمة في لوحتين منفصلتين"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis originale og oversatte liveundertekster i separate paneler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originale und übersetzte Live-Untertitel in getrennten Bereichen anzeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show original and translated live captions in separate panes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar los subtítulos en directo originales y traducidos en paneles separados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les sous-titres en direct originaux et traduits dans des volets distincts"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan teks langsung asli dan terjemahannya di panel terpisah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrare i sottotitoli in tempo reale originali e tradotti in riquadri separati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブ字幕の原文と翻訳を別々のペインに表示する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "원본 실시간 자막과 번역된 실시간 자막을 별도 창에 표시"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paparkan kapsyen langsung asal dan terjemahan dalam anak tetingkap berasingan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis originale og oversatte direktetekster i separate paneler"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originele en vertaalde live ondertiteling in aparte panelen tonen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyświetlanie oryginalnych i przetłumaczonych napisów na żywo w osobnych panelach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar legendas ao vivo originais e traduzidas em painéis separados"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa ursprunglig och översatt livetextning i separata paneler"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orijinal ve çevrilmiş canlı altyazıları ayrı panellerde göster"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在獨立窗格中顯示原文和翻譯後的即時字幕"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在独立窗格中显示原文和翻译后的实时字幕"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在獨立窗格中顯示原文和翻譯後的即時字幕"
+          }
+        }
+      }
+    },
     "Show source and translated realtime captions in separate panes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10247,6 +10872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在獨立窗格中顯示即時字幕的原文和譯文"
+          }
+        }
+      }
+    },
+    "Show the first part of a text translation sooner and keep results updating smoothly when several models stream at once" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض الجزء الأول من ترجمة النص في وقت أقرب والحفاظ على سلاسة تحديث النتائج عند تدفق مخرجات عدة نماذج في الوقت نفسه"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis den første del af en tekstoversættelse hurtigere, og opdater resultaterne flydende, når flere modeller streamer samtidig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den ersten Teil einer Textübersetzung früher anzeigen und Ergebnisse flüssig aktualisieren, wenn mehrere Modelle gleichzeitig streamen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the first part of a text translation sooner and keep results updating smoothly when several models stream at once"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar antes la primera parte de una traducción de texto y actualizar los resultados con fluidez cuando varios modelos generan contenido a la vez"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher plus tôt la première partie d’une traduction de texte et actualiser les résultats de façon fluide lorsque plusieurs modèles génèrent du contenu simultanément"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan bagian pertama terjemahan teks lebih cepat dan perbarui hasil dengan lancar saat beberapa model melakukan streaming sekaligus"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrare prima la prima parte di una traduzione testuale e aggiornare i risultati in modo fluido quando più modelli trasmettono contemporaneamente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テキスト翻訳の最初の部分をより早く表示し、複数のモデルが同時にストリーミングする場合も結果をスムーズに更新する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "텍스트 번역의 첫 부분을 더 빠르게 표시하고 여러 모델이 동시에 스트리밍할 때도 결과를 부드럽게 업데이트"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paparkan bahagian pertama terjemahan teks dengan lebih awal dan pastikan hasil dikemas kini dengan lancar apabila beberapa model menstrim serentak"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis den første delen av en tekstoversettelse raskere, og oppdater resultatene jevnt når flere modeller strømmer samtidig"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het eerste deel van een tekstvertaling eerder tonen en resultaten soepel blijven bijwerken wanneer meerdere modellen tegelijk streamen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybsze wyświetlanie pierwszej części tłumaczenia tekstu i płynne aktualizowanie wyników, gdy kilka modeli jednocześnie przesyła odpowiedzi strumieniowo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar mais cedo a primeira parte de uma tradução de texto e atualizar os resultados com fluidez quando vários modelos transmitem ao mesmo tempo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa den första delen av en textöversättning snabbare och uppdatera resultaten smidigt när flera modeller strömmar samtidigt"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metin çevirisinin ilk bölümünü daha erken göster ve birden fazla model aynı anda akış sağlarken sonuçların sorunsuz güncellenmesini sağla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更快顯示文字翻譯的第一部分，並在多個模型同時串流時保持結果更新流暢"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更快显示文本翻译的第一部分，并在多个模型同时流式输出时保持结果更新流畅"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更快顯示文字翻譯的第一部分，並在多個模型同時串流時保持結果更新流暢"
           }
         }
       }

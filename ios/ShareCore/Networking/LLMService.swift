@@ -139,7 +139,7 @@ public final class LLMService {
         cachedIsPremium: Bool? = nil,
         cachedUsageSubject: UsageSubject? = nil,
         timingTraces: [String: TranslationTimingTrace] = [:],
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)? = nil,
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)? = nil,
         completionHandler: (@MainActor @Sendable (ModelExecutionResult) -> Void)? = nil
     ) async -> [ModelExecutionResult] {
         let hasImages = !images.isEmpty
@@ -233,7 +233,7 @@ public final class LLMService {
         isPremium: Bool,
         usageSubject: UsageSubject?,
         timingTrace: TranslationTimingTrace,
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
         let start = Date()
 
@@ -401,7 +401,7 @@ public final class LLMService {
         decoder: JSONDecoder,
         structuredOutputConfig: ActionConfig.StructuredOutputConfig?,
         timingTrace: TranslationTimingTrace,
-        partialHandler: @escaping @MainActor @Sendable (String, StreamingUpdate) -> Void
+        partialHandler: @escaping @Sendable (String, StreamingUpdate) -> Void
     ) async throws -> ModelExecutionResult {
         let (bytes, response) = try await urlSession.bytes(for: request)
 
@@ -465,16 +465,16 @@ public final class LLMService {
                     guard pairs.count != emittedPairCount else { continue }
                     emittedPairCount = pairs.count
                     timingTrace.mark(.firstUsefulContent)
-                    await partialHandler(model.id, .sentencePairs(pairs))
+                    partialHandler(model.id, .sentencePairs(pairs))
                 } else if let parser = structuredParser {
                     let displayText = parser.append(deltaText)
                     guard displayText.utf16.count != emittedTextLength else { continue }
                     emittedTextLength = displayText.utf16.count
                     timingTrace.mark(.firstUsefulContent)
-                    await partialHandler(model.id, .text(displayText))
+                    partialHandler(model.id, .text(displayText))
                 } else {
                     timingTrace.mark(.firstUsefulContent)
-                    await partialHandler(model.id, .text(aggregatedText))
+                    partialHandler(model.id, .text(aggregatedText))
                 }
             }
             timingTrace.mark(.streamFinished)
@@ -572,11 +572,11 @@ public final class LLMService {
             timingTrace.recordOutputCharacters(cleanedText.count)
 
             if !parsed.sentencePairs.isEmpty {
-                await partialHandler(model.id, .sentencePairs(parsed.sentencePairs))
+                partialHandler(model.id, .sentencePairs(parsed.sentencePairs))
             } else {
-                try await emitFallbackText(cleanedText, publish: { snapshot in
-                    partialHandler(model.id, .text(snapshot))
-                })
+                try Task.checkCancellation()
+                partialHandler(model.id, .text(cleanedText))
+                try Task.checkCancellation()
             }
 
             return ModelExecutionResult(

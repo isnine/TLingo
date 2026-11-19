@@ -4,6 +4,7 @@ owner: ios
 verified_commit: e6749b0ba0c80b9e59f1ea0f2d22dc82709fa7c1
 review_triggers:
   - DebugLaunchTestHarness changes
+  - DebugStreamingRenderView changes
   - TranslationTimingTrace stage changes
   - ActionConfig structuredOutput or OutputType changes
   - LLMService request preparation changes
@@ -88,7 +89,34 @@ xcrun devicectl device copy from --device <UDID> \
 
 Dedicated serial `translate`-only benchmark triggered via `SIMCTL_CHILD_TLINGO_TEXT_BENCHMARK=1`; see [`../verification.md`](../verification.md) for usage. Uses the same `TranslationTimingTrace` and `TranslationFrameProbe` instrumentation.
 
-### 3. Live Network Inspector & Instruments Signposts
+### 3. Offline Streaming Render Stress (`DebugStreamingRenderView`, iOS)
+
+Launch with `-TLingoDebugRenderStreams 30` to replay synchronized model output through the production update coalescers and result panel, without model discovery, HTTP/SSE decoding, provider calls, or History writes. The stream count defaults to 30 and accepts 1–30. Add `-TLingoDebugRenderExpanded` to expand all results before the first batch. Use `-TLingoDebugRenderFixture text|markdown|pairs` (default: `text`) to select the output.
+
+```bash
+xcrun devicectl device process launch --device <UDID> --terminate-existing com.zanderwang.AITranslator -- \
+  -TLingoDebugRenderStreams 30 -TLingoDebugRenderExpanded -TLingoDebugRenderFixture text
+xcrun devicectl device copy from --device <UDID> \
+  --domain-type appDataContainer --domain-identifier com.zanderwang.AITranslator \
+  --source Documents/debug-streaming-render.json --destination /tmp/tlingo-render.json
+```
+
+The scenario starts automatically and can be repeated in place with **Replay**. Each run delivers 180 synchronized batches at 20 ms intervals, then completes all runs together. Copy the report after the app shows the result. It includes first-batch delivery spread, sample count, P95/max display-link intervals, and estimated missed 60 Hz callbacks for the first 250 ms, the remaining stream, and the 500 ms completion window. Keep the app in the foreground. These are frame-pacing proxies, not GPU-present counts; the harness does not measure network latency, input responsiveness, or scrolling. Compare the same fixture, panel state, build configuration, device and refresh rate across runs.
+
+#### iPhone 15 Plus Debug A/B
+
+Runs started in fresh processes. The baseline uses the same offline harness and the previous eager comparison stack. The optimized iOS comparison stack loads rows lazily and skips a redundant pending partial when committing the final result.
+
+| Fixture | Layout | Streaming P95 before → after | Estimated missed callbacks during streaming |
+| --- | --- | --- | --- |
+| 30 plain-text streams | Expanded | 806–824 ms → 16.6 ms | 146–149 → 0 |
+| 30 plain-text streams | Collapsed | 16.6 ms → 16.6 ms | 0 → 0 |
+| 30 Markdown streams | Expanded | 834 ms → 16.6 ms | 145 → 0 |
+| 30 sentence-pair streams | Expanded | 426 ms → 16.6–30.5 ms | 151 → 0–17 |
+
+The expanded plain-text baseline had only 5–6 streaming callbacks in its sample window; the optimized runs had 200. Plain-text expansion still had a 65–75 ms maximum interval in the first 250 ms. Sentence-pair completion peaked at 65–130 ms in two runs. These are stationary Debug measurements, not Release or scroll benchmarks.
+
+### 4. Live Network Inspector & Instruments Signposts
 
 - **OSSignposter**: `PerformanceSignposts.signposter` emits `Translation Run` intervals (`submitted -> resultApplied`) and `Translation Stage` events (`subsystem == "com.zanderwang.AITranslator"`).
 - **Network Inspector (`DebugNetworkProtocol`)**: Captures `URLSessionTaskTransactionMetrics` (`domainLookup`, `connect`, `secureConnection`, `request`, `response`, `isReusedConnection`, `networkProtocolName`) correlated by `X-Request-ID`.

@@ -278,6 +278,7 @@ public struct HomeView: View {
         onPremiumRequired: (() -> Void)? = nil,
         viewModel: HomeViewModel? = nil,
         showsOnlyResults: Bool = false,
+        initiallyExpandsResults: Bool = false,
         onResultReplace: ((String) -> Void)? = nil,
         onResultConversation: ((ConversationSession) -> Void)? = nil
     ) {
@@ -292,6 +293,7 @@ public struct HomeView: View {
         self.onShowSidebarTap = onShowSidebarTap
         self.onRealtimeTap = onRealtimeTap
         self.onPremiumRequired = onPremiumRequired
+        _isComparingResults = State(initialValue: initiallyExpandsResults)
         // A host-owned model keeps input and results across layout switches.
         _viewModel = StateObject(wrappedValue: viewModel ?? HomeViewModel())
         #if os(iOS)

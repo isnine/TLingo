@@ -773,7 +773,7 @@
                 }
 
                 private func startDisplayLinkIfNeeded() {
-                    guard hasContent, !hasReportedCurrentState, window != nil, link == nil else { return }
+                    guard trace != nil, hasContent, !hasReportedCurrentState, window != nil, link == nil else { return }
                     let link = CADisplayLink(target: self, selector: #selector(tick))
                     link.add(to: .main, forMode: .common)
                     self.link = link

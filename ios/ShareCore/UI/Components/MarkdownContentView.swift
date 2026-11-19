@@ -25,8 +25,13 @@ public struct MarkdownContentView: View {
     @ThemeColors private var colors: AppColorPalette
 
     @MainActor
-    private static var documentCache: [ParseKey: RenderableDocument] = [:]
+    private static var documentCache: [ParseKey: CachedDocument] = [:]
     private static let documentCacheLimit = 64
+
+    private struct CachedDocument {
+        let document: RenderableDocument
+        let isMarkdown: Bool
+    }
 
     public init(
         text: String,
@@ -51,26 +56,35 @@ public struct MarkdownContentView: View {
                 .textSelection(.enabled)
                 .contentDirectionAware(text)
         } else {
+            let key = parseKey
+            let config = renderConfig
+            let resolved = if let parsed, parsed.key == key {
+                ResolvedDocument(document: parsed.document, needsAsyncParse: false, shouldPinParsed: false)
+            } else {
+                Self.resolveCachedDocument(for: key, config: config)
+            }
             SwiftStreamingMarkdown.DocumentView(
-                renderableDocument: renderableDocument,
-                config: renderConfig
+                renderableDocument: resolved.document,
+                config: config
             )
-            .task(id: parseKey) {
-                let key = parseKey
-                guard Self.containsMarkdownSyntax(key.text) else {
-                    timingTrace?.mark(.markdownParsed)
-                    return
-                }
-                if let cached = Self.documentCache[key] {
-                    if parsed?.key != key {
-                        parsed = ParsedMarkdown(key: key, document: cached)
+            .task(id: key) {
+                if !resolved.needsAsyncParse {
+                    if resolved.shouldPinParsed, parsed?.key != key {
+                        parsed = ParsedMarkdown(key: key, document: resolved.document)
                     }
                     timingTrace?.mark(.markdownParsed)
                     return
                 }
-                let document = await MarkdownParserImpl().parse(text: key.text, config: renderConfig)
+                if let cached = Self.documentCache[key], cached.isMarkdown {
+                    if parsed?.key != key {
+                        parsed = ParsedMarkdown(key: key, document: cached.document)
+                    }
+                    timingTrace?.mark(.markdownParsed)
+                    return
+                }
+                let document = await MarkdownParserImpl().parse(text: key.text, config: config)
                 guard !Task.isCancelled else { return }
-                Self.storeCachedDocument(document, for: key)
+                Self.storeCachedDocument(document, for: key, isMarkdown: true)
                 parsed = ParsedMarkdown(key: key, document: document)
                 timingTrace?.mark(.markdownParsed)
             }
@@ -78,7 +92,7 @@ public struct MarkdownContentView: View {
         }
     }
 
-    private struct ParseKey: Hashable {
+    struct ParseKey: Hashable {
         let text: String
         let preset: MarkdownContentPreset
         let textColor: Color
@@ -92,6 +106,12 @@ public struct MarkdownContentView: View {
         let document: RenderableDocument
     }
 
+    struct ResolvedDocument {
+        let document: RenderableDocument
+        let needsAsyncParse: Bool
+        let shouldPinParsed: Bool
+    }
+
     private var parseKey: ParseKey {
         ParseKey(
             text: text.isEmpty ? " " : text,
@@ -103,24 +123,32 @@ public struct MarkdownContentView: View {
         )
     }
 
-    /// Parsing is async, so show styled plain text (or cached document) immediately instead of re-parsing plain strings.
-    private var renderableDocument: RenderableDocument {
-        let key = parseKey
-        if let parsed, parsed.key == key {
-            return parsed.document
+    @MainActor
+    static func resolveCachedDocument(
+        for key: ParseKey,
+        config: MarkdownRenderConfig
+    ) -> ResolvedDocument {
+        if let cached = documentCache[key] {
+            return ResolvedDocument(
+                document: cached.document,
+                needsAsyncParse: false,
+                shouldPinParsed: cached.isMarkdown
+            )
         }
-        if let cached = Self.documentCache[key] {
-            return cached
+        let plainDocument = RenderableDocument(plainText: key.text, config: config)
+        if !containsMarkdownSyntax(key.text) {
+            storeCachedDocument(plainDocument, for: key, isMarkdown: false)
+            return ResolvedDocument(document: plainDocument, needsAsyncParse: false, shouldPinParsed: false)
         }
-        return RenderableDocument(plainText: key.text, config: renderConfig)
+        return ResolvedDocument(document: plainDocument, needsAsyncParse: true, shouldPinParsed: false)
     }
 
     @MainActor
-    private static func storeCachedDocument(_ document: RenderableDocument, for key: ParseKey) {
+    static func storeCachedDocument(_ document: RenderableDocument, for key: ParseKey, isMarkdown: Bool) {
         if documentCache.count >= documentCacheLimit {
             documentCache.removeAll(keepingCapacity: true)
         }
-        documentCache[key] = document
+        documentCache[key] = CachedDocument(document: document, isMarkdown: isMarkdown)
     }
 
     private static let markdownMarkerSet = CharacterSet(charactersIn: "*#_`[]~>|\\")
@@ -135,10 +163,10 @@ public struct MarkdownContentView: View {
         if text.contains("---") {
             return true
         }
-        if text.range(of: #"(?m)^\s*\d+\.\s"#, options: .regularExpression) != nil {
-            return true
+        guard text.utf8.contains(0x2E) else {
+            return false
         }
-        return false
+        return text.range(of: #"(?m)^\s*\d+\.\s"#, options: .regularExpression) != nil
     }
 
     private var resolvedTextColor: Color {

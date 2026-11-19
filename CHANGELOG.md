@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.7] - 2026-11-18
+
+### Added
+
+- [Both] Show original and translated live captions in separate panes
+
+### Improved
+
+- [Both] Show the first part of a text translation sooner and keep results updating smoothly when several models stream at once
+- [iOS] Keep expanded model comparisons responsive while results are streaming
+- [Both] Keep long live caption sessions responsive and make large history transcripts smoother to scroll
+
+### Fixed
+
+- [iOS] Restore the Live Translate button in narrow iPad Split View and keep chats open when resizing
+- [Mac] Keep prompt editing stable while composing with an input method
+
 ## [5.7.6] - 2026-11-14
 
 ### Added

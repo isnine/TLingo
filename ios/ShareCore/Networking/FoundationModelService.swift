@@ -172,7 +172,7 @@ public final class FoundationModelService: Sendable {
         images: [ImageAttachment],
         targetLanguageDescriptor: String,
         sourceLanguageDescriptor: String,
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)?
     ) async -> ModelExecutionResult {
         let start = Date()
         do {
@@ -311,14 +311,14 @@ public final class FoundationModelService: Sendable {
         prompt: String,
         modelID: String,
         start: Date,
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
         var finalText = ""
         for try await snapshot in session.streamResponse(to: prompt) {
             try Task.checkCancellation()
             finalText = snapshot.content
             if let partialHandler {
-                await partialHandler(modelID, .text(finalText))
+                partialHandler(modelID, .text(finalText))
             }
         }
 
@@ -338,7 +338,7 @@ public final class FoundationModelService: Sendable {
         prompt: String,
         modelID: String,
         start: Date,
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
         var finalPairs: [SentencePair] = []
         for try await snapshot in session.streamResponse(to: prompt, generating: GeneratedSentencePairs.self) {
@@ -353,7 +353,7 @@ public final class FoundationModelService: Sendable {
                 return SentencePair(original: original, translation: translation)
             } ?? []
             if let partialHandler, !finalPairs.isEmpty {
-                await partialHandler(modelID, .sentencePairs(finalPairs))
+                partialHandler(modelID, .sentencePairs(finalPairs))
             }
         }
 
@@ -372,7 +372,7 @@ public final class FoundationModelService: Sendable {
         prompt: String,
         modelID: String,
         start: Date,
-        partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
+        partialHandler: (@Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
         var revisedText = ""
         var additionalText = ""
@@ -383,7 +383,7 @@ public final class FoundationModelService: Sendable {
             if let partialHandler {
                 let text = [revisedText, additionalText].filter { !$0.isEmpty }.joined(separator: "\n\n")
                 if !text.isEmpty {
-                    await partialHandler(modelID, .text(text))
+                    partialHandler(modelID, .text(text))
                 }
             }
         }

@@ -41,6 +41,9 @@ struct AITranslatorApp: App {
 
     init() {
         _ = TranslationTimingTrace.processStartedAt
+        #if DEBUG && os(iOS)
+            if DebugStreamingRenderView.isEnabled { return }
+        #endif
         MetricKitReporter.shared.start()
         // Keep automatic reporting out of XCTest and screenshot/UI-test launches.
         let environment = ProcessInfo.processInfo.environment
@@ -89,7 +92,9 @@ struct AITranslatorApp: App {
                 MainWindowContent()
             #else
                 #if DEBUG
-                    if ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK"] == "1" {
+                    if DebugStreamingRenderView.isEnabled {
+                        DebugStreamingRenderView()
+                    } else if ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK"] == "1" {
                         TextTranslationBenchmarkView()
                     } else {
                         RootTabView()
