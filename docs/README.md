@@ -21,6 +21,7 @@ review_triggers:
 
 - [`verification.md`](./verification.md)：按变更范围选择构建和测试。
 - [`ios-agent-workflow.md`](./ios-agent-workflow.md)：iOS App 编译、运行、交互和运行时验证流程。
+- [`perf/text-pipeline-latency.md`](./perf/text-pipeline-latency.md)：启动参数压测系统、全链路耗时埋点与真机基准数据。
 
 ## 领域文档
 
