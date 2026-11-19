@@ -6,31 +6,42 @@
 import Foundation
 import Security
 
-struct UsageSubject {
-    let type: String
-    let id: String
-    let label: String
+public struct UsageSubject: Sendable, Equatable {
+    public let type: String
+    public let id: String
+    public let label: String
+
+    public init(type: String, id: String, label: String) {
+        self.type = type
+        self.id = id
+        self.label = label
+    }
 }
 
-enum UsageSubjectProvider {
+public enum UsageSubjectProvider {
+    @MainActor
+    public static func currentMainActor() -> UsageSubject? {
+        if StoreManager.shared.isPremium,
+           let appStoreSubjectID = StoreManager.shared.usageAppStoreSubjectID
+        {
+            return UsageSubject(
+                type: "app_store",
+                id: appStoreSubjectID,
+                label: appStoreLabel(for: appStoreSubjectID)
+            )
+        }
+
+        guard let deviceID = DeviceIdentifierStore.current() else { return nil }
+        return UsageSubject(
+            type: "device",
+            id: "device:\(deviceID)",
+            label: "Device \(deviceID.prefix(8))"
+        )
+    }
+
     static func current() async -> UsageSubject? {
         await MainActor.run {
-            if StoreManager.shared.isPremium,
-               let appStoreSubjectID = StoreManager.shared.usageAppStoreSubjectID
-            {
-                return UsageSubject(
-                    type: "app_store",
-                    id: appStoreSubjectID,
-                    label: appStoreLabel(for: appStoreSubjectID)
-                )
-            }
-
-            guard let deviceID = DeviceIdentifierStore.current() else { return nil }
-            return UsageSubject(
-                type: "device",
-                id: "device:\(deviceID)",
-                label: "Device \(deviceID.prefix(8))"
-            )
+            currentMainActor()
         }
     }
 
@@ -51,7 +62,9 @@ enum DeviceIdentifierStore {
     private static var cached: String?
 
     static func current() -> String? {
-        if let cached { return cached }
+        if let cached {
+            return cached
+        }
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

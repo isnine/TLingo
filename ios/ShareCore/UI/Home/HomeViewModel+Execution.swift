@@ -428,6 +428,7 @@ extension HomeViewModel {
             onboardingTrial: !onboardingTrialModels.isEmpty,
             refreshEntitlement: context.refreshEntitlement,
             cachedIsPremium: context.cachedIsPremium,
+            cachedUsageSubject: context.usageSubject,
             timingTraces: Dictionary(uniqueKeysWithValues: modelRuns.compactMap { run in
                 run.timingTrace.map { (run.id, $0) }
             }),
@@ -693,6 +694,7 @@ extension HomeViewModel {
                     else { return }
                     existing.diff = diff
                     self.modelRuns[currentIndex].status = .success(existing)
+                    self.modelRuns[currentIndex].timingTrace?.mark(.diffComputed)
                 }
             }
 

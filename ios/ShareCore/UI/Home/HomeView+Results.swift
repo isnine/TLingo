@@ -101,6 +101,9 @@ extension HomeView {
                 heldResultHeights[runID] = nil
             }
         }
+        #if DEBUG && os(iOS)
+        .background(TranslationFrameProbe(run: run))
+        #endif
 
         #if os(iOS)
             if isSuccessfulRun(run) {
@@ -618,6 +621,9 @@ extension HomeView {
             if isSuccessfulRun(run) {
                 cardContent
                     .background(providerResultCardBackground)
+                #if DEBUG
+                    .background(TranslationFrameProbe(run: run))
+                #endif
                     .contentShape(Rectangle())
                     .gesture(
                         TapGesture()
@@ -633,6 +639,9 @@ extension HomeView {
             } else {
                 cardContent
                     .background(providerResultCardBackground)
+                #if DEBUG
+                    .background(TranslationFrameProbe(run: run))
+                #endif
             }
         #else
             cardContent
@@ -1095,7 +1104,7 @@ extension HomeView {
                     StyledDiffView(diff: diff)
                 } else {
                     let mainText = !result.supplementalTexts.isEmpty ? result.copyText : result.text
-                    MarkdownContentView(text: mainText, preset: textPreset)
+                    MarkdownContentView(text: mainText, preset: textPreset, timingTrace: run.timingTrace)
                 }
 
                 // Suggested action chips
@@ -1115,7 +1124,7 @@ extension HomeView {
                     Divider()
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(Array(result.supplementalTexts.enumerated()), id: \.offset) { entry in
-                            CompactMarkdownContent(text: entry.element)
+                            CompactMarkdownContent(text: entry.element, timingTrace: run.timingTrace)
                         }
                     }
                 }

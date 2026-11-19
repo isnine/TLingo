@@ -9,7 +9,10 @@ import Foundation
 
 /// Represents a single sentence pair with original and translated text.
 public struct SentencePair: Codable, Hashable, Identifiable, Sendable {
-    public var id: String { original + translation }
+    public var id: String {
+        original + translation
+    }
+
     public let original: String
     public let translation: String
 
@@ -48,6 +51,13 @@ public struct ActionConfig: Identifiable, Hashable, Codable, Sendable {
             self.primaryField = primaryField
             self.additionalFields = additionalFields
             self.jsonSchema = jsonSchema
+        }
+
+        public var validatedRawJSONSchema: String? {
+            guard jsonSchemaObject() != nil else {
+                return nil
+            }
+            return jsonSchema.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         public func responseFormatPayload() -> [String: Any]? {

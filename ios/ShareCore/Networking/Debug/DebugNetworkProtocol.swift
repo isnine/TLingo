@@ -102,6 +102,45 @@ public final class DebugNetworkProtocol: URLProtocol, URLSessionDataDelegate {
         client?.urlProtocol(self, didLoad: data)
     }
 
+    public func urlSession(_: URLSession, task _: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        guard let requestID = request.value(forHTTPHeaderField: "X-Request-ID"),
+              let transaction = metrics.transactionMetrics.last(where: { $0.resourceFetchType == .networkLoad })
+              ?? metrics.transactionMetrics.last
+        else { return }
+
+        let tcpConnectMs: Double?
+        let tlsHandshakeMs: Double?
+        if let secureStart = transaction.secureConnectionStartDate {
+            tcpConnectMs = Self.intervalMs(from: transaction.connectStartDate, to: secureStart)
+            tlsHandshakeMs = Self.intervalMs(
+                from: secureStart,
+                to: transaction.secureConnectionEndDate ?? transaction.connectEndDate
+            )
+        } else {
+            tcpConnectMs = Self.intervalMs(from: transaction.connectStartDate, to: transaction.connectEndDate)
+            tlsHandshakeMs = nil
+        }
+
+        let timing = TranslationTimingTrace.NetworkTransactionTiming(
+            networkProtocolName: transaction.networkProtocolName,
+            isReusedConnection: transaction.isReusedConnection,
+            dnsLookupMs: Self.intervalMs(from: transaction.domainLookupStartDate, to: transaction.domainLookupEndDate),
+            tcpConnectMs: tcpConnectMs,
+            tlsHandshakeMs: tlsHandshakeMs,
+            requestSendMs: Self.intervalMs(from: transaction.requestStartDate, to: transaction.requestEndDate),
+            responseWaitMs: Self.intervalMs(from: transaction.requestEndDate, to: transaction.responseStartDate),
+            responseReceiveMs: Self.intervalMs(from: transaction.responseStartDate, to: transaction.responseEndDate),
+            totalTransactionMs: Self.intervalMs(from: transaction.fetchStartDate, to: transaction.responseEndDate)
+        )
+        TranslationTimingTrace.recordNetworkTransaction(timing, forRequestID: requestID)
+    }
+
+    private static func intervalMs(from start: Date?, to end: Date?) -> Double? {
+        guard let start, let end else { return nil }
+        let milliseconds = end.timeIntervalSince(start) * 1000
+        return milliseconds.isFinite && milliseconds >= 0 ? milliseconds : nil
+    }
+
     public func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         Self.router.unregister(task)
         if let error {
@@ -179,6 +218,10 @@ private final class InnerTaskRouter: NSObject, URLSessionDataDelegate, @unchecke
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         owner(of: dataTask)?.urlSession(session, dataTask: dataTask, didReceive: data)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        owner(of: task)?.urlSession(session, task: task, didFinishCollecting: metrics)
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {

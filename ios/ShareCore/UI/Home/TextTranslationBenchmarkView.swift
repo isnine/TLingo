@@ -36,7 +36,7 @@
                         ProviderResultCardView(
                             run: run, showModelName: true, viewModel: viewModel, onCopy: { _ in }
                         )
-                        .background(FrameProbe(run: run))
+                        .background(TranslationFrameProbe(run: run))
                     }
                 }
                 .padding()
@@ -74,12 +74,24 @@
             guard (1 ... 10).contains(repeats) else { throw BenchmarkError.invalidRepeats }
             let selectedIDs = ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK_MODELS"]
                 .map { Set($0.split(separator: ",").map(String.init)) }
-            for model in matrix where selectedIDs?.contains(model.id) ?? true {
-                for inputIndex in Self.inputs.indices {
-                    for repetition in 1 ... (inputIndex == 0 ? repeats : 1) {
-                        try await records.append(measure(model: model, inputIndex: inputIndex, repetition: repetition))
-                        try encoder.encode(records).write(to: output.appendingPathComponent("results.json"), options: .atomic)
-                        try await Task.sleep(for: .milliseconds(300))
+            let actionIDs = (ProcessInfo.processInfo.environment["TLINGO_TEXT_BENCHMARK_ACTIONS"] ?? "")
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            let resolvedActionIDs = actionIDs.isEmpty ? [BuiltInActionCatalog.translateActionID] : actionIDs
+            for actionID in resolvedActionIDs {
+                for model in matrix where selectedIDs?.contains(model.id) ?? true {
+                    for inputIndex in Self.inputs.indices {
+                        for repetition in 1 ... (inputIndex == 0 ? repeats : 1) {
+                            try await records.append(
+                                measure(actionID: actionID, model: model, inputIndex: inputIndex, repetition: repetition)
+                            )
+                            try encoder.encode(records).write(
+                                to: output.appendingPathComponent("results.json"),
+                                options: .atomic
+                            )
+                            try await Task.sleep(for: .milliseconds(300))
+                        }
                     }
                 }
             }
@@ -87,10 +99,14 @@
             try Data(progress.utf8).write(to: output.appendingPathComponent("complete.txt"), options: .atomic)
         }
 
-        private func measure(model: ModelConfig, inputIndex: Int, repetition: Int) async throws -> Record {
-            progress = "\(model.displayName) / input \(inputIndex + 1) / run \(repetition)"
+        private func measure(actionID: String, model: ModelConfig, inputIndex: Int, repetition: Int) async throws -> Record {
+            progress = "[\(actionID)] \(model.displayName) / input \(inputIndex + 1) / run \(repetition)"
             preferences.setEnabledModelIDs([model.id])
-            viewModel.selectedActionID = BuiltInActionCatalog.translateActionID
+            preferences.setDefaultsToSentencePairs(actionID == BuiltInActionCatalog.sentenceTranslateActionID)
+            let effectiveActionID = actionID == BuiltInActionCatalog.sentenceTranslateActionID
+                ? BuiltInActionCatalog.translateActionID
+                : actionID
+            viewModel.selectedActionID = effectiveActionID
             viewModel.inputText = ""
             viewModel.inputText = Self.inputs[inputIndex]
             viewModel.performSelectedAction()
@@ -105,6 +121,7 @@
             try await Task.sleep(for: .milliseconds(200))
             let run = viewModel.modelRuns.first { $0.id == model.id }
             var record = Record(
+                actionID: actionID,
                 modelID: model.id, inputIndex: inputIndex, repetition: repetition,
                 status: "unavailable", timing: run?.timingTrace?.snapshot()
             )
@@ -126,6 +143,7 @@
         }
 
         private struct Record: Codable {
+            let actionID: String
             let modelID: String
             let inputIndex: Int
             let repetition: Int
@@ -157,76 +175,5 @@
             using the same input and language pair before deciding which changes are worth making.
             """,
         ]
-    }
-
-    private struct FrameProbe: UIViewRepresentable {
-        let run: HomeViewModel.ModelRunViewState
-
-        func makeUIView(context _: Context) -> ProbeView {
-            ProbeView()
-        }
-
-        func updateUIView(_ view: ProbeView, context _: Context) {
-            let hasContent: Bool
-            let isFinal: Bool
-            switch run.status {
-            case let .streaming(text, _):
-                hasContent = !text.isEmpty
-                isFinal = false
-            case let .streamingSentencePairs(pairs, _):
-                hasContent = !pairs.isEmpty
-                isFinal = false
-            case .success:
-                hasContent = true
-                isFinal = true
-            default:
-                hasContent = false
-                isFinal = false
-            }
-            view.observe(trace: run.timingTrace, hasContent: hasContent, isFinal: isFinal)
-        }
-
-        final class ProbeView: UIView {
-            private var link: CADisplayLink?
-            private var trace: TranslationTimingTrace?
-            private var hasContent = false
-            private var isFinal = false
-            private var frames = 0
-
-            func observe(trace: TranslationTimingTrace?, hasContent: Bool, isFinal: Bool) {
-                guard self.trace !== trace || self.hasContent != hasContent || self.isFinal != isFinal else { return }
-                self.trace = trace
-                self.hasContent = hasContent
-                self.isFinal = isFinal
-                frames = 0
-                link?.invalidate()
-                link = nil
-                guard hasContent else { return }
-                let link = CADisplayLink(target: self, selector: #selector(tick))
-                link.add(to: .main, forMode: .common)
-                self.link = link
-            }
-
-            @objc private func tick() {
-                guard window != nil else { return }
-                frames += 1
-                // A second display callback brackets a committed UI update, not pixel visibility.
-                guard frames >= 2 else { return }
-                trace?.mark(.firstUIFrame)
-                if isFinal {
-                    trace?.mark(.finalUIFrame)
-                }
-                link?.invalidate()
-                link = nil
-            }
-
-            override func didMoveToWindow() {
-                super.didMoveToWindow()
-                if window == nil {
-                    link?.invalidate()
-                    link = nil
-                }
-            }
-        }
     }
 #endif

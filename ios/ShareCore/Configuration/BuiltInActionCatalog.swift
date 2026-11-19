@@ -144,6 +144,7 @@ enum BuiltInActionCatalog {
                 "Explanation language: {appLanguage}",
                 "",
                 "Rules:",
+                "- Output revised_text first, before additional_text.",
                 "- Put the corrected version in revised_text.",
                 "- Preserve the input language in revised_text.",
                 "- Write ALL of additional_text (headings, issue explanations, and commentary) in {appLanguage}, " +

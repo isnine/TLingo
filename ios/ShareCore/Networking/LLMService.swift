@@ -137,11 +137,23 @@ public final class LLMService {
         onboardingTrial: Bool = false,
         refreshEntitlement: Bool = true,
         cachedIsPremium: Bool? = nil,
+        cachedUsageSubject: UsageSubject? = nil,
         timingTraces: [String: TranslationTimingTrace] = [:],
         partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)? = nil,
         completionHandler: (@MainActor @Sendable (ModelExecutionResult) -> Void)? = nil
     ) async -> [ModelExecutionResult] {
         let hasImages = !images.isEmpty
+        let resolvedIsPremium = onboardingTrial
+            ? false
+            : await hasPremiumEntitlement(
+                refresh: refreshEntitlement,
+                cachedIsPremium: cachedIsPremium
+            )
+        let resolvedUsageSubject: UsageSubject? = if let cachedUsageSubject {
+            cachedUsageSubject
+        } else {
+            await UsageSubjectProvider.current()
+        }
         return await withTaskGroup(of: ModelExecutionResult?.self) { group in
             for model in models {
                 group.addTask { [weak self] in
@@ -179,8 +191,8 @@ public final class LLMService {
                             targetLanguageDescriptor: targetLanguageDescriptor,
                             sourceLanguageDescriptor: sourceLanguageDescriptor,
                             onboardingTrial: onboardingTrial,
-                            refreshEntitlement: refreshEntitlement,
-                            cachedIsPremium: cachedIsPremium,
+                            isPremium: resolvedIsPremium,
+                            usageSubject: resolvedUsageSubject,
                             timingTrace: timingTraces[model.id] ?? TranslationTimingTrace(),
                             partialHandler: partialHandler
                         )
@@ -218,8 +230,8 @@ public final class LLMService {
         targetLanguageDescriptor: String,
         sourceLanguageDescriptor: String = "",
         onboardingTrial: Bool = false,
-        refreshEntitlement: Bool = true,
-        cachedIsPremium: Bool? = nil,
+        isPremium: Bool,
+        usageSubject: UsageSubject?,
         timingTrace: TranslationTimingTrace,
         partialHandler: (@MainActor @Sendable (String, StreamingUpdate) -> Void)?
     ) async throws -> ModelExecutionResult {
@@ -251,13 +263,10 @@ public final class LLMService {
                 // premium. Skip premium proof so the trial path is unambiguous in logs.
                 let deviceID = try await trialDeviceID(urlSession)
                 request.setValue(deviceID, forHTTPHeaderField: "X-Onboarding-Device")
-            } else if await hasPremiumEntitlement(
-                refresh: refreshEntitlement,
-                cachedIsPremium: cachedIsPremium
-            ) {
+            } else if isPremium {
                 CloudAuthHelper.applyPremiumProof(to: &request)
             }
-            await applyUsageSubjectHeaders(to: &request)
+            applyUsageSubject(usageSubject, to: &request)
         }
 
         let structuredOutputConfig = action.structuredOutput
@@ -291,30 +300,24 @@ public final class LLMService {
             let encoder = JSONEncoder()
             encoder.outputFormatting = []
             let decoder = JSONDecoder.llmDecoder
+            let payload = LLMRequestPayload(
+                messages: messages,
+                stream: enableStreaming ? true : nil,
+                reasoningEffort: requestTuning.reasoningEffort
+            )
+            let baseData = try encoder.encode(payload)
             let payloadData: Data
-
-            if let structuredOutputConfig,
-               let responseFormat = structuredOutputConfig.responseFormatPayload()
+            if let rawSchema = structuredOutputConfig?.validatedRawJSONSchema,
+               baseData.last == 0x7D
             {
-                // For structured output, we must use JSONSerialization to include response_format.
-                let messageDicts: [[String: Any]] = messages.map { $0.toDictionary() }
-
-                var body: [String: Any] = [
-                    "messages": messageDicts,
-                    "stream": enableStreaming,
-                ]
-                if let reasoningEffort = requestTuning.reasoningEffort {
-                    body["reasoning_effort"] = reasoningEffort
-                }
-                body["response_format"] = responseFormat
-                payloadData = try JSONSerialization.data(withJSONObject: body, options: [])
+                // Preserve exact schema property order (e.g. revised_text before additional_text).
+                var spliced = Data(baseData.dropLast())
+                spliced.append(Data(#","response_format":{"type":"json_schema","json_schema":"#.utf8))
+                spliced.append(Data(rawSchema.utf8))
+                spliced.append(Data("}}".utf8))
+                payloadData = spliced
             } else {
-                let payload = LLMRequestPayload(
-                    messages: messages,
-                    stream: enableStreaming ? true : nil,
-                    reasoningEffort: requestTuning.reasoningEffort
-                )
-                payloadData = try encoder.encode(payload)
+                payloadData = baseData
             }
 
             request.httpBody = try CustomEndpointService.requestBody(payloadData, for: model)
@@ -346,7 +349,7 @@ public final class LLMService {
                 let (data, response) = try await urlSession.data(for: request)
 
                 let httpResponse = try response.asHTTP(or: URLError(.badServerResponse))
-                timingTrace.recordResponseMetadata(httpResponse)
+                timingTrace.receiveHeaders(httpResponse)
                 timingTrace.mark(.streamFinished)
 
                 let responseString = String(data: data, encoding: .utf8) ?? ""
@@ -363,6 +366,9 @@ public final class LLMService {
                 let trimmed = parsed.message.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { throw LLMServiceError.emptyContent }
                 let (cleanedText, suggestions) = Self.extractSuggestedActions(from: trimmed)
+                timingTrace.receiveContent()
+                timingTrace.mark(.firstUsefulContent)
+                timingTrace.recordOutputCharacters(cleanedText.count)
                 let duration = Date().timeIntervalSince(start)
                 let upstreamTTFB = extractUpstreamTTFB(from: httpResponse)
                 return ModelExecutionResult(
@@ -494,6 +500,7 @@ public final class LLMService {
                 let (cleanedText, suggestions) = Self.extractSuggestedActions(
                     from: combinedText.isEmpty ? finalText : combinedText
                 )
+                timingTrace.recordOutputCharacters(cleanedText.count)
                 let duration = Date().timeIntervalSince(start)
                 let upstream = upstreamTTFBMs.map { $0 / 1000.0 }
                 return ModelExecutionResult(
@@ -510,6 +517,7 @@ public final class LLMService {
             if let config = structuredOutputConfig {
                 if let parsed = parseStructuredOutputFromJSON(finalText, config: config) {
                     let (cleanedMessage, suggestions) = Self.extractSuggestedActions(from: parsed.message)
+                    timingTrace.recordOutputCharacters(cleanedMessage.count)
                     let duration = Date().timeIntervalSince(start)
                     let upstream = upstreamTTFBMs.map { $0 / 1000.0 }
                     return ModelExecutionResult(
@@ -531,6 +539,7 @@ public final class LLMService {
             }
 
             let (cleanedFinalText, suggestions) = Self.extractSuggestedActions(from: finalText)
+            timingTrace.recordOutputCharacters(cleanedFinalText.count)
             let duration = Date().timeIntervalSince(start)
             let upstream = upstreamTTFBMs.map { $0 / 1000.0 }
             return ModelExecutionResult(
@@ -558,6 +567,9 @@ public final class LLMService {
             guard !trimmed.isEmpty else { throw LLMServiceError.emptyContent }
 
             let (cleanedText, suggestions) = Self.extractSuggestedActions(from: trimmed)
+            timingTrace.receiveContent()
+            timingTrace.mark(.firstUsefulContent)
+            timingTrace.recordOutputCharacters(cleanedText.count)
 
             if !parsed.sentencePairs.isEmpty {
                 await partialHandler(model.id, .sentencePairs(parsed.sentencePairs))

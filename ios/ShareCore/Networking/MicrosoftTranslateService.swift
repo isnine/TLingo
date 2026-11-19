@@ -63,8 +63,9 @@ public final class MicrosoftTranslateService: Sendable {
             request.httpBody = try JSONEncoder().encode(body)
             timingTrace?.mark(.requestPrepared)
             let (data, response) = try await session.data(for: request)
-            timingTrace?.mark(.streamFinished)
             let http = try response.asHTTP(or: URLError(.badServerResponse))
+            timingTrace?.receiveHeaders(http)
+            timingTrace?.mark(.streamFinished)
             guard http.statusCode == 200 else {
                 let bodyText = String(data: data, encoding: .utf8)
                 throw ModelsServiceError.httpError(statusCode: http.statusCode, body: bodyText)
@@ -73,9 +74,14 @@ public final class MicrosoftTranslateService: Sendable {
             guard !translated.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw URLError(.cannotParseResponse)
             }
+            timingTrace?.receiveContent()
+            timingTrace?.mark(.firstUsefulContent)
+            timingTrace?.recordOutputCharacters(translated.count)
             return ModelExecutionResult(
                 modelID: ModelConfig.microsoftTranslateID,
-                duration: Date().timeIntervalSince(start), response: .success(translated)
+                duration: Date().timeIntervalSince(start), response: .success(translated),
+                upstreamTTFB: timingTrace?.snapshot().upstreamHeaderMilliseconds.map { $0 / 1000.0 },
+                clientToAzureLatency: timingTrace?.clientHeaderOverhead
             )
         } catch {
             return ModelExecutionResult(

@@ -258,7 +258,7 @@ struct ResultContentView: View {
                 StyledDiffView(diff: diff)
             } else {
                 let mainText = !supplementalTexts.isEmpty ? copyText : text
-                CompactMarkdownContent(text: mainText)
+                CompactMarkdownContent(text: mainText, timingTrace: run.timingTrace)
             }
 
             // Suggested action chips
@@ -290,7 +290,7 @@ struct ResultContentView: View {
                 Divider()
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(supplementalTexts.enumerated()), id: \.offset) { entry in
-                        CompactMarkdownContent(text: entry.element)
+                        CompactMarkdownContent(text: entry.element, timingTrace: run.timingTrace)
                     }
                 }
             }

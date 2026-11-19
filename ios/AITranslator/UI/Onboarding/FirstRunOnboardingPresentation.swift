@@ -73,6 +73,11 @@
         private func presentDefaultTranslationOnboardingIfNeeded() async -> Bool {
             let forceOnboarding = RootTabView.forceOnboarding
             guard !HomeViewModel.isSnapshotMode else { return false }
+            #if DEBUG
+                if DebugLaunchTestConfig.isEnabled {
+                    return false
+                }
+            #endif
             guard forceOnboarding || !entitlement.isPro else { return false }
             guard forceOnboarding || !preferences.hasSeenDefaultTranslationOnboarding else { return false }
 
@@ -88,6 +93,11 @@
         @MainActor
         private func presentFirstRunPaywallIfNeeded() async {
             guard !HomeViewModel.isSnapshotMode else { return }
+            #if DEBUG
+                if DebugLaunchTestConfig.isEnabled {
+                    return
+                }
+            #endif
             guard !entitlement.isPro else { return }
             guard preferences.hasSeenDefaultTranslationOnboarding else { return }
             guard !preferences.hasSeenIOSPaywallOnboarding else { return }

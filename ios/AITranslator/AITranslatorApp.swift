@@ -40,6 +40,7 @@ struct AITranslatorApp: App {
     #endif
 
     init() {
+        _ = TranslationTimingTrace.processStartedAt
         MetricKitReporter.shared.start()
         // Keep automatic reporting out of XCTest and screenshot/UI-test launches.
         let environment = ProcessInfo.processInfo.environment
@@ -71,6 +72,11 @@ struct AITranslatorApp: App {
     static var isAutomatedLaunch: Bool {
         let arguments = ProcessInfo.processInfo.arguments
         let environment = ProcessInfo.processInfo.environment
+        #if DEBUG
+            if DebugLaunchTestConfig.isEnabled {
+                return true
+            }
+        #endif
         return isSnapshotMode
             || arguments.contains("-SNAPSHOT_TAB")
             || arguments.contains("-TLINGO_UI_TESTING")

@@ -73,9 +73,7 @@ public enum OutputType: String, Codable, CaseIterable, Sendable {
             return .sentencePairs
         case .grammarCheck:
             return .grammarCheck
-        case .diff, .translate:
-            return .textResponse
-        case .markdown:
+        case .diff, .translate, .markdown:
             return nil
         }
     }

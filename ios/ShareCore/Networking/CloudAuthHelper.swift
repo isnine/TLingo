@@ -27,5 +27,8 @@ enum CloudAuthHelper {
         if let transactionJWS = StoreManager.premiumTransactionJWS {
             request.setValue(transactionJWS, forHTTPHeaderField: "X-AppStore-Transaction")
         }
+        #if DEBUG
+            request.setValue("1", forHTTPHeaderField: "X-TLingo-Debug-Premium")
+        #endif
     }
 }

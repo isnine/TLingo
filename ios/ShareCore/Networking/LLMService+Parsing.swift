@@ -748,11 +748,15 @@ extension LLMService {
         return await MainActor.run { Entitlement.shared.isPro }
     }
 
-    func applyUsageSubjectHeaders(to request: inout URLRequest) async {
-        guard let subject = await UsageSubjectProvider.current() else { return }
+    func applyUsageSubject(_ subject: UsageSubject?, to request: inout URLRequest) {
+        guard let subject else { return }
         request.setValue(subject.type, forHTTPHeaderField: "X-Usage-Subject-Type")
         request.setValue(subject.id, forHTTPHeaderField: "X-Usage-Subject-ID")
         request.setValue(subject.label, forHTTPHeaderField: "X-Usage-Subject-Label")
+    }
+
+    func applyUsageSubjectHeaders(to request: inout URLRequest) async {
+        applyUsageSubject(await UsageSubjectProvider.current(), to: &request)
     }
 
     func decodeConversationResponse(_ data: Data) throws -> ConversationResponse {

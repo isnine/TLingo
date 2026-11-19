@@ -752,7 +752,12 @@ extension HomeView {
             // `.task` runs after the first frame commits, so opening the history store doesn't delay launch.
             .task { refreshRecentTextRecords() }
             .onReceive(NotificationCenter.default.publisher(for: .translationRecordSaved)) { _ in
-                refreshRecentTextRecords()
+                recentRecordsRefreshTask?.cancel()
+                recentRecordsRefreshTask = Task {
+                    try? await Task.sleep(for: .milliseconds(250))
+                    guard !Task.isCancelled else { return }
+                    refreshRecentTextRecords()
+                }
             }
         }
 

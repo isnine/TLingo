@@ -390,7 +390,9 @@ public final class HomeViewModel: ObservableObject {
     /// target language for the current translation.
     var targetLanguageOverride: TargetLanguageOption?
     var currentTextTarget: TargetLanguageOption?
-    public var hasCurrentTextTarget: Bool { currentTextTarget != nil }
+    public var hasCurrentTextTarget: Bool {
+        currentTextTarget != nil
+    }
 
     /// Optional handler invoked on macOS to route Apple Translate requests through a
     /// real NSWindow (required for TranslationSession to work outside an NSPopover).
@@ -457,6 +459,7 @@ public final class HomeViewModel: ObservableObject {
         let showsDiff: Bool
         let refreshEntitlement: Bool
         let cachedIsPremium: Bool
+        var usageSubject: UsageSubject?
         /// History record for on-demand sentence-pair runs, kept apart from the main result.
         var sentencePairsHistoryRequestID = UUID()
         /// The input was answered as a dictionary entry, so sentence pairs do not apply.
@@ -472,7 +475,8 @@ public final class HomeViewModel: ObservableObject {
                 languages: languages,
                 showsDiff: action.showsDiff,
                 refreshEntitlement: refreshEntitlement,
-                cachedIsPremium: cachedIsPremium
+                cachedIsPremium: cachedIsPremium,
+                usageSubject: usageSubject
             )
             context.sentencePairsHistoryRequestID = sentencePairsHistoryRequestID
             context.isWordLookup = isWordLookup
@@ -964,25 +968,32 @@ public final class HomeViewModel: ObservableObject {
         setDetectedSourceLanguage(nil, reason: "Starting selected action request")
 
         let generation = UUID()
+        let resolvedLanguages = consumeResolvedTarget(for: text)
+        let languageResolvedAt = ContinuousClock.now
+        let usageSubject = UsageSubjectProvider.currentMainActor()
         var context = RequestContext(
             generation: generation,
             historyRequestID: generation,
             text: text,
             images: attachedImages,
             action: action,
-            languages: consumeResolvedTarget(for: text),
+            languages: resolvedLanguages,
             showsDiff: action.showsDiff,
             refreshEntitlement: refreshEntitlement,
-            cachedIsPremium: cachedIsPremium
+            cachedIsPremium: cachedIsPremium,
+            usageSubject: usageSubject
         )
         context.isWordLookup = isWordLookup
         let runTokens = Dictionary(uniqueKeysWithValues: modelsToUse.map { ($0.id, UUID()) })
         activeRequestContext = context
         requestGenerationTracker.begin(generation: generation, runTokens: runTokens)
 
-        modelRuns = modelsToUse.map {
-            ModelRunViewState(
-                model: $0, timingTrace: TranslationTimingTrace(startedAt: submittedAt),
+        modelRuns = modelsToUse.map { model in
+            let trace = TranslationTimingTrace(startedAt: submittedAt)
+            trace.mark(.languageResolved, at: languageResolvedAt)
+            trace.recordActionAndModel(actionID: action.id, modelID: model.id, inputCharacters: text.count)
+            return ModelRunViewState(
+                model: model, timingTrace: trace,
                 status: .running(start: Date()),
                 requestLanguages: context.languages
             )
@@ -1125,7 +1136,10 @@ public final class HomeViewModel: ObservableObject {
 
         // Reset UI state for this specific run
         modelRuns[index].markdownStreamSource.reset()
-        modelRuns[index].timingTrace = TranslationTimingTrace()
+        let trace = TranslationTimingTrace()
+        trace.mark(.languageResolved)
+        trace.recordActionAndModel(actionID: context.action.id, modelID: model.id, inputCharacters: context.text.count)
+        modelRuns[index].timingTrace = trace
         modelRuns[index].status = .running(start: Date())
         if !keepsResultOrder {
             modelRuns[index].firstOutputAt = nil

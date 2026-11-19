@@ -15,6 +15,7 @@ public struct MarkdownContentView: View {
     private let preset: MarkdownContentPreset
     private let textColor: Color?
     private let lineLimit: Int?
+    private let timingTrace: TranslationTimingTrace?
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -23,19 +24,24 @@ public struct MarkdownContentView: View {
 
     @ThemeColors private var colors: AppColorPalette
 
+    @MainActor
+    private static var documentCache: [ParseKey: RenderableDocument] = [:]
+    private static let documentCacheLimit = 64
+
     public init(
         text: String,
         preset: MarkdownContentPreset = .compact,
         textColor: Color? = nil,
-        lineLimit: Int? = nil
+        lineLimit: Int? = nil,
+        timingTrace: TranslationTimingTrace? = nil
     ) {
         self.text = text
         self.preset = preset
         self.textColor = textColor
         self.lineLimit = lineLimit
+        self.timingTrace = timingTrace
     }
 
-    @ViewBuilder
     public var body: some View {
         if let lineLimit {
             Text(previewText)
@@ -51,16 +57,31 @@ public struct MarkdownContentView: View {
             )
             .task(id: parseKey) {
                 let key = parseKey
+                guard Self.containsMarkdownSyntax(key.text) else {
+                    timingTrace?.mark(.markdownParsed)
+                    return
+                }
+                if let cached = Self.documentCache[key] {
+                    if parsed?.key != key {
+                        parsed = ParsedMarkdown(key: key, document: cached)
+                    }
+                    timingTrace?.mark(.markdownParsed)
+                    return
+                }
                 let document = await MarkdownParserImpl().parse(text: key.text, config: renderConfig)
                 guard !Task.isCancelled else { return }
+                Self.storeCachedDocument(document, for: key)
                 parsed = ParsedMarkdown(key: key, document: document)
+                timingTrace?.mark(.markdownParsed)
             }
             .contentDirectionAware(text)
         }
     }
 
-    private struct ParseKey: Equatable {
+    private struct ParseKey: Hashable {
         let text: String
+        let preset: MarkdownContentPreset
+        let textColor: Color
         let colorScheme: ColorScheme
         let readingStyle: ResultReadingStyle
         let dynamicTypeSize: DynamicTypeSize
@@ -74,19 +95,50 @@ public struct MarkdownContentView: View {
     private var parseKey: ParseKey {
         ParseKey(
             text: text.isEmpty ? " " : text,
+            preset: preset,
+            textColor: resolvedTextColor,
             colorScheme: colorScheme,
             readingStyle: readingStyle,
             dynamicTypeSize: dynamicTypeSize
         )
     }
 
-    /// Parsing is async, so show styled plain text until it lands instead of an empty frame.
+    /// Parsing is async, so show styled plain text (or cached document) immediately instead of re-parsing plain strings.
     private var renderableDocument: RenderableDocument {
         let key = parseKey
         if let parsed, parsed.key == key {
             return parsed.document
         }
+        if let cached = Self.documentCache[key] {
+            return cached
+        }
         return RenderableDocument(plainText: key.text, config: renderConfig)
+    }
+
+    @MainActor
+    private static func storeCachedDocument(_ document: RenderableDocument, for key: ParseKey) {
+        if documentCache.count >= documentCacheLimit {
+            documentCache.removeAll(keepingCapacity: true)
+        }
+        documentCache[key] = document
+    }
+
+    private static let markdownMarkerSet = CharacterSet(charactersIn: "*#_`[]~>|\\")
+
+    static func containsMarkdownSyntax(_ text: String) -> Bool {
+        if text.rangeOfCharacter(from: markdownMarkerSet) != nil {
+            return true
+        }
+        if text.hasPrefix("- ") || text.hasPrefix("+ ") || text.contains("\n- ") || text.contains("\n+ ") {
+            return true
+        }
+        if text.contains("---") {
+            return true
+        }
+        if text.range(of: #"(?m)^\s*\d+\.\s"#, options: .regularExpression) != nil {
+            return true
+        }
+        return false
     }
 
     private var resolvedTextColor: Color {

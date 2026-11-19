@@ -44,6 +44,7 @@ public struct HomeView: View {
     /// The waveform alone reads as voice input, so it carries a label until first use.
     @AppStorage("home.hasUsedRealtimeButton") var hasUsedRealtimeButton = false
     @State var recentTextRecords: [HomeRecentRecord] = []
+    @State var recentRecordsRefreshTask: Task<Void, Never>?
     @State var isInputExpanded: Bool
     @State var showingProviderInfo: String?
     @State var isFallbackTargetPickerPresented = false
@@ -477,8 +478,19 @@ public struct HomeView: View {
                 }
             }
             .onDisappear {
+                recentRecordsRefreshTask?.cancel()
+                recentRecordsRefreshTask = nil
                 HomeInputRouter.shared.unregisterReceiver(id: inputReceiverID)
             }
+        #if DEBUG
+            .task {
+                guard !openFromExtension else { return }
+                await DebugLaunchTestRunner.shared.runIfNeeded(
+                    viewModel: viewModel,
+                    expandResults: { isComparingResults = true }
+                )
+            }
+        #endif
             .erasedForLaunch()
         #if os(macOS)
             .onAppear {
