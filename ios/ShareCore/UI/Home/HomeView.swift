@@ -75,6 +75,7 @@ public struct HomeView: View {
 
         @State var phoneComparisonMode: PhoneComparisonMode?
         @State var phoneComposerDockHeight: CGFloat = 0
+        @State var isEditingSourceAfterResults = false
         @State var phoneCollapsedResultsHeaderHeight: CGFloat = 0
         @State var selectedResult: SelectedResult?
         @State var resultDetailDetent: PresentationDetent = .medium
@@ -837,6 +838,7 @@ public struct HomeView: View {
                 }
             }
             .onChange(of: viewModel.activeRequestContext?.generation) {
+                isEditingSourceAfterResults = false
                 if phoneComparisonMode != nil {
                     collapseResultComparison()
                 }
@@ -905,7 +907,15 @@ public struct HomeView: View {
                 #endif
             }
 
-            bottomComposerContent(availableHeight: availableHeight)
+            #if os(iOS)
+                if showsResultActions {
+                    resultActionsBar
+                } else {
+                    bottomComposerContent(availableHeight: availableHeight)
+                }
+            #else
+                bottomComposerContent(availableHeight: availableHeight)
+            #endif
 
             if isCentered {
                 #if os(macOS)
