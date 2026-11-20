@@ -94,6 +94,10 @@ extension HomeView {
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
+        } else if languageSelectorPlacement == .languageBar {
+            #if os(iOS)
+                phoneLanguageBar
+            #endif
         }
     }
 
@@ -259,10 +263,7 @@ extension HomeView {
                !viewModel.canSend,
                viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             {
-                Button {
-                    hasUsedRealtimeButton = true
-                    onRealtimeTap()
-                } label: {
+                Button(action: onRealtimeTap) {
                     phonePrimaryInputButtonIcon("waveform")
                 }
                 .buttonStyle(.glassProminent)
@@ -581,13 +582,14 @@ extension HomeView {
 
         // MARK: - iPhone chrome
 
-        var navigationBarLanguageSelector: some View {
+        var phoneLanguageBar: some View {
             LanguageSwitcherView(
                 globeFont: .system(size: 13),
-                textFont: .system(size: 16, weight: .semibold),
+                textFont: .system(size: 17, weight: .semibold),
                 chevronFont: .system(size: 9, weight: .semibold),
                 foregroundColor: colors.textPrimary,
                 showsControlBackgrounds: false,
+                swapButtonBackground: colors.accent.opacity(0.12),
                 languageDependencies: viewModel.selectedAction?.languageDependencies ?? .none,
                 resolvedTarget: viewModel.resolvedTargetLanguage,
                 onOverrideTarget: { viewModel.overrideTargetLanguage($0) },
@@ -598,6 +600,31 @@ extension HomeView {
                 hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                 onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
             )
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .padding(.horizontal, TLingoSpacing.sm)
+            .background(colors.cardBackground, in: Capsule())
+        }
+
+        /// Realtime is a separate screen; picking it presents RealtimeView and the control stays on Text.
+        @ViewBuilder
+        var homeModePicker: some View {
+            if let onRealtimeTap {
+                Picker(selection: Binding(
+                    get: { false },
+                    set: { isRealtime in
+                        guard isRealtime else { return }
+                        onRealtimeTap()
+                    }
+                )) {
+                    Text("Text").tag(false)
+                    Text("Realtime").tag(true)
+                } label: {
+                    EmptyView()
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+                .accessibilityIdentifier("home_mode_picker")
+            }
         }
 
         @ViewBuilder
@@ -644,20 +671,13 @@ extension HomeView {
             let hasText = !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
             if !hasText, let onRealtimeTap {
-                Button {
-                    hasUsedRealtimeButton = true
-                    onRealtimeTap()
-                } label: {
-                    if hasUsedRealtimeButton {
-                        phonePrimaryInputButtonIcon("waveform")
-                    } else {
-                        Label("Live Translate", systemImage: "waveform")
-                            .font(.system(size: 15, weight: .semibold))
-                            .frame(height: 22)
-                    }
+                Button(action: onRealtimeTap) {
+                    Label("Live Translate", systemImage: "waveform")
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(height: 22)
                 }
                 .buttonStyle(.glassProminent)
-                .buttonBorderShape(hasUsedRealtimeButton ? .circle : .capsule)
+                .buttonBorderShape(.capsule)
                 .tint(colors.accent)
                 .accessibilityLabel("Realtime Translation")
                 .accessibilityIdentifier("home_realtime_button")

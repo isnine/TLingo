@@ -26,7 +26,7 @@ enum HomeSatisfactionPromptChrome {
 enum HomeLanguageSelectorPlacement {
     case aboveInput
     case insideInput
-    case navigationBar
+    case languageBar
 }
 
 enum HomeBottomComposerPlacement {
@@ -82,7 +82,7 @@ enum HomeTextLayoutPolicy {
         idiom: HomeTextLayoutIdiom
     ) -> HomeLanguageSelectorPlacement {
         if usesBottomComposerLayout, idiom == .phone {
-            return .navigationBar
+            return .languageBar
         }
         if usesBottomComposerLayout || !usesSimplifiedTextLayout {
             return .insideInput

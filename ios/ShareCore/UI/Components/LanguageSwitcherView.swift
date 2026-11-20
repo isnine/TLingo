@@ -29,6 +29,7 @@ public struct LanguageSwitcherView: View {
     let chevronFont: Font
     let foregroundColor: Color?
     let showsControlBackgrounds: Bool
+    let swapButtonBackground: Color?
     let sourceOptions: [SourceLanguageOption]
     let targetOptions: [TargetLanguageOption]
     let disabledSourceOptions: Set<SourceLanguageOption>
@@ -65,6 +66,7 @@ public struct LanguageSwitcherView: View {
         chevronFont: Font = .system(size: 8),
         foregroundColor: Color? = nil,
         showsControlBackgrounds: Bool = true,
+        swapButtonBackground: Color? = nil,
         sourceOptions: [SourceLanguageOption] = SourceLanguageOption.allCases,
         targetOptions: [TargetLanguageOption] = TargetLanguageOption.selectionOptions,
         disabledSourceOptions: Set<SourceLanguageOption> = [],
@@ -92,6 +94,7 @@ public struct LanguageSwitcherView: View {
         self.chevronFont = chevronFont
         self.foregroundColor = foregroundColor
         self.showsControlBackgrounds = showsControlBackgrounds
+        self.swapButtonBackground = swapButtonBackground
         self.sourceOptions = sourceOptions
         self.targetOptions = targetOptions
         self.disabledSourceOptions = disabledSourceOptions
@@ -380,6 +383,11 @@ public struct LanguageSwitcherView: View {
                 .font(.system(size: usesCompactMetrics ? 12 : 16, weight: .medium))
                 .foregroundColor(resolvedColor)
                 .frame(width: directionalIconWidth, height: chipHeight)
+                .background {
+                    if let swapButtonBackground {
+                        Circle().fill(swapButtonBackground)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
