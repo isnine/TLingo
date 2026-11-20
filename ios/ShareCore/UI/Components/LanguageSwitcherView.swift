@@ -29,6 +29,7 @@ public struct LanguageSwitcherView: View {
     let chevronFont: Font
     let foregroundColor: Color?
     let showsControlBackgrounds: Bool
+    let swapButtonBackground: Color?
     let sourceOptions: [SourceLanguageOption]
     let targetOptions: [TargetLanguageOption]
     let disabledSourceOptions: Set<SourceLanguageOption>
@@ -65,6 +66,7 @@ public struct LanguageSwitcherView: View {
         chevronFont: Font = .system(size: 8),
         foregroundColor: Color? = nil,
         showsControlBackgrounds: Bool = true,
+        swapButtonBackground: Color? = nil,
         sourceOptions: [SourceLanguageOption] = SourceLanguageOption.allCases,
         targetOptions: [TargetLanguageOption] = TargetLanguageOption.selectionOptions,
         disabledSourceOptions: Set<SourceLanguageOption> = [],
@@ -92,6 +94,7 @@ public struct LanguageSwitcherView: View {
         self.chevronFont = chevronFont
         self.foregroundColor = foregroundColor
         self.showsControlBackgrounds = showsControlBackgrounds
+        self.swapButtonBackground = swapButtonBackground
         self.sourceOptions = sourceOptions
         self.targetOptions = targetOptions
         self.disabledSourceOptions = disabledSourceOptions
@@ -377,9 +380,16 @@ public struct LanguageSwitcherView: View {
             swapLanguages()
         } label: {
             Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: usesCompactMetrics ? 12 : 16, weight: .medium))
-                .foregroundColor(resolvedColor)
+                .font(.system(size: swapButtonBackground != nil ? 13 : usesCompactMetrics ? 12 : 16, weight: .semibold))
+                .foregroundColor(swapButtonBackground == nil ? resolvedColor : colors.accent)
                 .frame(width: directionalIconWidth, height: chipHeight)
+                .background {
+                    if let swapButtonBackground {
+                        Capsule()
+                            .fill(swapButtonBackground)
+                            .frame(height: 24)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
