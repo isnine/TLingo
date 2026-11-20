@@ -380,12 +380,14 @@ public struct LanguageSwitcherView: View {
             swapLanguages()
         } label: {
             Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: usesCompactMetrics ? 12 : 16, weight: .medium))
-                .foregroundColor(resolvedColor)
+                .font(.system(size: swapButtonBackground != nil ? 13 : usesCompactMetrics ? 12 : 16, weight: .semibold))
+                .foregroundColor(swapButtonBackground == nil ? resolvedColor : colors.accent)
                 .frame(width: directionalIconWidth, height: chipHeight)
                 .background {
                     if let swapButtonBackground {
-                        Circle().fill(swapButtonBackground)
+                        Capsule()
+                            .fill(swapButtonBackground)
+                            .frame(height: 24)
                     }
                 }
                 .contentShape(Rectangle())

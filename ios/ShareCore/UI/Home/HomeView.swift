@@ -764,6 +764,13 @@ public struct HomeView: View {
                             }
                         #endif
 
+                        #if os(iOS)
+                            if languageSelectorPlacement == .languageBar {
+                                phoneLanguageBar
+                                    .padding(.bottom, TLingoSpacing.sm)
+                            }
+                        #endif
+
                         if viewModel.modelRuns.isEmpty {
                             if !usesPhoneComposerChrome {
                                 hintLabel

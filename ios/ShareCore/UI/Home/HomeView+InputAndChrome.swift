@@ -94,10 +94,6 @@ extension HomeView {
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .tlingoGlassSurface(.chrome, cornerRadius: TLingoRadius.large)
-        } else if languageSelectorPlacement == .languageBar {
-            #if os(iOS)
-                phoneLanguageBar
-            #endif
         }
     }
 
