@@ -79,6 +79,10 @@ public struct HomeView: View {
         @State var phoneCollapsedResultsHeaderHeight: CGFloat = 0
         @State var selectedResult: SelectedResult?
         @State var resultDetailDetent: PresentationDetent = .medium
+        @State var longTextMode: LongTextResultMode = .reading
+        @State var longTextSelectedRunID: String?
+        @State var longTextParagraphIndex = 0
+        @State var isLongTextSourceExpanded = false
     #endif
     @State var appleTranslationConfig: TranslationSession.Configuration?
     @State var appleTranslationConfigLanguagePair: (source: String?, target: String)?
@@ -784,6 +788,8 @@ public struct HomeView: View {
                                     phoneEmptyStateSuggestions
                                 }
                             #endif
+                        } else if usesLongTextResultsLayout {
+                            longTextResultsPanel
                         } else if usesFlatResultsPanel {
                             flatResultsPanel(
                                 viewportHeight: geometry.size.height
@@ -909,7 +915,11 @@ public struct HomeView: View {
 
             #if os(iOS)
                 if showsResultActions {
-                    resultActionsBar
+                    if usesLongTextResults {
+                        longTextActionsBar
+                    } else {
+                        resultActionsBar
+                    }
                 } else {
                     bottomComposerContent(availableHeight: availableHeight)
                 }
