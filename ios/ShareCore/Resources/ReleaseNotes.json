@@ -10,6 +10,17 @@
         {
           "kind": "fixed",
           "text": "Keep a finished translation in place instead of rebuilding it sentence by sentence"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Stop the bottom input bar from repeatedly fading in and out when expanding long comparisons while loading"
+        },
+        {
+          "kind": "fixed",
+          "text": "Keep the result options footer in place instead of drifting across cards when toggling model comparison"
         }
       ]
     },

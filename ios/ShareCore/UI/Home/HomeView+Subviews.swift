@@ -159,6 +159,7 @@ import SwiftUI
 // MARK: - Shimmer Animation
 
 private struct ShimmerModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var phase: CGFloat = 0
 
     func body(content: Content) -> some View {
@@ -172,13 +173,20 @@ private struct ShimmerModifier: ViewModifier {
                     )
                     .frame(width: geometry.size.width * 0.6)
                     .offset(x: -geometry.size.width * 0.3 + phase * geometry.size.width * 1.6)
+                    // Scope the repeating animation to this gradient so it cannot leak into sibling view transitions.
+                    .animation(
+                        !reduceMotion && phase == 1 ? .linear(duration: 1.2).repeatForever(autoreverses: false) : nil,
+                        value: phase
+                    )
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             .onAppear {
-                withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                    phase = 1
-                }
+                guard !reduceMotion else { return }
+                phase = 1
+            }
+            .onDisappear {
+                phase = 0
             }
     }
 }

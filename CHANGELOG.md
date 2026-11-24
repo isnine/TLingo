@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - [Both] Keep a finished translation in place instead of rebuilding it sentence by sentence
+- [iOS] Stop the bottom input bar from repeatedly fading in and out when expanding long comparisons while loading
+- [Both] Keep the result options footer in place instead of drifting across cards when toggling model comparison
 
 ## [5.7.7] - 2026-11-18
 

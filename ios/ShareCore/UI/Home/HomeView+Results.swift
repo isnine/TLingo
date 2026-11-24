@@ -38,31 +38,30 @@ extension HomeView {
                     let remainingRuns = Array(runs.dropFirst())
                     Group {
                         if showsComparison {
-                            expandedComparison(remainingRuns)
+                            VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+                                expandedComparison(remainingRuns)
+                                flatResultsFooter(showsResultOptions: showsResultOptions, showsResultOrder: true)
+                            }
                         } else {
                             let previews = Dictionary(
                                 uniqueKeysWithValues: remainingRuns.map { run in
                                     (run.id, isAwaitingFirstOutput(run) ? AttributedString() : resultPreview(for: run))
                                 }
                             )
-                            collapsedResults(
-                                remainingRuns,
-                                previews: previews,
-                                viewportHeight: viewportHeight
-                            )
+                            VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
+                                collapsedResults(
+                                    remainingRuns,
+                                    previews: previews,
+                                    viewportHeight: viewportHeight
+                                )
+                                flatResultsFooter(showsResultOptions: showsResultOptions, showsResultOrder: true)
+                            }
                         }
                     }
-                    .animation(.easeInOut(duration: 0.2), value: showsComparison)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: showsComparison)
+                } else {
+                    flatResultsFooter(showsResultOptions: showsResultOptions, showsResultOrder: false)
                 }
-            }
-
-            if !runs.isEmpty, showsResultOptions {
-                resultOptionsFooter(showsResultOrder: runs.count > 1)
-            }
-
-            if shouldShowInlineSatisfactionPrompt {
-                satisfactionPromptResultCell
-                    .padding(.top, 6)
             }
         }
         #if os(macOS)
@@ -386,6 +385,18 @@ extension HomeView {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+    }
+
+    @ViewBuilder
+    func flatResultsFooter(showsResultOptions: Bool, showsResultOrder: Bool) -> some View {
+        if showsResultOptions {
+            resultOptionsFooter(showsResultOrder: showsResultOrder)
+        }
+
+        if shouldShowInlineSatisfactionPrompt {
+            satisfactionPromptResultCell
+                .padding(.top, 6)
         }
     }
 

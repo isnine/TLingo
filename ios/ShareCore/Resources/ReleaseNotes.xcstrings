@@ -5001,6 +5001,131 @@
         }
       }
     },
+    "Keep the result options footer in place instead of drifting across cards when toggling model comparison" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت تذييل خيارات النتائج في مكانه بدلاً من تنقله بين البطاقات عند تشغيل مقارنة النماذج أو إيقافها"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold sidefoden med resultatmuligheder på plads, så den ikke glider mellem kort, når modelsammenligning slås til eller fra"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Fußzeile mit den Ergebnisoptionen bleibt beim Ein- und Ausschalten des Modellvergleichs an Ort und Stelle, statt zwischen den Karten zu wandern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the result options footer in place instead of drifting across cards when toggling model comparison"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener el pie con las opciones del resultado en su sitio al activar o desactivar la comparación de modelos, sin que se desplace entre tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenir le pied de page des options du résultat en place lorsqu’on active ou désactive la comparaison de modèles, au lieu de le laisser glisser entre les cartes"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaga footer opsi hasil tetap di tempatnya agar tidak bergeser antar kartu saat perbandingan model diaktifkan atau dinonaktifkan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni il piè di pagina con le opzioni del risultato al suo posto, senza che si sposti tra le schede quando si attiva o disattiva il confronto tra modelli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデル比較のオン・オフを切り替えても、結果オプションのフッターがカード間を移動せず、所定の位置に留まるようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 비교를 켜거나 끌 때 결과 옵션 푸터가 카드 사이를 이동하지 않고 제자리에 유지되도록 수정"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastikan pengaki pilihan hasil kekal di tempatnya dan tidak beralih antara kad apabila perbandingan model dihidupkan atau dimatikan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold bunnteksten med resultatalternativer på plass, slik at den ikke glir mellom kort når modellsammenligning slås av eller på"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de voettekst met resultaatopties op zijn plek, zodat deze niet tussen kaarten verschuift bij het in- of uitschakelen van modelvergelijking"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utrzymanie stopki z opcjami wyniku na miejscu, zamiast przesuwania jej między kartami podczas włączania lub wyłączania porównania modeli"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter o rodapé com as opções do resultado no lugar, sem se deslocar entre os cartões ao ativar ou desativar a comparação de modelos"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll sidfoten med resultatalternativ på plats så att den inte glider mellan kort när modelljämförelse slås på eller av"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model karşılaştırması açılıp kapatılırken sonuç seçenekleri alt bilgisinin kartlar arasında kaymak yerine yerinde kalmasını sağla"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換模型比較時，讓結果選項頁尾維持原位，不再在卡片之間移動"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换模型比较时，让结果选项页脚保持在原位，不再在卡片之间移动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換模型比較時，讓結果選項頁尾保持在原位，不再於卡片之間移動"
+          }
+        }
+      }
+    },
     "Kept iPhone Audio recognition and History running in the background even when Picture in Picture is off." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11747,6 +11872,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "穩定了即時字幕、停止計時、字幕對齊、macOS 字幕捲動及語音模型下載。"
+          }
+        }
+      }
+    },
+    "Stop the bottom input bar from repeatedly fading in and out when expanding long comparisons while loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "منع شريط الإدخال السفلي من الظهور والاختفاء بشكل متكرر عند توسيع المقارنات الطويلة أثناء التحميل"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forhindr, at inputlinjen nederst gentagne gange toner ind og ud, når lange sammenligninger udvides under indlæsning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verhindern, dass die untere Eingabeleiste beim Aufklappen langer Vergleiche während des Ladens wiederholt ein- und ausgeblendet wird"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop the bottom input bar from repeatedly fading in and out when expanding long comparisons while loading"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evitar que la barra de entrada inferior aparezca y desaparezca repetidamente al expandir comparaciones largas durante la carga"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empêcher la barre de saisie inférieure d’apparaître et de disparaître en boucle lorsqu’on développe de longues comparaisons pendant le chargement"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cegah bilah input bawah muncul dan menghilang berulang kali saat memperluas perbandingan panjang selama pemuatan"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impedisci che la barra di input in basso appaia e scompaia ripetutamente quando si espandono confronti lunghi durante il caricamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込み中に長い比較を展開すると、下部の入力バーが繰り返しフェードイン・フェードアウトする問題を修正"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로딩 중에 긴 비교 내용을 펼칠 때 하단 입력창이 반복해서 나타났다 사라지는 문제 수정"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halang bar input bawah daripada berulang kali muncul dan menghilang apabila mengembangkan perbandingan panjang semasa pemuatan"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hindre at inntastingslinjen nederst gjentatte ganger tones inn og ut når lange sammenligninger utvides under innlasting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorkom dat de invoerbalk onderaan steeds in- en uitfade bij het uitvouwen van lange vergelijkingen tijdens het laden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapobieganie ciągłemu pojawianiu się i znikaniu dolnego paska wprowadzania podczas rozwijania długich porównań w trakcie ładowania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impedir que a barra de entrada inferior apareça e desapareça repetidamente ao expandir comparações longas durante o carregamento"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förhindra att inmatningsfältet längst ned tonas in och ut upprepade gånger när långa jämförelser expanderas under inläsning"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme sırasında uzun karşılaştırmalar genişletildiğinde alttaki giriş çubuğunun tekrar tekrar belirip kaybolmasını önle"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "避免載入期間展開較長的比較內容時，底部輸入列反覆淡入淡出"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "避免在加载期间展开较长的比较内容时，底部输入栏反复淡入淡出"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "避免在載入期間展開較長的比較內容時，底部輸入列反覆淡入淡出"
           }
         }
       }
