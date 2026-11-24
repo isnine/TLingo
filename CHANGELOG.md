@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.8] - 2026-11-24
+
+### Improved
+
+- [Both] Refine model comparison and app icons
+
+### Fixed
+
+- [Both] Keep a finished translation in place instead of rebuilding it sentence by sentence
+
 ## [5.7.7] - 2026-11-18
 
 ### Added

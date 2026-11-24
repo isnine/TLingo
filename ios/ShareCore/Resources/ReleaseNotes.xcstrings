@@ -3876,6 +3876,131 @@
         }
       }
     },
+    "Keep a finished translation in place instead of rebuilding it sentence by sentence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبقاء على الترجمة المكتملة بدلًا من إعادة إنشائها جملةً بجملة"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold en færdig oversættelse i stedet for at opbygge den igen sætning for sætning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine fertige Übersetzung beibehalten, statt sie Satz für Satz neu aufzubauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep a finished translation in place instead of rebuilding it sentence by sentence"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener una traducción terminada en lugar de reconstruirla frase por frase"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserver une traduction terminée au lieu de la reconstruire phrase par phrase"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertahankan terjemahan yang sudah selesai alih-alih menyusunnya ulang kalimat demi kalimat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni una traduzione completata invece di ricostruirla frase per frase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成した翻訳を、一文ずつ再構築せずにそのまま保持する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료된 번역을 문장별로 다시 구성하지 않고 그대로 유지"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kekalkan terjemahan yang telah siap dan bukannya membinanya semula ayat demi ayat"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold en ferdig oversettelse i stedet for å bygge den opp på nytt setning for setning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behoud een voltooide vertaling in plaats van deze zin voor zin opnieuw op te bouwen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj ukończone tłumaczenie zamiast tworzyć je ponownie zdanie po zdaniu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter uma tradução concluída em vez de reconstruí-la frase por frase"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behåll en färdig översättning i stället för att bygga upp den på nytt mening för mening"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamamlanmış bir çeviriyi cümle cümle yeniden oluşturmak yerine olduğu gibi koru"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留已完成的翻譯，而非逐句重新建立"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留已完成的翻译，而不是逐句重新生成"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留已完成的翻譯，而非逐句重新建立"
+          }
+        }
+      }
+    },
     "Keep chat input stable while composing with an input method" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8122,6 +8247,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "改善輸入內容混合多種語言時的語言選擇"
+          }
+        }
+      }
+    },
+    "Refine model comparison and app icons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين مقارنة النماذج وأيقونات التطبيق"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedr modelsammenligningen og appikonerne"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellvergleich und App-Symbole verbessern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refine model comparison and app icons"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mejorar la comparación de modelos y los iconos de la aplicación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Améliorer la comparaison des modèles et les icônes de l’application"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sempurnakan perbandingan model dan ikon aplikasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migliora il confronto tra modelli e le icone dell’app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モデルの比較とアプリアイコンを改善"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모델 비교 및 앱 아이콘 개선"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perhalus perbandingan model dan ikon aplikasi"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbedre modellsammenligningen og appikonene"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelvergelijking en app-pictogrammen verbeteren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulepsz porównywanie modeli i ikony aplikacji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprimorar a comparação de modelos e os ícones do aplicativo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förbättra modelljämförelsen och appikonerna"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model karşılaştırmasını ve uygulama simgelerini iyileştir"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優化模型比較及應用程式圖示"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "优化模型比较和应用图标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優化模型比較與應用程式圖示"
           }
         }
       }

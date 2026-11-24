@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "5.7.8",
+      "items": [
+        {
+          "kind": "improved",
+          "text": "Refine model comparison and app icons"
+        },
+        {
+          "kind": "fixed",
+          "text": "Keep a finished translation in place instead of rebuilding it sentence by sentence"
+        }
+      ]
+    },
+    {
       "version": "5.7.7",
       "items": [
         {
