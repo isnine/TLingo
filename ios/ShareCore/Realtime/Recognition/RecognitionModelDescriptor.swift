@@ -34,6 +34,19 @@ public enum RecognitionFluidAudioModel: String, Equatable, Sendable {
     case nemotronStreaming1120
     case nemotronStreaming2240
     case nemotronMultilingual2240
+    case parakeetUnified1120
+}
+
+public enum RecognitionModelDownloadSource: Equatable, Sendable {
+    case apple
+    case huggingFace
+
+    public var title: String {
+        switch self {
+        case .apple: String(localized: "Accelerated CDN")
+        case .huggingFace: "Hugging Face"
+        }
+    }
 }
 
 public enum RecognitionModelDownload: Equatable, Sendable {
@@ -118,6 +131,8 @@ public struct RecognitionModelDescriptor: Identifiable, Equatable, Sendable {
             return String(localized: "Use for low-latency English captions.")
         case Self.parakeetEOU1280.id:
             return String(localized: "Use for higher-accuracy English captions with natural EOU boundaries.")
+        case Self.parakeetUnified.id:
+            return String(localized: "Use for accurate English captions with punctuation.")
         case Self.nemotronStreaming560.id:
             return String(localized: "Use for lower-latency English streaming recognition.")
         case Self.nemotronStreaming1120.id:
@@ -273,6 +288,21 @@ public extension RecognitionModelDescriptor {
         isExperimental: true,
         requiresAppleSilicon: true,
         download: .fluidAudio(.parakeetEOU1280),
+        license: "CC-BY-4.0"
+    )
+
+    static let parakeetUnified = RecognitionModelDescriptor(
+        id: "parakeet-unified-en-1120ms",
+        title: "Parakeet Unified",
+        subtitle: "Accurate English streaming ASR with punctuation, powered by FluidAudio.",
+        runtime: .fluidAudio,
+        supportedPlatforms: [.iOS, .macOS],
+        supportedLanguageIDs: ["en"],
+        sampleRate: 16000,
+        sizeDisplayName: RecognitionAssetPack.parakeetUnified.sizeDisplayName,
+        isExperimental: true,
+        requiresAppleSilicon: true,
+        download: .fluidAudio(.parakeetUnified1120),
         license: "CC-BY-4.0"
     )
 

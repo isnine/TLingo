@@ -154,6 +154,37 @@
             UserDefaults.standard.set(durations, forKey: loadDurationsKey)
         }
 
+        static let parakeetUnifiedConfig = UnifiedConfig(leftFrames: 70, chunkFrames: 7, rightFrames: 7)
+
+        /// int8 fails to build an execution plan on A16 (FluidAudio #828), so iOS uses fp16.
+        static let parakeetUnifiedPrecision: UnifiedEncoderPrecision = {
+            #if os(macOS)
+                .int8
+            #else
+                .fp16
+            #endif
+        }()
+
+        static let parakeetUnifiedEncoderFile = ModelNames.ParakeetUnified.streamingEncoderFile(
+            precision: parakeetUnifiedPrecision,
+            contextSuffix: parakeetUnifiedConfig.contextSuffix
+        )
+
+        static let parakeetUnifiedFiles = [
+            parakeetUnifiedEncoderFile,
+            ModelNames.ParakeetUnified.decoderFile,
+            ModelNames.ParakeetUnified.jointDecisionFile,
+            ModelNames.ParakeetUnified.vocab,
+        ]
+
+        private static func parakeetUnifiedDirectory(cacheDirectory: URL) throws -> URL {
+            let assetPack = RecognitionAssetPack.parakeetUnified
+            if assetPack.isAvailableLocally {
+                return try assetPack.directoryURL()
+            }
+            return cacheDirectory.appendingPathComponent(Repo.parakeetUnified.folderName, isDirectory: true)
+        }
+
         static func load(
             _ model: RecognitionFluidAudioModel,
             descriptor: RecognitionModelDescriptor,
@@ -195,6 +226,13 @@
                     )
                 }
                 return .multilingual(manager)
+            case .parakeetUnified1120:
+                let manager = StreamingUnifiedAsrManager(
+                    config: parakeetUnifiedConfig,
+                    encoderPrecision: parakeetUnifiedPrecision
+                )
+                try await manager.loadModels(from: parakeetUnifiedDirectory(cacheDirectory: modelDirectory))
+                return .standard(manager)
             }
         }
     }

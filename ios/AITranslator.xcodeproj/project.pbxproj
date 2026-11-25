@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BA0000000000000000000001 /* TLingoAssetDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BA0000000000000000000004 /* TLingoAssetDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A10000010000000000000001 /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000004 /* MLXAudioCore */; };
 		A10000010000000000000002 /* MLXAudioSTT in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = A10000010000000000000005 /* MLXAudioSTT */; };
 		AF1100000000000000000010 /* AITranslator/TextSelection/AccessibilityGrabber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */; };
@@ -45,6 +46,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BA0000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA000000000000000000000A;
+			remoteInfo = TLingoAssetDownloader;
+		};
 		AF220000000000000000000D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CE4EB0D52EA33ADD00DDDFA5 /* Project object */;
@@ -122,6 +130,7 @@
 			dstSubfolderSpec = 16;
 			files = (
 				CE4EB10F2EA33CAD00DDDFA5 /* TLingoTranslation.appex in Embed ExtensionKit Extensions */,
+				BA0000000000000000000001 /* TLingoAssetDownloader.appex in Embed ExtensionKit Extensions */,
 			);
 			name = "Embed ExtensionKit Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -141,6 +150,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BA0000000000000000000004 /* TLingoAssetDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = TLingoAssetDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF1100000000000000000020 /* AITranslator/TextSelection/AccessibilityGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/AccessibilityGrabber.swift; sourceTree = SOURCE_ROOT; };
 		AF1100000000000000000021 /* AITranslator/TextSelection/AppleScriptGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/AppleScriptGrabber.swift; sourceTree = SOURCE_ROOT; };
 		AF1100000000000000000022 /* AITranslator/TextSelection/ClipboardGrabber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITranslator/TextSelection/ClipboardGrabber.swift; sourceTree = SOURCE_ROOT; };
@@ -170,6 +180,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BA0000000000000000000005 /* Exceptions for "TLingoAssetDownloader" folder in "TLingoAssetDownloader" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = BA000000000000000000000A /* TLingoAssetDownloader */;
+		};
 		AF1100000000000000000030 /* Exceptions for "TLingoHelper" folder in "TLingoHelper" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -208,6 +225,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		BA0000000000000000000006 /* TLingoAssetDownloader */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BA0000000000000000000005 /* Exceptions for "TLingoAssetDownloader" folder in "TLingoAssetDownloader" target */,
+			);
+			path = TLingoAssetDownloader;
+			sourceTree = "<group>";
+		};
 		AF1100000000000000000031 /* TLingoHelper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -266,6 +291,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		BA0000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AF1100000000000000000032 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -382,6 +414,7 @@
 				AF1100000000000000000033 /* Helper Shared Sources */,
 				CE4EB1092EA33CAD00DDDFA5 /* TranslationUI */,
 				CEAB00072FB5000000000001 /* TLingoBroadcastUpload */,
+				BA0000000000000000000006 /* TLingoAssetDownloader */,
 				CE4EB11F2EA4F47400DDDFA5 /* ShareCore */,
 				AF2200000000000000000007 /* TLingoWidgets */,
 				AF2200000000000000000033 /* Widget Shared Sources */,
@@ -400,6 +433,7 @@
 				CE4EB1082EA33CAD00DDDFA5 /* TLingoTranslation.appex */,
 				CEAB00052FB5000000000001 /* TLingoBroadcastUpload.appex */,
 				AF2200000000000000000005 /* TLingoWidgets.appex */,
+				BA0000000000000000000004 /* TLingoAssetDownloader.appex */,
 				CE4EB11E2EA4F47400DDDFA5 /* ShareCore.framework */,
 				CE3703402F3E000000000001 /* ShareCoreTests.xctest */,
 				CE37034F2F3E000000000001 /* TLingoUITests.xctest */,
@@ -431,6 +465,28 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		BA000000000000000000000A /* TLingoAssetDownloader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA000000000000000000000D /* Build configuration list for PBXNativeTarget "TLingoAssetDownloader" */;
+			buildPhases = (
+				BA0000000000000000000007 /* Sources */,
+				BA0000000000000000000008 /* Frameworks */,
+				BA0000000000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				BA0000000000000000000006 /* TLingoAssetDownloader */,
+			);
+			name = TLingoAssetDownloader;
+			packageProductDependencies = (
+			);
+			productName = TLingoAssetDownloader;
+			productReference = BA0000000000000000000004 /* TLingoAssetDownloader.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 		AF1100000000000000000040 /* TLingoHelper */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AF1100000000000000000041 /* Build configuration list for PBXNativeTarget "TLingoHelper" */;
@@ -539,6 +595,7 @@
 			dependencies = (
 				CE22638E2EB250B800BB7BEF /* PBXTargetDependency */,
 				CE4EB10E2EA33CAD00DDDFA5 /* PBXTargetDependency */,
+				BA0000000000000000000003 /* PBXTargetDependency */,
 				CEAB000C2FB5000000000001 /* PBXTargetDependency */,
 				AF220000000000000000000C /* PBXTargetDependency */,
 			);
@@ -658,6 +715,9 @@
 					CEAB00092FB5000000000001 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
+					BA000000000000000000000A = {
+						CreatedOnToolsVersion = 27.2;
+					};
 				};
 			};
 			buildConfigurationList = CE4EB0D82EA33ADD00DDDFA5 /* Build configuration list for PBXProject "AITranslator" */;
@@ -686,6 +746,7 @@
 				CE4EB1072EA33CAD00DDDFA5 /* TLingoTranslation */,
 				CEAB00092FB5000000000001 /* TLingoBroadcastUpload */,
 				AF2200000000000000000009 /* TLingoWidgets */,
+				BA000000000000000000000A /* TLingoAssetDownloader */,
 				CE4EB11D2EA4F47400DDDFA5 /* ShareCore */,
 				CE3703402F3E000000000007 /* ShareCoreTests */,
 				CE37034F2F3E000000000006 /* TLingoUITests */,
@@ -695,6 +756,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		BA0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AF1100000000000000000035 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -761,6 +829,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		BA0000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AF1100000000000000000034 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -831,6 +906,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BA0000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA000000000000000000000A /* TLingoAssetDownloader */;
+			targetProxy = BA0000000000000000000002 /* PBXContainerItemProxy */;
+		};
 		AF220000000000000000000C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
@@ -877,6 +957,82 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		BA000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TLingoAssetDownloader/TLingoAssetDownloader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoAssetDownloader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo.dev;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 5.7.8;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.AssetDownloader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BA000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE3703262F2E39700039FC39 /* Base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TLingoAssetDownloader/TLingoAssetDownloader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = JW2LR94V6G;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TLingoAssetDownloader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TLingo;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 5.7.8;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zanderwang.AITranslator.AssetDownloader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AF1100000000000000000042 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = AF1100000000000000000029 /* Helper.xcconfig */;
@@ -1567,6 +1723,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		BA000000000000000000000D /* Build configuration list for PBXNativeTarget "TLingoAssetDownloader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA000000000000000000000B /* Debug */,
+				BA000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AF1100000000000000000041 /* Build configuration list for PBXNativeTarget "TLingoHelper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -37,6 +37,7 @@ public actor RecognitionModelStore {
     public static let knownModels: [RecognitionModelDescriptor] = [
         .appleSpeech,
         .mossTranscribeDiarize,
+        .parakeetUnified,
         .parakeetEOU320,
         .parakeetEOU1280,
         .nemotronStreaming560,
@@ -47,6 +48,7 @@ public actor RecognitionModelStore {
     ]
     public static let selectableModels: [RecognitionModelDescriptor] = [
         .appleSpeech,
+        .parakeetUnified,
         .parakeetEOU320,
         .parakeetEOU1280,
         .nemotronStreaming560,
@@ -58,6 +60,7 @@ public actor RecognitionModelStore {
     public static let allModels = knownModels
     public static let localModels: [RecognitionModelDescriptor] = [.appleSpeech]
     public static let experimentalModels: [RecognitionModelDescriptor] = [
+        .parakeetUnified,
         .parakeetEOU320,
         .parakeetEOU1280,
         .nemotronStreaming560,
@@ -198,6 +201,20 @@ public actor RecognitionModelStore {
         models.filter { isModelCached($0) }
     }
 
+    /// Where a model with more than one download source comes from: the copy on disk, or Apple
+    /// hosting before it is downloaded. `nil` for models with a single source.
+    public func downloadSource(for model: RecognitionModelDescriptor) -> RecognitionModelDownloadSource? {
+        guard model.download == .fluidAudio(.parakeetUnified1120) else { return nil }
+        #if arch(arm64) && canImport(FluidAudio)
+            if !RecognitionAssetPack.parakeetUnified.isAvailableLocally,
+               isParakeetUnifiedFallbackCached(at: cachedModelURL(for: model))
+            {
+                return .huggingFace
+            }
+        #endif
+        return .apple
+    }
+
     public func isModelCached(_ model: RecognitionModelDescriptor) -> Bool {
         guard let download = model.download else {
             return true
@@ -286,7 +303,10 @@ public actor RecognitionModelStore {
         downloadTasks[model.id]?.cancel()
     }
 
-    public func deleteModel(_ model: RecognitionModelDescriptor) throws {
+    public func deleteModel(_ model: RecognitionModelDescriptor) async throws {
+        if model.download == .fluidAudio(.parakeetUnified1120), RecognitionAssetPack.parakeetUnified.isAvailableLocally {
+            try await RecognitionAssetPack.parakeetUnified.remove()
+        }
         let url = cachedModelURL(for: model)
         guard fileManager.fileExists(atPath: url.path) else { return }
         try fileManager.removeItem(at: url)
@@ -414,8 +434,21 @@ public actor RecognitionModelStore {
         return Data(digest).hexEncodedString()
     }
 
+    #if arch(arm64) && canImport(FluidAudio)
+        private func isParakeetUnifiedFallbackCached(at directory: URL) -> Bool {
+            guard !containsPartialDownload(in: directory) else { return false }
+            let modelDirectory = directory.appendingPathComponent(Repo.parakeetUnified.folderName, isDirectory: true)
+            return RealtimeFluidAudioEngineCache.parakeetUnifiedFiles.allSatisfy { name in
+                fluidAudioArtifactExists(at: modelDirectory.appendingPathComponent(name))
+            }
+        }
+    #endif
+
     private func isFluidAudioModelCached(_ model: RecognitionFluidAudioModel, at directory: URL) -> Bool {
         #if arch(arm64) && canImport(FluidAudio)
+            if model == .parakeetUnified1120, RecognitionAssetPack.parakeetUnified.isAvailableLocally {
+                return true
+            }
             guard !containsPartialDownload(in: directory) else { return false }
             switch model {
             case .parakeetEOU320, .parakeetEOU1280:
@@ -454,6 +487,8 @@ public actor RecognitionModelStore {
                 ].allSatisfy { name in
                     fluidAudioArtifactExists(at: modelDirectory.appendingPathComponent(name))
                 }
+            case .parakeetUnified1120:
+                return isParakeetUnifiedFallbackCached(at: directory)
             }
         #else
             return false
@@ -499,6 +534,10 @@ public actor RecognitionModelStore {
             let modelDirectory = cachedModelURL(for: descriptor)
             try fileManager.createDirectory(at: modelDirectory, withIntermediateDirectories: true)
 
+            if fluidAudioModel == .parakeetUnified1120 {
+                return try await downloadParakeetUnified(descriptor: descriptor, modelDirectory: modelDirectory)
+            }
+
             await selectModelRegistryIfNeeded()
             let config = DownloadConfig(timeout: Self.downloadIdleTimeout)
             do {
@@ -533,7 +572,7 @@ public actor RecognitionModelStore {
                     .nemotronStreaming1120
                 case .nemotronStreaming2240:
                     .nemotronStreaming2240
-                case .nemotronMultilingual2240:
+                case .nemotronMultilingual2240, .parakeetUnified1120:
                     preconditionFailure("Handled above")
                 }
                 try await ModelHub.download(
@@ -557,6 +596,35 @@ public actor RecognitionModelStore {
 
 #if arch(arm64) && canImport(FluidAudio)
     private extension RecognitionModelStore {
+        /// Apple hosts this model as an asset pack. When Apple hosting fails (including builds run
+        /// from Xcode, which cannot reach it without `ba-serve`), fall back to the Hugging Face repo.
+        func downloadParakeetUnified(
+            descriptor: RecognitionModelDescriptor,
+            modelDirectory: URL
+        ) async throws -> URL {
+            let assetPack = RecognitionAssetPack.parakeetUnified
+            do {
+                try await assetPack.ensureLocalAvailability { [weak self] fraction in
+                    Task { await self?.setDownloadProgress(fraction, for: descriptor.id) }
+                }
+                return try assetPack.directoryURL()
+            } catch {
+                guard !RealtimeSessionStore.isCancellationError(error) else { throw error }
+                RealtimeLog.warn("model", "asset pack unavailable id=\(assetPack.id) error=\(error); using Hugging Face")
+                await selectModelRegistryIfNeeded()
+                try await ModelHub.download(
+                    .parakeetUnified,
+                    to: modelDirectory,
+                    additionalModelNames: [RealtimeFluidAudioEngineCache.parakeetUnifiedEncoderFile],
+                    config: DownloadConfig(timeout: Self.downloadIdleTimeout),
+                    progressHandler: { [weak self] progress in
+                        Task { await self?.setFluidAudioProgress(progress, for: descriptor.id, downloadWeight: 1) }
+                    }
+                )
+                return modelDirectory.appendingPathComponent(Repo.parakeetUnified.folderName, isDirectory: true)
+            }
+        }
+
         func setFluidAudioProgress(_ progress: DownloadProgress, for modelID: String, downloadWeight: Double) {
             switch progress.phase {
             case .listing:

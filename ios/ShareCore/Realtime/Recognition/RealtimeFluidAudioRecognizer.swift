@@ -915,7 +915,7 @@
             case .parakeetEOU320: 0.32
             case .parakeetEOU1280: 1.28
             case .nemotronStreaming560: 0.56
-            case .nemotronStreaming1120: 1.12
+            case .nemotronStreaming1120, .parakeetUnified1120: 1.12
             case .nemotronStreaming2240, .nemotronMultilingual2240: 2.24
             }
             return chunkDuration + 0.2

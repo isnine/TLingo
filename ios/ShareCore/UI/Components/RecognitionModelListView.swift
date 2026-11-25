@@ -7,6 +7,7 @@ public struct RecognitionModelListView: View {
     private let isDisabled: Bool
 
     @State private var cachedModelIDs: Set<String> = []
+    @State private var downloadSources: [String: RecognitionModelDownloadSource] = [:]
     @State private var downloadStatuses: [String: RecognitionModelDownloadStatus] = [:]
     @State private var downloadErrors: [String: String] = [:]
     @State private var downloadTasks: [String: Task<Void, Never>] = [:]
@@ -100,6 +101,11 @@ public struct RecognitionModelListView: View {
         }
     }
 
+    private func limitsText(for model: RecognitionModelDescriptor) -> String {
+        guard let source = downloadSources[model.id] else { return model.limitsText }
+        return "\(model.limitsText) · \(source.title)"
+    }
+
     private func modelRow(_ model: RecognitionModelDescriptor) -> some View {
         Button {
             primaryAction(for: model)
@@ -114,7 +120,7 @@ public struct RecognitionModelListView: View {
                         .foregroundStyle(Color.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text(model.limitsText)
+                    Text(limitsText(for: model))
                         .font(.footnote)
                         .foregroundStyle(Color.secondary)
 
@@ -278,15 +284,18 @@ public struct RecognitionModelListView: View {
     private func refreshModelState() async {
         var cachedIDs = Set<String>()
         var statuses: [String: RecognitionModelDownloadStatus] = [:]
+        var sources: [String: RecognitionModelDownloadSource] = [:]
         for model in models {
             if await RecognitionModelStore.shared.isModelCached(model) {
                 cachedIDs.insert(model.id)
             }
+            sources[model.id] = await RecognitionModelStore.shared.downloadSource(for: model)
             if let value = await RecognitionModelStore.shared.downloadStatus(for: model) {
                 statuses[model.id] = value
             }
         }
         cachedModelIDs = cachedIDs
+        downloadSources = sources
         downloadStatuses = statuses
     }
 
