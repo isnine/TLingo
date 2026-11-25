@@ -8,6 +8,9 @@
 import os
 import ShareCore
 import SwiftUI
+#if os(iOS)
+    import TipKit
+#endif
 #if os(macOS)
     import UniformTypeIdentifiers
 #endif
@@ -48,6 +51,11 @@ struct AITranslatorApp: App {
             if DebugDevicePerformanceView.isEnabled { return }
         #endif
         MetricKitReporter.shared.start()
+        #if os(iOS)
+            if !Self.isAutomatedLaunch {
+                try? Tips.configure()
+            }
+        #endif
         // Keep automatic reporting out of XCTest and screenshot/UI-test launches.
         let environment = ProcessInfo.processInfo.environment
         let isTestProcess = ["XCTestConfigurationFilePath", "XCTestBundlePath", "XCTestSessionIdentifier"]

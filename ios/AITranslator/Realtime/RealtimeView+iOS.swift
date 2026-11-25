@@ -6,6 +6,7 @@
     import ShareCore
     import Speech
     import SwiftUI
+    import TipKit
     import Translation
     import UIKit
 
@@ -29,6 +30,7 @@
         @State private var isSourceLanguagePickerPresented = false
         @State private var isTargetLanguagePickerPresented = false
         @State private var controlDockHeight: CGFloat = 0
+        private let parakeetUnifiedTip = ParakeetUnifiedTip()
         @State private var translationPack: TranslationPackState = .ready
         @State private var translationPackDownloadConfiguration: TranslationSession.Configuration?
 
@@ -107,6 +109,16 @@
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     controlDock
+                        // Popover tips do not present from navigation bar items here.
+                        .popoverTip(parakeetUnifiedTip) { action in
+                            guard action.id == ParakeetUnifiedTip.chooseModelActionID else { return }
+                            parakeetUnifiedTip.invalidate(reason: .actionPerformed)
+                            Task {
+                                // A sheet presented while the tip popover is dismissing never appears.
+                                try? await Task.sleep(for: .milliseconds(400))
+                                controlModel.opensRecognitionModels = true
+                            }
+                        }
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { controlDockHeight = $0 }
                 }
                 .background(colors.background.ignoresSafeArea())
@@ -131,6 +143,12 @@
                     isSettingsPresented = true
                 }
                 .onAppear(perform: repairSameLanguageDirection)
+                .task(id: parakeetUnifiedTipKey) {
+                    ParakeetUnifiedTip.updateEligibility(
+                        source: preferences.realtimeSourceLanguage,
+                        modelID: preferences.realtimeRecognitionModelID
+                    )
+                }
                 .task(id: recognitionModelPrewarmKey) {
                     guard scenePhase == .active else { return }
                     await store.prewarmRecognitionModel()
@@ -1080,6 +1098,10 @@
                 }
             }
             .presentationDetents([.medium, .large], selection: $settingsDetent)
+        }
+
+        private var parakeetUnifiedTipKey: String {
+            "\(preferences.realtimeSourceLanguage.rawValue)|\(preferences.realtimeRecognitionModelID)"
         }
 
         private var selectedRecognitionModel: RecognitionModelDescriptor {
