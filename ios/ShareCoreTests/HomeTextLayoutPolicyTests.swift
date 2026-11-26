@@ -39,14 +39,14 @@ struct HomeTextLayoutPolicyTests {
         )
     }
 
-    @Test("iPhone bottom composer places language selector in navigation bar")
-    func iPhoneBottomComposerPlacesLanguageSelectorInNavigationBar() {
+    @Test("iPhone bottom composer places language selector in its own bar")
+    func iPhoneBottomComposerPlacesLanguageSelectorInLanguageBar() {
         #expect(
             HomeTextLayoutPolicy.languageSelectorPlacement(
                 usesBottomComposerLayout: true,
                 usesSimplifiedTextLayout: true,
                 idiom: .phone
-            ) == .navigationBar
+            ) == .languageBar
         )
     }
 

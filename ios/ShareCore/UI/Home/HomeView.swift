@@ -42,7 +42,6 @@ public struct HomeView: View {
     @ObservedObject var entitlement = Entitlement.shared
     @State var hasTriggeredAutoRequest = false
     /// The waveform alone reads as voice input, so it carries a label until first use.
-    @AppStorage("home.hasUsedRealtimeButton") var hasUsedRealtimeButton = false
     @State var recentTextRecords: [HomeRecentRecord] = []
     @State var recentRecordsRefreshTask: Task<Void, Never>?
     @State var isInputExpanded: Bool
@@ -427,7 +426,7 @@ public struct HomeView: View {
                             }
                         }
                         ToolbarItem(placement: .principal) {
-                            navigationBarLanguageSelector
+                            homeModePicker
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             phoneSettingsButton
@@ -762,6 +761,13 @@ public struct HomeView: View {
                         #if !os(macOS)
                             if !openFromExtension, !usesNativeNavigationChrome {
                                 header
+                            }
+                        #endif
+
+                        #if os(iOS)
+                            if languageSelectorPlacement == .languageBar {
+                                phoneLanguageBar
+                                    .padding(.bottom, TLingoSpacing.sm)
                             }
                         #endif
 
