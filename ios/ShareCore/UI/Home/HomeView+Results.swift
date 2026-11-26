@@ -33,9 +33,14 @@ extension HomeView {
 
         let panel = VStack(alignment: .leading, spacing: Self.flatResultCardSpacing) {
             if let primaryRun = runs.first {
-                flatResultRow(for: primaryRun, animatesStreamingText: true)
+                flatResultRow(for: primaryRun, animatesStreamingText: true, badge: primaryResultBadge(for: primaryRun))
                 if runs.count > 1 {
                     let remainingRuns = Array(runs.dropFirst())
+                    #if os(iOS)
+                        if usesPhoneComposerChrome, !showsComparison {
+                            otherModelsHeader(count: remainingRuns.count)
+                        }
+                    #endif
                     Group {
                         if showsComparison {
                             expandedComparison(remainingRuns)
@@ -56,7 +61,7 @@ extension HomeView {
                 }
             }
 
-            if !runs.isEmpty, showsResultOptions {
+            if !runs.isEmpty, showsResultOptions, !(usesPhoneComposerChrome && runs.count > 1) {
                 resultOptionsFooter(showsResultOrder: runs.count > 1)
             }
 
@@ -107,12 +112,13 @@ extension HomeView {
     @ViewBuilder
     func flatResultRow(
         for run: HomeViewModel.ModelRunViewState,
-        animatesStreamingText: Bool = true
+        animatesStreamingText: Bool = true,
+        badge: Text? = nil
     ) -> some View {
         let runID = run.id
         let isLoading = isRunLoading(run)
         let row = VStack(alignment: .leading, spacing: 8) {
-            flatResultHeader(for: run)
+            flatResultHeader(for: run, badge: badge)
             content(
                 for: run,
                 textPreset: .compact,
@@ -152,12 +158,22 @@ extension HomeView {
         #endif
     }
 
-    func flatResultHeader(for run: HomeViewModel.ModelRunViewState) -> some View {
+    func flatResultHeader(for run: HomeViewModel.ModelRunViewState, badge: Text? = nil) -> some View {
         HStack(spacing: 8) {
             Text(run.modelDisplayName)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(colors.textPrimary)
                 .lineLimit(1)
+
+            if let badge {
+                badge
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(colors.accent)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(colors.accent.opacity(0.12), in: Capsule())
+                    .lineLimit(1)
+            }
 
             switch run.status {
             case .idle, .running, .streaming, .streamingSentencePairs:
@@ -297,7 +313,9 @@ extension HomeView {
             }
         } label: {
             let header = HStack(spacing: 4) {
-                Text("\(runs.count) more models")
+                if !usesPhoneComposerChrome {
+                    Text("\(runs.count) more models")
+                }
                 if finishedCount < runs.count {
                     ProgressView()
                         .controlSize(.mini)
@@ -420,6 +438,39 @@ extension HomeView {
             #endif
         }
         .padding(.top, 4)
+    }
+
+    func primaryResultBadge(for run: HomeViewModel.ModelRunViewState) -> Text? {
+        guard usesPhoneComposerChrome, viewModel.displayedModelRuns.count > 1 else { return nil }
+        switch preferences.modelResultOrder {
+        case .modelList:
+            return Text("Preferred Model")
+        case .firstCompletedFirst:
+            guard isFinishedRun(run), let duration = run.durationText else { return nil }
+            return Text("Fastest · \(duration)")
+        }
+    }
+
+    func otherModelsHeader(count: Int) -> some View {
+        HStack {
+            Text("\(count) more models")
+                .foregroundStyle(colors.textSecondary)
+            Spacer()
+            Menu {
+                resultOptionsMenuContent(showsResultOrder: true)
+            } label: {
+                HStack(spacing: 3) {
+                    Text(preferences.modelResultOrder.title)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundStyle(colors.accent)
+            }
+            .accessibilityIdentifier("home_result_order")
+        }
+        .font(.system(size: 13, weight: .medium))
+        .padding(.horizontal, 4)
+        .padding(.top, 6)
     }
 
     func comparisonHeader(remainingModelCount: Int) -> some View {

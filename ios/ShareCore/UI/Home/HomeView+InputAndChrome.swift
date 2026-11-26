@@ -559,6 +559,7 @@ extension HomeView {
                         onImagePaste: { _ in },
                         onContentHeightChange: contentHeightChangeHandler,
                         onSubmit: performInputActionIfPossible,
+                        autoFocus: isEditingSourceAfterResults,
                         onSwapLanguages: { viewModel.swapInputLanguages() }
                     )
                     .frame(minHeight: editorHeight ?? inputEditorMinHeight, maxHeight: editorHeight ?? inputEditorMaxHeight)
@@ -621,6 +622,39 @@ extension HomeView {
                 .fixedSize()
                 .accessibilityIdentifier("home_mode_picker")
             }
+        }
+
+        /// Results end with two plain choices instead of a chat-style input.
+        var showsResultActions: Bool {
+            usesPhoneComposerChrome && context == nil && !viewModel.modelRuns.isEmpty && !isEditingSourceAfterResults
+        }
+
+        var resultActionsBar: some View {
+            HStack(spacing: TLingoSpacing.md) {
+                Button {
+                    isEditingSourceAfterResults = true
+                } label: {
+                    Text("Edit Source")
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .tlingoGlassCapsule(.control, interactive: true)
+                }
+                .foregroundStyle(colors.accent)
+                .accessibilityIdentifier("home_edit_source_button")
+
+                Button {
+                    viewModel.inputText = ""
+                } label: {
+                    Text("New Translation")
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .tlingoGlassCapsule(.prominent, interactive: true)
+                }
+                .foregroundStyle(colors.onAccent)
+                .accessibilityIdentifier("home_new_translation_button")
+            }
+            .font(.headline)
+            .buttonStyle(.plain)
+            .frame(maxWidth: bottomComposerContentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
 
         @ViewBuilder
