@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.9] - 2026-11-27
+
+### Added
+
+- [Both] Add Parakeet Unified for more accurate English live captions with punctuation
+- [iOS] Suggest Parakeet Unified when you start English live captions
+
+### Improved
+
+- [iOS] Switch between Text and Realtime at the top of Home, with the language bar right below
+- [iOS] Keep first-run onboarding focused on setting up translation for selected text
+
+### Fixed
+
+- [iOS] Make onboarding buttons respond across their full width on iPad
+
 ## [5.7.8] - 2026-11-24
 
 ### Improved

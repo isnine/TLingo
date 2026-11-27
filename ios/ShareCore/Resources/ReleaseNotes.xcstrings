@@ -1,6 +1,131 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Add Parakeet Unified for more accurate English live captions with punctuation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف Parakeet Unified للحصول على تسميات توضيحية مباشرة باللغة الإنجليزية أكثر دقة مع علامات الترقيم"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj Parakeet Unified for mere præcise engelske liveundertekster med tegnsætning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge Parakeet Unified hinzu, um genauere englische Live-Untertitel mit Satzzeichen zu erhalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Parakeet Unified for more accurate English live captions with punctuation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade Parakeet Unified para obtener subtítulos en directo en inglés más precisos y con puntuación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez Parakeet Unified pour obtenir des sous-titres en direct en anglais plus précis et ponctués"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambahkan Parakeet Unified untuk teks langsung bahasa Inggris yang lebih akurat dan dilengkapi tanda baca"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi Parakeet Unified per sottotitoli in tempo reale in inglese più accurati e con punteggiatura"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parakeet Unifiedを追加すると、句読点付きのより正確な英語のライブキャプションを利用できます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parakeet Unified를 추가하여 문장 부호가 포함된 더 정확한 영어 실시간 자막을 이용하세요"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambahkan Parakeet Unified untuk kapsyen langsung bahasa Inggeris yang lebih tepat dengan tanda baca"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legg til Parakeet Unified for mer presise engelske direktetekster med tegnsetting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg Parakeet Unified toe voor nauwkeurigere Engelse liveondertiteling met leestekens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj Parakeet Unified, aby uzyskać dokładniejsze angielskie napisy na żywo z interpunkcją"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicione o Parakeet Unified para obter legendas ao vivo em inglês mais precisas e com pontuação"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg till Parakeet Unified för mer exakta engelska livetexter med skiljetecken"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noktalama işaretleri içeren daha doğru İngilizce canlı altyazılar için Parakeet Unified'ı ekleyin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入 Parakeet Unified，提供更準確並附有標點符號的英語即時字幕"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 Parakeet Unified，获取更准确且带有标点符号的英语实时字幕"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入 Parakeet Unified，提供更準確且附有標點符號的英語即時字幕"
+          }
+        }
+      }
+    },
     "Added a centered Quick Panel on macOS with a configurable shortcut, inline actions, and results that hand off to the main window." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4251,6 +4376,131 @@
         }
       }
     },
+    "Keep first-run onboarding focused on setting up translation for selected text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إبقاء خطوات الإعداد عند التشغيل الأول مركزة على إعداد ترجمة النص المحدد"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold introduktionen ved første start fokuseret på opsætning af oversættelse af markeret tekst"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konzentriere die Einführung beim ersten Start auf die Einrichtung der Übersetzung für ausgewählten Text"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep first-run onboarding focused on setting up translation for selected text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centra la introducción inicial en configurar la traducción del texto seleccionado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concentrez la prise en main initiale sur la configuration de la traduction du texte sélectionné"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fokuskan panduan awal pada pengaturan terjemahan untuk teks yang dipilih"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni la configurazione iniziale focalizzata sull'impostazione della traduzione del testo selezionato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初回起動時の案内を、選択したテキストの翻訳設定に絞る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "처음 실행 시 안내를 선택한 텍스트의 번역 설정에 집중"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fokuskan panduan permulaan pada penyediaan terjemahan untuk teks yang dipilih"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold introduksjonen ved første oppstart fokusert på oppsett av oversettelse for markert tekst"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de introductie bij de eerste keer opstarten gericht op het instellen van vertaling voor geselecteerde tekst"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skup wprowadzenie przy pierwszym uruchomieniu na konfiguracji tłumaczenia zaznaczonego tekstu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenha a introdução inicial focada na configuração da tradução de texto selecionado"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Håll introduktionen vid första starten fokuserad på att ställa in översättning av markerad text"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk açılış tanıtımını, seçilen metnin çevirisini ayarlamaya odaklı tutun"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓首次啟動的引導流程集中於設定所選文字的翻譯"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让首次启动引导专注于设置所选文本的翻译"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓首次啟動的引導流程專注於設定所選文字的翻譯"
+          }
+        }
+      }
+    },
     "Keep long live caption sessions responsive and make large history transcripts smoother to scroll" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5872,6 +6122,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "讓即時輸入和語音辨識選項更容易找到，並為 iPhone 音訊啟用了僅轉寫模式。"
+          }
+        }
+      }
+    },
+    "Make onboarding buttons respond across their full width on iPad" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جعل أزرار الإعداد تستجيب للمس عبر كامل عرضها على iPad"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gør knapperne i introduktionen trykbare i hele deres bredde på iPad"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorge dafür, dass die Schaltflächen der Einführung auf dem iPad über ihre gesamte Breite reagieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make onboarding buttons respond across their full width on iPad"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haz que los botones de la introducción respondan en toda su anchura en el iPad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendez les boutons de prise en main réactifs sur toute leur largeur sur iPad"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buat tombol panduan awal merespons sentuhan di seluruh lebarnya pada iPad"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendi i pulsanti della configurazione iniziale attivi per tutta la loro larghezza su iPad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadで初期設定のボタンを横幅全体でタップできるようにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad에서 시작 안내 버튼의 전체 너비를 터치할 수 있도록 개선"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jadikan butang panduan permulaan responsif pada seluruh lebarnya di iPad"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjør knappene i introduksjonen trykkbare i hele bredden på iPad"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorg dat de knoppen in de introductie op de iPad over de volle breedte reageren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spraw, by przyciski wprowadzenia na iPadzie reagowały na dotyk na całej szerokości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faça os botões da introdução responderem ao toque em toda a largura no iPad"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gör knapparna i introduktionen tryckbara över hela bredden på iPad"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad'de başlangıç tanıtımı düğmelerinin tüm genişlikleri boyunca dokunmaya yanıt vermesini sağlayın"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓 iPad 上的引導流程按鈕在整個寬度範圍內都可點按"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让 iPad 上的引导按钮在整个宽度范围内都能响应点击"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓 iPad 上的引導按鈕在整個寬度範圍內都能回應點按"
           }
         }
       }
@@ -12001,6 +12376,131 @@
         }
       }
     },
+    "Suggest Parakeet Unified when you start English live captions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اقتراح Parakeet Unified عند بدء التسميات التوضيحية المباشرة باللغة الإنجليزية"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreslå Parakeet Unified, når du starter engelske liveundertekster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlage Parakeet Unified vor, wenn du englische Live-Untertitel startest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest Parakeet Unified when you start English live captions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugiere Parakeet Unified al iniciar los subtítulos en directo en inglés"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggérez Parakeet Unified au démarrage des sous-titres en direct en anglais"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sarankan Parakeet Unified saat Anda memulai teks langsung bahasa Inggris"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggerisci Parakeet Unified quando avvii i sottotitoli in tempo reale in inglese"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "英語のライブキャプションを開始するときにParakeet Unifiedを提案する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영어 실시간 자막을 시작할 때 Parakeet Unified 추천"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cadangkan Parakeet Unified apabila anda memulakan kapsyen langsung bahasa Inggeris"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreslå Parakeet Unified når du starter engelske direktetekster"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel Parakeet Unified voor wanneer je Engelse liveondertiteling start"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaproponuj Parakeet Unified po uruchomieniu angielskich napisów na żywo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugira o Parakeet Unified ao iniciar as legendas ao vivo em inglês"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föreslå Parakeet Unified när du startar engelska livetexter"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İngilizce canlı altyazıları başlattığınızda Parakeet Unified'ı önerin"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟動英語即時字幕時建議使用 Parakeet Unified"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动英语实时字幕时推荐使用 Parakeet Unified"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟動英語即時字幕時建議使用 Parakeet Unified"
+          }
+        }
+      }
+    },
     "Support custom OpenAI-compatible endpoints" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12122,6 +12622,131 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "支援自訂 OpenAI 相容端點"
+          }
+        }
+      }
+    },
+    "Switch between Text and Realtime at the top of Home, with the language bar right below" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدّل بين النص والوقت الفعلي في أعلى الصفحة الرئيسية، مع شريط اللغات أسفلهما مباشرةً"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skift mellem Tekst og Realtid øverst på startsiden, med sproglinjen lige nedenunder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wechsle oben auf der Startseite zwischen Text und Echtzeit. Die Sprachleiste befindet sich direkt darunter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch between Text and Realtime at the top of Home, with the language bar right below"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia entre Texto y Tiempo real en la parte superior de Inicio, con la barra de idiomas justo debajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passez de Texte à Temps réel en haut de l’accueil, avec la barre de langues juste en dessous"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beralih antara Teks dan Real-time di bagian atas Beranda, dengan bilah bahasa tepat di bawahnya"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa da Testo a Tempo reale nella parte superiore della schermata Home, con la barra delle lingue subito sotto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームの上部で「テキスト」と「リアルタイム」を切り替え、そのすぐ下に言語バーを表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "홈 상단에서 텍스트와 실시간을 전환하고 바로 아래에서 언어 막대 사용"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beralih antara Teks dan Masa Nyata di bahagian atas laman Utama, dengan bar bahasa betul-betul di bawahnya"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytt mellom Tekst og Sanntid øverst på Hjem, med språklinjen rett under"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel bovenaan het startscherm tussen Tekst en Realtime, met de taalbalk direct daaronder"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przełączaj między Tekstem a Czasem rzeczywistym u góry ekranu głównego, z paskiem języków bezpośrednio poniżej"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterne entre Texto e Tempo real na parte superior da tela inicial, com a barra de idiomas logo abaixo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Växla mellan Text och Realtid högst upp på Hem, med språkfältet precis nedanför"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ana Sayfa'nın üst kısmında Metin ve Gerçek Zamanlı arasında geçiş yapın; dil çubuğu hemen altında yer alır"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在主頁頂部切換「文字」和「即時」模式，語言列就在下方"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在首页顶部切换“文本”和“实时”模式，语言栏就在下方"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在首頁頂部切換「文字」和「即時」模式，語言列就在下方"
           }
         }
       }

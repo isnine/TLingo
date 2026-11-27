@@ -1,6 +1,43 @@
 {
   "releases": [
     {
+      "version": "5.7.9",
+      "items": [
+        {
+          "kind": "added",
+          "text": "Add Parakeet Unified for more accurate English live captions with punctuation"
+        },
+        {
+          "kind": "added",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Suggest Parakeet Unified when you start English live captions"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Switch between Text and Realtime at the top of Home, with the language bar right below"
+        },
+        {
+          "kind": "improved",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Keep first-run onboarding focused on setting up translation for selected text"
+        },
+        {
+          "kind": "fixed",
+          "platforms": [
+            "ios"
+          ],
+          "text": "Make onboarding buttons respond across their full width on iPad"
+        }
+      ]
+    },
+    {
       "version": "5.7.8",
       "items": [
         {
