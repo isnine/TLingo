@@ -1316,6 +1316,7 @@
                     .foregroundColor(colors.textSecondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: Constants.Layout.secondaryButtonHeight)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
