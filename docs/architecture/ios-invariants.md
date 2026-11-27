@@ -32,11 +32,12 @@ review_triggers:
 
 ## First-Run Onboarding Scenarios
 
-- The first-run cover starts with a scenario picker (Words and selected text, Live conversations, Shows and videos; multi-select). `OnboardingRoute` in ShareCore decides the phases: Realtime runs before the words flow so the words flow's premium offer stays last. Skipping the picker or picking nothing keeps the original words-only flow.
-- Realtime-only selections never show the words flow's premium offer; after the cover dismisses they present the first-run paywall instead, and `hasSeenIOSPaywallOnboarding` is set only by that paywall. Every other path sets it on dismissal as before.
+- The first-run cover shows only the words flow (`DefaultTranslationOnboardingView`). The scenario picker and Realtime flows run only from Settings → Replay Onboarding (`OnboardingFlowContainer`).
+- The replay cover starts with a scenario picker (Words and selected text, Live conversations, Shows and videos; multi-select). `OnboardingRoute` in ShareCore decides the phases: Realtime runs before the words flow so the words flow's premium offer stays last. Skipping the picker or picking nothing keeps the original words-only flow.
+- Realtime-only replay selections never show the words flow's premium offer, and a replay never presents the first-run paywall; only an explicit upgrade tap opens the paywall.
 - `RealtimeOnboardingView` is one flow parameterized by input: Live conversations uses the microphone, Shows and videos uses iPhone Audio (Speech Recognition only, plus the broadcast picker). Selecting both tries the microphone first, then iPhone Audio.
 - The flow drives the real `RealtimeSessionStore` / `RealtimeControlModel` (start, stop, permission and language-pack alerts). It restores the previous input source and clears the transcript on exit. Trial sessions are recorded in History like any other session.
-- Existing users with `hasSeenDefaultTranslationOnboarding` already set do not see the picker.
+- Existing users with `hasSeenDefaultTranslationOnboarding` already set do not see the first-run cover.
 
 ## Language Resolution
 

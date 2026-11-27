@@ -8,8 +8,8 @@
     import SwiftUI
 
     extension View {
-        /// Presents the first-run onboarding (scenario picker, Realtime setup, default translation),
-        /// then the first-run paywall.
+        /// Presents the first-run default translation onboarding, then the first-run paywall.
+        /// The scenario picker and Realtime setup are only offered from Settings.
         /// `isBlocked` is re-read after the launch delay so containers can defer while another sheet is up.
         func firstRunOnboardingPresentation(isBlocked: @escaping @MainActor () -> Bool) -> some View {
             modifier(FirstRunOnboardingPresentation(isBlocked: isBlocked))
@@ -23,7 +23,7 @@
         @ObservedObject private var entitlement = Entitlement.shared
         @State private var showDefaultTranslationOnboarding = false
         @State private var showDefaultTranslationPaywall = false
-        @State private var pendingResult: OnboardingFlowResult = .dismissed
+        @State private var pendingUpgrade = false
         @State private var showFirstRunPaywall = false
 
         func body(content: Content) -> some View {
@@ -32,8 +32,8 @@
                     isPresented: $showDefaultTranslationOnboarding,
                     onDismiss: handleDefaultTranslationOnboardingDismiss
                 ) {
-                    OnboardingFlowContainer { result in
-                        pendingResult = result
+                    DefaultTranslationOnboardingView { outcome in
+                        pendingUpgrade = outcome == .upgrade
                         showDefaultTranslationOnboarding = false
                     }
                 }
@@ -115,20 +115,12 @@
 
         @MainActor
         private func handleDefaultTranslationOnboardingDismiss() {
-            let result = pendingResult
-            pendingResult = .dismissed
+            let upgrade = pendingUpgrade
+            pendingUpgrade = false
             preferences.setHasSeenDefaultTranslationOnboarding(true)
-
-            switch result {
-            case .dismissed:
-                preferences.setHasSeenIOSPaywallOnboarding(true)
-            case .upgrade:
-                preferences.setHasSeenIOSPaywallOnboarding(true)
+            preferences.setHasSeenIOSPaywallOnboarding(true)
+            if upgrade {
                 showDefaultTranslationPaywall = true
-            case .firstRunPaywall:
-                // Realtime-only users never saw the words flow's premium offer, so show the first-run paywall.
-                guard !entitlement.isPro, !preferences.hasSeenIOSPaywallOnboarding else { return }
-                showFirstRunPaywall = true
             }
         }
     }

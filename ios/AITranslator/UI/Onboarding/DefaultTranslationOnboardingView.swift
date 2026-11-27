@@ -42,6 +42,9 @@
             static let scrollFooterSpacing: CGFloat = 14
             static let scrollFooterTopPadding: CGFloat = 20
             static let footerControlsSpacing: CGFloat = 10
+            static let legalTopPadding: CGFloat = 12
+            static let legalSpacing: CGFloat = 6
+            static let legalLinkSpacing: CGFloat = 6
 
             static let introSpacing: CGFloat = 20
             static let introTextReservedHeight: CGFloat = 176
@@ -90,6 +93,8 @@
             static let body: CGFloat = 15
             static let caption: CGFloat = 14
             static let small: CGFloat = 12
+            static let legalLink: CGFloat = 11
+            static let legalDisclosure: CGFloat = 10
             static let primaryButton: CGFloat = 17
             static let secondaryButton: CGFloat = 15
             static let statusIcon: CGFloat = 15
@@ -120,6 +125,7 @@
             static let sealTint: Double = 0.14
             static let sealFallbackTint: Double = 0.10
             static let sealFallbackStroke: Double = 0.24
+            static let legalDisclosure: Double = 0.7
         }
 
         enum Animation {
@@ -311,6 +317,13 @@
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .tint(colors.accent)
             .onAppear {
+                #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("-TLingoOnboardingTrialOffer") {
+                        step = .success
+                        premiumStage = .trialOffer
+                        Task { await loadTrialProduct() }
+                    }
+                #endif
                 preferences.refreshFromDefaults()
                 celebrateTrialInvocationIfNeeded()
                 if trialNotifierToken == nil {
@@ -1260,8 +1273,8 @@
         )!
 
         private var trialLegalFooter: some View {
-            VStack(spacing: 6) {
-                HStack(spacing: 12) {
+            VStack(spacing: Constants.Layout.legalSpacing) {
+                HStack(spacing: Constants.Layout.legalLinkSpacing) {
                     Button("Restore") {
                         Task {
                             await storeManager.restorePurchases()
@@ -1271,10 +1284,12 @@
                     .buttonStyle(.plain)
                     .disabled(storeManager.isPurchasing)
 
+                    Text(verbatim: "·")
                     Link("Terms of Use", destination: Self.termsOfUseURL)
+                    Text(verbatim: "·")
                     Link("Privacy Policy", destination: Self.privacyPolicyURL)
                 }
-                .font(.system(size: Constants.FontSize.small))
+                .font(.system(size: Constants.FontSize.legalLink, weight: .medium))
                 .foregroundColor(colors.textSecondary)
 
                 let renewalText = String(localized: "Subscriptions renew automatically.")
@@ -1282,11 +1297,12 @@
                     localized: "Cancel at least 24 hours before the end of the current period to avoid renewal."
                 )
                 Text("\(renewalText) \(cancellationText)")
-                    .font(.system(size: Constants.FontSize.small))
-                    .foregroundColor(colors.textSecondary)
+                    .font(.system(size: Constants.FontSize.legalDisclosure))
+                    .foregroundColor(colors.textSecondary.opacity(Constants.Opacity.legalDisclosure))
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 4)
+            .padding(.top, Constants.Layout.legalTopPadding)
         }
 
         private func primaryButton(
