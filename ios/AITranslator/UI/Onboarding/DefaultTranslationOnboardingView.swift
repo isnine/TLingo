@@ -39,38 +39,24 @@
             static let footerBottomPadding: CGFloat = 14
             static let footerTopSpacing: CGFloat = 20
             static let scrollBottomInset: CGFloat = 110
-            static let scrollFooterSpacing: CGFloat = 14
             static let scrollFooterTopPadding: CGFloat = 20
             static let footerControlsSpacing: CGFloat = 10
             static let legalTopPadding: CGFloat = 12
             static let legalSpacing: CGFloat = 6
             static let legalLinkSpacing: CGFloat = 6
 
-            static let introSpacing: CGFloat = 20
+            static let introSpacing: CGFloat = 26
             static let introTextReservedHeight: CGFloat = 176
-            static let introMediaHeightRatio: CGFloat = 0.64
             static let textBlockSpacing: CGFloat = 8
             static let bodyLineSpacing: CGFloat = 2
-            static let settingsSpacing: CGFloat = 22
-            static let settingsTitleSpacing: CGFloat = 12
-            static let setupStepsSpacing: CGFloat = 10
-            static let cardPadding: CGFloat = 16
-            static let tryItSpacing: CGFloat = 18
-            static let practiceCardMinHeight: CGFloat = 150
-            static let practiceCardPadding: CGFloat = 14
-            static let practiceCardBottomSpacing: CGFloat = 20
-            static let statusSpacing: CGFloat = 8
-            static let successSpacing: CGFloat = 20
-            static let successSealSize: CGFloat = 88
-            static let benefitsSpacing: CGFloat = 12
-            static let successTopPadding: CGFloat = 40
 
             static let primaryButtonHeight: CGFloat = 50
             static let secondaryButtonHeight: CGFloat = 42
-            static let stepBadgeSize: CGFloat = 22
-            static let setupStepSpacing: CGFloat = 10
-            static let benefitRowSpacing: CGFloat = 12
-            static let benefitIconSize: CGFloat = 26
+
+            static let dotsBottomSpacing: CGFloat = 10
+            static let receiptTitleSpacing: CGFloat = 28
+            static let reminderTopSpacing: CGFloat = 22
+            static let trialTitleTopSpacing: CGFloat = 24
 
             static let dotSpacing: CGFloat = 8
             static let dotActiveWidth: CGFloat = 20
@@ -79,52 +65,38 @@
         }
 
         enum Media {
-            static let heroAspectRatio: CGFloat = 640.0 / 854.0
-            static let introGifMinHeight: CGFloat = 280
-            static let settingsAspectRatio: CGFloat = 720.0 / 440.0
-            static let settingsImageMaxHeight: CGFloat = 240
-            static let tryItGifMaxHeight: CGFloat = 220
+            static let tryItGifSize = CGSize(width: 150, height: 200)
+        }
+
+        enum Receipt {
+            static let settingsWidth: CGFloat = 310
+            static let tryItWidth: CGFloat = 290
+            static let modelsWidth: CGFloat = 290
+            static let tryPremiumWidth: CGFloat = 300
+            static let trialWidth: CGFloat = 270
+            static let reminderWidth: CGFloat = 300
         }
 
         enum FontSize {
-            static let introTitle: CGFloat = 28
-            static let pageTitle: CGFloat = 26
-            static let successTitle: CGFloat = 30
+            static let pageTitle: CGFloat = 28
             static let body: CGFloat = 15
             static let caption: CGFloat = 14
-            static let small: CGFloat = 12
             static let legalLink: CGFloat = 11
             static let legalDisclosure: CGFloat = 10
             static let primaryButton: CGFloat = 17
             static let secondaryButton: CGFloat = 15
-            static let statusIcon: CGFloat = 15
-            static let benefitIcon: CGFloat = 17
-            static let successSeal: CGFloat = 60
         }
 
         enum Radius {
-            static let card: CGFloat = 14
-            static let button: CGFloat = 12
-            static let media: CGFloat = 18
+            static let receiptMedia: CGFloat = 10
+            static let receiptGif: CGFloat = 8
         }
 
         enum Stroke {
             static let hairline: CGFloat = 1
         }
 
-        enum Shadow {
-            static let radius: CGFloat = 16
-            static let yOffset: CGFloat = 8
-            static let darkOpacity: Double = 0.24
-            static let lightOpacity: Double = 0.08
-        }
-
         enum Opacity {
-            static let inactiveDot: Double = 0.25
-            static let disabledButton: Double = 0.28
-            static let sealTint: Double = 0.14
-            static let sealFallbackTint: Double = 0.10
-            static let sealFallbackStroke: Double = 0.24
             static let legalDisclosure: Double = 0.7
         }
 
@@ -146,10 +118,8 @@
         }
 
         enum Premium {
-            static let sectionSpacing: CGFloat = 18
-            static let rowVerticalPadding: CGFloat = 13
-            static let rowHorizontalPadding: CGFloat = 16
-            static let rowIconWidth: CGFloat = 24
+            static let loadingVerticalPadding: CGFloat = 20
+            static let monogramSize: CGFloat = 30
         }
     }
 
@@ -170,6 +140,7 @@
         @State private var didCelebrateTrialInvocation = false
         @State private var trialInvocationAtEntry: Date?
         @State private var showSkipOption = false
+        @State private var hasSelectedPracticeText = false
         @State private var premiumStage: PremiumStage?
         @State private var premiumModels: [ModelConfig] = []
         @State private var selectedPremiumIDs: Set<String> = []
@@ -192,6 +163,8 @@
         /// reminder ("Off") and is the default, so switching to a concrete day
         /// is what surfaces the notification permission prompt, in context.
         @State private var selectedReminderDaysBefore: Int?
+        @State private var isOpeningSettings = false
+        @State private var didLeaveForSettings = false
 
         private enum Step: Int, CaseIterable {
             case intro
@@ -238,14 +211,15 @@
                     ? Constants.Layout.horizontalPaddingWide
                     : Constants.Layout.horizontalPaddingNarrow
                 mediaWidth = min(size.width - horizontalPadding * 2, Constants.Layout.mediaWidthMax)
-                topPadding = max(Constants.Layout.safeAreaPaddingFloor, safeAreaInsets.top + Constants.Layout.topPaddingExtra)
+                // The GeometryReader already sits inside the safe area, so only pad
+                // by the full floor where the device has no inset of its own.
+                topPadding = safeAreaInsets.top > 0 ? Constants.Layout.topPaddingExtra : Constants.Layout.safeAreaPaddingFloor
                 contentTopSpacing = size.height < Constants.Layout.compactHeightThreshold
                     ? Constants.Layout.contentTopSpacingCompact
                     : Constants.Layout.contentTopSpacingRegular
-                footerBottomPadding = max(
-                    Constants.Layout.safeAreaPaddingFloor,
-                    safeAreaInsets.bottom + Constants.Layout.footerBottomPaddingExtra
-                )
+                footerBottomPadding = safeAreaInsets.bottom > 0
+                    ? Constants.Layout.footerBottomPaddingExtra
+                    : Constants.Layout.safeAreaPaddingFloor
 
                 let fixedFooterHeight = Constants.Layout.footerTopSpacing
                     + Constants.Layout.primaryButtonHeight
@@ -259,16 +233,12 @@
                 min(mediaWidth / aspectRatio, maxHeight)
             }
 
-            func introMediaSize() -> CGSize {
-                let naturalHeight = mediaWidth / Constants.Media.heroAspectRatio
+            func heroScale() -> CGFloat {
+                let hero = TypewriterHero.size
                 let availableHeight = fixedContentHeight
                     - Constants.Layout.introSpacing
                     - Constants.Layout.introTextReservedHeight
-                let preferredHeight = min(naturalHeight, fixedContentHeight * Constants.Layout.introMediaHeightRatio)
-                let height = availableHeight >= Constants.Media.introGifMinHeight
-                    ? min(preferredHeight, availableHeight)
-                    : max(0, availableHeight)
-                return CGSize(width: min(mediaWidth, height * Constants.Media.heroAspectRatio), height: height)
+                return max(0, min(1, mediaWidth / hero.width, availableHeight / hero.height))
             }
         }
 
@@ -281,6 +251,10 @@
             AppColors.Palette(colorScheme: colorScheme, accentTheme: preferences.accentTheme)
         }
 
+        private var paper: OnboardingPaperPalette {
+            OnboardingPaperPalette(colorScheme: colorScheme)
+        }
+
         private var hasCompletedTrial: Bool {
             preferences.hasCompletedDefaultTranslationTrial
         }
@@ -290,7 +264,7 @@
                 let metrics = LayoutMetrics(size: proxy.size, safeAreaInsets: proxy.safeAreaInsets)
 
                 ZStack {
-                    colors.background
+                    paper.background
                         .ignoresSafeArea()
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -315,13 +289,16 @@
                 }
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
-            .tint(colors.accent)
+            .tint(OnboardingPaperPalette.accent)
             .onAppear {
                 #if DEBUG
                     if ProcessInfo.processInfo.arguments.contains("-TLingoOnboardingTrialOffer") {
                         step = .success
                         premiumStage = .trialOffer
                         Task { await loadTrialProduct() }
+                    }
+                    if let page = UserDefaults.standard.string(forKey: "TLingoOnboardingPage") {
+                        applyDebugPage(page)
                     }
                 #endif
                 preferences.refreshFromDefaults()
@@ -431,11 +408,11 @@
                     .padding(.top, metrics.topPadding)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                footerControls
-                    .padding(.top, Constants.Layout.footerTopSpacing)
-                    .padding(.bottom, Constants.Layout.footerBottomPadding)
-
                 progressDots
+                    .padding(.top, Constants.Layout.footerTopSpacing)
+                    .padding(.bottom, Constants.Layout.dotsBottomSpacing)
+
+                footerControls
                     .padding(.bottom, metrics.footerBottomPadding)
             }
             .padding(.horizontal, metrics.horizontalPadding)
@@ -452,14 +429,14 @@
                 .padding(.horizontal, metrics.horizontalPadding)
             }
             .safeAreaInset(edge: .bottom) {
-                VStack(spacing: Constants.Layout.scrollFooterSpacing) {
-                    footerControls
+                VStack(spacing: Constants.Layout.dotsBottomSpacing) {
                     progressDots
+                    footerControls
                 }
                 .padding(.horizontal, metrics.horizontalPadding)
                 .padding(.bottom, metrics.footerBottomPadding)
                 .padding(.top, Constants.Layout.scrollFooterTopPadding)
-                .background(colors.background)
+                .background(paper.solidBackground)
             }
         }
 
@@ -469,30 +446,18 @@
             case .intro:
                 centeredContent(fill: fill) { introPage(metrics: metrics) }
             case .settings:
-                centeredContent(fill: fill) { settingsPage(metrics: metrics) }
+                centeredContent(fill: fill) { settingsPage }
             case .tryIt:
-                tryItPage(metrics: metrics, fill: fill)
+                centeredContent(fill: fill) { tryItPage }
             case .success:
                 switch premiumStage {
                 case .none:
-                    successPageContent(fill: fill)
+                    centeredContent(fill: fill) { modelsPage }
                 case .tryPremium:
-                    centeredContent(fill: fill) { tryPremiumPage(metrics: metrics) }
+                    centeredContent(fill: fill) { tryPremiumPage }
                 case .trialOffer:
                     centeredContent(fill: fill) { trialOfferPage }
                 }
-            }
-        }
-
-        @ViewBuilder
-        private func successPageContent(fill: Bool) -> some View {
-            if fill {
-                VStack(spacing: 0) {
-                    successPage
-                    Spacer(minLength: 0)
-                }
-            } else {
-                successPage
             }
         }
 
@@ -530,8 +495,7 @@
                     } label: {
                         Capsule()
                             .fill(
-                                index == progressIndex ? colors.accent : colors.textSecondary
-                                    .opacity(Constants.Opacity.inactiveDot)
+                                index == progressIndex ? paper.dotActive : paper.dotInactive
                             )
                             .frame(
                                 width: index == progressIndex ? Constants.Layout.dotActiveWidth : Constants.Layout.dotSize,
@@ -543,7 +507,7 @@
                             .animation(.easeInOut(duration: Constants.Animation.stepTransition), value: progressIndex)
                     }
                     .buttonStyle(.plain)
-                    .disabled(index >= progressIndex)
+                    .allowsHitTesting(index < progressIndex)
                     .accessibilityLabel("Go to step \(index + 1) of \(progressTotal)")
                 }
             }
@@ -567,25 +531,19 @@
         }
 
         private func introPage(metrics: LayoutMetrics) -> some View {
-            let heroSize = metrics.introMediaSize()
+            let scale = metrics.heroScale()
 
             return VStack(spacing: Constants.Layout.introSpacing) {
-                animatedScreenshot(
-                    "DefaultTranslationHeroAnimation",
-                    width: heroSize.width,
-                    height: heroSize.height
-                )
+                TypewriterHero()
+                    .scaleEffect(scale, anchor: .top)
+                    .frame(width: TypewriterHero.size.width * scale, height: TypewriterHero.size.height * scale)
 
                 VStack(spacing: Constants.Layout.textBlockSpacing) {
-                    Text("Translate without leaving the app you're in")
-                        .font(.system(size: Constants.FontSize.introTitle, weight: .bold))
-                        .foregroundColor(colors.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
+                    pageTitle("Translate without leaving the app you're in")
 
                     Text("Select text anywhere and translate it from the text menu.")
                         .font(.system(size: Constants.FontSize.body))
-                        .foregroundColor(colors.textSecondary)
+                        .foregroundStyle(paper.subtitle)
                         .multilineTextAlignment(.center)
                         .lineSpacing(Constants.Layout.bodyLineSpacing)
                         .fixedSize(horizontal: false, vertical: true)
@@ -593,225 +551,178 @@
             }
         }
 
-        private func settingsPage(metrics: LayoutMetrics) -> some View {
-            let settingsHeight = metrics.mediaHeight(
-                aspectRatio: Constants.Media.settingsAspectRatio,
-                maxHeight: Constants.Media.settingsImageMaxHeight
-            )
-
-            return VStack(spacing: Constants.Layout.settingsSpacing) {
-                screenshot(
-                    "DefaultTranslationSettings",
-                    width: settingsHeight * Constants.Media.settingsAspectRatio,
-                    height: settingsHeight
-                )
-
-                VStack(spacing: Constants.Layout.settingsTitleSpacing) {
-                    Text("Choose TLingo in Settings")
-                        .font(.system(size: Constants.FontSize.pageTitle, weight: .bold))
-                        .foregroundColor(colors.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    VStack(alignment: .leading, spacing: Constants.Layout.setupStepsSpacing) {
-                        setupStep(number: 1, text: "Open Settings > Apps > Default Apps > Translation")
-                        setupStep(number: 2, text: "Select TLingo")
-                    }
-                    .padding(Constants.Layout.cardPadding)
-                    .background(cardBackground)
-                }
-            }
+        private func pageTitle(_ title: LocalizedStringKey) -> some View {
+            Text(title)
+                .font(.system(size: Constants.FontSize.pageTitle, weight: .bold))
+                .foregroundStyle(paper.title)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
 
-        private func tryItPage(metrics: LayoutMetrics, fill: Bool) -> some View {
-            let gifHeight = metrics.mediaHeight(
-                aspectRatio: Constants.Media.heroAspectRatio,
-                maxHeight: Constants.Media.tryItGifMaxHeight
-            )
-
-            return VStack(spacing: Constants.Layout.tryItSpacing) {
-                animatedScreenshot(
-                    "DefaultTranslationHeroAnimation",
-                    width: gifHeight * Constants.Media.heroAspectRatio,
-                    height: gifHeight
-                )
-
-                VStack(spacing: Constants.Layout.textBlockSpacing) {
-                    Text("Translate this sentence now")
-                        .font(.system(size: Constants.FontSize.pageTitle, weight: .bold))
-                        .foregroundColor(colors.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text("Select this sentence, then tap Translate from the text menu.")
-                        .font(.system(size: Constants.FontSize.body))
-                        .foregroundColor(colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(Constants.Layout.bodyLineSpacing)
-                }
-
-                SelectablePracticeTextView(text: Self.practiceText)
-                    .frame(
-                        maxWidth: .infinity,
-                        minHeight: Constants.Layout.practiceCardMinHeight,
-                        maxHeight: fill ? .infinity : nil,
-                        alignment: .topLeading
-                    )
-                    .padding(Constants.Layout.practiceCardPadding)
-                    .background(cardBackground)
-                    .frame(maxWidth: metrics.mediaWidth)
-                    .padding(.bottom, Constants.Layout.practiceCardBottomSpacing)
+        private func receiptPage(
+            _ title: LocalizedStringKey,
+            @ViewBuilder receipt: () -> some View
+        ) -> some View {
+            VStack(spacing: Constants.Layout.receiptTitleSpacing) {
+                receipt()
+                pageTitle(title)
             }
             .frame(maxWidth: .infinity)
         }
 
-        private var trialStatusIndicator: some View {
-            HStack(spacing: Constants.Layout.statusSpacing) {
-                Image(systemName: hasCompletedTrial ? "checkmark.circle.fill" : "clock")
-                    .font(.system(size: Constants.FontSize.statusIcon, weight: .semibold))
-                Text(
-                    hasCompletedTrial ? String(localized: "TLingo opened successfully.") :
-                        String(localized: "Waiting for you to try it...")
-                )
-                .font(.system(size: Constants.FontSize.caption, weight: .medium))
-
-                if !hasCompletedTrial, showSkipOption {
-                    Button("Skip for now") {
-                        onFinished(.dismissed)
-                    }
-                    .font(.system(size: Constants.FontSize.caption, weight: .semibold))
-                    .foregroundColor(colors.accent)
-                    .buttonStyle(.plain)
-                    .transition(.opacity)
+        private var settingsPage: some View {
+            receiptPage("Set TLingo as your translator") {
+                ReceiptPaper(width: Constants.Receipt.settingsWidth) {
+                    ReceiptHeader(number: 2)
+                    ReceiptRule()
+                    Text("Settings › Apps › Default Apps")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(OnboardingPaperPalette.inkSecondary)
+                    Image("DefaultTranslationSettings")
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.Radius.receiptMedia, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Constants.Radius.receiptMedia, style: .continuous)
+                                .stroke(.black.opacity(0.06), lineWidth: Constants.Stroke.hairline)
+                        )
+                        .accessibilityLabel(Text("Translation set to TLingo in Default Apps"))
                 }
             }
-            .foregroundColor(hasCompletedTrial ? colors.success : colors.textSecondary)
         }
 
-        private var successPage: some View {
-            VStack(spacing: Constants.Layout.successSpacing) {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: Constants.FontSize.successSeal, weight: .bold))
-                    .foregroundStyle(colors.success)
-                    .frame(width: Constants.Layout.successSealSize, height: Constants.Layout.successSealSize)
-                    .tlingoGlassCircle(
-                        tint: colors.success.opacity(Constants.Opacity.sealTint),
-                        fallbackTint: colors.success.opacity(Constants.Opacity.sealFallbackTint),
-                        fallbackStroke: colors.success.opacity(Constants.Opacity.sealFallbackStroke)
-                    )
-
-                VStack(spacing: Constants.Layout.textBlockSpacing) {
-                    Text("You're ready to translate")
-                        .font(.system(size: Constants.FontSize.successTitle, weight: .bold))
-                        .foregroundColor(colors.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text("Translate selected text without copying and pasting. Try checking grammar with premium models.")
-                        .font(.system(size: Constants.FontSize.body))
-                        .foregroundColor(colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(Constants.Layout.bodyLineSpacing)
+        private var tryItPage: some View {
+            receiptPage(hasCompletedTrial ? "Ready" : "Try it now") {
+                ReceiptPaper(width: Constants.Receipt.tryItWidth) {
+                    ReceiptHeader(number: 3, leading: { EmptyView() }, trailing: {
+                        TrialWaitingDot(isDone: hasCompletedTrial)
+                    })
+                    ReceiptRule()
+                    AnimatedGIFView(assetName: "DefaultTranslationHeroAnimation")
+                        .frame(width: Constants.Media.tryItGifSize.width, height: Constants.Media.tryItGifSize.height)
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.Radius.receiptGif, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Constants.Radius.receiptGif, style: .continuous)
+                                .stroke(.black.opacity(0.08), lineWidth: Constants.Stroke.hairline)
+                        )
+                        .shadow(color: paper.shadow, radius: 3, x: 0, y: 2)
+                        .frame(maxWidth: .infinity)
+                        .accessibilityHidden(true)
+                    ReceiptRule()
+                    SelectablePracticeTextView(text: Self.practiceText) {
+                        hasSelectedPracticeText = true
+                    }
+                        .overlay(alignment: .topLeading) {
+                            if !hasCompletedTrial, !hasSelectedPracticeText {
+                                PracticeSelectionHint(phrase: "The quickest way", font: SelectablePracticeTextView.font)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .animation(.easeOut(duration: 0.2), value: hasSelectedPracticeText)
+                        .overlay(alignment: .bottomTrailing) {
+                            if hasCompletedTrial {
+                                ReceiptStamp(title: "RECEIVED ✓")
+                                    .offset(x: 6, y: 12)
+                            }
+                        }
                 }
-
-                premiumModelPickerCard
             }
-            .frame(maxWidth: .infinity)
         }
 
         // MARK: - Premium try branch
 
-        @ViewBuilder
-        private var premiumModelPickerCard: some View {
-            if selectablePremiumModels.isEmpty, isLoadingPremiumModels {
-                premiumModelsLoadingPlaceholder
-            } else {
-                ModelSectionCard(
-                    title: "Premium Models",
-                    icon: "crown.fill",
-                    tint: .orange,
-                    models: selectablePremiumModels,
-                    dividerLeadingPadding: Constants.Premium.rowHorizontalPadding * 2 + Constants.Premium.rowIconWidth
-                ) { model in
-                    premiumModelRow(model)
+        private var modelsPage: some View {
+            receiptPage("Pick models to try") {
+                ReceiptPaper(
+                    width: Constants.Receipt.modelsWidth,
+                    spacing: 6,
+                    insets: EdgeInsets(top: 14, leading: 18, bottom: 12, trailing: 18)
+                ) {
+                    ReceiptHeader(number: 4) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(OnboardingPaperPalette.accent)
+                            .accessibilityLabel(Text("Premium Models"))
+                    }
+                    ReceiptRule()
+                        .padding(.bottom, 4)
+                    if selectablePremiumModels.isEmpty, isLoadingPremiumModels {
+                        HStack(spacing: 10) {
+                            ProgressView()
+                                .scaleEffect(0.85)
+                            Text("Loading models…")
+                                .font(.system(size: Constants.FontSize.caption, weight: .medium))
+                                .foregroundStyle(OnboardingPaperPalette.inkSecondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Constants.Premium.loadingVerticalPadding)
+                    } else {
+                        ForEach(selectablePremiumModels, id: \.id) { model in
+                            premiumModelRow(model)
+                        }
+                    }
                 }
             }
         }
 
         private func premiumModelRow(_ model: ModelConfig) -> some View {
             let isSelected = selectedPremiumIDs.contains(model.id)
-            return SelectableModelRow(
-                model: model,
-                isSelected: isSelected,
-                style: .compact,
-                showsDefaultBadge: false,
-                showsModelTags: false
-            ) {
+            return Button {
                 togglePremiumModel(model)
-            }
-        }
-
-        private var premiumModelsLoadingPlaceholder: some View {
-            HStack(spacing: 10) {
-                ProgressView()
-                    .scaleEffect(0.85)
-                Text("Loading models…")
-                    .font(.system(size: Constants.FontSize.caption, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, Constants.Premium.rowHorizontalPadding)
-            .padding(.vertical, Constants.Premium.rowVerticalPadding * 3)
-            .background(cardBackground)
-        }
-
-        @ViewBuilder
-        private func tryPremiumPage(metrics: LayoutMetrics) -> some View {
-            VStack(spacing: Constants.Premium.sectionSpacing) {
-                tryPremiumHeader
-                tryPremiumComposer
-                    .frame(maxWidth: metrics.mediaWidth)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, metrics.horizontalPadding)
-            .padding(.top, Constants.Layout.successTopPadding)
-        }
-
-        @ViewBuilder
-        private var tryPremiumHeader: some View {
-            VStack(spacing: Constants.Layout.textBlockSpacing) {
-                Text("Try Grammar Check")
-                    .font(.system(size: Constants.FontSize.pageTitle, weight: .bold))
-                    .foregroundColor(colors.textPrimary)
-                    .multilineTextAlignment(.center)
-
-                Text("Select the text below, then tap Translate from the text menu.")
-                    .font(.system(size: Constants.FontSize.body))
-                    .foregroundColor(colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(Constants.Layout.bodyLineSpacing)
-
-                Text("See how premium models correct grammar mistakes and explain the changes.")
-                    .font(.system(size: Constants.FontSize.body))
-                    .foregroundColor(colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(Constants.Layout.bodyLineSpacing)
-            }
-        }
-
-        @ViewBuilder
-        private var tryPremiumComposer: some View {
-            OnboardingTrialTextEditor(
-                text: $trialInputText,
-                font: .preferredFont(forTextStyle: .body),
-                customActionTitle: String(localized: "Translate"),
-                onCustomAction: { selectedText in
-                    presentTrialSheet(inputText: selectedText)
-                },
-                onFeedback: {
-                    composeFeedbackEmail()
+            } label: {
+                HStack(spacing: 12) {
+                    Text(verbatim: String(model.displayName.prefix(1)).uppercased())
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: Constants.Premium.monogramSize, height: Constants.Premium.monogramSize)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(OnboardingPaperPalette.ink)
+                        )
+                        .accessibilityHidden(true)
+                    Text(model.displayName)
+                        .font(.system(size: Constants.FontSize.body, weight: .semibold))
+                        .foregroundStyle(OnboardingPaperPalette.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 22))
+                        .foregroundStyle(isSelected ? OnboardingPaperPalette.accent : OnboardingPaperPalette.rule)
+                        .accessibilityHidden(true)
                 }
-            )
-            .frame(minHeight: Constants.Layout.practiceCardMinHeight)
-            .padding(Constants.Layout.practiceCardPadding)
-            .background(cardBackground)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 2)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+        }
+
+        private var tryPremiumPage: some View {
+            receiptPage("Try Grammar Check") {
+                ReceiptPaper(width: Constants.Receipt.tryPremiumWidth) {
+                    ReceiptHeader(number: 5) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 13, weight: .semibold))
+                            .accessibilityHidden(true)
+                    }
+                    ReceiptRule()
+                    OnboardingTrialTextEditor(
+                        text: $trialInputText,
+                        font: UIFontMetrics(forTextStyle: .body)
+                            .scaledFont(for: .monospacedSystemFont(ofSize: 13, weight: .regular)),
+                        textColor: UIColor(OnboardingPaperPalette.ink),
+                        customActionTitle: String(localized: "Translate"),
+                        onCustomAction: { selectedText in
+                            presentTrialSheet(inputText: selectedText)
+                        },
+                        onFeedback: {
+                            composeFeedbackEmail()
+                        }
+                    )
+                    .padding(.horizontal, -8)
+                }
+            }
         }
 
         private func composeFeedbackEmail() {
@@ -831,62 +742,74 @@
         }
 
         private var trialOfferPage: some View {
-            VStack(spacing: Constants.Layout.successSpacing) {
-                Image(systemName: "crown.fill")
-                    .font(.system(size: Constants.FontSize.successSeal, weight: .bold))
-                    .foregroundStyle(colors.accent)
-                    .frame(width: Constants.Layout.successSealSize, height: Constants.Layout.successSealSize)
-                    .tlingoGlassCircle(
-                        tint: colors.accent.opacity(Constants.Opacity.sealTint),
-                        fallbackTint: colors.accent.opacity(Constants.Opacity.sealFallbackTint),
-                        fallbackStroke: colors.accent.opacity(Constants.Opacity.sealFallbackStroke)
-                    )
-
-                VStack(spacing: Constants.Layout.textBlockSpacing) {
-                    Text(trialOfferHeadline)
-                        .font(.system(size: Constants.FontSize.successTitle, weight: .bold))
-                        .foregroundColor(colors.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text(trialSubtitle)
-                        .font(.system(size: Constants.FontSize.body))
-                        .foregroundColor(colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(Constants.Layout.bodyLineSpacing)
+            VStack(spacing: 0) {
+                ReceiptPaper(
+                    width: Constants.Receipt.trialWidth,
+                    spacing: 8,
+                    insets: EdgeInsets(top: 12, leading: 20, bottom: 16, trailing: 20)
+                ) {
+                    ReceiptHeader(number: 6) {
+                        Text(verbatim: "PRO")
+                    }
+                    ReceiptRule()
+                    if let trialEnd = trialEndDate, let price = storeManager.annualProduct?.displayPrice {
+                        TrialTimeline(
+                            startDate: Self.timelineDateFormatter.string(from: Date()).uppercased(),
+                            reminderDate: selectedReminderDate.map { Self.timelineDateFormatter.string(from: $0).uppercased() },
+                            renewDate: Self.timelineDateFormatter.string(from: trialEnd).uppercased(),
+                            renewPrice: String(localized: "\(price)/yr")
+                        )
+                        .padding(.vertical, 4)
+                        ReceiptRule()
+                    }
+                    HStack {
+                        Text("DUE TODAY")
+                        Spacer(minLength: 8)
+                        Text(verbatim: dueTodayText)
+                    }
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
                 }
 
-                if isEligibleForFreeTrial {
-                    reminderCard
+                if isEligibleForFreeTrial, !reminderOptions.isEmpty {
+                    reminderPicker
+                        .frame(width: Constants.Receipt.reminderWidth)
+                        .padding(.top, Constants.Layout.reminderTopSpacing)
                 }
+
+                pageTitle(trialOfferHeadline)
+                    .padding(.top, Constants.Layout.trialTitleTopSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(.top, Constants.Layout.successTopPadding)
         }
 
         private var trialOfferHeadline: LocalizedStringKey {
             isEligibleForFreeTrial
-                ? "Keep using these models after your free trial"
+                ? "Try Pro free"
                 : "Unlock every AI translation model"
         }
 
-        @ViewBuilder
-        private var reminderCard: some View {
-            let options = reminderOptions
-            VStack(alignment: .leading, spacing: Constants.Layout.benefitsSpacing) {
-                HStack(alignment: .top, spacing: Constants.Layout.benefitRowSpacing) {
-                    Image(systemName: "bell.badge")
-                        .font(.system(size: Constants.FontSize.benefitIcon, weight: .semibold))
-                        .foregroundColor(colors.accent)
-                        .frame(width: Constants.Layout.benefitIconSize, height: Constants.Layout.benefitIconSize)
-                    Text("Remind me before the trial ends, so I can cancel in time.")
-                        .font(.system(size: Constants.FontSize.caption, weight: .medium))
-                        .foregroundColor(colors.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 0)
-                }
+        private var dueTodayText: String {
+            guard let product = trialProduct ?? storeManager.annualProduct else { return "" }
+            if isEligibleForFreeTrial {
+                return Decimal.zero.formatted(product.priceFormatStyle)
+            }
+            return String(localized: "\(product.displayPrice)/yr")
+        }
+
+        private var selectedReminderDate: Date? {
+            guard let days = selectedReminderDaysBefore, let trialEnd = trialEndDate else { return nil }
+            return reminderFireDate(daysBefore: days, trialEnd: trialEnd)
+        }
+
+        private var reminderPicker: some View {
+            HStack(spacing: 10) {
+                Image(systemName: "bell")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(paper.title)
+                    .accessibilityHidden(true)
 
                 Picker("Trial reminder", selection: $selectedReminderDaysBefore) {
-                    ForEach(options, id: \.daysBefore) { option in
+                    ForEach(reminderOptions, id: \.daysBefore) { option in
                         Text(option.segmentLabel).tag(Optional(option.daysBefore))
                     }
                     Text("Off").tag(Int?.none)
@@ -896,24 +819,7 @@
                 .onChange(of: selectedReminderDaysBefore) { _, newValue in
                     if newValue != nil { requestNotificationPermission() }
                 }
-
-                if let dateText = options.first(where: { $0.daysBefore == selectedReminderDaysBefore })?.dateText {
-                    Text("We'll remind you on \(dateText).")
-                        .font(.system(size: Constants.FontSize.small, weight: .medium))
-                        .foregroundColor(colors.textSecondary)
-                }
             }
-            .padding(Constants.Layout.cardPadding)
-            .background(cardBackground)
-        }
-
-        private var trialSubtitle: LocalizedStringKey {
-            if let price = storeManager.annualProduct?.displayPrice {
-                return isEligibleForFreeTrial
-                    ? "Then \(price) per year. Cancel anytime."
-                    : "\(price) per year. Cancel anytime."
-            }
-            return "Cancel anytime."
         }
 
         private var trialPrimaryTitle: LocalizedStringKey {
@@ -962,12 +868,11 @@
         private struct ReminderOption {
             let daysBefore: Int
             let segmentLabel: String
-            let dateText: String
         }
 
-        private static let reminderDateFormatter: DateFormatter = {
+        private static let timelineDateFormatter: DateFormatter = {
             let formatter = DateFormatter()
-            formatter.setLocalizedDateFormatFromTemplate("MMMdj")
+            formatter.setLocalizedDateFormatFromTemplate("MMMd")
             return formatter
         }()
 
@@ -999,8 +904,7 @@
                 let segmentLabel = days == 1 ? String(localized: "1 day") : String(localized: "\(days) days")
                 return ReminderOption(
                     daysBefore: days,
-                    segmentLabel: segmentLabel,
-                    dateText: Self.reminderDateFormatter.string(from: fireDate)
+                    segmentLabel: segmentLabel
                 )
             }
         }
@@ -1203,22 +1107,31 @@
             VStack(spacing: Constants.Layout.footerControlsSpacing) {
                 switch step {
                 case .intro:
-                    primaryButton("Set up TLingo") {
+                    primaryButton("Continue") {
                         withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
                             step = .settings
                         }
                     }
                 case .settings:
-                    primaryButton("Open Settings") {
-                        openDefaultTranslationSettings()
-                    }
-                    secondaryButton("I've set it up") {
-                        withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
-                            step = .tryIt
-                        }
+                    if didLeaveForSettings {
+                        primaryButton("I've set it up", action: advanceToTryIt)
+                        secondaryButton("Open Settings", action: openDefaultTranslationSettings)
+                    } else {
+                        primaryButton("Open Settings", action: openDefaultTranslationSettings)
+                        secondaryButton("I've set it up", action: advanceToTryIt)
                     }
                 case .tryIt:
-                    trialStatusIndicator
+                    if !hasCompletedTrial, showSkipOption {
+                        Button("Skip for now") {
+                            withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
+                                step = .success
+                            }
+                        }
+                        .font(.system(size: Constants.FontSize.caption, weight: .semibold))
+                        .foregroundStyle(OnboardingPaperPalette.accentDeep)
+                        .buttonStyle(.plain)
+                        .transition(.opacity)
+                    }
                     primaryButton("Continue", isDisabled: !hasCompletedTrial) {
                         withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
                             step = .success
@@ -1232,6 +1145,12 @@
                 case .success:
                     successFooter
                 }
+            }
+        }
+
+        private func advanceToTryIt() {
+            withAnimation(.easeInOut(duration: Constants.Animation.stepTransition)) {
+                step = .tryIt
             }
         }
 
@@ -1290,7 +1209,7 @@
                     Link("Privacy Policy", destination: Self.privacyPolicyURL)
                 }
                 .font(.system(size: Constants.FontSize.legalLink, weight: .medium))
-                .foregroundColor(colors.textSecondary)
+                .foregroundStyle(paper.subtitle)
 
                 let renewalText = String(localized: "Subscriptions renew automatically.")
                 let cancellationText = String(
@@ -1298,7 +1217,7 @@
                 )
                 Text("\(renewalText) \(cancellationText)")
                     .font(.system(size: Constants.FontSize.legalDisclosure))
-                    .foregroundColor(colors.textSecondary.opacity(Constants.Opacity.legalDisclosure))
+                    .foregroundStyle(paper.subtitle.opacity(Constants.Opacity.legalDisclosure))
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -1313,13 +1232,10 @@
             Button(action: action) {
                 Text(title)
                     .font(.system(size: Constants.FontSize.primaryButton, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(paper.buttonText)
                     .frame(maxWidth: .infinity)
                     .frame(height: Constants.Layout.primaryButtonHeight)
-                    .background(
-                        RoundedRectangle(cornerRadius: Constants.Radius.button, style: .continuous)
-                            .fill(isDisabled ? colors.textSecondary.opacity(Constants.Opacity.disabledButton) : colors.accent)
-                    )
+                    .background(Capsule().fill(isDisabled ? paper.disabledButtonFill : paper.buttonFill))
             }
             .buttonStyle(.plain)
             .disabled(isDisabled)
@@ -1329,74 +1245,12 @@
             Button(action: action) {
                 Text(title)
                     .font(.system(size: Constants.FontSize.secondaryButton, weight: .medium))
-                    .foregroundColor(colors.textSecondary)
+                    .foregroundStyle(paper.secondaryText)
                     .frame(maxWidth: .infinity)
                     .frame(height: Constants.Layout.secondaryButtonHeight)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-        }
-
-        private func screenshot(_ name: String, width: CGFloat, height: CGFloat) -> some View {
-            Image(name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: width, height: height)
-                .clipShape(RoundedRectangle(cornerRadius: Constants.Radius.media, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Constants.Radius.media, style: .continuous)
-                        .stroke(colors.divider, lineWidth: Constants.Stroke.hairline)
-                )
-                .shadow(
-                    color: .black.opacity(colorScheme == .dark ? Constants.Shadow.darkOpacity : Constants.Shadow.lightOpacity),
-                    radius: Constants.Shadow.radius,
-                    x: 0,
-                    y: Constants.Shadow.yOffset
-                )
-                .accessibilityHidden(true)
-        }
-
-        private func animatedScreenshot(_ name: String, width: CGFloat, height: CGFloat) -> some View {
-            AnimatedGIFView(assetName: name)
-                .frame(width: width, height: height)
-                .clipShape(RoundedRectangle(cornerRadius: Constants.Radius.media, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Constants.Radius.media, style: .continuous)
-                        .stroke(colors.divider, lineWidth: Constants.Stroke.hairline)
-                )
-                .shadow(
-                    color: .black.opacity(colorScheme == .dark ? Constants.Shadow.darkOpacity : Constants.Shadow.lightOpacity),
-                    radius: Constants.Shadow.radius,
-                    x: 0,
-                    y: Constants.Shadow.yOffset
-                )
-                .accessibilityHidden(true)
-        }
-
-        private func setupStep(number: Int, text: LocalizedStringKey) -> some View {
-            HStack(alignment: .top, spacing: Constants.Layout.setupStepSpacing) {
-                Text("\(number)")
-                    .font(.system(size: Constants.FontSize.small, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: Constants.Layout.stepBadgeSize, height: Constants.Layout.stepBadgeSize)
-                    .background(Circle().fill(colors.accent))
-
-                Text(text)
-                    .font(.system(size: Constants.FontSize.caption, weight: .medium))
-                    .foregroundColor(colors.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Spacer(minLength: 0)
-            }
-        }
-
-        private var cardBackground: some View {
-            RoundedRectangle(cornerRadius: Constants.Radius.card, style: .continuous)
-                .fill(colors.cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Constants.Radius.card, style: .continuous)
-                        .stroke(colors.divider, lineWidth: Constants.Stroke.hairline)
-                )
         }
 
         private func openDefaultTranslationSettings() {
@@ -1408,10 +1262,15 @@
             }
 
             guard let settingsURL else { return }
+            isOpeningSettings = true
             UIApplication.shared.open(settingsURL)
         }
 
         private func handleScenePhaseChange(_ phase: ScenePhase) {
+            if phase == .background, isOpeningSettings {
+                isOpeningSettings = false
+                didLeaveForSettings = true
+            }
             guard phase == .active else { return }
             preferences.refreshFromDefaults()
             celebrateTrialInvocationIfNeeded()
@@ -1454,6 +1313,29 @@
             }
         }
 
+        #if DEBUG
+            private func applyDebugPage(_ page: String) {
+                switch page {
+                case "settings":
+                    step = .settings
+                case "tryIt":
+                    step = .tryIt
+                case "models":
+                    step = .success
+                case "tryPremium":
+                    step = .success
+                    premiumStage = .tryPremium
+                    Task { await loadPremiumModels() }
+                case "trialOffer":
+                    step = .success
+                    premiumStage = .trialOffer
+                    Task { await loadTrialProduct() }
+                default:
+                    break
+                }
+            }
+        #endif
+
         private var celebrationTitle: LocalizedStringKey {
             storeManager.isPremium ? "Thank You for Subscribing!" : "TLingo is ready"
         }
@@ -1480,25 +1362,67 @@
         }
     }
 
-    private struct SelectablePracticeTextView: UIViewRepresentable {
-        let text: String
+    private struct TrialWaitingDot: View {
+        let isDone: Bool
 
-        func makeUIView(context _: Context) -> UITextView {
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+        var body: some View {
+            Circle()
+                .fill(isDone ? OnboardingPaperPalette.success : OnboardingPaperPalette.accentDeep)
+                .frame(width: 7, height: 7)
+                .phaseAnimator([1.0, 0.25]) { content, opacity in
+                    content.opacity(isDone || reduceMotion ? 1 : opacity)
+                } animation: { _ in
+                    .linear(duration: 0.5)
+                }
+                .accessibilityHidden(true)
+        }
+    }
+
+    private struct SelectablePracticeTextView: UIViewRepresentable {
+        static var font: UIFont {
+            UIFontMetrics(forTextStyle: .body).scaledFont(for: .monospacedSystemFont(ofSize: 15, weight: .semibold))
+        }
+
+        let text: String
+        var onSelect: () -> Void
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator(onSelect: onSelect)
+        }
+
+        func makeUIView(context: Context) -> UITextView {
             let textView = UITextView()
+            textView.delegate = context.coordinator
             textView.isEditable = false
             textView.isSelectable = true
             textView.isScrollEnabled = false
             textView.backgroundColor = .clear
-            textView.textColor = .label
-            textView.font = .preferredFont(forTextStyle: .body)
+            textView.textColor = UIColor(OnboardingPaperPalette.ink)
+            textView.font = Self.font
             textView.adjustsFontForContentSizeCategory = true
             textView.textContainerInset = .zero
             textView.textContainer.lineFragmentPadding = 0
             return textView
         }
 
-        func updateUIView(_ textView: UITextView, context _: Context) {
+        func updateUIView(_ textView: UITextView, context: Context) {
             textView.text = text
+            context.coordinator.onSelect = onSelect
+        }
+
+        final class Coordinator: NSObject, UITextViewDelegate {
+            var onSelect: () -> Void
+
+            init(onSelect: @escaping () -> Void) {
+                self.onSelect = onSelect
+            }
+
+            func textViewDidChangeSelection(_ textView: UITextView) {
+                guard textView.selectedRange.length > 0 else { return }
+                onSelect()
+            }
         }
 
         func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context _: Context) -> CGSize? {
@@ -1506,6 +1430,64 @@
             guard width > 0 else { return nil }
             let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
             return CGSize(width: width, height: size.height)
+        }
+    }
+
+    /// Looping finger that long-presses and drags across the practice text so people know it is selectable.
+    private struct PracticeSelectionHint: View {
+        let phrase: String
+        let font: UIFont
+
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+        private static let cycle: TimeInterval = 3.4
+
+        var body: some View {
+            if reduceMotion {
+                frame(progress: 0.75)
+            } else {
+                TimelineView(.animation) { context in
+                    let time = context.date.timeIntervalSinceReferenceDate
+                    frame(progress: time.truncatingRemainder(dividingBy: Self.cycle) / Self.cycle)
+                }
+            }
+        }
+
+        private func frame(progress: Double) -> some View {
+            let lineHeight = font.lineHeight
+            let phraseWidth = (phrase as NSString).size(withAttributes: [.font: font]).width
+            let firstWordWidth = ((phrase.split(separator: " ").first.map(String.init) ?? phrase) as NSString)
+                .size(withAttributes: [.font: font]).width
+
+            let approach = Self.ramp(progress, from: 0.05, to: 0.22)
+            let pressed = progress > 0.24 && progress < 0.72
+            let drag = Self.ramp(progress, from: 0.3, to: 0.62)
+            let fadeOut = 1 - Self.ramp(progress, from: 0.86, to: 0.98)
+            let highlightWidth = progress < 0.24 ? 0 : firstWordWidth + (phraseWidth - firstWordWidth) * drag
+            let fingerX = (progress < 0.3 ? firstWordWidth / 2 : firstWordWidth / 2 + (phraseWidth - firstWordWidth / 2) * drag)
+            let fingerY = lineHeight * 0.55 + 36 * (1 - approach)
+
+            return ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(OnboardingPaperPalette.accent.opacity(0.22))
+                    .frame(width: max(highlightWidth, 0), height: lineHeight)
+                    .opacity(highlightWidth > 0 ? fadeOut : 0)
+
+                Image(systemName: "hand.point.up.left.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(OnboardingPaperPalette.ink)
+                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+                    .scaleEffect(pressed ? 0.88 : 1, anchor: .topLeading)
+                    .offset(x: fingerX - 6, y: fingerY)
+                    .opacity(approach * fadeOut)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+
+        private static func ramp(_ value: Double, from start: Double, to end: Double) -> Double {
+            let t = min(max((value - start) / (end - start), 0), 1)
+            return t * t * (3 - 2 * t)
         }
     }
 

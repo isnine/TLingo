@@ -22,6 +22,7 @@
     struct OnboardingTrialTextEditor: UIViewRepresentable {
         @Binding var text: String
         var font: UIFont = .preferredFont(forTextStyle: .body)
+        var textColor: UIColor = .label
         var customActionTitle: String
         var onCustomAction: (String) -> Void
         var onFeedback: () -> Void
@@ -34,6 +35,7 @@
             let textView = OnboardingTrialUITextView()
             textView.delegate = context.coordinator
             textView.font = font
+            textView.textColor = textColor
             textView.backgroundColor = .clear
             textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
             textView.adjustsFontForContentSizeCategory = true
@@ -49,6 +51,12 @@
                 uiView.text = text
             }
             context.coordinator.parent = self
+        }
+
+        func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context _: Context) -> CGSize? {
+            guard let width = proposal.width, width > 0 else { return nil }
+            let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+            return CGSize(width: width, height: size.height)
         }
 
         final class Coordinator: NSObject, UITextViewDelegate, OnboardingTrialMenuConfiguring {

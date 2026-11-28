@@ -47,7 +47,7 @@ review_triggers:
 通用流程见 `~/.agents/TOOLS.md` 的 Real Device Verification。TLingo 专属信息：
 
 - project `ios/AITranslator.xcodeproj`，scheme `TLingo`，bundle id `com.zanderwang.AITranslator`。
-- Debug 构建会自动授予 Premium（`StoreManager.swift`），重装后 onboarding 默认不出现；启动参数 `-TLingoForceOnboarding` 可强制显示，再加 `-TLingoOnboardingTrialOffer` 直接跳到试用付款页。
+- Debug 构建会自动授予 Premium（`StoreManager.swift`），重装后 onboarding 默认不出现；启动参数 `-TLingoForceOnboarding` 可强制显示，再加 `-TLingoOnboardingTrialOffer` 直接跳到试用付款页，或 `-TLingoOnboardingPage <settings|tryIt|models|tryPremium|trialOffer>` 跳到指定页。
 - 已有 UI 测试位于 `TLingoUITests`。
 
 ## 已验证的故障恢复
