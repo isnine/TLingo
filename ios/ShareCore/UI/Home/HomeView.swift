@@ -425,8 +425,10 @@ public struct HomeView: View {
                                     .accessibilityIdentifier("home_history_button")
                             }
                         }
-                        ToolbarItem(placement: .principal) {
-                            homeModePicker
+                        if languageSelectorPlacement == .languageBar {
+                            ToolbarItem(placement: .principal) {
+                                phoneLanguageBar
+                            }
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             phoneSettingsButton
@@ -761,13 +763,6 @@ public struct HomeView: View {
                         #if !os(macOS)
                             if !openFromExtension, !usesNativeNavigationChrome {
                                 header
-                            }
-                        #endif
-
-                        #if os(iOS)
-                            if languageSelectorPlacement == .languageBar {
-                                phoneLanguageBar
-                                    .padding(.bottom, TLingoSpacing.sm)
                             }
                         #endif
 

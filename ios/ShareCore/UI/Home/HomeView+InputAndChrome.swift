@@ -596,31 +596,6 @@ extension HomeView {
                 hasTemporaryTarget: viewModel.hasCurrentTextTarget,
                 onSourceChanged: { viewModel.clearDetectedSourceLanguage() }
             )
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .padding(.horizontal, TLingoSpacing.sm)
-            .background(colors.cardBackground, in: Capsule())
-        }
-
-        /// Realtime is a separate screen; picking it presents RealtimeView and the control stays on Text.
-        @ViewBuilder
-        var homeModePicker: some View {
-            if let onRealtimeTap {
-                Picker(selection: Binding(
-                    get: { false },
-                    set: { isRealtime in
-                        guard isRealtime else { return }
-                        onRealtimeTap()
-                    }
-                )) {
-                    Text("Text").tag(false)
-                    Text("Realtime").tag(true)
-                } label: {
-                    EmptyView()
-                }
-                .pickerStyle(.segmented)
-                .fixedSize()
-                .accessibilityIdentifier("home_mode_picker")
-            }
         }
 
         @ViewBuilder
